@@ -6,9 +6,9 @@ import com.wavesplatform.{NoShrink, TransactionGen}
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Assertions, Matchers, PropSpec}
 import scodec.bits.ByteVector
-import scorex.account.{Address, Alias}
+import com.wavesplatform.account.{Address, Alias}
 import org.scalacheck.Gen
-import scorex.transaction.{DataTransaction, Proofs}
+import com.wavesplatform.transaction.{DataTransaction, Proofs}
 
 class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
 
@@ -18,7 +18,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
         val result = runScript[ByteVector](
           """
             |match tx {
-            | case ttx : TransferTransaction  =>  extract(ttx.transferAssetId)
+            | case ttx : TransferTransaction  =>  extract(ttx.assetId)
             | case other => throw
             | }
             |""".stripMargin,
@@ -37,7 +37,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
         val result = runScript[Boolean](
           """
                                           |match tx {
-                                          | case ttx : TransferTransaction  =>  isDefined(ttx.transferAssetId)
+                                          | case ttx : TransferTransaction  =>  isDefined(ttx.assetId)
                                           | case other => throw
                                           | }
                                           |""".stripMargin,

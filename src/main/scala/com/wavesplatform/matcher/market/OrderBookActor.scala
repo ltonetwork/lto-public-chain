@@ -17,12 +17,12 @@ import com.wavesplatform.state.Blockchain
 import com.wavesplatform.utx.UtxPool
 import io.netty.channel.group.ChannelGroup
 import play.api.libs.json._
-import scorex.transaction.ValidationError
-import scorex.transaction.ValidationError.{AccountBalanceError, GenericError, OrderValidationError}
-import scorex.transaction.assets.exchange._
-import scorex.utils.{NTP, ScorexLogging}
-import scorex.wallet.Wallet
-import scorex.account.PublicKeyAccount
+import com.wavesplatform.transaction.ValidationError
+import com.wavesplatform.transaction.ValidationError.{AccountBalanceError, GenericError, OrderValidationError}
+import com.wavesplatform.transaction.assets.exchange._
+import com.wavesplatform.wallet.Wallet
+import com.wavesplatform.account.PublicKeyAccount
+import com.wavesplatform.utils.{NTP, ScorexLogging}
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -47,6 +47,8 @@ class OrderBookActor(assetPair: AssetPair,
   private var orderBook           = OrderBook.empty
   private var apiSender           = Option.empty[ActorRef]
   private var cancellable         = Option.empty[Cancellable]
+
+  private var lastTrade: Option[Order] = None
 
   private lazy val alreadyCanceledOrders = CacheBuilder
     .newBuilder()
@@ -125,6 +127,8 @@ class OrderBookActor(assetPair: AssetPair,
       sender() ! GetOrdersResponse(orderBook.bids.values.flatten.toSeq)
     case GetOrderBookRequest(pair, depth) =>
       handleGetOrderBook(pair, depth)
+    case GetMarketStatusRequest(pair) =>
+      handleGetMarketStatus(pair)
   }
 
   private def onCancelOrder(cancel: CancelOrder): Unit = {
@@ -195,7 +199,13 @@ class OrderBookActor(assetPair: AssetPair,
     if (pair == assetPair) {
       val d = Math.min(depth.getOrElse(MaxDepth), MaxDepth)
       sender() ! GetOrderBookResponse(pair, orderBook.bids.take(d).map(aggregateLevel).toSeq, orderBook.asks.take(d).map(aggregateLevel).toSeq)
-    } else sender() ! GetOrderBookResponse(pair, Seq(), Seq())
+    } else sender() ! GetOrderBookResponse.empty(pair)
+  }
+
+  private def handleGetMarketStatus(pair: AssetPair): Unit = {
+    if (pair == assetPair) {
+      sender() ! GetMarketStatusResponse(pair, orderBook.bids.headOption.map(_._1), orderBook.asks.headOption.map(_._1), lastTrade)
+    } else sender() ! GetMarketStatusResponse(pair, None, None, None)
   }
 
   private def onAddOrder(order: Order): Unit = {
@@ -283,6 +293,7 @@ class OrderBookActor(assetPair: AssetPair,
           _  <- utx.putIfNew(tx)
         } yield tx) match {
           case Right(tx) if tx.isInstanceOf[ExchangeTransaction] =>
+            lastTrade = Some(c.order)
             allChannels.broadcastTx(tx)
             processEvent(event)
             context.system.eventStream.publish(ExchangeTransactionCreated(tx.asInstanceOf[ExchangeTransaction]))
@@ -354,6 +365,8 @@ object OrderBookActor {
 
   case class GetOrderBookRequest(assetPair: AssetPair, depth: Option[Int]) extends OrderBookRequest
 
+  case class GetMarketStatusRequest(assetPair: AssetPair) extends OrderBookRequest
+
   case class DeleteOrderBookRequest(assetPair: AssetPair) extends OrderBookRequest
 
   case class CancelOrder(assetPair: AssetPair, sender: PublicKeyAccount, orderId: String) extends OrderBookRequest {
@@ -399,6 +412,16 @@ object OrderBookActor {
 
   object GetOrderBookResponse {
     def empty(pair: AssetPair): GetOrderBookResponse = GetOrderBookResponse(pair, Seq(), Seq())
+  }
+
+  case class GetMarketStatusResponse(pair: AssetPair, bid: Option[Price], ask: Option[Price], last: Option[Order]) extends MatcherResponse {
+    def json: JsValue = Json.obj(
+      "lastPrice" -> last.map(_.price),
+      "lastSide"  -> last.map(_.orderType.toString),
+      "bestBid"   -> bid,
+      "bestAsk"   -> ask
+    )
+    val code = StatusCodes.OK
   }
 
   // Direct requests
