@@ -36,7 +36,7 @@ class CreateAliasTransactionSpecification extends PropSpec with PropertyChecks w
     val js = Json.parse("""{
                          "type": 10,
                          "id": "7acjQQWJAharrgzb4Z6jo3eeAKAGPmLkHTPtvBTKaiug",
-                         "sender": "3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh",
+                         "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                          "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                          "fee": 100000,
                          "timestamp": 1526910778245,
@@ -64,7 +64,7 @@ class CreateAliasTransactionSpecification extends PropSpec with PropertyChecks w
     val js = Json.parse("""{
                        "type": 10,
                        "id": "7acjQQWJAharrgzb4Z6jo3eeAKAGPmLkHTPtvBTKaiug",
-                       "sender": "3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh",
+                       "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
                        "timestamp": 1526910778245,
