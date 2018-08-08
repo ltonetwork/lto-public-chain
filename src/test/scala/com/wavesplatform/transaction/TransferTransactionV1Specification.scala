@@ -38,7 +38,7 @@ class TransferTransactionV1Specification extends PropSpec with PropertyChecks wi
   property("JSON format validation") {
     val js = Json.parse("""{
                         "type": 4,
-                        "id": "FLszEaqasJptohmP6zrXodBwjaEYq4jRP2BzdPPjvukk",
+                        "id": "6e3LbdveBEAGbNX2zYuAHXH2kpqzsZsk1RbNR2F6TVaH",
                         "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                         "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                         "fee": 100000,

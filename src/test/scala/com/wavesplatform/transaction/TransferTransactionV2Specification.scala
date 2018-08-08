@@ -53,8 +53,8 @@ class TransferTransactionV2Specification extends PropSpec with PropertyChecks wi
   property("JSON format validation") {
     val js = Json.parse("""{
                        "type": 4,
-                       "id": "2qMiGUpNMuRpeyTnXLa1mLuVP1cYEtxys55cQbDaXd5g",
-                       "sender": "3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh",
+                       "id": "5xPEPhDEmKv2sb6j1ddeFRyFdqFzXjmQZ8NqJ5UURkJX",
+                       "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000000,
                        "timestamp": 1526641218066,
@@ -62,7 +62,7 @@ class TransferTransactionV2Specification extends PropSpec with PropertyChecks wi
                        "4bfDaqBcnK3hT8ywFEFndxtS1DTSYfncUqd4s5Vyaa66PZHawtC73rDswUur6QZu5RpqM7L9NFgBHT1vhCoox4vi"
                        ],
                        "version": 2,
-                       "recipient": "3My3KZgFQ3CrVHgz6vGRt8687sH4oAA1qp8",
+                       "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt",
                        "assetId": null,
                        "feeAssetId": null,
                        "feeAsset": null,
@@ -75,7 +75,7 @@ class TransferTransactionV2Specification extends PropSpec with PropertyChecks wi
         2,
         None,
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
-        Address.fromString("3My3KZgFQ3CrVHgz6vGRt8687sH4oAA1qp8").explicitGet(),
+        Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet(),
         100000000,
         1526641218066L,
         None,
