@@ -28,7 +28,7 @@ class BurnTransactionSpecification extends PropSpec with PropertyChecks with Mat
     val js = Json.parse("""{
                        "type": 6,
                        "id": "Ci1q7y7Qq2C2GDH7YVXsQ8w5vRRKYeoYTp9J76AXw8TZ",
-                       "sender": "3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh",
+                       "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000000,
                        "timestamp": 1526287561757,
@@ -58,7 +58,7 @@ class BurnTransactionSpecification extends PropSpec with PropertyChecks with Mat
     val js = Json.parse("""{
                        "type": 6,
                        "id": "6QA1sLV53euVCX5fFemNuEyRVdQ5JYo5dWDsCmtKADRc",
-                       "sender": "3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh",
+                       "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000000,
                        "timestamp": 1526287561757,
