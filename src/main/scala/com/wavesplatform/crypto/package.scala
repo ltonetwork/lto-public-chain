@@ -1,7 +1,7 @@
 package com.wavesplatform
 
 import com.wavesplatform.account.PrivateKeyAccount
-import scorex.crypto.hash.{Blake2b256, Keccak256}
+import scorex.crypto.hash.{Blake2b256, Keccak256, Sha256}
 import scorex.crypto.signatures.{Curve25519, PrivateKey, PublicKey, Signature}
 
 package object crypto {
@@ -13,7 +13,9 @@ package object crypto {
 
   def fastHash(s: String): Array[Byte] = fastHash(s.getBytes())
 
-  def secureHash(m: Array[Byte]): Array[Byte] = Keccak256.hash(Blake2b256.hash(m))
+  def secureHash(m: Array[Byte]): Array[Byte] =
+    Sha256.hash(Blake2b256.hash(m))
+  //Keccak256.hash(Blake2b256.hash(m))
 
   def secureHash(s: String): Array[Byte] = secureHash(s.getBytes())
 
