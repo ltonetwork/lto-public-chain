@@ -18,7 +18,7 @@ import com.wavesplatform.consensus.nxt.api.http.NxtConsensusApiRoute
 import com.wavesplatform.db.openDB
 import com.wavesplatform.features.api.ActivationApiRoute
 import com.wavesplatform.history.{CheckpointServiceImpl, StorageFactory}
-import com.wavesplatform.http.{DebugApiRoute, NodeApiRoute, WavesApiRoute}
+import com.wavesplatform.http.{DebugApiRoute, NodeApiRoute}
 import com.wavesplatform.matcher.Matcher
 import com.wavesplatform.metrics.Metrics
 import com.wavesplatform.mining.{Miner, MinerImpl}
@@ -255,7 +255,6 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
           scoreStatsReporter,
           configRoot
         ),
-        WavesApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, time),
         ActivationApiRoute(settings.restAPISettings, settings.blockchainSettings.functionalitySettings, settings.featuresSettings, blockchainUpdater),
       )
 
@@ -269,7 +268,6 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
         typeOf[PeersApiRoute],
         typeOf[AddressApiRoute],
         typeOf[DebugApiRoute],
-        typeOf[WavesApiRoute],
         typeOf[ActivationApiRoute]
       )
       val combinedRoute = CompositeHttpService(actorSystem, apiTypes, apiRoutes, settings.restAPISettings).loggingCompositeRoute
