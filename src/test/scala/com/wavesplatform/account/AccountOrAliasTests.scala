@@ -7,11 +7,11 @@ import org.scalatest.{Matchers, PropSpec}
 class AccountOrAliasTests extends PropSpec with PropertyChecks with Matchers {
 
   property("Account should get parsed correctly") {
-    AddressOrAlias.fromString("3My3KZgFQ3CrVHgz6vGRt8687sH4oAA1qp8").explicitGet() shouldBe an[Address]
-    AddressOrAlias.fromString("address:3My3KZgFQ3CrVHgz6vGRt8687sH4oAA1qp8").explicitGet() shouldBe an[Address]
+    AddressOrAlias.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet() shouldBe an[Address]
+    AddressOrAlias.fromString("address:3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet() shouldBe an[Address]
 
-    Address.fromString("3My3KZgFQ3CrVHgz6vGRt8687sH4oAA1qp8").explicitGet() shouldBe an[Address]
-    Address.fromString("address:3My3KZgFQ3CrVHgz6vGRt8687sH4oAA1qp8").explicitGet() shouldBe an[Address]
+    Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet() shouldBe an[Address]
+    Address.fromString("address:3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet() shouldBe an[Address]
   }
 
   property("Alias should get parsed correctly") {

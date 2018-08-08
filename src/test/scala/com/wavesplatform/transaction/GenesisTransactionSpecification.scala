@@ -1,6 +1,6 @@
 package com.wavesplatform.transaction
 
-import com.wavesplatform.state.EitherExt2
+import com.wavesplatform.state.{ByteStr, EitherExt2}
 import com.wavesplatform.utils.Base58
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest._
@@ -16,14 +16,15 @@ class GenesisTransactionSpecification extends PropSpec with PropertyChecks with 
     val timestamp = 2398762345L
     val signature = GenesisTransaction.generateSignature(defaultRecipient, balance, timestamp)
 
-    val expected = "3L4zhpN1o6TysvM8FZFv1NmSEjpGSgV4V71e2iJwseFrrt65aZJiyXwqj5WpigLAn296sUrFb9yN8fdsY7GSdwwR"
+    val expected = "31kwJkQswbomM8XwKPrbuw1GoTy74c28kBGTFaT9obU3DEEeG2xjGNHxs9r6Usi7htFSGYfvyQjJ63cESMaUgWjY"
     val actual   = Base58.encode(signature)
 
     assert(actual == expected)
   }
 
   property("GenesisTransaction parse from Bytes should work fine") {
-    val bytes = Base58.decode("5GoidXWjBfzuS9tZm4Fp6GAXUYFunVMsoWAew3eBnDbmaDi7WiP9yVpBD2").get
+
+    val bytes = Base58.decode("5GoidXWjBfzuS9tYF43DP2KywVGXY7MXQv915BfoZU6uhu5UMDUU6ScmH2").get
 
     val actualTransaction = GenesisTransaction.parseBytes(bytes).get
 
