@@ -1,7 +1,7 @@
 # Orange 
 In the `orange` branch there is a code with functions that is under development. The latest release for each network can be found in the [Releases section], you can switch to the corresponding tag and build the application.
 
-For further information please refer the official [documentation](https://docs.wavesplatform.com).
+For further information please refer the [waves plaform documentation](https://docs.wavesplatform.com).
 
 # Acknowledgement
 
