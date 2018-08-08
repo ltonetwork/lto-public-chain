@@ -16,7 +16,7 @@ class GenesisTransactionSpecification extends PropSpec with PropertyChecks with 
     val timestamp = 2398762345L
     val signature = GenesisTransaction.generateSignature(defaultRecipient, balance, timestamp)
 
-    val expected = "3L4zhpN1o6TysvM8FZFv1NmSEjpGSgV4V71e2iJwseFrrt65aZJiyXwqj5WpigLAn296sUrFb9yN8fdsY7GSdwwR"
+    val expected = "31kwJkQswbomM8XwKPrbuw1GoTy74c28kBGTFaT9obU3DEEeG2xjGNHxs9r6Usi7htFSGYfvyQjJ63cESMaUgWjY"
     val actual   = Base58.encode(signature)
 
     assert(actual == expected)
