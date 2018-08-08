@@ -123,7 +123,7 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
         |}""".stripMargin))
     val settings = BlockchainSettings.fromConfig(config)
 
-    settings.addressSchemeCharacter should be('W')
+    settings.addressSchemeCharacter should be('L')
     settings.functionalitySettings.allowTemporaryNegativeUntil should be(1479168000000L)
     settings.functionalitySettings.requireSortedTransactionsAfter should be(1479168000000L)
     settings.functionalitySettings.generationBalanceDepthFrom50To1000AfterHeight should be(232000L)
