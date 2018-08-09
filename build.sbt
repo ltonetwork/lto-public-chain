@@ -242,6 +242,8 @@ lazy val lang =
 lazy val langJS  = lang.js
 lazy val langJVM = lang.jvm
 
+lazy val nacl4s = project
+
 lazy val node = project
   .in(file("."))
   .settings(
@@ -264,6 +266,7 @@ lazy val node = project
         Dependencies.monix.value
   )
   .dependsOn(langJVM)
+  .dependsOn(nacl4s)
 
 lazy val discovery = project
 
