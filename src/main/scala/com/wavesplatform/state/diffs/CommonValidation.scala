@@ -30,12 +30,12 @@ object CommonValidation {
     if (blockTime >= settings.allowTemporaryNegativeUntil) {
       def checkTransfer(sender: Address, assetId: Option[AssetId], amount: Long, feeAssetId: Option[AssetId], feeAmount: Long) = {
         val amountDiff = assetId match {
-          case Some(aid) => Portfolio(0, LeaseBalance.empty, Map(aid -> -amount))
-          case None      => Portfolio(-amount, LeaseBalance.empty, Map.empty)
+          case Some(aid) => Portfolio(0, LeaseBalance.empty)
+          case None      => Portfolio(-amount, LeaseBalance.empty)
         }
         val feeDiff = feeAssetId match {
-          case Some(aid) => Portfolio(0, LeaseBalance.empty, Map(aid -> -feeAmount))
-          case None      => Portfolio(-feeAmount, LeaseBalance.empty, Map.empty)
+          case Some(aid) => Portfolio(0, LeaseBalance.empty)
+          case None      => Portfolio(-feeAmount, LeaseBalance.empty)
         }
 
         val spendings       = Monoid.combine(amountDiff, feeDiff)
@@ -48,18 +48,6 @@ object CommonValidation {
               "Attempt to transfer unavailable funds: Transaction application leads to " +
                 s"negative waves balance to (at least) temporary negative state, current balance equals $oldWavesBalance, " +
                 s"spends equals ${spendings.balance}, result is $newWavesBalance"))
-        } else if (spendings.assets.nonEmpty) {
-          val oldAssetBalances = blockchain.portfolio(sender).assets
-          val balanceError = spendings.assets.collectFirst {
-            case (aid, delta) if oldAssetBalances.getOrElse(aid, 0L) + delta < 0 =>
-              val availableBalance = oldAssetBalances.getOrElse(aid, 0L)
-              GenericError(
-                "Attempt to transfer unavailable funds: Transaction application leads to negative asset " +
-                  s"'$aid' balance to (at least) temporary negative state, current balance is $availableBalance, " +
-                  s"spends equals $delta, result is ${availableBalance + delta}")
-          }
-
-          balanceError.fold[Either[ValidationError, T]](Right(tx))(Left(_))
         } else Right(tx)
       }
 
@@ -69,7 +57,7 @@ object CommonValidation {
             GenericError(
               "Attempt to pay unavailable funds: balance " +
                 s"${blockchain.portfolio(ptx.sender).balance} is less than ${ptx.amount + ptx.fee}"))
-        case ttx: TransferTransaction     => checkTransfer(ttx.sender, ttx.assetId, ttx.amount, ttx.feeAssetId, ttx.fee)
+        case ttx: TransferTransaction     => checkTransfer(ttx.sender, None, ttx.amount, None, ttx.fee)
         case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.assetId, mtx.transfers.map(_.amount).sum, None, mtx.fee)
         case _                            => Right(tx)
       }
@@ -162,18 +150,7 @@ object CommonValidation {
       } else
         for {
           feeInUnits <- feeInUnits(blockchain, height, tx)
-          r <- txAsset match {
-            case None => Right((None, feeInUnits * Sponsorship.FeeUnit))
-            case Some(assetId) =>
-              for {
-                assetInfo <- blockchain.assetDescription(assetId).toRight(GenericError(s"Asset $assetId does not exist, cannot be used to pay fees"))
-                wavesFee <- Either.cond(
-                  assetInfo.sponsorship > 0,
-                  feeInUnits * Sponsorship.FeeUnit,
-                  GenericError(s"Asset $assetId is not sponsored, cannot be used to pay fees")
-                )
-              } yield (Some((assetId, assetInfo)), wavesFee)
-          }
+          r          <- Right((None, feeInUnits * Sponsorship.FeeUnit))
         } yield r
 
     def isSmartToken(input: FeeInfo): Boolean = input._1.map(_._1).flatMap(blockchain.assetDescription).exists(_.script.isDefined)
@@ -197,7 +174,7 @@ object CommonValidation {
       } else inputFee
     }
 
-    feeAfterSponsorship(tx.assetFee._1)
+    feeAfterSponsorship(None)
       .flatMap(feeAfterSmartTokens)
       .flatMap(feeAfterSmartAccounts)
       .map {
@@ -207,36 +184,24 @@ object CommonValidation {
   }
 
   def checkFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Unit] = {
-    def restFeeAfterSponsorship(inputFee: (Option[AssetId], Long)): Either[ValidationError, (Option[AssetId], Long)] =
-      if (height < Sponsorship.sponsoredFeesSwitchHeight(blockchain, fs)) Right(inputFee)
+    def restFeeAfterSponsorship(inputFee: Long): Either[ValidationError, (Option[AssetId], Long)] =
+      if (height < Sponsorship.sponsoredFeesSwitchHeight(blockchain, fs)) Right(None, inputFee)
       else {
-        val (feeAssetId, feeAmount) = inputFee
+        val feeAmount = inputFee
         for {
           feeInUnits <- feeInUnits(blockchain, height, tx)
-          feeAmount <- feeAssetId match {
-            case None => Right(feeAmount)
-            case Some(x) =>
-              for {
-                assetInfo <- blockchain.assetDescription(x).toRight(GenericError(s"Asset $x does not exist, cannot be used to pay fees"))
-                wavesFee <- Either.cond(
-                  assetInfo.sponsorship > 0,
-                  Sponsorship.toWaves(feeAmount, assetInfo.sponsorship),
-                  GenericError(s"Asset $x is not sponsored, cannot be used to pay fees")
-                )
-              } yield wavesFee
-          }
+          feeAmount  <- Right(feeAmount)
           minimumFee    = feeInUnits * Sponsorship.FeeUnit
           restFeeAmount = feeAmount - minimumFee
           _ <- Either.cond(
             restFeeAmount >= 0,
             (),
-            GenericError(
-              s"Fee in ${feeAssetId.fold("WAVES")(_.toString)} for ${tx.builder.classTag} does not exceed minimal value of $minimumFee WAVES: $feeAmount")
+            GenericError(s"Fee in WAVES for ${tx.builder.classTag} does not exceed minimal value of $minimumFee WAVES: $feeAmount")
           )
         } yield (None, restFeeAmount)
       }
 
-    def isSmartToken: Boolean = tx.assetFee._1.flatMap(blockchain.assetDescription).exists(_.script.isDefined)
+    def isSmartToken: Boolean = false
 
     def restFeeAfterSmartTokens(inputFee: (Option[AssetId], Long)): Either[ValidationError, (Option[AssetId], Long)] =
       if (isSmartToken) {
@@ -271,7 +236,7 @@ object CommonValidation {
         } yield (feeAssetId, restFeeAmount)
       } else Right(inputFee)
 
-    restFeeAfterSponsorship(tx.assetFee)
+    restFeeAfterSponsorship(tx.fee)
       .flatMap(restFeeAfterSmartTokens)
       .flatMap(restFeeAfterSmartAccounts)
       .map(_ => ())

@@ -109,7 +109,7 @@ trait RequestGen extends TransactionGen { _: Suite =>
     _signature <- signatureGen
     _timestamp <- ntpTimestampGen
     _tr        <- transferReq
-  } yield SignedTransferV1Request(_tr.sender, _tr.assetId, _tr.recipient, _tr.amount, _tr.fee, _tr.feeAssetId, _timestamp, _tr.attachment, _signature)
+  } yield SignedTransferV1Request(_tr.sender, _tr.recipient, _tr.amount, _tr.fee, _timestamp, _tr.attachment, _signature)
 
   val createAliasReq: G[SignedCreateAliasV1Request] = for {
     _signature <- signatureGen

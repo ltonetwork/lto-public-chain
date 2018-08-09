@@ -24,8 +24,8 @@ object LeaseTransactionsDiff {
           Left(GenericError(s"Cannot lease more than own: Balance:${ap.balance}, already leased: ${ap.lease.out}"))
         } else {
           val portfolioDiff: Map[Address, Portfolio] = Map(
-            sender    -> Portfolio(-tx.fee, LeaseBalance(0, tx.amount), Map.empty),
-            recipient -> Portfolio(0, LeaseBalance(tx.amount, 0), Map.empty)
+            sender    -> Portfolio(-tx.fee, LeaseBalance(0, tx.amount)),
+            recipient -> Portfolio(0, LeaseBalance(tx.amount, 0))
           )
           Right(Diff(height = height, tx = tx, portfolios = portfolioDiff, leaseState = Map(tx.id() -> true)))
         }
@@ -49,12 +49,12 @@ object LeaseTransactionsDiff {
       canceller = Address.fromPublicKey(tx.sender.publicKey)
       portfolioDiff <- if (tx.sender == lease.sender) {
         Right(
-          Monoid.combine(Map(canceller -> Portfolio(-tx.fee, LeaseBalance(0, -lease.amount), Map.empty)),
-                         Map(recipient -> Portfolio(0, LeaseBalance(-lease.amount, 0), Map.empty))))
+          Monoid.combine(Map(canceller -> Portfolio(-tx.fee, LeaseBalance(0, -lease.amount))),
+                         Map(recipient -> Portfolio(0, LeaseBalance(-lease.amount, 0)))))
       } else if (time < settings.allowMultipleLeaseCancelTransactionUntilTimestamp) { // cancel of another acc
         Right(
-          Monoid.combine(Map(canceller -> Portfolio(-tx.fee, LeaseBalance(0, -lease.amount), Map.empty)),
-                         Map(recipient -> Portfolio(0, LeaseBalance(-lease.amount, 0), Map.empty))))
+          Monoid.combine(Map(canceller -> Portfolio(-tx.fee, LeaseBalance(0, -lease.amount))),
+                         Map(recipient -> Portfolio(0, LeaseBalance(-lease.amount, 0)))))
       } else
         Left(
           GenericError(

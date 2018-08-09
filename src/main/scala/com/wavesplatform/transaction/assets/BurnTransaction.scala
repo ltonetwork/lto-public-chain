@@ -20,8 +20,6 @@ trait BurnTransaction extends ProvenTransaction with VersionedTransaction {
 
   def timestamp: Long
 
-  override val assetFee: (Option[AssetId], Long) = (None, fee)
-
   override val json: Coeval[JsObject] = Coeval.evalOnce {
     jsonBase() ++ Json.obj(
       "chainId" -> chainByte,

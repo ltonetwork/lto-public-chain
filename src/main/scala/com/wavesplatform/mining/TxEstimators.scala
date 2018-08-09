@@ -16,7 +16,7 @@ object TxEstimators {
 
     override def toString(): String = "sizeInBytes"
 
-    override val minEstimate = 109
+    override val minEstimate = 109l
   }
 
   object one extends Fn {
@@ -24,7 +24,7 @@ object TxEstimators {
 
     override def toString(): String = "one"
 
-    override val minEstimate = 1
+    override val minEstimate = 1l
   }
 
   object scriptRunNumber extends Fn {
@@ -34,22 +34,11 @@ object TxEstimators {
         case _                                                                => 0
       }
 
-      val assetIds = x match {
-        case x: TransferTransaction     => x.assetId.toSeq
-        case x: MassTransferTransaction => x.assetId.toSeq
-        case x: BurnTransaction         => Seq(x.assetId)
-        case x: ReissueTransaction      => Seq(x.assetId)
-        case x: SponsorFeeTransaction   => Seq(x.assetId)
-        case x: ExchangeTransaction     => Seq(x.buyOrder.assetPair.amountAsset, x.buyOrder.assetPair.priceAsset).flatten
-        case _                          => Seq.empty
-      }
-
-      val smartTokenRuns = assetIds.flatMap(blockchain.assetDescription).count(_.script.isDefined)
-      smartAccountRun + smartTokenRuns
+      smartAccountRun
     }
 
     override def toString(): String = "scriptRunNumber"
 
-    override val minEstimate = 0
+    override val minEstimate = 0l
   }
 }

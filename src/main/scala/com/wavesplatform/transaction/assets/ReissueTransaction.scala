@@ -17,8 +17,6 @@ trait ReissueTransaction extends ProvenTransaction with VersionedTransaction {
   def fee: Long
   def chainByte: Option[Byte]
 
-  override val assetFee: (Option[AssetId], Long) = (None, fee)
-
   override final val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase() ++ Json.obj(
       "version"    -> version,

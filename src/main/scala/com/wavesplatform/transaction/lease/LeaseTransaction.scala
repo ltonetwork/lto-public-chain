@@ -12,7 +12,6 @@ trait LeaseTransaction extends ProvenTransaction with VersionedTransaction {
   def amount: Long
   def fee: Long
   def recipient: AddressOrAlias
-  override val assetFee: (Option[AssetId], Long) = (None, fee)
 
   override final val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase() ++ Json.obj(

@@ -13,7 +13,6 @@ trait LeaseCancelTransaction extends ProvenTransaction with VersionedTransaction
   def chainByte: Option[Byte]
   def leaseId: ByteStr
   def fee: Long
-  override val assetFee: (Option[AssetId], Long) = (None, fee)
 
   override val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase() ++ Json.obj(

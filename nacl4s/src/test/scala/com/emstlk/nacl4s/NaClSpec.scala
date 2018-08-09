@@ -27,7 +27,7 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
 
     it("first case") {
       val key = fromHex("dc908dda0b9344a953629b733820778880f3ceb421bb61b91cbd4c3e66256ce4")
-      val c = fromHex("657870616e642033322d62797465206b")
+      val c   = fromHex("657870616e642033322d62797465206b")
       val out = new Array[Byte](outputBytes)
       val expectedOut = "a763249cfc79b52add4d52000bae41c0b7fa0e72368ae15495a1a50714d5c020" +
         "8c2f5ba72de4cf3ddce7efd71d2aebf22d19b607e6647446f4284fa4b89d5d91"
@@ -36,9 +36,9 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     }
 
     it("second case") {
-      val k = fromHex("0102030405060708090a0b0c0d0e0f10c9cacbcccdcecfd0d1d2d3d4d5d6d7d8")
-      val in = fromHex("65666768696a6b6c6d6e6f7071727374")
-      val c = fromHex("657870616e642033322d62797465206b")
+      val k   = fromHex("0102030405060708090a0b0c0d0e0f10c9cacbcccdcecfd0d1d2d3d4d5d6d7d8")
+      val in  = fromHex("65666768696a6b6c6d6e6f7071727374")
+      val c   = fromHex("657870616e642033322d62797465206b")
       val out = new Array[Byte](outputBytes)
       val expectedOut = "45254427290f6bc1ff8b7a06aae9d9625990b66a1533c841ef31de22d772287e" +
         "68c507e1c5991f02664e4cb054f5f6b8b1a0858206489577c0c384ecea67f64a"
@@ -47,17 +47,17 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     }
 
     it("third case") {
-      val k = fromHex("ee304fca27008d8c126f90027901d80f7f1d8b8dc936cf3b9f819692827e5777")
-      val in = fromHex("81918ef2a5e0da9b3e9060521e4bb352")
-      val c = fromHex("657870616e642033322d62797465206b")
+      val k   = fromHex("ee304fca27008d8c126f90027901d80f7f1d8b8dc936cf3b9f819692827e5777")
+      val in  = fromHex("81918ef2a5e0da9b3e9060521e4bb352")
+      val c   = fromHex("657870616e642033322d62797465206b")
       val out = new Array[Byte](outputBytes)
       cryptoCore(out, in, k, c)
 
       def show(x: Array[Byte], xoffset: Int, y: Array[Byte], yoffset: Int) = {
         var borrow = 0
         (0 until 4).map { i =>
-          val xi = x(xoffset + i) & 0xff
-          val yi = y(yoffset + i) & 0xff
+          val xi  = x(xoffset + i) & 0xff
+          val yi  = y(yoffset + i) & 0xff
           val res = "%02x".format((xi - yi - borrow) & 0xff)
           borrow = if (xi < yi + borrow) 1 else 0
           res
@@ -75,9 +75,9 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     }
 
     it("fourth case") {
-      val key = fromHex("dc908dda0b9344a953629b733820778880f3ceb421bb61b91cbd4c3e66256ce4")
+      val key   = fromHex("dc908dda0b9344a953629b733820778880f3ceb421bb61b91cbd4c3e66256ce4")
       val nonce = fromHex("8219e0036b7a0b37")
-      val out = new Array[Byte](outputBytes)
+      val out   = new Array[Byte](outputBytes)
       val expectedOut = "eea6a7251c1e72916d11c2cb214d3c252539121d8e234e652d651fa4c8cff880" +
         "309e645a74e9e0a60d8243acd9177ab51a1beb8d5a2f5d700c093c5e55855796"
       cryptoStream(out, out.length, nonce, 0, key)
@@ -92,25 +92,25 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
 
     it("first case") {
       val shared = fromHex("4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742")
-      val c = fromHex("657870616e642033322d62797465206b")
-      val key = new Array[Byte](keyBytes)
+      val c      = fromHex("657870616e642033322d62797465206b")
+      val key    = new Array[Byte](keyBytes)
       cryptoCore(key, new Array[Byte](inputBytes), shared, c)
       toHex(key) shouldBe "1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389"
     }
 
     it("second case") {
-      val firstKey = fromHex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389")
-      val nonce = fromHex("69696ee955b62b73cd62bda875fc73d6")
-      val c = fromHex("657870616e642033322d62797465206b")
+      val firstKey  = fromHex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389")
+      val nonce     = fromHex("69696ee955b62b73cd62bda875fc73d6")
+      val c         = fromHex("657870616e642033322d62797465206b")
       val secondKey = new Array[Byte](keyBytes)
       cryptoCore(secondKey, nonce, firstKey, c)
       toHex(secondKey) shouldBe "dc908dda0b9344a953629b733820778880f3ceb421bb61b91cbd4c3e66256ce4"
     }
 
     it("third case") {
-      val k = fromHex("ee304fca27008d8c126f90027901d80f7f1d8b8dc936cf3b9f819692827e5777")
-      val in = fromHex("81918ef2a5e0da9b3e9060521e4bb352")
-      val c = fromHex("657870616e642033322d62797465206b")
+      val k   = fromHex("ee304fca27008d8c126f90027901d80f7f1d8b8dc936cf3b9f819692827e5777")
+      val in  = fromHex("81918ef2a5e0da9b3e9060521e4bb352")
+      val c   = fromHex("657870616e642033322d62797465206b")
       val out = new Array[Byte](outputBytes)
       cryptoCore(out, in, k, c)
       toHex(out) shouldBe "bc1b30fc072cc14075e4baa731b5a845ea9b11e9a5191f94e18cba8fd821a7cd"
@@ -123,9 +123,9 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     import XSalsa20._
 
     it("first case") {
-      val key = fromHex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389")
+      val key   = fromHex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389")
       val nonce = fromHex("69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37")
-      val out = new Array[Byte](64)
+      val out   = new Array[Byte](64)
       val expectedOut = "eea6a7251c1e72916d11c2cb214d3c252539121d8e234e652d651fa4c8cff880" +
         "309e645a74e9e0a60d8243acd9177ab51a1beb8d5a2f5d700c093c5e55855796"
       cryptoStream(out, out.length, nonce, key)
@@ -133,22 +133,23 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     }
 
     it("second case") {
-      val key = fromHex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389")
+      val key   = fromHex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389")
       val nonce = fromHex("69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37")
-      val rs = new Array[Byte](32)
+      val rs    = new Array[Byte](32)
       cryptoStream(rs, rs.length, nonce, key)
       toHex(rs) shouldBe "eea6a7251c1e72916d11c2cb214d3c252539121d8e234e652d651fa4c8cff880"
     }
 
     it("third case") {
-      val key = fromHex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389")
+      val key   = fromHex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389")
       val nonce = fromHex("69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37")
-      val m = fromHex("0000000000000000000000000000000000000000000000000000000000000000" +
-        "be075fc53c81f2d5cf141316ebeb0c7b5228c52a4c62cbd44b66849b64244ffc" +
-        "e5ecbaaf33bd751a1ac728d45e6c61296cdc3c01233561f41db66cce314adb31" +
-        "0e3be8250c46f06dceea3a7fa1348057e2f6556ad6b1318a024a838f21af1fde" +
-        "048977eb48f59ffd4924ca1c60902e52f0a089bc76897040e082f93776384864" +
-        "5e0705")
+      val m = fromHex(
+        "0000000000000000000000000000000000000000000000000000000000000000" +
+          "be075fc53c81f2d5cf141316ebeb0c7b5228c52a4c62cbd44b66849b64244ffc" +
+          "e5ecbaaf33bd751a1ac728d45e6c61296cdc3c01233561f41db66cce314adb31" +
+          "0e3be8250c46f06dceea3a7fa1348057e2f6556ad6b1318a024a838f21af1fde" +
+          "048977eb48f59ffd4924ca1c60902e52f0a089bc76897040e082f93776384864" +
+          "5e0705")
       val expectedC = "8e993b9f48681273c29650ba32fc76ce48332ea7164d96a4476fb8c531a1186a" +
         "c0dfc17c98dce87b4da7f011ec48c97271d2c20f9b928fe2270d6fb863d51738" +
         "b48eeee314a7cc8ab932164548e526ae90224368517acfeabd6bb3732bc0e9da" +
@@ -168,11 +169,12 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     it("first case") {
       val rs = fromHex("eea6a7251c1e72916d11c2cb214d3c252539121d8e234e652d651fa4c8cff880")
 
-      val c = fromHex("8e993b9f48681273c29650ba32fc76ce48332ea7164d96a4476fb8c531a1186a" +
-        "c0dfc17c98dce87b4da7f011ec48c97271d2c20f9b928fe2270d6fb863d51738" +
-        "b48eeee314a7cc8ab932164548e526ae90224368517acfeabd6bb3732bc0e9da" +
-        "99832b61ca01b6de56244a9e88d5f9b37973f622a43d14a6599b1f654cb45a74" +
-        "e355a5")
+      val c = fromHex(
+        "8e993b9f48681273c29650ba32fc76ce48332ea7164d96a4476fb8c531a1186a" +
+          "c0dfc17c98dce87b4da7f011ec48c97271d2c20f9b928fe2270d6fb863d51738" +
+          "b48eeee314a7cc8ab932164548e526ae90224368517acfeabd6bb3732bc0e9da" +
+          "99832b61ca01b6de56244a9e88d5f9b37973f622a43d14a6599b1f654cb45a74" +
+          "e355a5")
 
       val mac = new Array[Byte](16)
       cryptoOneTimeAuth(mac, 0, c, 0, c.length, rs)
@@ -185,8 +187,8 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
 
     it("random 10000 cases") {
       val key = new Array[Byte](32)
-      val c = new Array[Byte](10000)
-      val a = new Array[Byte](16)
+      val c   = new Array[Byte](10000)
+      val a   = new Array[Byte](16)
 
       var length = 0
       while (length < 10000) {
@@ -237,25 +239,25 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
 
     it("third case") {
       val alicesk = fromHex("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a")
-      val bobpk = fromHex("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f")
-      val k = new Array[Byte](bytes)
+      val bobpk   = fromHex("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f")
+      val k       = new Array[Byte](bytes)
       cryptoScalarmult(k, alicesk, bobpk)
       toHex(k) shouldBe "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742"
     }
 
     it("fourth case") {
-      val bobsk = fromHex("5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b6fd1c2f8b27ff88e0eb")
+      val bobsk   = fromHex("5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b6fd1c2f8b27ff88e0eb")
       val alicepk = fromHex("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a")
-      val k = new Array[Byte](bytes)
+      val k       = new Array[Byte](bytes)
       cryptoScalarmult(k, bobsk, alicepk)
       toHex(k) shouldBe "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742"
     }
 
     it("fifth case") {
-      val p1 = fromHex("7220f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4eea")
-      val p2 = fromHex("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a")
-      val out1 = new Array[Byte](bytes)
-      val out2 = new Array[Byte](bytes)
+      val p1     = fromHex("7220f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4eea")
+      val p2     = fromHex("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a")
+      val out1   = new Array[Byte](bytes)
+      val out2   = new Array[Byte](bytes)
       val scalar = new Array[Byte](scalarBytes)
       scalar(0) = 1
 
@@ -301,14 +303,15 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     import XSalsa20Poly1305._
 
     it("first case") {
-      val key = fromHex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389")
+      val key   = fromHex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389")
       val nonce = fromHex("69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37")
-      val m = fromHex("0000000000000000000000000000000000000000000000000000000000000000" +
-        "be075fc53c81f2d5cf141316ebeb0c7b5228c52a4c62cbd44b66849b64244ffc" +
-        "e5ecbaaf33bd751a1ac728d45e6c61296cdc3c01233561f41db66cce314adb31" +
-        "0e3be8250c46f06dceea3a7fa1348057e2f6556ad6b1318a024a838f21af1fde" +
-        "048977eb48f59ffd4924ca1c60902e52f0a089bc76897040e082f93776384864" +
-        "5e0705")
+      val m = fromHex(
+        "0000000000000000000000000000000000000000000000000000000000000000" +
+          "be075fc53c81f2d5cf141316ebeb0c7b5228c52a4c62cbd44b66849b64244ffc" +
+          "e5ecbaaf33bd751a1ac728d45e6c61296cdc3c01233561f41db66cce314adb31" +
+          "0e3be8250c46f06dceea3a7fa1348057e2f6556ad6b1318a024a838f21af1fde" +
+          "048977eb48f59ffd4924ca1c60902e52f0a089bc76897040e082f93776384864" +
+          "5e0705")
       val expectedC = "f3ffc7703f9400e52a7dfb4b3d3305d98e993b9f48681273c29650ba32fc76ce" +
         "48332ea7164d96a4476fb8c531a1186ac0dfc17c98dce87b4da7f011ec48c972" +
         "71d2c20f9b928fe2270d6fb863d51738b48eeee314a7cc8ab932164548e526ae" +
@@ -320,14 +323,15 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     }
 
     it("second case") {
-      val key = fromHex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389")
+      val key   = fromHex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389")
       val nonce = fromHex("69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37")
-      val c = fromHex("00000000000000000000000000000000f3ffc7703f9400e52a7dfb4b3d3305d9" +
-        "8e993b9f48681273c29650ba32fc76ce48332ea7164d96a4476fb8c531a1186a" +
-        "c0dfc17c98dce87b4da7f011ec48c97271d2c20f9b928fe2270d6fb863d51738" +
-        "b48eeee314a7cc8ab932164548e526ae90224368517acfeabd6bb3732bc0e9da" +
-        "99832b61ca01b6de56244a9e88d5f9b37973f622a43d14a6599b1f654cb45a74" +
-        "e355a5")
+      val c = fromHex(
+        "00000000000000000000000000000000f3ffc7703f9400e52a7dfb4b3d3305d9" +
+          "8e993b9f48681273c29650ba32fc76ce48332ea7164d96a4476fb8c531a1186a" +
+          "c0dfc17c98dce87b4da7f011ec48c97271d2c20f9b928fe2270d6fb863d51738" +
+          "b48eeee314a7cc8ab932164548e526ae90224368517acfeabd6bb3732bc0e9da" +
+          "99832b61ca01b6de56244a9e88d5f9b37973f622a43d14a6599b1f654cb45a74" +
+          "e355a5")
       val expectedM = "be075fc53c81f2d5cf141316ebeb0c7b5228c52a4c62cbd44b66849b64244ffc" +
         "e5ecbaaf33bd751a1ac728d45e6c61296cdc3c01233561f41db66cce314adb31" +
         "0e3be8250c46f06dceea3a7fa1348057e2f6556ad6b1318a024a838f21af1fde" +
@@ -339,10 +343,10 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     }
 
     it("random 1000 cases") {
-      val k = new Array[Byte](keyBytes)
-      val n = new Array[Byte](nonceBytes)
-      val m = new Array[Byte](10000)
-      val c = new Array[Byte](10000)
+      val k  = new Array[Byte](keyBytes)
+      val n  = new Array[Byte](nonceBytes)
+      val m  = new Array[Byte](10000)
+      val c  = new Array[Byte](10000)
       val m2 = new Array[Byte](10000)
 
       var length = 0
@@ -376,15 +380,16 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     import Curve25519XSalsa20Poly1305._
 
     it("first case") {
-      val sk = fromHex("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a")
-      val pk = fromHex("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f")
+      val sk    = fromHex("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a")
+      val pk    = fromHex("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f")
       val nonce = fromHex("69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37")
-      val m = fromHex("0000000000000000000000000000000000000000000000000000000000000000" +
-        "be075fc53c81f2d5cf141316ebeb0c7b5228c52a4c62cbd44b66849b64244ffc" +
-        "e5ecbaaf33bd751a1ac728d45e6c61296cdc3c01233561f41db66cce314adb31" +
-        "0e3be8250c46f06dceea3a7fa1348057e2f6556ad6b1318a024a838f21af1fde" +
-        "048977eb48f59ffd4924ca1c60902e52f0a089bc76897040e082f93776384864" +
-        "5e0705")
+      val m = fromHex(
+        "0000000000000000000000000000000000000000000000000000000000000000" +
+          "be075fc53c81f2d5cf141316ebeb0c7b5228c52a4c62cbd44b66849b64244ffc" +
+          "e5ecbaaf33bd751a1ac728d45e6c61296cdc3c01233561f41db66cce314adb31" +
+          "0e3be8250c46f06dceea3a7fa1348057e2f6556ad6b1318a024a838f21af1fde" +
+          "048977eb48f59ffd4924ca1c60902e52f0a089bc76897040e082f93776384864" +
+          "5e0705")
       val expectedC = "f3ffc7703f9400e52a7dfb4b3d3305d98e993b9f48681273c29650ba32fc76ce" +
         "48332ea7164d96a4476fb8c531a1186ac0dfc17c98dce87b4da7f011ec48c972" +
         "71d2c20f9b928fe2270d6fb863d51738b48eeee314a7cc8ab932164548e526ae" +
@@ -397,15 +402,16 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     }
 
     it("second case") {
-      val sk = fromHex("5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b6fd1c2f8b27ff88e0eb")
-      val pk = fromHex("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a")
+      val sk    = fromHex("5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b6fd1c2f8b27ff88e0eb")
+      val pk    = fromHex("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a")
       val nonce = fromHex("69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37")
-      val c = fromHex("00000000000000000000000000000000f3ffc7703f9400e52a7dfb4b3d3305d9" +
-        "8e993b9f48681273c29650ba32fc76ce48332ea7164d96a4476fb8c531a1186a" +
-        "c0dfc17c98dce87b4da7f011ec48c97271d2c20f9b928fe2270d6fb863d51738" +
-        "b48eeee314a7cc8ab932164548e526ae90224368517acfeabd6bb3732bc0e9da" +
-        "99832b61ca01b6de56244a9e88d5f9b37973f622a43d14a6599b1f654cb45a74" +
-        "e355a5")
+      val c = fromHex(
+        "00000000000000000000000000000000f3ffc7703f9400e52a7dfb4b3d3305d9" +
+          "8e993b9f48681273c29650ba32fc76ce48332ea7164d96a4476fb8c531a1186a" +
+          "c0dfc17c98dce87b4da7f011ec48c97271d2c20f9b928fe2270d6fb863d51738" +
+          "b48eeee314a7cc8ab932164548e526ae90224368517acfeabd6bb3732bc0e9da" +
+          "99832b61ca01b6de56244a9e88d5f9b37973f622a43d14a6599b1f654cb45a74" +
+          "e355a5")
       val expectedM = "be075fc53c81f2d5cf141316ebeb0c7b5228c52a4c62cbd44b66849b64244ffc" +
         "e5ecbaaf33bd751a1ac728d45e6c61296cdc3c01233561f41db66cce314adb31" +
         "0e3be8250c46f06dceea3a7fa1348057e2f6556ad6b1318a024a838f21af1fde" +
@@ -420,12 +426,12 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     it("random 1000 cases") {
       val alicesk = new Array[Byte](secretKeyBytes)
       val alicepk = new Array[Byte](publicKeyBytes)
-      val bobsk = new Array[Byte](secretKeyBytes)
-      val bobpk = new Array[Byte](publicKeyBytes)
-      val n = new Array[Byte](nonceBytes)
-      val m = new Array[Byte](10000)
-      val c = new Array[Byte](10000)
-      val m2 = new Array[Byte](10000)
+      val bobsk   = new Array[Byte](secretKeyBytes)
+      val bobpk   = new Array[Byte](publicKeyBytes)
+      val n       = new Array[Byte](nonceBytes)
+      val m       = new Array[Byte](10000)
+      val c       = new Array[Byte](10000)
+      val m2      = new Array[Byte](10000)
 
       var length = 0
       while (length < 1000) {
@@ -484,11 +490,11 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
       val out = new Array[Byte](1024 + bytes)
 
       for (line <- Source.fromFile("src/test/data/sign_data").getLines()) {
-        val data = line.split(',')
-        val sk = fromHex(data(0))
-        val pk = fromHex(data(1))
+        val data      = line.split(',')
+        val sk        = fromHex(data(0))
+        val pk        = fromHex(data(1))
         val signature = data(2)
-        val msg = if (data.length == 3) Array.empty[Byte] else fromHex(data(3))
+        val msg       = if (data.length == 3) Array.empty[Byte] else fromHex(data(3))
 
         cryptoSign(out, msg, msg.length, sk ++ pk)
         toHex(out.take(bytes)) shouldBe signature
@@ -499,8 +505,8 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     }
 
     it("generate signing key pair") {
-      val pk = new Array[Byte](publicKeyBytes)
-      val sk = new Array[Byte](secretKeyBytes)
+      val pk   = new Array[Byte](publicKeyBytes)
+      val sk   = new Array[Byte](secretKeyBytes)
       val seed = "421151a459faeade3d247115f94aedae42318124095afabe4d1451a559faedee"
       cryptoSignSeedKeyPair(pk, sk, fromHex(seed))
       toHex(pk) shouldBe "b5076a8474a832daee4dd5b4040983b6623b5f344aca57d4d6ee4baf3f259e6e"
@@ -514,10 +520,10 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     it("check box") {
       forAll { message: String =>
         val aliceKeys = KeyPair()
-        val bobKeys = KeyPair()
+        val bobKeys   = KeyPair()
 
-        val aliceBox = Box(bobKeys.publicKey, aliceKeys.privateKey)
-        val nonce = Box.randomNonce()
+        val aliceBox  = Box(bobKeys.publicKey, aliceKeys.privateKey)
+        val nonce     = Box.randomNonce()
         val encrypted = aliceBox.encrypt(nonce, message.asBytes)
 
         val bobBox = Box(aliceKeys.publicKey, bobKeys.privateKey)
@@ -528,9 +534,9 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
     it("check secret box") {
       forAll { message: String =>
         val myBox = SecretBox.withRandomKey()
-        val key = myBox.key
+        val key   = myBox.key
 
-        val nonce = SecretBox.randomNonce()
+        val nonce     = SecretBox.randomNonce()
         val encrypted = myBox.encrypt(nonce, message.asBytes)
 
         val friendBox = SecretBox(key)
@@ -540,8 +546,8 @@ class NaClSpec extends FunSpec with Matchers with GeneratorDrivenPropertyChecks 
 
     it("check signing key pair") {
       forAll { message: String =>
-        val keys = SigningKeyPair()
-        val msg = message.asBytes
+        val keys      = SigningKeyPair()
+        val msg       = message.asBytes
         val signature = SigningKey(keys.privateKey).sign(msg)
         noException shouldBe thrownBy {
           VerifyKey(keys.publicKey).verify(msg, signature)

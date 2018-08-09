@@ -140,13 +140,6 @@ trait Caches extends Blockchain {
         leaseBalances += addressId(address) -> newPortfolio.lease
       }
 
-      if (portfolioDiff.assets.nonEmpty) {
-        val newAssetBalances = for { (k, v) <- portfolioDiff.assets if v != 0 } yield k -> newPortfolio.assets(k)
-        if (newAssetBalances.nonEmpty) {
-          assetBalances += addressId(address) -> newAssetBalances
-        }
-      }
-
       newPortfolios += address -> newPortfolio
     }
 

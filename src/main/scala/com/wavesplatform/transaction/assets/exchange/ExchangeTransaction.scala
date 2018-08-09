@@ -25,7 +25,6 @@ case class ExchangeTransaction private (buyOrder: Order,
     with FastHashId {
 
   override val builder: ExchangeTransaction.type = ExchangeTransaction
-  override val assetFee: (Option[AssetId], Long) = (None, fee)
 
   @ApiModelProperty(hidden = true)
   override val sender: PublicKeyAccount = buyOrder.matcherPublicKey

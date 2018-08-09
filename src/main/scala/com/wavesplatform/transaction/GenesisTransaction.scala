@@ -14,9 +14,9 @@ case class GenesisTransaction private (recipient: Address, amount: Long, timesta
 
   import GenesisTransaction._
 
-  override val builder: TransactionParser        = GenesisTransaction
-  override val assetFee: (Option[AssetId], Long) = (None, 0)
-  override val id: Coeval[AssetId]               = Coeval.evalOnce(signature)
+  override val builder: TransactionParser = GenesisTransaction
+  override val fee                        = 0
+  override val id: Coeval[AssetId]        = Coeval.evalOnce(signature)
 
   override val json: Coeval[JsObject] = Coeval.evalOnce(
     Json.obj(

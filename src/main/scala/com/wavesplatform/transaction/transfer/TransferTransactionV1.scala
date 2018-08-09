@@ -10,12 +10,10 @@ import scorex.crypto.signatures.Curve25519._
 
 import scala.util.{Failure, Success, Try}
 
-case class TransferTransactionV1 private (assetId: Option[AssetId],
-                                          sender: PublicKeyAccount,
+case class TransferTransactionV1 private (sender: PublicKeyAccount,
                                           recipient: AddressOrAlias,
                                           amount: Long,
                                           timestamp: Long,
-                                          feeAssetId: Option[AssetId],
                                           fee: Long,
                                           attachment: Array[Byte],
                                           signature: ByteStr)
@@ -41,55 +39,41 @@ object TransferTransactionV1 extends TransactionParserFor[TransferTransactionV1]
 
       (for {
         parsed <- TransferTransaction.parseBase(bytes, SignatureLength + 1)
-        (sender, assetIdOpt, feeAssetIdOpt, timestamp, amount, feeAmount, recipient, attachment, _) = parsed
-        tt <- TransferTransactionV1.create(assetIdOpt.map(ByteStr(_)),
-                                           sender,
-                                           recipient,
-                                           amount,
-                                           timestamp,
-                                           feeAssetIdOpt.map(ByteStr(_)),
-                                           feeAmount,
-                                           attachment,
-                                           signature)
+        (sender, timestamp, amount, feeAmount, recipient, attachment, _) = parsed
+        tt <- TransferTransactionV1.create(sender, recipient, amount, timestamp, feeAmount, attachment, signature)
       } yield tt).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
-  def create(assetId: Option[AssetId],
-             sender: PublicKeyAccount,
+  def create(sender: PublicKeyAccount,
              recipient: AddressOrAlias,
              amount: Long,
              timestamp: Long,
-             feeAssetId: Option[AssetId],
              feeAmount: Long,
              attachment: Array[Byte],
              signature: ByteStr): Either[ValidationError, TransactionT] = {
     TransferTransaction
       .validate(amount, feeAmount, attachment)
-      .map(_ => TransferTransactionV1(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, attachment, signature))
+      .map(_ => TransferTransactionV1(sender, recipient, amount, timestamp, feeAmount, attachment, signature))
   }
 
-  def signed(assetId: Option[AssetId],
-             sender: PublicKeyAccount,
+  def signed(sender: PublicKeyAccount,
              recipient: AddressOrAlias,
              amount: Long,
              timestamp: Long,
-             feeAssetId: Option[AssetId],
              feeAmount: Long,
              attachment: Array[Byte],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    create(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, attachment, ByteStr.empty).right.map { unsigned =>
+    create(sender, recipient, amount, timestamp, feeAmount, attachment, ByteStr.empty).right.map { unsigned =>
       unsigned.copy(signature = ByteStr(crypto.sign(signer, unsigned.bodyBytes())))
     }
   }
 
-  def selfSigned(assetId: Option[AssetId],
-                 sender: PrivateKeyAccount,
+  def selfSigned(sender: PrivateKeyAccount,
                  recipient: AddressOrAlias,
                  amount: Long,
                  timestamp: Long,
-                 feeAssetId: Option[AssetId],
                  feeAmount: Long,
                  attachment: Array[Byte]): Either[ValidationError, TransactionT] = {
-    signed(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, attachment, sender)
+    signed(sender, recipient, amount, timestamp, feeAmount, attachment, sender)
   }
 }
