@@ -63,7 +63,7 @@ class OracleDataTest extends PropSpec with PropertyChecks with Matchers with Tra
 
     } yield (genesis, genesis2, createAlias, setScript, dataTransaction, transferFromScripted)
 
-  property("simple oracle value required to transfer") {
+  ignore("simple oracle value required to transfer") {
     forAll(preconditions) {
       case (genesis, genesis2, createAlias, setScript, dataTransaction, transferFromScripted) =>
         assertDiffAndState(Seq(TestBlock.create(Seq(genesis, genesis2, createAlias, setScript, dataTransaction))),
