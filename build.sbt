@@ -268,8 +268,6 @@ lazy val node = project
   .dependsOn(langJVM)
   .dependsOn(nacl4s)
 
-lazy val discovery = project
-
 lazy val it = project
   .dependsOn(node)
 
