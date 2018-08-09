@@ -13,7 +13,6 @@ import com.wavesplatform.block.Block
 import com.wavesplatform.consensus.nxt.NxtLikeConsensusBlockData
 import com.wavesplatform.transaction.GenesisTransaction
 import com.wavesplatform.wallet.Wallet
-import scorex.crypto.signatures.Curve25519._
 import scala.concurrent.duration._
 
 object GenesisBlockGenerator extends App {
@@ -30,8 +29,8 @@ object GenesisBlockGenerator extends App {
     private val distributionsSum = distributions.values.sum
 
     require(
-      distributionsSum <= initialBalance,
-      s"The sum of all balances should be <= $initialBalance, but it is $distributionsSum"
+      distributionsSum == initialBalance,
+      s"The sum of all balances should be == $initialBalance, but it is $distributionsSum"
     )
 
     val networkByte: Byte = networkType.head.toByte
@@ -85,7 +84,7 @@ object GenesisBlockGenerator extends App {
   }.toSeq
 
   val genesisBlock: Block = {
-    val reference     = ByteStr(Array.fill(SignatureLength)(-1: Byte))
+    val reference     = ByteStr(Array.fill(crypto.SignatureLength)(-1: Byte))
     val genesisSigner = PrivateKeyAccount(Array.empty)
 
     Block
