@@ -29,7 +29,7 @@ class CancelLeaseOverflowTest extends PropSpec with PropertyChecks with Matchers
         GenesisTransaction.create(sender2, amount + fee * 2, ts).explicitGet(),
         LeaseTransactionV1.selfSigned(sender1, amount, fee, ts, sender2).explicitGet(),
         LeaseTransactionV1.selfSigned(sender2, amount, fee, ts, recipient).explicitGet(),
-        TransferTransactionV1.selfSigned(None, sender2, recipient, amount, ts, None, fee, Array.emptyByteArray).explicitGet()
+        TransferTransactionV1.selfSigned(sender2, recipient, amount, ts, fee, Array.emptyByteArray).explicitGet()
       )
 
     forAll(leaseOverflowGen) {

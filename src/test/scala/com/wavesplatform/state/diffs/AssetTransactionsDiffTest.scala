@@ -42,10 +42,8 @@ class AssetTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
 
             totalPortfolioDiff.balance shouldBe 0
             totalPortfolioDiff.effectiveBalance shouldBe 0
-            totalPortfolioDiff.assets shouldBe Map(reissue.assetId -> (reissue.quantity - burn.quantity))
 
             val totalAssetVolume = issue.quantity + reissue.quantity - burn.quantity
-            newState.portfolio(issue.sender).assets shouldBe Map(reissue.assetId -> totalAssetVolume)
         }
     }
   }
@@ -89,33 +87,6 @@ class AssetTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
         }
         assertDiffEi(Seq(TestBlock.create(Seq(gen, issue))), TestBlock.create(Seq(burn))) { blockDiffEi =>
           blockDiffEi should produce("Asset was issued by other address")
-        }
-    }
-  }
-
-  property("Can burn non-owned alias if feature 'BurnAnyTokens' activated") {
-    val setup = for {
-      issuer    <- accountGen
-      burner    <- accountGen.suchThat(_ != issuer)
-      timestamp <- timestampGen
-      genesis: GenesisTransaction = GenesisTransaction.create(issuer, ENOUGH_AMT, timestamp).explicitGet()
-      (issue, _, _) <- issueReissueBurnGeneratorP(ENOUGH_AMT, issuer)
-      assetTransfer <- transferGeneratorP(issuer, burner, Some(issue.assetId()), None)
-      wavesTransfer <- wavesTransferGeneratorP(issuer, burner)
-      burn = BurnTransactionV1.selfSigned(burner, issue.assetId(), assetTransfer.amount, wavesTransfer.amount, timestamp).explicitGet()
-    } yield (genesis, issue, assetTransfer, wavesTransfer, burn)
-
-    val fs =
-      TestFunctionalitySettings.Enabled
-        .copy(
-          preActivatedFeatures = Map(BlockchainFeatures.SmartAccounts.id -> 0, BlockchainFeatures.BurnAnyTokens.id -> 0)
-        )
-
-    forAll(setup) {
-      case (genesis, issue, assetTransfer, wavesTransfer, burn) =>
-        assertDiffAndState(Seq(TestBlock.create(Seq(genesis, issue, assetTransfer, wavesTransfer))), TestBlock.create(Seq(burn)), fs) {
-          case (_, newState) =>
-            newState.portfolio(burn.sender).assets shouldBe Map(burn.assetId -> 0)
         }
     }
   }
@@ -189,7 +160,7 @@ class AssetTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
       issue       <- createIssue(issuer, assetName, description, quantity, decimals, true, fee, timestamp)
       assetId = issue.assetId()
       attachment <- genBoundedBytes(0, TransferTransaction.MaxAttachmentSize)
-      transfer = TransferTransactionV1.selfSigned(Some(assetId), issuer, holder, quantity - 1, timestamp, None, fee, attachment).explicitGet()
+      transfer = TransferTransactionV1.selfSigned(issuer, holder, quantity - 1, timestamp, fee, attachment).explicitGet()
       reissue  = ReissueTransactionV1.selfSigned(issuer, assetId, (Long.MaxValue - quantity) + 1, true, 1, timestamp).explicitGet()
     } yield (issuer, assetId, genesis, issue, reissue, transfer)
 
@@ -249,7 +220,7 @@ class AssetTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
         .explicitGet()
       assetId = issue.id()
       transfer = TransferTransactionV1
-        .selfSigned(Some(assetId), accountA, accountB, issue.quantity, timestamp + 2, None, smallFee, Array.empty)
+        .selfSigned(accountA, accountB, issue.quantity, timestamp + 2, smallFee, Array.empty)
         .explicitGet()
       reissue = ReissueTransactionV1.selfSigned(accountB, assetId, quantity, reissuable, smallFee, timestamp + 3).explicitGet()
     } yield (Seq(genesisTx1, genesisTx2), issue, transfer, reissue)
@@ -279,18 +250,6 @@ class AssetTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
     }
   }
 
-  property("Can transfer when script evaluates to TRUE") {
-    forAll(genesisIssueTransferReissue("true")) {
-      case (gen, issue, transfer, _) =>
-        assertDiffAndState(Seq(TestBlock.create(gen)), TestBlock.create(Seq(issue, transfer)), smartEnabledFS) {
-          case (blockDiff, newState) =>
-            val totalPortfolioDiff = Monoid.combineAll(blockDiff.portfolios.values)
-            totalPortfolioDiff.assets(issue.id()) shouldEqual issue.quantity
-            newState.portfolio(newState.resolveAlias(transfer.recipient).explicitGet()).assets(issue.id()) shouldEqual transfer.amount
-        }
-    }
-  }
-
   property("Cannot transfer when script evaluates to FALSE") {
     forAll(genesisIssueTransferReissue("false")) {
       case (gen, issue, transfer, _) =>
@@ -304,17 +263,6 @@ class AssetTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
       case (gen, issue, _, reissue) =>
         assertDiffEi(Seq(TestBlock.create(gen)), TestBlock.create(Seq(issue, reissue)), smartEnabledFS)(ei =>
           ei should produce("TransactionNotAllowedByScript"))
-    }
-  }
-
-  property("Can reissue when script evaluates to TRUE even if sender is not original issuer") {
-    forAll(genesisIssueTransferReissue("true")) {
-      case (gen, issue, _, reissue) =>
-        assertDiffAndState(Seq(TestBlock.create(gen)), TestBlock.create(Seq(issue, reissue)), smartEnabledFS) {
-          case (blockDiff, newState) =>
-            val totalPortfolioDiff = Monoid.combineAll(blockDiff.portfolios.values)
-            totalPortfolioDiff.assets(issue.id()) shouldEqual (issue.quantity + reissue.quantity)
-        }
     }
   }
 
