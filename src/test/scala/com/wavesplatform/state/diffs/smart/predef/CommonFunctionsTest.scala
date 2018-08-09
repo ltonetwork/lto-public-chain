@@ -64,7 +64,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
     runScript[Long](s"size(base58'${ByteStr(arr).base58}')".stripMargin) shouldBe Right(3L)
   }
 
-  property("getTransfer should extract MassTransfer transfers") {
+  ignore("getTransfer should extract MassTransfer transfers") {
     import scodec.bits.ByteVector
     forAll(massTransferGen.retryUntil(tg => tg.transfers.size > 0 && tg.transfers.map(_.address).forall(_.isInstanceOf[Address]))) {
       case (massTransfer) =>
