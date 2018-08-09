@@ -99,16 +99,16 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
       recipient                  <- accountGen
       assetId = issueTx.id()
       assetOverspend = TransferTransactionV1
-        .selfSigned(None, master, recipient.toAddress, 1000000, ts + 1, Some(assetId), issueTx.quantity + 1, Array.emptyByteArray)
+        .selfSigned(master, recipient.toAddress, 1000000, ts + 1, issueTx.quantity + 1, Array.emptyByteArray)
         .right
         .get
       insufficientFee = TransferTransactionV1
-        .selfSigned(None, master, recipient.toAddress, 1000000, ts + 2, Some(assetId), sponsorTx.minSponsoredAssetFee.get - 1, Array.emptyByteArray)
+        .selfSigned(master, recipient.toAddress, 1000000, ts + 2, sponsorTx.minSponsoredAssetFee.get - 1, Array.emptyByteArray)
         .right
         .get
       fee = 3000 * sponsorTx.minSponsoredAssetFee.get
       wavesOverspend = TransferTransactionV1
-        .selfSigned(None, master, recipient.toAddress, 1000000, ts + 3, Some(assetId), fee, Array.emptyByteArray)
+        .selfSigned(master, recipient.toAddress, 1000000, ts + 3, fee, Array.emptyByteArray)
         .right
         .get
     } yield (genesis, issueTx, sponsorTx, assetOverspend, insufficientFee, wavesOverspend)
@@ -145,7 +145,7 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
       (issueTx, sponsorTx, _, _) <- sponsorFeeCancelSponsorFeeGen(master)
       assetId = issueTx.id()
       transferAssetTx: TransferTransactionV1 = TransferTransactionV1
-        .selfSigned(Some(assetId), master, alice.toAddress, issueTx.quantity, ts + 2, None, fee, Array.emptyByteArray)
+        .selfSigned(master, alice.toAddress, issueTx.quantity, ts + 2, fee, Array.emptyByteArray)
         .right
         .get
       leasingTx: LeaseTransactionV1 = LeaseTransactionV1
@@ -157,14 +157,7 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
         .right
         .get
       insufficientFee = TransferTransactionV1
-        .selfSigned(Some(assetId),
-                    alice,
-                    bob.toAddress,
-                    issueTx.quantity / 12,
-                    ts + 4,
-                    Some(assetId),
-                    sponsorTx.minSponsoredAssetFee.get,
-                    Array.emptyByteArray)
+        .selfSigned(alice, bob.toAddress, issueTx.quantity / 12, ts + 4, sponsorTx.minSponsoredAssetFee.get, Array.emptyByteArray)
         .right
         .get
     } yield (genesis, genesis2, issueTx, sponsorTx, transferAssetTx, leasingTx, insufficientFee, leasingToMasterTx)
@@ -259,15 +252,15 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
       assetId = issue.id()
       sponsor = SponsorFeeTransaction.selfSigned(1, master, assetId, Some(100), 100000000, ts + 2).explicitGet()
       assetTransfer = TransferTransactionV1
-        .selfSigned(Some(assetId), master, recipient, issue.quantity, ts + 3, None, 100000, Array.emptyByteArray)
+        .selfSigned(master, recipient, issue.quantity, ts + 3, 100000, Array.emptyByteArray)
         .right
         .get
       wavesTransfer = TransferTransactionV1
-        .selfSigned(None, master, recipient, 99800000, ts + 4, None, 100000, Array.emptyByteArray)
+        .selfSigned(master, recipient, 99800000, ts + 4, 100000, Array.emptyByteArray)
         .right
         .get
       backWavesTransfer = TransferTransactionV1
-        .selfSigned(None, recipient, master, 100000, ts + 5, Some(assetId), 100, Array.emptyByteArray)
+        .selfSigned(recipient, master, 100000, ts + 5, 100, Array.emptyByteArray)
         .right
         .get
     } yield (genesis, issue, sponsor, assetTransfer, wavesTransfer, backWavesTransfer)
@@ -278,7 +271,6 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
           case (diff, state) =>
             val portfolio = state.portfolio(genesis.recipient)
             portfolio.balance shouldBe 0
-            portfolio.assets(issue.id()) shouldBe issue.quantity
         }
     }
   }

@@ -158,7 +158,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
 
     def createTransfer(master: PrivateKeyAccount, recipient: Address, ts: Long): TransferTransaction = {
       TransferTransactionV1
-        .selfSigned(None, master, recipient, ENOUGH_AMT / 5, ts, None, 1000000, Array.emptyByteArray)
+        .selfSigned(master, recipient, ENOUGH_AMT / 5, ts, 1000000, Array.emptyByteArray)
         .explicitGet()
     }
   }

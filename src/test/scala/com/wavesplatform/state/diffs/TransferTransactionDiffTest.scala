@@ -40,10 +40,7 @@ class TransferTransactionDiffTest extends PropSpec with PropertyChecks with Matc
             val recipient: Address = transfer.recipient.asInstanceOf[Address]
             val recipientPortfolio = newState.portfolio(recipient)
             if (transfer.sender.toAddress != recipient) {
-              transfer.assetId match {
-                case Some(aid) => recipientPortfolio shouldBe Portfolio(0, LeaseBalance.empty, Map(aid -> transfer.amount))
-                case None      => recipientPortfolio shouldBe Portfolio(transfer.amount, LeaseBalance.empty, Map.empty)
-              }
+              recipientPortfolio shouldBe Portfolio(transfer.amount, LeaseBalance.empty)
             }
         }
     }

@@ -43,7 +43,6 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
             val totalPortfolioDiff: Portfolio = Monoid.combineAll(blockDiff.portfolios.values)
             totalPortfolioDiff.balance shouldBe 0
             totalPortfolioDiff.effectiveBalance shouldBe 0
-            totalPortfolioDiff.assets.values.toSet shouldBe Set(0L)
 
             blockDiff.portfolios(exchange.sender).balance shouldBe exchange.buyMatcherFee + exchange.sellMatcherFee - exchange.fee
         }
@@ -97,7 +96,6 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
               val totalPortfolioDiff: Portfolio = Monoid.combineAll(blockDiff.portfolios.values)
               totalPortfolioDiff.balance shouldBe 0
               totalPortfolioDiff.effectiveBalance shouldBe 0
-              totalPortfolioDiff.assets.values.toSet shouldBe Set(0L)
 
               blockDiff.portfolios(exchange.sender).balance shouldBe exchange.buyMatcherFee + exchange.sellMatcherFee - exchange.fee
           }

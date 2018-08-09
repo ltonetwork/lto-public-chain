@@ -59,12 +59,10 @@ class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with
 
   private val transferWavesTx = TransferTransactionV1
     .selfSigned(
-      assetId = None,
       sender = PrivateKeyAccount("sender".getBytes()),
       recipient = PrivateKeyAccount("recipient".getBytes()),
       amount = 1,
       timestamp = System.currentTimeMillis(),
-      feeAssetId = None,
       feeAmount = 100000,
       attachment = Array.emptyByteArray
     )
@@ -72,12 +70,10 @@ class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with
 
   private val transferAssetsTx = TransferTransactionV1
     .selfSigned(
-      assetId = Some(assetId),
       sender = PrivateKeyAccount("sender".getBytes()),
       recipient = PrivateKeyAccount("recipient".getBytes()),
       amount = 1,
       timestamp = System.currentTimeMillis(),
-      feeAssetId = None,
       feeAmount = 100000,
       attachment = Array.emptyByteArray
     )

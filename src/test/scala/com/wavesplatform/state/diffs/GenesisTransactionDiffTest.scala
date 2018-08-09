@@ -23,7 +23,6 @@ class GenesisTransactionDiffTest extends PropSpec with PropertyChecks with Match
         val totalPortfolioDiff: Portfolio = Monoid.combineAll(blockDiff.portfolios.values)
         totalPortfolioDiff.balance shouldBe gtxs.map(_.amount).sum
         totalPortfolioDiff.effectiveBalance shouldBe gtxs.map(_.amount).sum
-        totalPortfolioDiff.assets shouldBe Map.empty
 
         gtxs.foreach { gtx =>
           blockDiff.portfolios(gtx.recipient).balance shouldBe gtx.amount
