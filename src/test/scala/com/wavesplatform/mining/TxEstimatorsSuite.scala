@@ -35,22 +35,6 @@ class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with
 
         TxEstimators.scriptRunNumber(blockchain, transferAssetsTx) shouldBe 0
       }
-
-      "should count transactions working with smart tokens" in {
-        val blockchain = stub[Blockchain]
-        (blockchain.hasScript _).when(*).onCall((_: Address) => false).anyNumberOfTimes()
-        (blockchain.assetDescription _).when(*).onCall((_: ByteStr) => Some(assetDescription)).anyNumberOfTimes()
-
-        TxEstimators.scriptRunNumber(blockchain, transferAssetsTx) shouldBe 1
-      }
-    }
-
-    "both - should double count transactions working with smart tokens from samrt account" in {
-      val blockchain = stub[Blockchain]
-      (blockchain.hasScript _).when(*).onCall((_: Address) => true).anyNumberOfTimes()
-      (blockchain.assetDescription _).when(*).onCall((_: ByteStr) => Some(assetDescription)).anyNumberOfTimes()
-
-      TxEstimators.scriptRunNumber(blockchain, transferAssetsTx) shouldBe 2
     }
   }
 

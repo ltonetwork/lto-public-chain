@@ -24,15 +24,12 @@ object TransferTransactionDiff {
         .combine(
           Map(sender -> Portfolio(-tx.fee, LeaseBalance.empty))
         )
-    } yield (portfolios, blockTime > s.allowUnissuedAssetsUntil)
+    } yield portfolios
 
     isInvalidEi match {
       case Left(e) => Left(e)
-      case Right((portfolios, invalid)) =>
-        if (invalid)
-          Left(GenericError(s"Unissued assets are not allowed after allowUnissuedAssetsUntil=${s.allowUnissuedAssetsUntil}"))
-        else
-          Right(Diff(height, tx, portfolios))
+      case Right(portfolios) =>
+        Right(Diff(height, tx, portfolios))
     }
   }
 }

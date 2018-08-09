@@ -183,38 +183,6 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
         }
     }
 
-    "asset balances" in forAll(accountGen, positiveLongGen, positiveLongGen, accountGen) {
-      case (sender, initialBalance, assetAmount, recipient) =>
-        withDomain() { d =>
-          d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
-          val genesisBlockId = d.lastBlockId
-          val issueTransaction =
-            IssueTransactionV1.selfSigned(sender, "test".getBytes, Array.empty[Byte], assetAmount, 8, true, 1, nextTs).explicitGet()
-
-          d.appendBlock(
-            TestBlock.create(
-              nextTs,
-              genesisBlockId,
-              Seq(issueTransaction)
-            ))
-
-          val blockIdWithIssue = d.lastBlockId
-
-          d.appendBlock(
-            TestBlock.create(
-              nextTs,
-              d.lastBlockId,
-              Seq(
-                TransferTransactionV1
-                  .selfSigned(sender, recipient, assetAmount, nextTs, 1, Array.empty[Byte])
-                  .explicitGet())
-            ))
-
-          d.removeAfter(blockIdWithIssue)
-
-        }
-    }
-
     "asset quantity and reissuability" in forAll(accountGen, positiveLongGen, byteArrayGen(10), byteArrayGen(12)) {
       case (sender, initialBalance, name, description) =>
         withDomain() { d =>

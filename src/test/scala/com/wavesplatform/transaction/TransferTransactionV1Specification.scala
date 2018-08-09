@@ -44,8 +44,6 @@ class TransferTransactionV1Specification extends PropSpec with PropertyChecks wi
                         "signature": "eaV1i3hEiXyYQd6DQY7EnPg9XzpAvB9VA3bnpin2qJe4G36GZXaGnYKCgSf9xiQ61DcAwcBFzjSXh6FwCgazzFz",
                         "version": 1,
                         "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt",
-                        "assetId": null,
-                        "feeAssetId": null,
                         "feeAsset": null,
                         "amount": 1900000,
                         "attachment": "4t2Xazb2SX"

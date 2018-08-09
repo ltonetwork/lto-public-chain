@@ -12,22 +12,6 @@ import com.wavesplatform.transaction.{DataTransaction, Proofs}
 
 class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
 
-  property("extract should transaction transfer assetId if exists") {
-    forAll(transferV1Gen) {
-      case (transfer) =>
-        val result = runScript[ByteVector](
-          """
-            |match tx {
-            | case ttx : TransferTransaction  =>  extract(ttx.assetId)
-            | case other => throw
-            | }
-            |""".stripMargin,
-          transfer
-        )
-        result should produce("termination")
-    }
-  }
-
   property("Some/None/extract/isDefined") {
     val some3 = "if true then 3 else unit"
     val none  = "if false then 3 else unit"
