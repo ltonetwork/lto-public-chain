@@ -46,17 +46,11 @@ class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with 
               val totalAmount     = transfer.transfers.map(_.amount).sum
               val fees            = issue.fee + transfer.fee
               val senderPortfolio = newState.portfolio(transfer.sender)
-              transfer.assetId match {
-                case Some(aid) => senderPortfolio shouldBe Portfolio(ENOUGH_AMT - fees, LeaseBalance.empty, Map(aid -> (ENOUGH_AMT - totalAmount)))
-                case None      => senderPortfolio.balance shouldBe (ENOUGH_AMT - fees - totalAmount)
-              }
+              senderPortfolio.balance shouldBe (ENOUGH_AMT - fees - totalAmount)
               for (ParsedTransfer(recipient, amount) <- transfer.transfers) {
                 val recipientPortfolio = newState.portfolio(recipient.asInstanceOf[Address])
                 if (transfer.sender.toAddress != recipient) {
-                  transfer.assetId match {
-                    case Some(aid) => recipientPortfolio shouldBe Portfolio(0, LeaseBalance.empty, Map(aid -> amount))
-                    case None      => recipientPortfolio shouldBe Portfolio(amount, LeaseBalance.empty, Map.empty)
-                  }
+                  recipientPortfolio shouldBe Portfolio(amount, LeaseBalance.empty)
                 }
               }
           }

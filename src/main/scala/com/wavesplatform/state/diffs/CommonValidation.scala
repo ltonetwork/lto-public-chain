@@ -28,15 +28,10 @@ object CommonValidation {
                                                           blockTime: Long,
                                                           tx: T): Either[ValidationError, T] =
     if (blockTime >= settings.allowTemporaryNegativeUntil) {
-      def checkTransfer(sender: Address, assetId: Option[AssetId], amount: Long, feeAssetId: Option[AssetId], feeAmount: Long) = {
-        val amountDiff = assetId match {
-          case Some(aid) => Portfolio(0, LeaseBalance.empty)
-          case None      => Portfolio(-amount, LeaseBalance.empty)
-        }
-        val feeDiff = feeAssetId match {
-          case Some(aid) => Portfolio(0, LeaseBalance.empty)
-          case None      => Portfolio(-feeAmount, LeaseBalance.empty)
-        }
+      def checkTransfer(sender: Address, amount: Long, feeAmount: Long) = {
+        val amountDiff = Portfolio(-amount, LeaseBalance.empty)
+
+        val feeDiff = Portfolio(-feeAmount, LeaseBalance.empty)
 
         val spendings       = Monoid.combine(amountDiff, feeDiff)
         val oldWavesBalance = blockchain.portfolio(sender).balance
@@ -57,8 +52,8 @@ object CommonValidation {
             GenericError(
               "Attempt to pay unavailable funds: balance " +
                 s"${blockchain.portfolio(ptx.sender).balance} is less than ${ptx.amount + ptx.fee}"))
-        case ttx: TransferTransaction     => checkTransfer(ttx.sender, None, ttx.amount, None, ttx.fee)
-        case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.assetId, mtx.transfers.map(_.amount).sum, None, mtx.fee)
+        case ttx: TransferTransaction     => checkTransfer(ttx.sender, ttx.amount, ttx.fee)
+        case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.transfers.map(_.amount).sum, mtx.fee)
         case _                            => Right(tx)
       }
     } else Right(tx)

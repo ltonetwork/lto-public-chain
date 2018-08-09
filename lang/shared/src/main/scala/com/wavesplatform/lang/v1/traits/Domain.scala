@@ -70,7 +70,6 @@ object Tx {
   case class CreateAlias(p: Proven, alias: String)                                        extends Tx
   case class SetScript(p: Proven, script: Option[ByteVector])                             extends Tx
   case class MassTransfer(p: Proven,
-                          assetId: Option[ByteVector],
                           transferCount: Long,
                           totalAmount: Long,
                           transfers: IndexedSeq[TransferItem],

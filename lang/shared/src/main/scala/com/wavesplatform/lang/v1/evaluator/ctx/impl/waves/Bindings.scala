@@ -131,13 +131,12 @@ object Bindings {
             "alias" -> alias,
           ) ++ provenTxPart(p)
         )
-      case MassTransfer(p, assetId, transferCount, totalAmount, transfers, attachment) =>
+      case MassTransfer(p, transferCount, totalAmount, transfers, attachment) =>
         CaseObj(
           massTransferTransactionType.typeRef,
           Map(
             "transfers" -> transfers
               .map(bv => CaseObj(transfer.typeRef, Map(mapRecipient(bv.recipient), "amount" -> bv.amount))),
-            "assetId"       -> fromOption(assetId),
             "transferCount" -> transferCount,
             "totalAmount"   -> totalAmount,
             "attachment"    -> attachment

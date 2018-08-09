@@ -102,7 +102,6 @@ object TransactionFactory {
       transfers <- MassTransferTransaction.parseTransfersList(request.transfers)
       tx <- MassTransferTransaction.signed(
         request.version,
-        request.assetId.map(s => ByteStr.decodeBase58(s).get),
         sender,
         transfers,
         request.timestamp.getOrElse(time.getTimestamp()),
@@ -117,7 +116,6 @@ object TransactionFactory {
       transfers <- MassTransferTransaction.parseTransfersList(request.transfers)
       tx <- MassTransferTransaction.create(
         request.version,
-        request.assetId.map(s => ByteStr.decodeBase58(s).get),
         sender,
         transfers,
         0,
