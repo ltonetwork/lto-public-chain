@@ -6,12 +6,13 @@ import com.wavesplatform.it.api.SyncMatcherHttpApi._
 import com.wavesplatform.it.transactions.NodesFromDocker
 import com.wavesplatform.it.ReportingTestName
 import com.wavesplatform.it.api.LevelResponse
+import com.wavesplatform.it.sync.matcher.MatcherMassOrdersTestSuite.orderLimit
 import com.wavesplatform.state.ByteStr
 import com.wavesplatform.it.util._
 
 import scala.concurrent.duration._
 import org.scalatest.{BeforeAndAfterAll, CancelAfterFailure, FreeSpec, Matchers}
-import scorex.transaction.assets.exchange.{AssetPair, Order, OrderType}
+import com.wavesplatform.transaction.assets.exchange.{AssetPair, Order, OrderType}
 
 import scala.util.Random
 
@@ -22,8 +23,10 @@ class MatcherTestSuite extends FreeSpec with Matchers with BeforeAndAfterAll wit
   override protected def nodeConfigs: Seq[Config] = Configs
 
   private def matcherNode = nodes.head
-  private def aliceNode   = nodes(1)
-  private def bobNode     = nodes(2)
+
+  private def aliceNode = nodes(1)
+
+  private def bobNode = nodes(2)
 
   private val aliceSellAmount = 500
 
@@ -208,6 +211,15 @@ class MatcherTestSuite extends FreeSpec with Matchers with BeforeAndAfterAll wit
         updatedAliceBalance should be(aliceBalance - MatcherFee + 2.waves * 100)
       }
 
+      "market status" in {
+        val resp = matcherNode.marketStatus(aliceWavesPair)
+
+        resp.lastPrice shouldBe Some(2.waves * Order.PriceConstant)
+        resp.lastSide shouldBe Some("sell")
+        resp.bestBid shouldBe Some(2.waves * Order.PriceConstant)
+        resp.bestAsk shouldBe None
+      }
+
       "request order book for blacklisted pair" in {
         val f = matcherNode.matcherGetStatusCode(s"/matcher/orderbook/$ForbiddenAssetId/WAVES", 404)
         f.message shouldBe s"Invalid Asset ID: $ForbiddenAssetId"
@@ -285,7 +297,8 @@ class MatcherTestSuite extends FreeSpec with Matchers with BeforeAndAfterAll wit
     }
 
     "batch cancel" - {
-      def fileOrders(pair: AssetPair): Seq[String] = 0 to 5 map { _ =>
+      val ordersNum = 5
+      def fileOrders(n: Int, pair: AssetPair): Seq[String] = 0 until n map { _ =>
         val o = matcherNode.placeOrder(matcherNode.prepareOrder(aliceNode, pair, OrderType.BUY, 1.waves * Order.PriceConstant, 100))
         o.status should be("OrderAccepted")
         o.message.id
@@ -297,7 +310,7 @@ class MatcherTestSuite extends FreeSpec with Matchers with BeforeAndAfterAll wit
       val aliceWavesPair2 = AssetPair(ByteStr.decodeBase58(asset2).toOption, None)
 
       "canceling an order doesn't affect other orders for the same pair" in {
-        val orders                          = fileOrders(aliceWavesPair)
+        val orders                          = fileOrders(ordersNum, aliceWavesPair)
         val (orderToCancel, ordersToRetain) = (orders.head, orders.tail)
 
         val cancel = matcherNode.cancelOrder(aliceNode, aliceWavesPair, Some(orderToCancel))
@@ -309,15 +322,19 @@ class MatcherTestSuite extends FreeSpec with Matchers with BeforeAndAfterAll wit
       }
 
       "cancel orders by pair" in {
-        val ordersToCancel = fileOrders(aliceWavesPair)
-        val ordersToRetain = fileOrders(aliceWavesPair2)
+        val ordersToCancel = fileOrders(orderLimit + ordersNum, aliceWavesPair)
+        val ordersToRetain = fileOrders(ordersNum, aliceWavesPair2)
         val ts             = Some(System.currentTimeMillis)
 
         val cancel = matcherNode.cancelOrder(aliceNode, aliceWavesPair, None, ts)
         cancel.status should be("Cancelled")
 
-        ordersToCancel foreach { matcherNode.orderStatus(_, aliceWavesPair).status should be("Cancelled") }
-        ordersToRetain foreach { matcherNode.orderStatus(_, aliceWavesPair2).status should be("Accepted") }
+        ordersToCancel foreach {
+          matcherNode.orderStatus(_, aliceWavesPair).status should be("Cancelled")
+        }
+        ordersToRetain foreach {
+          matcherNode.orderStatus(_, aliceWavesPair2).status should be("Accepted")
+        }
 
         // signed timestamp is mandatory
         assertBadRequestAndMessage(matcherNode.cancelOrder(aliceNode, aliceWavesPair, None, None), "invalid signature")
@@ -327,15 +344,19 @@ class MatcherTestSuite extends FreeSpec with Matchers with BeforeAndAfterAll wit
       }
 
       "cancel all orders" in {
-        val orders1 = fileOrders(aliceWavesPair)
-        val orders2 = fileOrders(aliceWavesPair2)
+        val orders1 = fileOrders(orderLimit + ordersNum, aliceWavesPair)
+        val orders2 = fileOrders(orderLimit + ordersNum, aliceWavesPair2)
         val ts      = Some(System.currentTimeMillis)
 
         val cancel = matcherNode.cancelAllOrders(aliceNode, ts)
         cancel.status should be("Cancelled")
 
-        orders1 foreach { matcherNode.orderStatus(_, aliceWavesPair).status should be("Cancelled") }
-        orders2 foreach { matcherNode.orderStatus(_, aliceWavesPair2).status should be("Cancelled") }
+        orders1 foreach {
+          matcherNode.orderStatus(_, aliceWavesPair).status should be("Cancelled")
+        }
+        orders2 foreach {
+          matcherNode.orderStatus(_, aliceWavesPair2).status should be("Cancelled")
+        }
 
         // signed timestamp is mandatory
         assertBadRequestAndMessage(matcherNode.cancelAllOrders(aliceNode, None), "invalid signature")
@@ -356,6 +377,7 @@ object MatcherTestSuite {
   private val AssetQuantity    = 1000
   private val MatcherFee       = 300000
   private val TransactionFee   = 300000
+  private val orderLimit       = 20
 
   private val minerDisabled = parseString("waves.miner.enable = no")
   private val matcherConfig = parseString(s"""
@@ -366,6 +388,7 @@ object MatcherTestSuite {
        |  order-match-tx-fee = 300000
        |  blacklisted-assets = ["$ForbiddenAssetId"]
        |  balance-watching.enable = yes
+       |  rest-order-limit=$orderLimit
        |}""".stripMargin)
 
   private val Configs: Seq[Config] = (Default.last +: Random.shuffle(Default.init).take(3))

@@ -9,9 +9,9 @@ import com.wavesplatform.history.StorageFactory
 import com.wavesplatform.settings._
 import com.wavesplatform.state.{ByteStr, EitherExt2}
 import net.ceedubs.ficus.Ficus._
-import scorex.account.PublicKeyAccount
-import scorex.block.Block
-import scorex.utils.NTP
+import com.wavesplatform.account.PublicKeyAccount
+import com.wavesplatform.utils.NTP
+import com.wavesplatform.block.Block
 
 object BaseTargetChecker {
   def main(args: Array[String]): Unit = {
@@ -34,7 +34,7 @@ object BaseTargetChecker {
       case cfg if cfg.as[Boolean]("waves.miner.enable") =>
         val account   = PublicKeyAccount(cfg.as[ByteStr]("public-key").arr)
         val address   = account.toAddress
-        val balance   = bu.balance(address, None)
+        val balance   = bu.balance(address)
         val consensus = genesisBlock.consensusData
         val timeDelay = pos
           .getValidBlockDelay(bu.height, account.publicKey, consensus.baseTarget, balance)
