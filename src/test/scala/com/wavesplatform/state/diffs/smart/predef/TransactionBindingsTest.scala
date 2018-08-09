@@ -41,18 +41,12 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
            | case t : TransferTransaction  =>
            |   ${provenPart(t)}
            |   let amount = t.amount == ${t.amount}
-           |   let feeAssetId = if (${false})
-           |      then extract(t.feeAssetId) == base58'${ByteStr.empty.base58}'
-           |      else isDefined(t.feeAssetId) == false
-           |   let assetId = if (${false})
-           |      then extract(t.assetId) == base58'${ByteStr.empty.base58}'
-           |      else isDefined(t.assetId) == false
            |   let recipient = match (t.recipient) {
            |       case a: Address => a.bytes == base58'${t.recipient.cast[Address].map(_.bytes.base58).getOrElse("")}'
            |       case a: Alias => a.alias == ${Json.toJson(t.recipient.cast[Alias].map(_.name).getOrElse(""))}
            |      }
            |    let attachment = t.attachment == base58'${ByteStr(t.attachment).base58}'
-           |   $assertProvenPart && amount && feeAssetId && assetId && recipient && attachment
+           |   $assertProvenPart && amount && recipient && attachment
            | case other => throw
            | }
            |""".stripMargin,
@@ -294,14 +288,12 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
       val script = s"""
                       |match tx {
                       | case t : MassTransferTransaction =>
-                      |    let assetId = if (${false}) then extract(t.assetId) == base58'${ByteStr.empty.base58}'
-                      |      else isDefined(t.assetId) == false
                       |     let transferCount = t.transferCount == ${t.transfers.length}
                       |     let totalAmount = t.totalAmount == ${t.transfers.map(_.amount).sum}
                       |     let attachment = t.attachment == base58'${ByteStr(t.attachment).base58}'
                       |     ${Range(0, t.transfers.length).map(pg).mkString("\n")}
                       |   ${provenPart(t)}
-                      |   $resString && assetId && transferCount && totalAmount && attachment
+                      |   $resString && transferCount && totalAmount && attachment
                       | case other => throw
                       | }
                       |""".stripMargin
