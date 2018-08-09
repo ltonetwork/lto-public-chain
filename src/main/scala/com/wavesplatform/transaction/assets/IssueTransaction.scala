@@ -22,8 +22,7 @@ trait IssueTransaction extends ProvenTransaction with VersionedTransaction {
   def fee: Long
   def script: Option[Script]
 
-  final lazy val assetId                               = id
-  override final val assetFee: (Option[AssetId], Long) = (None, fee)
+  final lazy val assetId = id
 
   override val json = Coeval.evalOnce(
     jsonBase() ++ Json.obj(

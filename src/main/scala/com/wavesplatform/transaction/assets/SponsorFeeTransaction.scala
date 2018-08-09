@@ -41,8 +41,6 @@ case class SponsorFeeTransaction private (version: Byte,
       "minSponsoredAssetFee" -> minSponsoredAssetFee
     ))
 
-  override val assetFee: (Option[AssetId], Long) = (None, fee)
-
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(0: Byte, builder.typeId, version), bodyBytes(), proofs.bytes()))
 }
 

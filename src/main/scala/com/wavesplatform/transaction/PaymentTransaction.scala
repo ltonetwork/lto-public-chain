@@ -14,9 +14,8 @@ import scala.util.{Failure, Success, Try}
 
 case class PaymentTransaction private (sender: PublicKeyAccount, recipient: Address, amount: Long, fee: Long, timestamp: Long, signature: ByteStr)
     extends SignedTransaction {
-  override val builder: TransactionParser        = PaymentTransaction
-  override val assetFee: (Option[AssetId], Long) = (None, fee)
-  override val id: Coeval[AssetId]               = Coeval.evalOnce(signature)
+  override val builder: TransactionParser = PaymentTransaction
+  override val id: Coeval[AssetId]        = Coeval.evalOnce(signature)
 
   override val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase() ++ Json.obj("recipient" -> recipient.address, "amount" -> amount))
 

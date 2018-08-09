@@ -113,12 +113,10 @@ trait TransferSending extends ScorexLogging {
           createSignedTransferRequest(
             TransferTransactionV1
               .selfSigned(
-                assetId = None,
                 sender = PrivateKeyAccount.fromSeed(x.senderSeed).explicitGet(),
                 recipient = AddressOrAlias.fromString(x.targetAddress).explicitGet(),
                 amount = x.amount,
                 timestamp = start + i,
-                feeAssetId = None,
                 feeAmount = x.fee,
                 attachment = if (includeAttachment) {
                   Array.fill(TransferTransaction.MaxAttachmentSize)(ThreadLocalRandom.current().nextInt().toByte)
@@ -139,11 +137,9 @@ trait TransferSending extends ScorexLogging {
     import tx._
     SignedTransferV1Request(
       Base58.encode(tx.sender.publicKey),
-      assetId.map(_.base58),
       recipient.stringRepr,
       amount,
       fee,
-      feeAssetId.map(_.base58),
       timestamp,
       attachment.headOption.map(_ => Base58.encode(attachment)),
       signature.base58

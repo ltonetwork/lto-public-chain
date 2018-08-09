@@ -30,12 +30,10 @@ object TransactionFactory {
       signer       <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
       tx <- TransferTransactionV1.signed(
-        request.assetId.map(s => ByteStr.decodeBase58(s).get),
         sender,
         recipientAcc,
         request.amount,
         request.timestamp.getOrElse(time.getTimestamp()),
-        request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
         request.fee,
         request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray),
         signer
@@ -46,12 +44,10 @@ object TransactionFactory {
     for {
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
       tx <- TransferTransactionV1.create(
-        request.assetId.map(s => ByteStr.decodeBase58(s).get),
         sender,
         recipientAcc,
         request.amount,
         0,
-        request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
         request.fee,
         request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray),
         EmptySignature
@@ -68,12 +64,10 @@ object TransactionFactory {
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
       tx <- TransferTransactionV2.signed(
         request.version,
-        request.assetId.map(s => ByteStr.decodeBase58(s).get),
         sender,
         recipientAcc,
         request.amount,
         request.timestamp.getOrElse(time.getTimestamp()),
-        request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
         request.fee,
         request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray),
         signer
@@ -85,12 +79,10 @@ object TransactionFactory {
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
       tx <- TransferTransactionV2.create(
         request.version,
-        request.assetId.map(s => ByteStr.decodeBase58(s).get),
         sender,
         recipientAcc,
         request.amount,
         0,
-        request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
         request.fee,
         request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray),
         Proofs.empty

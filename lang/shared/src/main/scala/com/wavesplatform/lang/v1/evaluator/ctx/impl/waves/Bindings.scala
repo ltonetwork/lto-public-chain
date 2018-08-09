@@ -75,13 +75,11 @@ object Bindings {
         CaseObj(genesisTransactionType.typeRef, Map("amount" -> amount) ++ headerPart(h) + mapRecipient(recipient))
       case Tx.Payment(p, amount, recipient) =>
         CaseObj(paymentTransactionType.typeRef, Map("amount" -> amount) ++ provenTxPart(p) + mapRecipient(recipient))
-      case Tx.Transfer(p, feeAssetId, assetId, amount, recipient, attachment) =>
+      case Tx.Transfer(p, amount, recipient, attachment) =>
         CaseObj(
           transferTransactionType.typeRef,
           Map(
             "amount"     -> amount,
-            "feeAssetId" -> fromOption(feeAssetId),
-            "assetId"    -> fromOption(assetId),
             "attachment" -> attachment
           ) ++ provenTxPart(p) + mapRecipient(recipient)
         )

@@ -7,16 +7,14 @@ import com.wavesplatform.account.{AddressOrAlias, PublicKeyAccount}
 import com.wavesplatform.api.http.BroadcastRequest
 import com.wavesplatform.transaction.TransactionParsers.SignatureStringLength
 import com.wavesplatform.transaction.transfer._
-import com.wavesplatform.transaction.{AssetIdStringLength, ValidationError}
+import com.wavesplatform.transaction.ValidationError
 
 object SignedTransferV1Request {
   implicit val reads: Reads[SignedTransferV1Request] = (
     (JsPath \ "senderPublicKey").read[String] and
-      (JsPath \ "assetId").readNullable[String] and
       (JsPath \ "recipient").read[String] and
       (JsPath \ "amount").read[Long] and
       (JsPath \ "fee").read[Long] and
-      (JsPath \ "feeAssetId").read[String].map(Option.apply).orElse((JsPath \ "feeAsset").readNullable[String]) and
       (JsPath \ "timestamp").read[Long] and
       (JsPath \ "attachment").readNullable[String] and
       (JsPath \ "signature").read[String]
@@ -28,16 +26,12 @@ object SignedTransferV1Request {
 @ApiModel(value = "Signed Asset transfer transaction")
 case class SignedTransferV1Request(@ApiModelProperty(value = "Base58 encoded sender public key", required = true)
                                    senderPublicKey: String,
-                                   @ApiModelProperty(value = "Base58 encoded Asset ID")
-                                   assetId: Option[String],
                                    @ApiModelProperty(value = "Recipient address", required = true)
                                    recipient: String,
                                    @ApiModelProperty(required = true, example = "1000000")
                                    amount: Long,
                                    @ApiModelProperty(required = true)
                                    fee: Long,
-                                   @ApiModelProperty(value = "Fee asset ID")
-                                   feeAssetId: Option[String],
                                    @ApiModelProperty(required = true)
                                    timestamp: Long,
                                    @ApiModelProperty(value = "Base58 encoded attachment")
@@ -48,11 +42,9 @@ case class SignedTransferV1Request(@ApiModelProperty(value = "Base58 encoded sen
   def toTx: Either[ValidationError, TransferTransactionV1] =
     for {
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
-      _assetId    <- parseBase58ToOption(assetId.filter(_.length > 0), "invalid.assetId", AssetIdStringLength)
-      _feeAssetId <- parseBase58ToOption(feeAssetId.filter(_.length > 0), "invalid.feeAssetId", AssetIdStringLength)
       _signature  <- parseBase58(signature, "invalid.signature", SignatureStringLength)
       _attachment <- parseBase58(attachment.filter(_.length > 0), "invalid.attachment", TransferTransaction.MaxAttachmentStringSize)
       _account    <- AddressOrAlias.fromString(recipient)
-      t           <- TransferTransactionV1.create(_assetId, _sender, _account, amount, timestamp, _feeAssetId, fee, _attachment.arr, _signature)
+      t           <- TransferTransactionV1.create(_sender, _account, amount, timestamp, fee, _attachment.arr, _signature)
     } yield t
 }

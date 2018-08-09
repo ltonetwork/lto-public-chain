@@ -62,9 +62,8 @@ trait Blockchain {
   def accountData(acc: Address): AccountDataInfo
   def accountData(acc: Address, key: String): Option[DataEntry[_]]
 
-  def balance(address: Address, mayBeAssetId: Option[AssetId]): Long
+  def balance(address: Address): Long
 
-  def assetDistribution(assetId: ByteStr): Map[Address, Long]
   def wavesDistribution(height: Int): Map[Address, Long]
 
   // the following methods are used exclusively by patches

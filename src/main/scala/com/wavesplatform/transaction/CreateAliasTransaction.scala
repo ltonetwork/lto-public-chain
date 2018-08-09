@@ -14,8 +14,6 @@ trait CreateAliasTransaction extends ProvenTransaction with VersionedTransaction
   def fee: Long
   def timestamp: Long
 
-  override val assetFee: (Option[AssetId], Long) = (None, fee)
-
   override val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase() ++ Json.obj(
       "version"   -> version,

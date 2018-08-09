@@ -16,7 +16,7 @@ trait ProvenTransaction extends Transaction with Proven {
       "id"              -> id().base58,
       "sender"          -> sender.address,
       "senderPublicKey" -> Base58.encode(sender.publicKey),
-      "fee"             -> assetFee._2,
+      "fee"             -> fee,
       "timestamp"       -> timestamp
     ) ++ Json.obj(proofField)
 }

@@ -17,39 +17,14 @@ object TransferTransactionDiff {
 
     val isInvalidEi = for {
       recipient <- blockchain.resolveAlias(tx.recipient)
-      _ <- Either.cond((tx.feeAssetId >>= blockchain.assetDescription >>= (_.script)).isEmpty,
-                       (),
-                       GenericError("Smart assets can't participate in TransferTransactions as a fee"))
-      portfolios = (tx.assetId match {
-        case None =>
-          Map(sender -> Portfolio(-tx.amount, LeaseBalance.empty, Map.empty)).combine(
-            Map(recipient -> Portfolio(tx.amount, LeaseBalance.empty, Map.empty))
-          )
-        case Some(aid) =>
-          Map(sender -> Portfolio(0, LeaseBalance.empty, Map(aid -> -tx.amount))).combine(
-            Map(recipient -> Portfolio(0, LeaseBalance.empty, Map(aid -> tx.amount)))
-          )
-      }).combine(
-        tx.feeAssetId match {
-          case None => Map(sender -> Portfolio(-tx.fee, LeaseBalance.empty, Map.empty))
-          case Some(aid) =>
-            val senderPf = Map(sender -> Portfolio(0, LeaseBalance.empty, Map(aid -> -tx.fee)))
-            if (height >= Sponsorship.sponsoredFeesSwitchHeight(blockchain, s)) {
-              val sponsorPf = blockchain
-                .assetDescription(aid)
-                .collect {
-                  case desc if desc.sponsorship > 0 =>
-                    val feeInWaves = Sponsorship.toWaves(tx.fee, desc.sponsorship)
-                    Map(desc.issuer.toAddress -> Portfolio(-feeInWaves, LeaseBalance.empty, Map(aid -> tx.fee)))
-                }
-                .getOrElse(Map.empty)
-              senderPf.combine(sponsorPf)
-            } else senderPf
-        }
-      )
-      assetIssued    = tx.assetId.forall(blockchain.assetDescription(_).isDefined)
-      feeAssetIssued = tx.feeAssetId.forall(blockchain.assetDescription(_).isDefined)
-    } yield (portfolios, blockTime > s.allowUnissuedAssetsUntil && !(assetIssued && feeAssetIssued))
+      portfolios = Map(sender -> Portfolio(-tx.amount, LeaseBalance.empty))
+        .combine(
+          Map(recipient -> Portfolio(tx.amount, LeaseBalance.empty))
+        )
+        .combine(
+          Map(sender -> Portfolio(-tx.fee, LeaseBalance.empty))
+        )
+    } yield (portfolios, blockTime > s.allowUnissuedAssetsUntil)
 
     isInvalidEi match {
       case Left(e) => Left(e)

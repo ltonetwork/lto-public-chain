@@ -18,8 +18,8 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff]) extends
 
   override def portfolio(a: Address): Portfolio = inner.portfolio(a).combine(diff.portfolios.getOrElse(a, Portfolio.empty))
 
-  override def balance(address: Address, assetId: Option[AssetId]): Long =
-    inner.balance(address, assetId) + diff.portfolios.getOrElse(address, Portfolio.empty).balanceOf(assetId)
+  override def balance(address: Address): Long =
+    inner.balance(address) + diff.portfolios.getOrElse(address, Portfolio.empty).balance
 
   override def assetDescription(id: ByteStr): Option[AssetDescription] =
     inner.assetDescription(id) match {
@@ -113,7 +113,7 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff]) extends
   override def collectLposPortfolios[A](pf: PartialFunction[(Address, Portfolio), A]): Map[Address, A] = {
     val b = Map.newBuilder[Address, A]
     for ((a, p) <- diff.portfolios if p.lease != LeaseBalance.empty || p.balance != 0) {
-      pf.runWith(b += a -> _)(a -> portfolio(a).copy(assets = Map.empty))
+      pf.runWith(b += a -> _)(a -> portfolio(a).copy())
     }
 
     inner.collectLposPortfolios(pf) ++ b.result()
@@ -168,9 +168,6 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff]) extends
       (address, p) <- diff.portfolios
       if pred(p)
     } yield address -> f(address)
-
-  override def assetDistribution(assetId: ByteStr): Map[Address, Long] =
-    inner.assetDistribution(assetId) ++ changedBalances(_.assets.getOrElse(assetId, 0L) != 0, portfolio(_).assets.getOrElse(assetId, 0L))
 
   override def wavesDistribution(height: Int): Map[Address, Long] = {
     val innerDistribution = inner.wavesDistribution(height)

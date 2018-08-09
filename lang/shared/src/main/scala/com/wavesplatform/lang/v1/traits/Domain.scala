@@ -51,8 +51,6 @@ object Tx {
   case class Genesis(header: Header, amount: Long, recipient: Recipient) extends Tx
   case class Payment(p: Proven, amount: Long, recipient: Recipient)      extends Tx
   case class Transfer(p: Proven,
-                      feeAssetId: Option[ByteVector],
-                      assetId: Option[ByteVector],
                       amount: Long,
                       recipient: Recipient,
                       attachment: ByteVector)
