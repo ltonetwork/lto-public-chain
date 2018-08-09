@@ -82,7 +82,6 @@ object RealTransactionWrapper {
       case ms: MassTransferTransaction =>
         Tx.MassTransfer(
           proven(ms),
-          assetId = ms.assetId.map(a => ByteVector(a.arr)),
           transferCount = ms.transfers.length,
           totalAmount = ms.transfers.map(_.amount).sum,
           transfers = ms.transfers.map(r => com.wavesplatform.lang.v1.traits.TransferItem(r.address, r.amount)).toIndexedSeq,
