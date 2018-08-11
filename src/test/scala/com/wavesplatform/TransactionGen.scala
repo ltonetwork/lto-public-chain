@@ -163,18 +163,16 @@ trait TransactionGenBase extends ScriptGen {
   } yield (sender, amount, fee, timestamp, recipient)
 
   def createLease(sender: PrivateKeyAccount, amount: Long, fee: Long, timestamp: Long, recipient: AddressOrAlias) = {
-    val v1 = LeaseTransactionV1.selfSigned(sender, amount, fee, timestamp, recipient).explicitGet()
     val v2 = LeaseTransactionV2.selfSigned(LeaseTransactionV2.supportedVersions.head, sender, amount, fee, timestamp, recipient).explicitGet()
-    Gen.oneOf(v1, v2)
+    Gen.const(v2)
   }
 
   def createLeaseCancel(sender: PrivateKeyAccount, leaseId: ByteStr, cancelFee: Long, timestamp: Long) = {
-    val v1 = LeaseCancelTransactionV1.selfSigned(sender, leaseId, cancelFee, timestamp + 1).explicitGet()
     val v2 = LeaseCancelTransactionV2
       .selfSigned(LeaseTransactionV2.supportedVersions.head, AddressScheme.current.chainId, sender, leaseId, cancelFee, timestamp + 1)
       .right
       .get
-    Gen.oneOf(v1, v2)
+    Gen.const(v2)
   }
   val leaseAndCancelGen: Gen[(LeaseTransaction, LeaseCancelTransaction)] = for {
     (sender, amount, fee, timestamp, recipient) <- leaseParamGen
