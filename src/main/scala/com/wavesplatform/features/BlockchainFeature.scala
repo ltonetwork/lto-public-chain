@@ -18,10 +18,7 @@ object BlockchainFeatures {
     SmallerMinimalGeneratingBalance,
     NG,
     MassTransfer,
-    SmartAccounts,
     DataTransaction,
-    BurnAnyTokens,
-    FeeSponsorship,
     FairPoS
   ).map(f => f.id -> f).toMap
 

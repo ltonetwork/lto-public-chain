@@ -18,7 +18,6 @@ class WalletSpecification extends FunSuite with Matchers {
 
     w.privateKeyAccounts.size shouldBe walletSize
     w.privateKeyAccounts.map(_.address) shouldBe Seq(
-      List(
         "3N14vexKx7EpVy4iSBCyG3esoEggqSvZvn5",
         "3N2qbDFCL1R568R59X56SduiRGzj4C2ACmE",
         "3MuCs3n1eKQyzJuyBhP5gAr3AJKmNttB3DA",
@@ -29,7 +28,6 @@ class WalletSpecification extends FunSuite with Matchers {
         "3MvaWJxhPYXwskNqnQZqvW5eWNhVqr8Lrqi",
         "3MvSswYmUL83nrAZDgqC3yXaoTD4TxJycxz",
         "3N7vtzezG94RF59qgEPuu7GYS92x6rVdu3h"
-      )
     )
   }
 

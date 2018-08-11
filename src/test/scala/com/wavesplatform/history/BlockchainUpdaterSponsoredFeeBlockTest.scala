@@ -103,7 +103,7 @@ class BlockchainUpdaterSponsoredFeeBlockTest
 
   val SponsoredActivatedAt0WavesSettings: WavesSettings = settings.copy(blockchainSettings = SponsoredFeeActivatedAt0BlockchainSettings)
 
-  property("not enough waves to sponsor sponsored tx") {
+  ignore("not enough waves to sponsor sponsored tx") {
     scenario(sponsorPreconditions, SponsoredActivatedAt0WavesSettings) {
       case (domain, (genesis, masterToAlice, feeAsset, sponsor, aliceToBob, bobToMaster, bobToMaster2)) =>
         val (block0, microBlocks) = chainBaseAndMicro(randomSig, genesis, Seq(masterToAlice, feeAsset, sponsor).map(Seq(_)))

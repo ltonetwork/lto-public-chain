@@ -1,6 +1,7 @@
 package com.wavesplatform.settings
 
 import com.typesafe.config.Config
+import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.state.ByteStr
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
@@ -49,38 +50,47 @@ case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
 }
 
 object FunctionalitySettings {
+
+  val enabledFeatures = List(
+    BlockchainFeatures.SmallerMinimalGeneratingBalance,
+    BlockchainFeatures.NG,
+    BlockchainFeatures.MassTransfer,
+    BlockchainFeatures.DataTransaction,
+    BlockchainFeatures.FairPoS
+  ).map(_.id -> 0).toMap
+
   val MAINNET = apply(
     featureCheckBlocksPeriod = 5000,
     blocksForFeatureActivation = 4000,
-    allowTemporaryNegativeUntil = 1479168000000L,
-    requireSortedTransactionsAfter = 1479168000000L,
-    generationBalanceDepthFrom50To1000AfterHeight = 232000,
-    minimalGeneratingBalanceAfter = 1479168000000L,
-    allowTransactionsFromFutureUntil = 1479168000000L,
-    allowUnissuedAssetsUntil = 1479416400000L,
-    allowInvalidReissueInSameBlockUntilTimestamp = 1492768800000L,
-    allowMultipleLeaseCancelTransactionUntilTimestamp = 1492768800000L,
-    resetEffectiveBalancesAtHeight = 462000,
-    blockVersion3AfterHeight = 795000,
-    preActivatedFeatures = Map.empty,
-    doubleFeaturesPeriodsAfterHeight = 810000
+    allowTemporaryNegativeUntil = 0,
+    requireSortedTransactionsAfter = Long.MaxValue,
+    generationBalanceDepthFrom50To1000AfterHeight = 0,
+    minimalGeneratingBalanceAfter = 0,
+    allowTransactionsFromFutureUntil = 0,
+    allowUnissuedAssetsUntil = 0,
+    allowInvalidReissueInSameBlockUntilTimestamp = 0,
+    allowMultipleLeaseCancelTransactionUntilTimestamp = 0,
+    resetEffectiveBalancesAtHeight = -1,
+    blockVersion3AfterHeight = 0,
+    preActivatedFeatures = enabledFeatures,
+    doubleFeaturesPeriodsAfterHeight = -1
   )
 
   val TESTNET = apply(
     featureCheckBlocksPeriod = 3000,
-    blocksForFeatureActivation = 2700,
-    allowTemporaryNegativeUntil = 1477958400000L,
-    requireSortedTransactionsAfter = 1477958400000L,
+    blocksForFeatureActivation = 2000,
+    allowTemporaryNegativeUntil = 0,
+    requireSortedTransactionsAfter = Long.MaxValue,
     generationBalanceDepthFrom50To1000AfterHeight = 0,
     minimalGeneratingBalanceAfter = 0,
-    allowTransactionsFromFutureUntil = 1478100000000L,
-    allowUnissuedAssetsUntil = 1479416400000L,
-    allowInvalidReissueInSameBlockUntilTimestamp = 1492560000000L,
-    allowMultipleLeaseCancelTransactionUntilTimestamp = 1492560000000L,
-    resetEffectiveBalancesAtHeight = 51500,
-    blockVersion3AfterHeight = 161700,
-    preActivatedFeatures = Map.empty,
-    doubleFeaturesPeriodsAfterHeight = Int.MaxValue
+    allowTransactionsFromFutureUntil = 0,
+    allowUnissuedAssetsUntil = 0,
+    allowInvalidReissueInSameBlockUntilTimestamp = 0,
+    allowMultipleLeaseCancelTransactionUntilTimestamp = 0,
+    resetEffectiveBalancesAtHeight = -1,
+    blockVersion3AfterHeight = 0,
+    preActivatedFeatures = enabledFeatures,
+    doubleFeaturesPeriodsAfterHeight = -1
   )
 
   val configPath = "waves.blockchain.custom.functionality"
