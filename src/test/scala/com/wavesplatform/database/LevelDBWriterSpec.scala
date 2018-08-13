@@ -43,7 +43,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
     }
 
     "returns false if a script was set and then unset" in {
-      assume(BlockchainFeatures.implemented.contains(BlockchainFeatures.SmartAccounts.id))
+
       resetTest { (_, account) =>
         val writer = new LevelDBWriter(db, TestFunctionalitySettings.Stub)
         writer.hasScript(account) shouldBe false
@@ -52,7 +52,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
 
     "returns true" - {
       "if there is a script in db" in {
-        assume(BlockchainFeatures.implemented.contains(BlockchainFeatures.SmartAccounts.id))
+
         test { (_, account) =>
           val writer = new LevelDBWriter(db, TestFunctionalitySettings.Stub)
           writer.hasScript(account) shouldBe true
@@ -60,7 +60,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
       }
 
       "if there is a script in cache" in {
-        assume(BlockchainFeatures.implemented.contains(BlockchainFeatures.SmartAccounts.id))
+
         test { (defaultWriter, account) =>
           defaultWriter.hasScript(account) shouldBe true
         }

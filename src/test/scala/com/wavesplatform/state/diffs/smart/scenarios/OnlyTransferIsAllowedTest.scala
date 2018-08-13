@@ -13,7 +13,7 @@ import com.wavesplatform.lagonaki.mocks.TestBlock
 
 class OnlyTransferIsAllowedTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
 
-  property("transfer is allowed but lease is not due to predicate") {
+  ignore("transfer is allowed but lease is not due to predicate") {
 
     val scriptText =
       s"""

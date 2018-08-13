@@ -87,29 +87,27 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
     val settings = BlockchainSettings.fromConfig(config)
 
     settings.addressSchemeCharacter should be('T')
-    settings.functionalitySettings.allowTemporaryNegativeUntil should be(1477958400000L)
-    settings.functionalitySettings.requireSortedTransactionsAfter should be(1477958400000L)
+    settings.functionalitySettings.allowTemporaryNegativeUntil should be(0)
+    settings.functionalitySettings.requireSortedTransactionsAfter should be(Long.MaxValue)
     settings.functionalitySettings.generationBalanceDepthFrom50To1000AfterHeight should be(0)
     settings.functionalitySettings.minimalGeneratingBalanceAfter should be(0)
-    settings.functionalitySettings.allowTransactionsFromFutureUntil should be(1478100000000L)
-    settings.functionalitySettings.allowUnissuedAssetsUntil should be(1479416400000L)
-    settings.functionalitySettings.allowInvalidReissueInSameBlockUntilTimestamp should be(1492560000000L)
-    settings.functionalitySettings.allowMultipleLeaseCancelTransactionUntilTimestamp should be(1492560000000L)
-    settings.functionalitySettings.resetEffectiveBalancesAtHeight should be(51500)
-    settings.functionalitySettings.blockVersion3AfterHeight should be(161700)
-    settings.genesisSettings.blockTimestamp should be(1460678400000L)
-    settings.genesisSettings.timestamp should be(1478000000000L)
+    settings.functionalitySettings.allowTransactionsFromFutureUntil should be(0)
+    settings.functionalitySettings.allowUnissuedAssetsUntil should be(0)
+    settings.functionalitySettings.allowInvalidReissueInSameBlockUntilTimestamp should be(0)
+    settings.functionalitySettings.allowMultipleLeaseCancelTransactionUntilTimestamp should be(0)
+    settings.functionalitySettings.resetEffectiveBalancesAtHeight should be(-1)
+    settings.functionalitySettings.blockVersion3AfterHeight should be(0)
+    settings.genesisSettings.blockTimestamp should be(1533848511587L)
+    settings.genesisSettings.timestamp should be(1533848511587L)
     settings.genesisSettings.signature should be(
-      ByteStr.decodeBase58("5uqnLK3Z9eiot6FyYBfwUnbyid3abicQbAZjz38GQ1Q8XigQMxTK4C1zNkqS1SVw7FqSidbZKxWAKLVoEsp4nNqa").toOption)
+      ByteStr.decodeBase58("4vn1hKdNsw431aJ4iuVNtUJeS2Z8QoojagTTevSqfuD5GvGuWTKQ9zVVdjr5G5dffMg8XYWEa7GxV1KQ2SU5ZNUW").toOption)
     settings.genesisSettings.initialBalance should be(10000000000000000L)
 
     settings.genesisSettings.transactions should be(
       Seq(
-        GenesisTransactionSettings("3My3KZgFQ3CrVHgz6vGRt8687sH4oAA1qp8", 400000000000000L),
-        GenesisTransactionSettings("3NBVqYXrapgJP9atQccdBPAgJPwHDKkh6A8", 200000000000000L),
-        GenesisTransactionSettings("3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh", 200000000000000L),
-        GenesisTransactionSettings("3NCBMxgdghg4tUhEEffSXy11L6hUi6fcBpd", 200000000000000L),
-        GenesisTransactionSettings("3N18z4B8kyyQ96PhN5eyhCAbg4j49CgwZJx", 9000000000000000L)
+        GenesisTransactionSettings("3N5g7aNStjn8SBDPeyGoNR1CZLnCTmQkTN2", 1000000000000000L),
+        GenesisTransactionSettings("3N8cMFardfMUN5n45eneXEKAK4Hpi9Zfzpz", 6000000000000000L),
+        GenesisTransactionSettings("3N1WkBkDDWbgJVJxraEqkQ1aafwfwLabvLr", 3000000000000000L)
       ))
   }
 
@@ -123,16 +121,16 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
         |}""".stripMargin))
     val settings = BlockchainSettings.fromConfig(config)
 
-    settings.addressSchemeCharacter should be('L')
-    settings.functionalitySettings.allowTemporaryNegativeUntil should be(1479168000000L)
-    settings.functionalitySettings.requireSortedTransactionsAfter should be(1479168000000L)
-    settings.functionalitySettings.generationBalanceDepthFrom50To1000AfterHeight should be(232000L)
-    settings.functionalitySettings.minimalGeneratingBalanceAfter should be(1479168000000L)
-    settings.functionalitySettings.allowTransactionsFromFutureUntil should be(1479168000000L)
-    settings.functionalitySettings.allowUnissuedAssetsUntil should be(1479416400000L)
-    settings.functionalitySettings.allowInvalidReissueInSameBlockUntilTimestamp should be(1492768800000L)
-    settings.functionalitySettings.allowMultipleLeaseCancelTransactionUntilTimestamp should be(1492768800000L)
-    settings.functionalitySettings.resetEffectiveBalancesAtHeight should be(462000)
+    settings.functionalitySettings.allowTemporaryNegativeUntil should be(0)
+    settings.functionalitySettings.requireSortedTransactionsAfter should be(Long.MaxValue)
+    settings.functionalitySettings.generationBalanceDepthFrom50To1000AfterHeight should be(0)
+    settings.functionalitySettings.minimalGeneratingBalanceAfter should be(0)
+    settings.functionalitySettings.allowTransactionsFromFutureUntil should be(0)
+    settings.functionalitySettings.allowUnissuedAssetsUntil should be(0)
+    settings.functionalitySettings.allowInvalidReissueInSameBlockUntilTimestamp should be(0)
+    settings.functionalitySettings.allowMultipleLeaseCancelTransactionUntilTimestamp should be(0)
+    settings.functionalitySettings.resetEffectiveBalancesAtHeight should be(-1)
+    settings.functionalitySettings.blockVersion3AfterHeight should be(0)
     settings.genesisSettings.blockTimestamp should be(1460678400000L)
     settings.genesisSettings.timestamp should be(1465742577614L)
     settings.genesisSettings.signature should be(
