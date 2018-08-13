@@ -77,9 +77,9 @@ object MassTransferTransaction extends TransactionParserFor[MassTransferTransact
 
   override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
     Try {
-      val sender           = PublicKeyAccount(bytes.slice(0, KeyLength))
-      val (assetIdOpt, s0) = Deser.parseByteArrayOption(bytes, KeyLength, AssetIdLength)
-      val transferCount    = Shorts.fromByteArray(bytes.slice(s0, s0 + 2))
+      val sender        = PublicKeyAccount(bytes.slice(0, KeyLength))
+      val s0            = KeyLength
+      val transferCount = Shorts.fromByteArray(bytes.slice(s0, s0 + 2))
 
       def readTransfer(offset: Int): (Validation[ParsedTransfer], Int) = {
         AddressOrAlias.fromBytes(bytes, offset) match {

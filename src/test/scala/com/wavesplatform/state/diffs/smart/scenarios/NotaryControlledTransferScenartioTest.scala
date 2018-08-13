@@ -134,18 +134,4 @@ class NotaryControlledTransferScenartioTest extends PropSpec with PropertyChecks
     eval[Any](s"""addressFromString("$longAddress")""") shouldBe Right(())
   }
 
-  property("Scenario") {
-    forAll(preconditions) {
-      case (genesis, issue, kingDataTransaction, transferFromCompanyToA, notaryDataTransaction, accountBDataTransaction, transferFromAToB) =>
-        assertDiffAndState(smartEnabledFS) { append =>
-          append(genesis).explicitGet()
-          append(Seq(issue, kingDataTransaction, transferFromCompanyToA)).explicitGet()
-          append(Seq(transferFromAToB)) should produce("NotAllowedByScript")
-          append(Seq(notaryDataTransaction)).explicitGet()
-          append(Seq(transferFromAToB)) should produce("NotAllowedByScript") //recipient should accept tx
-          append(Seq(accountBDataTransaction)).explicitGet()
-          append(Seq(transferFromAToB)).explicitGet()
-        }
-    }
-  }
 }

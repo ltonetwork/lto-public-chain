@@ -81,7 +81,7 @@ class MassTransferTransactionSpecification extends PropSpec with PropertyChecks 
   property(testName = "JSON format validation") {
     val js = Json.parse("""{
                        "type": 11,
-                       "id": "H2AtqMUxGjxLff1qgynAh5VgMbmquiwhCmLQ5WiiWfBS",
+                       "id": "Dz3yJ9dKvm2A32HtWwDnUtFuJHURgfiPxNQpzP5HzNGU",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 200000,
@@ -89,7 +89,6 @@ class MassTransferTransactionSpecification extends PropSpec with PropertyChecks 
                        "proofs": [
                        "FXMNu3ecy5zBjn9b69VtpuYRwxjCbxdkZ3xZpLzB8ZeFDvcgTkmEDrD29wtGYRPtyLS3LPYrL2d5UM6TpFBMUGQ"],
                        "version": 1,
-                       "assetId": null,
                        "attachment": "59QuUcqP6p",
                        "transferCount": 2,
                        "totalAmount": 300000000,
