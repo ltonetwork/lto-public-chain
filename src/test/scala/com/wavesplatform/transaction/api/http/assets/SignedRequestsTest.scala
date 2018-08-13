@@ -48,13 +48,13 @@ class SignedRequestsTest extends FunSuite with Matchers {
         |{
         |"senderPublicKey":"D6HmGZqpXCyAqpz8mCAfWijYDWsPKncKe5v3jq1nTpf5",
         |"quantity":100000,"reissuable":true,
+        |"assetId":"",
         |"fee":100000,"timestamp":1234,
         |"reissuable":true,
         |"signature":"4YWbtkDA7PHH1MCxEUaP12pkNRPNqpJh8X7aagZzLyDNbzgopXJb7NHNNV8rjXcy2WsAKX1wzti7Bishu8u6hwtF"
         |}
       """.stripMargin
     val req = Json.parse(json).validate[SignedReissueV1Request].get
-    req.assetId shouldBe "Ha35nwsnmYxHRF8UmKG3S523BycBLZFU4FZnjXryKd4L"
     req.signature shouldBe "4YWbtkDA7PHH1MCxEUaP12pkNRPNqpJh8X7aagZzLyDNbzgopXJb7NHNNV8rjXcy2WsAKX1wzti7Bishu8u6hwtF"
     req.fee shouldBe 100000L
     req.quantity shouldBe 100000L
@@ -138,6 +138,7 @@ class SignedRequestsTest extends FunSuite with Matchers {
       """
         |{
         |"senderPublicKey":"D6HmGZqpXCyAqpz8mCAfWijYDWsPKncKe5v3jq1nTpf5",
+        |"assetId":"D6HmGZqpXCyAqpz8mCAfWijYDWsPKncKe5v3jq1nTpf5",
         |"quantity":10000,
         |"fee":100000000,"timestamp":1477302582842,
         |"signature":"H3F8gAsKYeJAPmxCagLaCHycqkr8KiYvzJ4dhophZs31Unmg3dLwVK5k1v1M2Z5zLuQySthpf3DeEyhL6cdpbqp"

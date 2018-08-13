@@ -6,13 +6,14 @@ import com.wavesplatform.settings.{Constants, TestFunctionalitySettings}
 import com.wavesplatform.state._
 import com.wavesplatform.utils.Base58
 import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatest.{Ignore, Matchers, PropSpec}
 import com.wavesplatform.lagonaki.mocks.TestBlock.{create => block}
 import com.wavesplatform.transaction.GenesisTransaction
 import com.wavesplatform.transaction.assets.{IssueTransactionV1, SponsorFeeTransaction}
 import com.wavesplatform.transaction.lease.LeaseTransactionV1
 import com.wavesplatform.transaction.transfer._
 
+@Ignore
 class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
   def settings(sponsorshipActivationHeight: Int) =

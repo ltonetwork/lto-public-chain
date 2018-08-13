@@ -73,23 +73,6 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
     }
   }
 
-  property("Transfer transaction with fee in asset") {
-    val feeCalculator = new FeeCalculator(mySettings, noScriptBlockchain)
-    val sender        = PrivateKeyAccount(Array.emptyByteArray)
-    val recipient     = Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet()
-    val tx1: TransferTransactionV1 = TransferTransactionV1
-      .selfSigned(sender, recipient, 1000000, 100000000, 12, Array.emptyByteArray)
-      .right
-      .get
-    val tx2: TransferTransactionV1 = TransferTransactionV1
-      .selfSigned(sender, recipient, 1000000, 100000000, 1, Array.emptyByteArray)
-      .right
-      .get
-
-    feeCalculator.enoughFee(tx1) shouldBe a[Right[_, _]]
-    feeCalculator.enoughFee(tx2) shouldBe a[Left[_, _]]
-  }
-
   property("Payment transaction ") {
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
     forAll(paymentGen) { tx: PaymentTransaction =>
