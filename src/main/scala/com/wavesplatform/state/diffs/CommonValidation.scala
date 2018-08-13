@@ -75,6 +75,8 @@ object CommonValidation {
         ValidationError.ActivationError(s"${tx.getClass.getSimpleName} transaction has not been activated yet")
       )
 
+    val disabled = Left(GenericError("tx type is disabled"))
+
     tx match {
       case _: BurnTransactionV1        => Right(tx)
       case _: PaymentTransaction       => Right(tx)
