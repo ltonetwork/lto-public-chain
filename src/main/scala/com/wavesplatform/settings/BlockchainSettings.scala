@@ -124,15 +124,31 @@ object GenesisSettings {
     60.seconds
   )
 
+//  val TESTNET = GenesisSettings(
+//    1533848511587L,
+//    1533848511587L,
+//    Constants.UnitsInWave * Constants.TotalWaves,
+//    ByteStr.decodeBase58("4vn1hKdNsw431aJ4iuVNtUJeS2Z8QoojagTTevSqfuD5GvGuWTKQ9zVVdjr5G5dffMg8XYWEa7GxV1KQ2SU5ZNUW").toOption,
+//    List(
+//      GenesisTransactionSettings("3N5g7aNStjn8SBDPeyGoNR1CZLnCTmQkTN2", (Constants.UnitsInWave * Constants.TotalWaves * 0.1).toLong),
+//      GenesisTransactionSettings("3N8cMFardfMUN5n45eneXEKAK4Hpi9Zfzpz", (Constants.UnitsInWave * Constants.TotalWaves * 0.6).toLong),
+//      GenesisTransactionSettings("3N1WkBkDDWbgJVJxraEqkQ1aafwfwLabvLr", (Constants.UnitsInWave * Constants.TotalWaves * 0.3).toLong),
+//    ),
+//    100,
+//    60.seconds
+//  )
+
   val TESTNET = GenesisSettings(
-    1533848511587L,
-    1533848511587L,
-    Constants.UnitsInWave * Constants.TotalWaves,
-    ByteStr.decodeBase58("4vn1hKdNsw431aJ4iuVNtUJeS2Z8QoojagTTevSqfuD5GvGuWTKQ9zVVdjr5G5dffMg8XYWEa7GxV1KQ2SU5ZNUW").toOption,
+    1534497076380L,
+    1534497076380L,
+    Constants.UnitsInLTO * Constants.TotalLTO,
+    ByteStr.decodeBase58("47pP5r1Kh159XmxcfG2eQVj6dKNhub3mvGgpJovcw7EcZyJswFLYyKGYNV21BGJ8pwkajA75ZLMWFBdv3BzMRMk").toOption,
     List(
-      GenesisTransactionSettings("3N5g7aNStjn8SBDPeyGoNR1CZLnCTmQkTN2", (Constants.UnitsInWave * Constants.TotalWaves * 0.1).toLong),
-      GenesisTransactionSettings("3N8cMFardfMUN5n45eneXEKAK4Hpi9Zfzpz", (Constants.UnitsInWave * Constants.TotalWaves * 0.6).toLong),
-      GenesisTransactionSettings("3N1WkBkDDWbgJVJxraEqkQ1aafwfwLabvLr", (Constants.UnitsInWave * Constants.TotalWaves * 0.3).toLong),
+      GenesisTransactionSettings("3N6mZMgGqYn9EVAR2Vbf637iej4fFipECq8", (Constants.UnitsInLTO * Constants.TotalLTO * 0.01).toLong),
+      GenesisTransactionSettings("3N51gbw5W3xvSkcAXtLnXc3SQh2m9e6TBcy", (Constants.UnitsInLTO * Constants.TotalLTO * 0.01).toLong),
+      GenesisTransactionSettings("3NAxYD4nFbYqHo8gz9Hsfj13s283xNYvGNi", (Constants.UnitsInLTO * Constants.TotalLTO * 0.9).toLong),
+      GenesisTransactionSettings("3Mv7ajrPLKewkBNqfxwRZoRwW6fziehp7dQ", (Constants.UnitsInLTO * Constants.TotalLTO * 0.01).toLong),
+      GenesisTransactionSettings("3NARPnCPG4egZbFUQENZ6VDojQqMCpGEG9i", Constants.UnitsInLTO * (Constants.TotalLTO * 0.07).round),
     ),
     100,
     60.seconds
