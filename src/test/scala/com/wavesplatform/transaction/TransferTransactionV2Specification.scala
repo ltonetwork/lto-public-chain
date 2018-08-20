@@ -31,8 +31,8 @@ class TransferTransactionV2Specification extends PropSpec with PropertyChecks wi
   property("VersionedTransferTransactionSpecification id doesn't depend on proof") {
     forAll(versionGen, accountGen, accountGen, proofsGen, proofsGen, bytes32gen) {
       case (version, acc1, acc2, proofs1, proofs2, attachment) =>
-        val tx1 = TransferTransactionV2.create(version, None, acc2, acc2.toAddress, 1, 1, None, 1, attachment, proofs1).explicitGet()
-        val tx2 = TransferTransactionV2.create(version, None, acc2, acc2.toAddress, 1, 1, None, 1, attachment, proofs2).explicitGet()
+        val tx1 = TransferTransactionV2.create(version, acc2, acc2.toAddress, 1, 1, 1, attachment, proofs1).explicitGet()
+        val tx2 = TransferTransactionV2.create(version, acc2, acc2.toAddress, 1, 1, 1, attachment, proofs2).explicitGet()
         tx1.id() shouldBe tx2.id()
     }
   }
@@ -44,8 +44,6 @@ class TransferTransactionV2Specification extends PropSpec with PropertyChecks wi
     first.amount shouldEqual second.amount
     first.recipient shouldEqual second.recipient
     first.version shouldEqual second.version
-    first.assetId shouldEqual second.assetId
-    first.feeAssetId shouldEqual second.feeAssetId
     first.proofs shouldEqual second.proofs
     first.bytes() shouldEqual second.bytes()
   }
@@ -53,7 +51,7 @@ class TransferTransactionV2Specification extends PropSpec with PropertyChecks wi
   property("JSON format validation") {
     val js = Json.parse("""{
                        "type": 4,
-                       "id": "5xPEPhDEmKv2sb6j1ddeFRyFdqFzXjmQZ8NqJ5UURkJX",
+                       "id": "2sYxwfjUWAcJuDThgdaMRk4z3vpmzs3qhhuNb6sBA8JX",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000000,
@@ -63,9 +61,6 @@ class TransferTransactionV2Specification extends PropSpec with PropertyChecks wi
                        ],
                        "version": 2,
                        "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt",
-                       "assetId": null,
-                       "feeAssetId": null,
-                       "feeAsset": null,
                        "amount": 100000000,
                        "attachment": "4t2Xazb2SX"}
     """)
@@ -73,12 +68,10 @@ class TransferTransactionV2Specification extends PropSpec with PropertyChecks wi
     val tx = TransferTransactionV2
       .create(
         2,
-        None,
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet(),
         100000000,
         1526641218066L,
-        None,
         100000000,
         Base58.decode("4t2Xazb2SX").get,
         Proofs(Seq(ByteStr.decodeBase58("4bfDaqBcnK3hT8ywFEFndxtS1DTSYfncUqd4s5Vyaa66PZHawtC73rDswUur6QZu5RpqM7L9NFgBHT1vhCoox4vi").get))

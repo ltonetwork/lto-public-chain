@@ -11,7 +11,7 @@ object DataTransactionDiff {
       Diff(
         height,
         tx,
-        portfolios = Map(sender  -> Portfolio(-tx.fee, LeaseBalance.empty, Map.empty)),
+        portfolios = Map(sender  -> Portfolio(-tx.fee, LeaseBalance.empty)),
         accountData = Map(sender -> AccountDataInfo(tx.data.map(item => item.key -> item).toMap))
       ))
   }

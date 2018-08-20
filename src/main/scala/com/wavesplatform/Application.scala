@@ -19,7 +19,6 @@ import com.wavesplatform.db.openDB
 import com.wavesplatform.features.api.ActivationApiRoute
 import com.wavesplatform.history.{CheckpointServiceImpl, StorageFactory}
 import com.wavesplatform.http.{DebugApiRoute, NodeApiRoute}
-import com.wavesplatform.matcher.Matcher
 import com.wavesplatform.metrics.Metrics
 import com.wavesplatform.mining.{Miner, MinerImpl}
 import com.wavesplatform.network.RxExtensionLoader.RxExtensionLoaderShutdownHook
@@ -28,7 +27,7 @@ import com.wavesplatform.settings._
 import com.wavesplatform.state.appender.{BlockAppender, CheckpointAppender, ExtensionAppender, MicroblockAppender}
 import com.wavesplatform.transaction._
 import com.wavesplatform.utils.{NTP, ScorexLogging, SystemInformationReporter, Time, forceStopApplication}
-import com.wavesplatform.utx.{MatcherUtxPool, UtxPool, UtxPoolImpl}
+import com.wavesplatform.utx.{UtxPool, UtxPoolImpl}
 import com.wavesplatform.wallet.Wallet
 import io.netty.channel.Channel
 import io.netty.channel.group.DefaultChannelGroup
@@ -76,7 +75,6 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
   private val historyRepliesScheduler         = fixedPool("history-replier", poolSize = 2, reporter = log.error("Error in History Replier", _))
   private val minerScheduler                  = fixedPool("miner-pool", poolSize = 2, reporter = log.error("Error in Miner", _))
 
-  private var matcher: Option[Matcher]                                         = None
   private var rxExtensionLoaderShutdown: Option[RxExtensionLoaderShutdownHook] = None
   private var maybeUtx: Option[UtxPool]                                        = None
   private var maybeNetwork: Option[NS]                                         = None
@@ -101,21 +99,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
     val innerUtxStorage =
       new UtxPoolImpl(time, blockchainUpdater, feeCalculator, settings.blockchainSettings.functionalitySettings, settings.utxSettings)
 
-    matcher = if (settings.matcherSettings.enable) {
-      val m = new Matcher(actorSystem,
-                          wallet,
-                          innerUtxStorage,
-                          allChannels,
-                          blockchainUpdater,
-                          settings.blockchainSettings,
-                          settings.restAPISettings,
-                          settings.matcherSettings)
-      m.runMatcher()
-      Some(m)
-    } else None
-
-    val utxStorage =
-      if (settings.matcherSettings.enable) new MatcherUtxPool(innerUtxStorage, settings.matcherSettings, actorSystem.eventStream) else innerUtxStorage
+    val utxStorage = innerUtxStorage
     maybeUtx = Some(utxStorage)
 
     val knownInvalidBlocks = new InvalidBlockStorageImpl(settings.synchronizationSettings.invalidBlocksStorage)
@@ -255,7 +239,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
           scoreStatsReporter,
           configRoot
         ),
-        ActivationApiRoute(settings.restAPISettings, settings.blockchainSettings.functionalitySettings, settings.featuresSettings, blockchainUpdater),
+        ActivationApiRoute(settings.restAPISettings, settings.blockchainSettings.functionalitySettings, settings.featuresSettings, blockchainUpdater)
       )
 
       val apiTypes = Seq(
@@ -302,8 +286,6 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
       for (addr <- settings.networkSettings.declaredAddress if settings.networkSettings.uPnPSettings.enable) {
         upnp.deletePort(addr.getPort)
       }
-
-      matcher.foreach(_.shutdownMatcher())
 
       log.debug("Closing peer database")
       peerDatabase.close()

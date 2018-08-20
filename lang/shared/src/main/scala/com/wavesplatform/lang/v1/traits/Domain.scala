@@ -51,8 +51,6 @@ object Tx {
   case class Genesis(header: Header, amount: Long, recipient: Recipient) extends Tx
   case class Payment(p: Proven, amount: Long, recipient: Recipient)      extends Tx
   case class Transfer(p: Proven,
-                      feeAssetId: Option[ByteVector],
-                      assetId: Option[ByteVector],
                       amount: Long,
                       recipient: Recipient,
                       attachment: ByteVector)
@@ -72,7 +70,6 @@ object Tx {
   case class CreateAlias(p: Proven, alias: String)                                        extends Tx
   case class SetScript(p: Proven, script: Option[ByteVector])                             extends Tx
   case class MassTransfer(p: Proven,
-                          assetId: Option[ByteVector],
                           transferCount: Long,
                           totalAmount: Long,
                           transfers: IndexedSeq[TransferItem],

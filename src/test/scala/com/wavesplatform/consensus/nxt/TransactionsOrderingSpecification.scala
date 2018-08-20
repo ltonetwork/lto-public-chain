@@ -15,12 +15,10 @@ class TransactionsOrderingSpecification extends PropSpec with Assertions with Ma
       .map(
         i =>
           TransferTransactionV1
-            .selfSigned(None,
-                        PrivateKeyAccount(Array.fill(32)(0)),
+            .selfSigned(PrivateKeyAccount(Array.fill(32)(0)),
                         Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
                         100000,
                         5,
-                        None,
                         125L,
                         Array(i.toByte))
             .right
@@ -29,46 +27,38 @@ class TransactionsOrderingSpecification extends PropSpec with Assertions with Ma
 
     val correctSeq = txsDifferentById ++ Seq(
       TransferTransactionV1
-        .selfSigned(None,
-                    PrivateKeyAccount(Array.fill(32)(0)),
+        .selfSigned(PrivateKeyAccount(Array.fill(32)(0)),
                     Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
                     100000,
                     1,
-                    None,
                     125L,
                     Array.empty)
         .right
         .get,
       TransferTransactionV1
-        .selfSigned(None,
-                    PrivateKeyAccount(Array.fill(32)(0)),
+        .selfSigned(PrivateKeyAccount(Array.fill(32)(0)),
                     Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
                     100000,
                     2,
-                    None,
                     124L,
                     Array.empty)
         .right
         .get,
       TransferTransactionV1
-        .selfSigned(None,
-                    PrivateKeyAccount(Array.fill(32)(0)),
+        .selfSigned(PrivateKeyAccount(Array.fill(32)(0)),
                     Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
                     100000,
                     1,
-                    None,
                     124L,
                     Array.empty)
         .right
         .get,
       TransferTransactionV1
         .selfSigned(
-          None,
           PrivateKeyAccount(Array.fill(32)(0)),
           Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
           100000,
           2,
-          Some(ByteStr.empty),
           124L,
           Array.empty
         )
@@ -76,12 +66,10 @@ class TransactionsOrderingSpecification extends PropSpec with Assertions with Ma
         .get,
       TransferTransactionV1
         .selfSigned(
-          None,
           PrivateKeyAccount(Array.fill(32)(0)),
           Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
           100000,
           1,
-          Some(ByteStr.empty),
           124L,
           Array.empty
         )
@@ -99,12 +87,10 @@ class TransactionsOrderingSpecification extends PropSpec with Assertions with Ma
       .map(
         i =>
           TransferTransactionV1
-            .selfSigned(None,
-                        PrivateKeyAccount(Array.fill(32)(0)),
+            .selfSigned(PrivateKeyAccount(Array.fill(32)(0)),
                         Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
                         100000,
                         5,
-                        None,
                         125L,
                         Array(i.toByte))
             .right
@@ -113,46 +99,38 @@ class TransactionsOrderingSpecification extends PropSpec with Assertions with Ma
 
     val correctSeq = txsDifferentById ++ Seq(
       TransferTransactionV1
-        .selfSigned(None,
-                    PrivateKeyAccount(Array.fill(32)(0)),
+        .selfSigned(PrivateKeyAccount(Array.fill(32)(0)),
                     Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
                     100000,
                     1,
-                    None,
                     124L,
                     Array.empty)
         .right
         .get,
       TransferTransactionV1
-        .selfSigned(None,
-                    PrivateKeyAccount(Array.fill(32)(0)),
+        .selfSigned(PrivateKeyAccount(Array.fill(32)(0)),
                     Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
                     100000,
                     1,
-                    None,
                     123L,
                     Array.empty)
         .right
         .get,
       TransferTransactionV1
-        .selfSigned(None,
-                    PrivateKeyAccount(Array.fill(32)(0)),
+        .selfSigned(PrivateKeyAccount(Array.fill(32)(0)),
                     Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
                     100000,
                     2,
-                    None,
                     123L,
                     Array.empty)
         .right
         .get,
       TransferTransactionV1
         .selfSigned(
-          None,
           PrivateKeyAccount(Array.fill(32)(0)),
           Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
           100000,
           1,
-          Some(ByteStr.empty),
           124L,
           Array.empty
         )
@@ -160,12 +138,10 @@ class TransactionsOrderingSpecification extends PropSpec with Assertions with Ma
         .get,
       TransferTransactionV1
         .selfSigned(
-          None,
           PrivateKeyAccount(Array.fill(32)(0)),
           Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
           100000,
           2,
-          Some(ByteStr.empty),
           124L,
           Array.empty
         )
@@ -181,23 +157,19 @@ class TransactionsOrderingSpecification extends PropSpec with Assertions with Ma
   property("TransactionsOrdering.InBlock should sort txs by decreasing block timestamp") {
     val correctSeq = Seq(
       TransferTransactionV1
-        .selfSigned(None,
-                    PrivateKeyAccount(Array.fill(32)(0)),
+        .selfSigned(PrivateKeyAccount(Array.fill(32)(0)),
                     Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
                     100000,
                     124L,
-                    None,
                     1,
                     Array())
         .right
         .get,
       TransferTransactionV1
-        .selfSigned(None,
-                    PrivateKeyAccount(Array.fill(32)(0)),
+        .selfSigned(PrivateKeyAccount(Array.fill(32)(0)),
                     Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
                     100000,
                     123L,
-                    None,
                     1,
                     Array())
         .right
@@ -210,23 +182,19 @@ class TransactionsOrderingSpecification extends PropSpec with Assertions with Ma
   property("TransactionsOrdering.InUTXPool should sort txs by ascending block timestamp") {
     val correctSeq = Seq(
       TransferTransactionV1
-        .selfSigned(None,
-                    PrivateKeyAccount(Array.fill(32)(0)),
+        .selfSigned(PrivateKeyAccount(Array.fill(32)(0)),
                     Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
                     100000,
                     123L,
-                    None,
                     1,
                     Array())
         .right
         .get,
       TransferTransactionV1
-        .selfSigned(None,
-                    PrivateKeyAccount(Array.fill(32)(0)),
+        .selfSigned(PrivateKeyAccount(Array.fill(32)(0)),
                     Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet(),
                     100000,
                     124L,
-                    None,
                     1,
                     Array())
         .right

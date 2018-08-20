@@ -55,10 +55,6 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
     }
   }
 
-  property("checkFee for sponsored transactions sunny") {
-    sponsoredTransactionsCheckFeeTest(feeInAssets = true, feeAmount = 10)(_ shouldBe 'right)
-  }
-
   property("checkFee for sponsored transactions fails if the fee is not enough") {
     sponsoredTransactionsCheckFeeTest(feeInAssets = true, feeAmount = 1)(_ should produce("does not exceed minimal value of"))
   }
@@ -81,10 +77,6 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
     smartTokensCheckFeeTest(feeInAssets = false, feeAmount = 1)(_ shouldBe 'right)
   }
 
-  property("checkFee for smart tokens fails if the fee is in tokens") {
-    smartTokensCheckFeeTest(feeInAssets = true, feeAmount = 1)(_ should produce("Transactions with smart tokens require Waves as fee"))
-  }
-
   private def smartAccountCheckFeeTest(feeInAssets: Boolean, feeAmount: Long)(f: Either[ValidationError, Unit] => Assertion): Unit = {
     val settings = createSettings(BlockchainFeatures.SmartAccounts -> 0)
     val gen      = sponsorAndSetScriptGen(sponsorship = false, smartToken = false, smartAccount = true, feeInAssets, feeAmount)
@@ -101,28 +93,6 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
 
   property("checkFee for smart accounts sunny") {
     smartAccountCheckFeeTest(feeInAssets = false, feeAmount = 400000)(_ shouldBe 'right)
-  }
-
-  property("checkFee for smart accounts fails if the fee is in tokens") {
-    smartAccountCheckFeeTest(feeInAssets = true, feeAmount = 1)(_ should produce("Transactions from scripted accounts require Waves as fee"))
-  }
-
-  property("checkFee sponsored + smart tokens + smart accounts sunny") {
-    val settings = createSettings(
-      BlockchainFeatures.FeeSponsorship -> 0,
-      BlockchainFeatures.SmartAccounts  -> 0,
-      BlockchainFeatures.SmartAssets    -> 0,
-    )
-    val gen = sponsorAndSetScriptGen(sponsorship = true, smartToken = true, smartAccount = true, feeInAssets = true, 90)
-    forAll(gen) {
-      case (genesisBlock, transferTx) =>
-        withStateAndHistory(settings) { blockchain =>
-          val preconditionDiff = BlockDiffer.fromBlock(settings, blockchain, None, genesisBlock, MiningConstraint.Unlimited).explicitGet()._1
-          blockchain.append(preconditionDiff, genesisBlock)
-
-          CommonValidation.checkFee(blockchain, settings, 1, transferTx) shouldBe 'right
-        }
-    }
   }
 
   private def sponsorAndSetScriptGen(sponsorship: Boolean, smartToken: Boolean, smartAccount: Boolean, feeInAssets: Boolean, feeAmount: Long) =
@@ -158,11 +128,11 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
             .explicitGet()
 
       val transferWavesTx = TransferTransactionV1
-        .selfSigned(None, richAcc, recipientAcc, 10 * Constants.UnitsInWave, ts, None, 1 * Constants.UnitsInWave, Array.emptyByteArray)
+        .selfSigned(richAcc, recipientAcc, 10 * Constants.UnitsInWave, ts, 1 * Constants.UnitsInWave, Array.emptyByteArray)
         .explicitGet()
 
       val transferAssetTx = TransferTransactionV1
-        .selfSigned(Some(issueTx.id()), richAcc, recipientAcc, 100, ts, None, 1 * Constants.UnitsInWave, Array.emptyByteArray)
+        .selfSigned(richAcc, recipientAcc, 100, ts, 1 * Constants.UnitsInWave, Array.emptyByteArray)
         .explicitGet()
 
       val sponsorTx =
@@ -191,12 +161,10 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
 
       val transferBackTx = TransferTransactionV1
         .selfSigned(
-          Some(issueTx.id()),
           recipientAcc,
           richAcc,
           1,
           ts,
-          if (feeInAssets) Some(issueTx.id()) else None,
           feeAmount,
           Array.emptyByteArray
         )

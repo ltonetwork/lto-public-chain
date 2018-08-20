@@ -43,7 +43,6 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
             val totalPortfolioDiff: Portfolio = Monoid.combineAll(blockDiff.portfolios.values)
             totalPortfolioDiff.balance shouldBe 0
             totalPortfolioDiff.effectiveBalance shouldBe 0
-            totalPortfolioDiff.assets.values.toSet shouldBe Set(0L)
 
             blockDiff.portfolios(exchange.sender).balance shouldBe exchange.buyMatcherFee + exchange.sellMatcherFee - exchange.fee
         }
@@ -97,7 +96,6 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
               val totalPortfolioDiff: Portfolio = Monoid.combineAll(blockDiff.portfolios.values)
               totalPortfolioDiff.balance shouldBe 0
               totalPortfolioDiff.effectiveBalance shouldBe 0
-              totalPortfolioDiff.assets.values.toSet shouldBe Set(0L)
 
               blockDiff.portfolios(exchange.sender).balance shouldBe exchange.buyMatcherFee + exchange.sellMatcherFee - exchange.fee
           }
@@ -150,33 +148,4 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
     }
   }
 
-  property("Not enough balance") {
-    val MatcherFee = 300000L
-    val Ts         = 1000L
-
-    val preconditions: Gen[(PrivateKeyAccount, PrivateKeyAccount, PrivateKeyAccount, GenesisTransaction, GenesisTransaction, IssueTransactionV1)] =
-      for {
-        buyer   <- accountGen
-        seller  <- accountGen
-        matcher <- accountGen
-        ts      <- timestampGen
-        gen1: GenesisTransaction = GenesisTransaction.create(buyer, ENOUGH_AMT, ts).explicitGet()
-        gen2: GenesisTransaction = GenesisTransaction.create(seller, ENOUGH_AMT, ts).explicitGet()
-        issue1: IssueTransactionV1 <- issueGen(seller, fixedQuantity = Some(1000L))
-      } yield (buyer, seller, matcher, gen1, gen2, issue1)
-
-    forAll(preconditions, priceGen) {
-      case ((buyer, seller, matcher, gen1, gen2, issue1), price) =>
-        val assetPair = AssetPair(Some(issue1.id()), None)
-        val buy       = Order.buy(buyer, matcher, assetPair, price, issue1.quantity + 1, Ts, Ts + 1, MatcherFee)
-        val sell      = Order.sell(seller, matcher, assetPair, price, issue1.quantity + 1, Ts, Ts + 1, MatcherFee)
-        val tx        = createExTx(buy, sell, price, matcher, Ts).explicitGet()
-        assertDiffEi(Seq(TestBlock.create(Seq(gen1, gen2, issue1))), TestBlock.create(Seq(tx))) { totalDiffEi =>
-          inside(totalDiffEi) {
-            case Left(TransactionValidationError(AccountBalanceError(errs), _)) =>
-              errs should contain key seller.toAddress
-          }
-        }
-    }
-  }
 }

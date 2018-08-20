@@ -19,25 +19,6 @@ import com.wavesplatform.transaction.{Transaction, ValidationError}
 
 object BlockDiffer extends ScorexLogging with Instrumented {
 
-  private def clearSponsorship(blockchain: Blockchain, portfolio: Portfolio, height: Int, fs: FunctionalitySettings): Portfolio = {
-    if (height >= Sponsorship.sponsoredFeesSwitchHeight(blockchain, fs)) {
-      val sponsoredAssets = portfolio.assets
-        .map {
-          case (assetId, totalFee) =>
-            (assetId, totalFee, blockchain.assetDescription(assetId))
-        }
-        .collect {
-          case (assetId, totalFee, Some(desc)) if desc.sponsorship > 0 =>
-            (assetId, totalFee, desc.sponsorship)
-        }
-      val unsponsoredPf = portfolio.copy(assets = portfolio.assets -- sponsoredAssets.map(_._1))
-      val sponsoredWaves = sponsoredAssets.map {
-        case (_, totalFee, baseFee) => Sponsorship.toWaves(totalFee, baseFee)
-      }.sum
-      unsponsoredPf.copy(balance = unsponsoredPf.balance + sponsoredWaves)
-    } else portfolio
-  }
-
   def fromBlock[Constraint <: MiningConstraint](settings: FunctionalitySettings,
                                                 blockchain: Blockchain,
                                                 maybePrevBlock: Option[Block],
@@ -51,10 +32,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
 
     lazy val prevBlockFeeDistr: Option[Diff] =
       if (stateHeight > ng4060switchHeight)
-        maybePrevBlock.map(
-          prevBlock =>
-            Diff.empty.copy(portfolios = Map(blockSigner ->
-              clearSponsorship(blockchain, prevBlock.prevBlockFeePart(), stateHeight, settings))))
+        maybePrevBlock.map(prevBlock => Diff.empty.copy(portfolios = Map(blockSigner -> prevBlock.prevBlockFeePart())))
       else None
 
     lazy val currentBlockFeeDistr =
@@ -146,7 +124,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
             else
               txDiffer(updatedBlockchain, tx).map { newDiff =>
                 val updatedPortfolios = newDiff.portfolios.combine(
-                  Map(blockGenerator -> clearSponsorship(blockchain, tx.feeDiff().multiply(Block.CurrentBlockFeePart), currentBlockHeight, settings))
+                  Map(blockGenerator -> tx.feeDiff()).mapValues(_.multiply(Block.CurrentBlockFeePart))
                 )
 
                 (currDiff.combine(newDiff.copy(portfolios = updatedPortfolios)), updatedConstraint)

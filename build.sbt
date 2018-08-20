@@ -35,7 +35,7 @@ val versionSource = Def.task {
 }
 val network = SettingKey[Network]("network")
 network := { Network(sys.props.get("network")) }
-name := "waves"
+name := "lto"
 normalizedName := s"${name.value}${network.value.packageSuffix}"
 
 git.useGitDescribe := true
@@ -83,7 +83,7 @@ val aopMerge: MergeStrategy = new MergeStrategy {
 inTask(assembly)(
   Seq(
     test := {},
-    assemblyJarName := s"waves-all-${version.value}.jar",
+    assemblyJarName := s"lto-public-all-${version.value}.jar",
     assemblyMergeStrategy := {
       case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.concat
       case PathList("META-INF", "aop.xml")                      => aopMerge
@@ -267,8 +267,6 @@ lazy val node = project
   )
   .dependsOn(langJVM)
   .dependsOn(nacl4s)
-
-lazy val discovery = project
 
 lazy val it = project
   .dependsOn(node)

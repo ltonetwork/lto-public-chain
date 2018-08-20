@@ -14,9 +14,7 @@ case class DataTransaction private (version: Byte, sender: PublicKeyAccount, dat
     with VersionedTransaction
     with FastHashId {
 
-  override val builder: TransactionParser        = DataTransaction
-  override val assetFee: (Option[AssetId], Long) = (None, fee)
-
+  override val builder: TransactionParser = DataTransaction
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce {
     Bytes.concat(
       Array(builder.typeId, version),

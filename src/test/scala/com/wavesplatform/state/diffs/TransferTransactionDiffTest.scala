@@ -40,10 +40,7 @@ class TransferTransactionDiffTest extends PropSpec with PropertyChecks with Matc
             val recipient: Address = transfer.recipient.asInstanceOf[Address]
             val recipientPortfolio = newState.portfolio(recipient)
             if (transfer.sender.toAddress != recipient) {
-              transfer.assetId match {
-                case Some(aid) => recipientPortfolio shouldBe Portfolio(0, LeaseBalance.empty, Map(aid -> transfer.amount))
-                case None      => recipientPortfolio shouldBe Portfolio(transfer.amount, LeaseBalance.empty, Map.empty)
-              }
+              recipientPortfolio shouldBe Portfolio(transfer.amount, LeaseBalance.empty)
             }
         }
     }
@@ -61,19 +58,5 @@ class TransferTransactionDiffTest extends PropSpec with PropertyChecks with Matc
       transferV2                   <- transferGeneratorP(master, recepient, issue.id().some, feeIssue.id().some)
       transfer                     <- Gen.oneOf(transferV1, transferV2)
     } yield (genesis, issue, feeIssue, transfer)
-  }
-
-  property("fails, if smart asset used as a fee") {
-    import smart._
-
-    forAll(transferWithSmartAssetFee) {
-      case (genesis, issue, fee, transfer) =>
-        assertDiffAndState(Seq(TestBlock.create(Seq(genesis))), TestBlock.create(Seq(issue, fee)), smartEnabledFS) {
-          case (_, state) => {
-            val diffOrError = TransferTransactionDiff(state, smartEnabledFS, System.currentTimeMillis(), state.height)(transfer)
-            diffOrError shouldBe Left(GenericError("Smart assets can't participate in TransferTransactions as a fee"))
-          }
-        }
-    }
   }
 }
