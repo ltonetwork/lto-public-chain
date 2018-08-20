@@ -244,7 +244,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
         }
     }
 
-    "data transaction" in pendingUntilFixed(forAll(accountGen, positiveLongGen, dataEntryGen(1000)) {
+    "data transaction" in (forAll(accountGen, positiveLongGen, dataEntryGen(1000)) {
       case (sender, initialBalance, dataEntry) =>
         withDomain() { d =>
           d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
