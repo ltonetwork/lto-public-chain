@@ -12,41 +12,6 @@ import com.wavesplatform.transaction.{DataTransaction, Proofs}
 
 class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
 
-  property("extract should transaction transfer assetId if exists") {
-    forAll(transferV1Gen) {
-      case (transfer) =>
-        val result = runScript[ByteVector](
-          """
-            |match tx {
-            | case ttx : TransferTransaction  =>  extract(ttx.assetId)
-            | case other => throw
-            | }
-            |""".stripMargin,
-          transfer
-        )
-        transfer.assetId match {
-          case Some(v) => result.explicitGet().toArray sameElements v.arr
-          case None    => result should produce("termination")
-        }
-    }
-  }
-
-  property("isDefined should return true if transfer assetId exists") {
-    forAll(transferV1Gen) {
-      case (transfer) =>
-        val result = runScript[Boolean](
-          """
-                                          |match tx {
-                                          | case ttx : TransferTransaction  =>  isDefined(ttx.assetId)
-                                          | case other => throw
-                                          | }
-                                          |""".stripMargin,
-          transfer
-        )
-        transfer.assetId.isDefined shouldEqual result.explicitGet()
-    }
-  }
-
   property("Some/None/extract/isDefined") {
     val some3 = "if true then 3 else unit"
     val none  = "if false then 3 else unit"
@@ -117,7 +82,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
           s"""
             |match tx {
             | case tx : TransferTransaction  => tx.id == base58'${transfer.id().base58}'
-            | case tx : IssueTransaction => tx.fee == ${transfer.assetFee._2}
+            | case tx : IssueTransaction => tx.fee == ${transfer.fee}
             | case tx : MassTransferTransaction => tx.timestamp == ${transfer.timestamp}
             | case other => throw
             | }
@@ -137,7 +102,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
                |let t = 100
                |match tx {
                | case t: TransferTransaction  => t.id == base58'${transfer.id().base58}'
-               | case t: IssueTransaction => t.fee == ${transfer.assetFee._2}
+               | case t: IssueTransaction => t.fee == ${transfer.fee}
                | case t: MassTransferTransaction => t.timestamp == ${transfer.timestamp}
                | case other => throw
                | }
@@ -178,7 +143,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
                | case tx: TransferTransaction | IssueTransaction => {
                |  match tx {
                |    case tx: TransferTransaction  => tx.id == base58'${transfer.id().base58}'
-               |    case tx: IssueTransaction => tx.fee == ${transfer.assetFee._2}
+               |    case tx: IssueTransaction => tx.fee == ${transfer.fee}
                |  }
                |  }
                | case other => throw

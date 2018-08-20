@@ -12,10 +12,8 @@ import scala.util.{Failure, Success, Try}
 case class TransferTransactionV2 private (version: Byte,
                                           sender: PublicKeyAccount,
                                           recipient: AddressOrAlias,
-                                          assetId: Option[AssetId],
                                           amount: Long,
                                           timestamp: Long,
-                                          feeAssetId: Option[AssetId],
                                           fee: Long,
                                           attachment: Array[Byte],
                                           proofs: Proofs)
@@ -38,61 +36,46 @@ object TransferTransactionV2 extends TransactionParserFor[TransferTransactionV2]
     Try {
       (for {
         parsed <- TransferTransaction.parseBase(bytes, 0)
-        (sender, assetIdOpt, feeAssetIdOpt, timestamp, amount, feeAmount, recipient, attachment, end) = parsed
+        (sender, timestamp, amount, feeAmount, recipient, attachment, end) = parsed
         proofs <- Proofs.fromBytes(bytes.drop(end))
-        tt <- TransferTransactionV2.create(version,
-                                           assetIdOpt.map(ByteStr(_)),
-                                           sender,
-                                           recipient,
-                                           amount,
-                                           timestamp,
-                                           feeAssetIdOpt.map(ByteStr(_)),
-                                           feeAmount,
-                                           attachment,
-                                           proofs)
+        tt     <- TransferTransactionV2.create(version, sender, recipient, amount, timestamp, feeAmount, attachment, proofs)
       } yield tt).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
   def create(version: Byte,
-             assetId: Option[AssetId],
              sender: PublicKeyAccount,
              recipient: AddressOrAlias,
              amount: Long,
              timestamp: Long,
-             feeAssetId: Option[AssetId],
              feeAmount: Long,
              attachment: Array[Byte],
              proofs: Proofs): Either[ValidationError, TransactionT] = {
     for {
       _ <- Either.cond(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version))
       _ <- TransferTransaction.validate(amount, feeAmount, attachment)
-    } yield TransferTransactionV2(version, sender, recipient, assetId, amount, timestamp, feeAssetId, feeAmount, attachment, proofs)
+    } yield TransferTransactionV2(version, sender, recipient, amount, timestamp, feeAmount, attachment, proofs)
   }
 
   def signed(version: Byte,
-             assetId: Option[AssetId],
              sender: PublicKeyAccount,
              recipient: AddressOrAlias,
              amount: Long,
              timestamp: Long,
-             feeAssetId: Option[AssetId],
              feeAmount: Long,
              attachment: Array[Byte],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    create(version, assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, attachment, Proofs.empty).right.map { unsigned =>
+    create(version, sender, recipient, amount, timestamp, feeAmount, attachment, Proofs.empty).right.map { unsigned =>
       unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes())))).explicitGet())
     }
   }
 
   def selfSigned(version: Byte,
-                 assetId: Option[AssetId],
                  sender: PrivateKeyAccount,
                  recipient: AddressOrAlias,
                  amount: Long,
                  timestamp: Long,
-                 feeAssetId: Option[AssetId],
                  feeAmount: Long,
                  attachment: Array[Byte]): Either[ValidationError, TransactionT] = {
-    signed(version, assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, attachment, sender)
+    signed(version, sender, recipient, amount, timestamp, feeAmount, attachment, sender)
   }
 }

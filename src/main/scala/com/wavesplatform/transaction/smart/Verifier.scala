@@ -12,7 +12,7 @@ import com.wavesplatform.transaction.transfer._
 object Verifier {
 
   def apply(blockchain: Blockchain, currentBlockHeight: Int)(tx: Transaction): Either[ValidationError, Transaction] =
-    (tx match {
+    tx match {
       case _: GenesisTransaction => Right(tx)
       case pt: ProvenTransaction =>
         (pt, blockchain.accountScript(pt.sender)) match {
@@ -20,19 +20,7 @@ object Verifier {
           case (stx: SignedTransaction, None) => stx.signaturesValid()
           case _                              => verifyAsEllipticCurveSignature(pt)
         }
-    }).flatMap(tx => {
-      for {
-        assetId <- tx match {
-          case t: TransferTransaction     => t.assetId
-          case t: MassTransferTransaction => t.assetId
-          case t: BurnTransaction         => Some(t.assetId)
-          case t: ReissueTransaction      => Some(t.assetId)
-          case _                          => None
-        }
-
-        script <- blockchain.assetDescription(assetId).flatMap(_.script)
-      } yield verify(blockchain, script, currentBlockHeight, tx, true)
-    }.getOrElse(Either.right(tx)))
+    }
 
   def verify[T <: Transaction](blockchain: Blockchain,
                                script: Script,

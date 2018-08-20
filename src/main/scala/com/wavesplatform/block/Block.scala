@@ -16,6 +16,7 @@ import com.wavesplatform.utils.ScorexLogging
 import com.wavesplatform.transaction.ValidationError.GenericError
 import com.wavesplatform.transaction._
 import scorex.crypto.signatures.Curve25519._
+
 import scala.util.{Failure, Try}
 
 class BlockHeader(val timestamp: Long,
@@ -146,26 +147,17 @@ case class Block private (override val timestamp: Long,
 
   val json: Coeval[JsObject] = Coeval.evalOnce(
     BlockHeader.json(this, bytes().length) ++
-      Json.obj("fee" -> transactionData.filter(_.assetFee._1.isEmpty).map(_.assetFee._2).sum) ++
+      Json.obj("fee" -> transactionData.map(_.fee).sum) ++
       transactionField.json())
 
   val bytesWithoutSignature: Coeval[Array[Byte]] = Coeval.evalOnce(bytes().dropRight(SignatureLength))
 
   val blockScore: Coeval[BigInt] = Coeval.evalOnce((BigInt("18446744073709551616") / consensusData.baseTarget).ensuring(_ > 0))
 
-  val feesPortfolio: Coeval[Portfolio] = Coeval.evalOnce(Monoid[Portfolio].combineAll({
-    val assetFees: Seq[(Option[AssetId], Long)] = transactionData.map(_.assetFee)
-    assetFees
-      .map { case (maybeAssetId, vol) => maybeAssetId -> vol }
-      .groupBy(a => a._1)
-      .mapValues((records: Seq[(Option[ByteStr], Long)]) => records.map(_._2).sum)
-  }.toList.map {
-    case (maybeAssetId, feeVolume) =>
-      maybeAssetId match {
-        case None          => Portfolio(feeVolume, LeaseBalance.empty, Map.empty)
-        case Some(assetId) => Portfolio(0L, LeaseBalance.empty, Map(assetId -> feeVolume))
-      }
-  }))
+  val feesPortfolio: Coeval[Portfolio] = Coeval {
+    val totalFee = transactionData.map(_.fee).sum
+    Portfolio(totalFee, LeaseBalance.empty)
+  }
 
   val prevBlockFeePart: Coeval[Portfolio] =
     Coeval.evalOnce(Monoid[Portfolio].combineAll(transactionData.map(tx => tx.feeDiff().minus(tx.feeDiff().multiply(CurrentBlockFeePart)))))

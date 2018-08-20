@@ -18,7 +18,7 @@ object RealTransactionWrapper {
       case vt: VersionedTransaction => vt.version
       case _                        => 1
     }
-    Header(ByteVector(tx.id().arr), tx.assetFee._2, tx.timestamp, v)
+    Header(ByteVector(tx.id().arr), tx.fee, tx.timestamp, v)
   }
   private def proven(tx: ProvenTransaction): Proven =
     Proven(
@@ -62,8 +62,6 @@ object RealTransactionWrapper {
       case t: TransferTransaction =>
         Tx.Transfer(
           proven(t),
-          feeAssetId = t.feeAssetId.map(a => ByteVector(a.arr)),
-          assetId = t.assetId.map(a => ByteVector(a.arr)),
           amount = t.amount,
           recipient = t.recipient,
           attachment = ByteVector(t.attachment)
@@ -84,7 +82,6 @@ object RealTransactionWrapper {
       case ms: MassTransferTransaction =>
         Tx.MassTransfer(
           proven(ms),
-          assetId = ms.assetId.map(a => ByteVector(a.arr)),
           transferCount = ms.transfers.length,
           totalAmount = ms.transfers.map(_.amount).sum,
           transfers = ms.transfers.map(r => com.wavesplatform.lang.v1.traits.TransferItem(r.address, r.amount)).toIndexedSeq,

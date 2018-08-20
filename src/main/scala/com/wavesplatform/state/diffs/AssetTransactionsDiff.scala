@@ -18,7 +18,7 @@ object AssetTransactionsDiff {
       Diff(
         height = height,
         tx = tx,
-        portfolios = Map(tx.sender.toAddress -> Portfolio(balance = -tx.fee, lease = LeaseBalance.empty, assets = Map(tx.id() -> tx.quantity))),
+        portfolios = Map(tx.sender.toAddress -> Portfolio(balance = -tx.fee, lease = LeaseBalance.empty)),
         assetInfos = Map(tx.id()             -> info)
       ))
   }
@@ -40,9 +40,8 @@ object AssetTransactionsDiff {
             Diff(
               height = height,
               tx = tx,
-              portfolios =
-                Map(tx.sender.toAddress   -> Portfolio(balance = -tx.fee, lease = LeaseBalance.empty, assets = Map(tx.assetId -> tx.quantity))),
-              assetInfos = Map(tx.assetId -> AssetInfo(volume = tx.quantity, isReissuable = tx.reissuable, script = None))
+              portfolios = Map(tx.sender.toAddress -> Portfolio(balance = -tx.fee, lease = LeaseBalance.empty)),
+              assetInfos = Map(tx.assetId          -> AssetInfo(volume = tx.quantity, isReissuable = tx.reissuable, script = None))
             ))
         }
       } else {
@@ -57,7 +56,7 @@ object AssetTransactionsDiff {
       Diff(
         height = height,
         tx = tx,
-        portfolios = Map(tx.sender.toAddress -> Portfolio(balance = -tx.fee, lease = LeaseBalance.empty, assets = Map(tx.assetId -> -tx.quantity))),
+        portfolios = Map(tx.sender.toAddress -> Portfolio(balance = -tx.fee, lease = LeaseBalance.empty)),
         assetInfos = Map(tx.assetId          -> AssetInfo(isReissuable = true, volume = -tx.quantity, None))
       )
     }
@@ -70,7 +69,7 @@ object AssetTransactionsDiff {
         Diff(
           height = height,
           tx = tx,
-          portfolios = Map(tx.sender.toAddress -> Portfolio(balance = -tx.fee, lease = LeaseBalance.empty, assets = Map.empty)),
+          portfolios = Map(tx.sender.toAddress -> Portfolio(balance = -tx.fee, lease = LeaseBalance.empty)),
           sponsorship = Map(tx.assetId         -> SponsorshipValue(tx.minSponsoredAssetFee.getOrElse(0)))
         ))
     }

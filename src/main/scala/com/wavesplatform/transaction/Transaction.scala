@@ -8,8 +8,8 @@ trait Transaction extends BytesSerializable with JsonSerializable {
   val id: Coeval[ByteStr]
 
   def builder: TransactionParser
-  def assetFee: (Option[AssetId], Long)
   def timestamp: Long
+  def fee: Long
 
   override def toString: String = json().toString()
 
@@ -22,15 +22,9 @@ trait Transaction extends BytesSerializable with JsonSerializable {
 }
 
 object Transaction {
-
   type Type = Byte
 
   implicit class TransactionExt(tx: Transaction) {
-    def feeDiff(): Portfolio = tx.assetFee match {
-      case (Some(asset), fee) =>
-        Portfolio(balance = 0, lease = LeaseBalance.empty, assets = Map(asset -> fee))
-      case (None, fee) => Portfolio(balance = fee, lease = LeaseBalance.empty, assets = Map.empty)
-    }
+    def feeDiff(): Portfolio = Portfolio(balance = tx.fee, lease = LeaseBalance.empty)
   }
-
 }

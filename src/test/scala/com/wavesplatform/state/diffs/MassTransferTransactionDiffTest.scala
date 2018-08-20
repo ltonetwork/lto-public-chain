@@ -46,17 +46,11 @@ class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with 
               val totalAmount     = transfer.transfers.map(_.amount).sum
               val fees            = issue.fee + transfer.fee
               val senderPortfolio = newState.portfolio(transfer.sender)
-              transfer.assetId match {
-                case Some(aid) => senderPortfolio shouldBe Portfolio(ENOUGH_AMT - fees, LeaseBalance.empty, Map(aid -> (ENOUGH_AMT - totalAmount)))
-                case None      => senderPortfolio.balance shouldBe (ENOUGH_AMT - fees - totalAmount)
-              }
+              senderPortfolio.balance shouldBe (ENOUGH_AMT - fees - totalAmount)
               for (ParsedTransfer(recipient, amount) <- transfer.transfers) {
                 val recipientPortfolio = newState.portfolio(recipient.asInstanceOf[Address])
                 if (transfer.sender.toAddress != recipient) {
-                  transfer.assetId match {
-                    case Some(aid) => recipientPortfolio shouldBe Portfolio(0, LeaseBalance.empty, Map(aid -> amount))
-                    case None      => recipientPortfolio shouldBe Portfolio(amount, LeaseBalance.empty, Map.empty)
-                  }
+                  recipientPortfolio shouldBe Portfolio(amount, LeaseBalance.empty)
                 }
               }
           }
@@ -80,23 +74,6 @@ class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with 
       case (genesis, transfer) =>
         assertDiffEi(Seq(block(Seq(genesis))), block(Seq(transfer)), fs) { blockDiffEi =>
           blockDiffEi should produce("AliasDoesNotExist")
-        }
-    }
-  }
-
-  property("MassTransfer fails on non-issued asset") {
-    val setup = for {
-      (genesis, master) <- baseSetup
-      recipient         <- accountGen.map(_.toAddress)
-      amount            <- Gen.choose(100000L, 1000000000L)
-      assetId           <- assetIdGen.filter(_.isDefined)
-      transfer          <- massTransferGeneratorP(master, List(ParsedTransfer(recipient, amount)), assetId)
-    } yield (genesis, transfer)
-
-    forAll(setup) {
-      case (genesis, transfer) =>
-        assertDiffEi(Seq(block(Seq(genesis))), block(Seq(transfer)), fs) { blockDiffEi =>
-          blockDiffEi should produce("Attempt to transfer unavailable funds")
         }
     }
   }

@@ -12,7 +12,7 @@ object SetScriptTransactionDiff {
       Diff(
         height = height,
         tx = tx,
-        portfolios = Map(tx.sender.toAddress -> Portfolio(-tx.fee, LeaseBalance.empty, Map.empty)),
+        portfolios = Map(tx.sender.toAddress -> Portfolio(-tx.fee, LeaseBalance.empty)),
         scripts = Map(tx.sender.toAddress    -> tx.script)
       ))
   }

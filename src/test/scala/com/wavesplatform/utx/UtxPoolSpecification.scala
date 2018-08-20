@@ -71,14 +71,14 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
       amount    <- chooseNum(1, (maxAmount * 0.9).toLong)
       recipient <- accountGen
       fee       <- chooseNum(extraFee, (maxAmount * 0.1).toLong)
-    } yield TransferTransactionV1.selfSigned(None, sender, recipient, amount, time.getTimestamp(), None, fee, Array.empty[Byte]).explicitGet())
+    } yield TransferTransactionV1.selfSigned(sender, recipient, amount, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet())
       .label("transferTransaction")
 
   private def transferWithRecipient(sender: PrivateKeyAccount, recipient: PublicKeyAccount, maxAmount: Long, time: Time) =
     (for {
       amount <- chooseNum(1, (maxAmount * 0.9).toLong)
       fee    <- chooseNum(extraFee, (maxAmount * 0.1).toLong)
-    } yield TransferTransactionV1.selfSigned(None, sender, recipient, amount, time.getTimestamp(), None, fee, Array.empty[Byte]).explicitGet())
+    } yield TransferTransactionV1.selfSigned(sender, recipient, amount, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet())
       .label("transferWithRecipient")
 
   private def massTransferWithRecipients(sender: PrivateKeyAccount, recipients: List[PublicKeyAccount], maxAmount: Long, time: Time) = {
@@ -87,7 +87,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
     val txs = for {
       version <- Gen.oneOf(MassTransferTransaction.supportedVersions.toSeq)
       fee     <- chooseNum(extraFee, amount)
-    } yield MassTransferTransaction.selfSigned(version, None, sender, transfers, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet()
+    } yield MassTransferTransaction.selfSigned(version, sender, transfers, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet()
     txs.label("transferWithRecipient")
   }
 
@@ -257,7 +257,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
   }
 
   private def transactionGen(sender: PrivateKeyAccount, ts: Long, feeAmount: Long): Gen[TransferTransactionV1] = accountGen.map { recipient =>
-    TransferTransactionV1.selfSigned(None, sender, recipient, waves(1), ts, None, feeAmount, Array.emptyByteArray).explicitGet()
+    TransferTransactionV1.selfSigned(sender, recipient, waves(1), ts, feeAmount, Array.emptyByteArray).explicitGet()
   }
 
   private val notEnoughFeeTxWithScriptedAccount = for {
@@ -354,10 +354,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
           utxPortfolio.lease.out should be <= basePortfolio.lease.out
           // should not be changed
           utxPortfolio.lease.in shouldBe basePortfolio.lease.in
-          utxPortfolio.assets.foreach {
-            case (assetId, count) =>
-              count should be <= basePortfolio.assets.getOrElse(assetId, count)
-          }
+
       }
 
       "is changed after transactions with these assets are removed" in forAll(withValidPayments) {
@@ -373,10 +370,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
 
           utxPortfolioAfter.balance should be >= utxPortfolioBefore.balance
           utxPortfolioAfter.lease.out should be >= utxPortfolioBefore.lease.out
-          utxPortfolioAfter.assets.foreach {
-            case (assetId, count) =>
-              count should be >= utxPortfolioBefore.assets.getOrElse(assetId, count)
-          }
+
       }
     }
 
