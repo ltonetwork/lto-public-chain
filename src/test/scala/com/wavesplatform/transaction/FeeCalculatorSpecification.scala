@@ -18,30 +18,15 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
   private val configString =
     """waves {
       |  fees {
-      |    payment {
-      |      WAVES = 100000
-      |    }
-      |    issue {
-      |      WAVES = 100000000
-      |    }
       |    transfer {
       |      WAVES = 100000
       |      "JAudr64y6YxTgLn9T5giKKqWGkbMfzhdRAxmNNfn6FJN" = 2
-      |    }
-      |    reissue {
-      |      WAVES = 200000
-      |    }
-      |    burn {
-      |      WAVES = 300000
       |    }
       |    lease {
       |      WAVES = 400000
       |    }
       |    lease-cancel {
       |      WAVES = 500000
-      |    }
-      |    create-alias {
-      |      WAVES = 600000
       |    }
       |    data {
       |      WAVES = 100000
@@ -73,34 +58,6 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
     }
   }
 
-  property("Payment transaction ") {
-    val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(paymentGen) { tx: PaymentTransaction =>
-      feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 100000)
-    }
-  }
-
-  property("Issue transaction ") {
-    val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(issueGen) { tx: IssueTransaction =>
-      feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 100000000)
-    }
-  }
-
-  property("Reissue transaction ") {
-    val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(reissueGen) { tx: ReissueTransaction =>
-      feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 200000)
-    }
-  }
-
-  property("Burn transaction ") {
-    val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(burnGen) { tx: BurnTransaction =>
-      feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 300000)
-    }
-  }
-
   property("Lease transaction") {
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
     forAll(leaseGen) { tx: LeaseTransaction =>
@@ -112,13 +69,6 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
     forAll(leaseCancelGen) { tx: LeaseCancelTransaction =>
       feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 500000)
-    }
-  }
-
-  property("Create alias transaction") {
-    val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(createAliasGen) { tx: CreateAliasTransaction =>
-      feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 600000)
     }
   }
 
