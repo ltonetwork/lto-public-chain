@@ -55,10 +55,6 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
     }
   }
 
-  property("checkFee for sponsored transactions fails if the fee is not enough") {
-    sponsoredTransactionsCheckFeeTest(feeInAssets = true, feeAmount = 1)(_ should produce("does not exceed minimal value of"))
-  }
-
   private def smartTokensCheckFeeTest(feeInAssets: Boolean, feeAmount: Long)(f: Either[ValidationError, Unit] => Assertion): Unit = {
     val settings = createSettings(BlockchainFeatures.SmartAccounts -> 0, BlockchainFeatures.SmartAssets -> 0)
     val gen      = sponsorAndSetScriptGen(sponsorship = false, smartToken = true, smartAccount = false, feeInAssets, feeAmount)
@@ -73,7 +69,7 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
     }
   }
 
-  property("checkFee for smart tokens sunny") {
+  ignore("checkFee for smart tokens sunny") {
     smartTokensCheckFeeTest(feeInAssets = false, feeAmount = 1)(_ shouldBe 'right)
   }
 
@@ -91,7 +87,7 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
     }
   }
 
-  property("checkFee for smart accounts sunny") {
+  ignore("checkFee for smart accounts sunny") {
     smartAccountCheckFeeTest(feeInAssets = false, feeAmount = 400000)(_ shouldBe 'right)
   }
 

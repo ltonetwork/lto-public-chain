@@ -31,20 +31,18 @@ class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with 
           recipient <- accountGen.map(_.toAddress)
           amount    <- Gen.choose(100000L, 1000000000L)
         } yield ParsedTransfer(recipient, amount)
-        transfers                              <- Gen.listOfN(transferCount, transferGen)
-        (assetIssue: IssueTransactionV1, _, _) <- issueReissueBurnGeneratorP(ENOUGH_AMT, master)
-        maybeAsset                             <- Gen.option(assetIssue)
-        transfer                               <- massTransferGeneratorP(master, transfers, maybeAsset.map(_.id()))
-      } yield (genesis, assetIssue, transfer)
+        transfers <- Gen.listOfN(transferCount, transferGen)
+        transfer  <- massTransferGeneratorP(master, transfers, None)
+      } yield (genesis, transfer)
 
       forAll(setup) {
-        case (genesis, issue, transfer) =>
-          assertDiffAndState(Seq(block(Seq(genesis, issue))), block(Seq(transfer)), fs) {
+        case (genesis, transfer) =>
+          assertDiffAndState(Seq(block(Seq(genesis))), block(Seq(transfer)), fs) {
             case (totalDiff, newState) =>
               assertBalanceInvariant(totalDiff)
 
               val totalAmount     = transfer.transfers.map(_.amount).sum
-              val fees            = issue.fee + transfer.fee
+              val fees            = transfer.fee
               val senderPortfolio = newState.portfolio(transfer.sender)
               senderPortfolio.balance shouldBe (ENOUGH_AMT - fees - totalAmount)
               for (ParsedTransfer(recipient, amount) <- transfer.transfers) {
