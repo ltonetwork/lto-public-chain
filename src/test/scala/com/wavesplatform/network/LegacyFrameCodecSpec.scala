@@ -31,7 +31,7 @@ class LegacyFrameCodecSpec extends FreeSpec with Matchers with MockFactory with 
     decodedBytes.data shouldEqual origTx.bytes()
   }
 
-  "should handle multiple messages" in forAll(Gen.nonEmptyListOf(issueGen)) { origTxs =>
+  "should handle multiple messages" in forAll(Gen.nonEmptyListOf(transferV1Gen)) { origTxs =>
     val codec = new LegacyFrameCodec(PeerDatabase.NoOp, 3.minutes)
 
     val buff = Unpooled.buffer

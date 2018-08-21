@@ -4,7 +4,6 @@ import play.api.libs.json.Json
 import com.wavesplatform.transaction.transfer.MassTransferTransaction.Transfer
 
 case class MassTransferRequest(version: Byte,
-                               assetId: Option[String],
                                sender: String,
                                transfers: List[Transfer],
                                fee: Long,

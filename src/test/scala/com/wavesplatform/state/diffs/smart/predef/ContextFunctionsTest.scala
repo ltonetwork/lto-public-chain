@@ -42,7 +42,7 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
 
   } yield (Seq(genesis1, genesis2), setScriptTransaction, dataTransaction, transfer)
 
-  property("validation of all functions from contexts") {
+  ignore("validation of all functions from contexts") {
     forAll(preconditionsAndPayments) {
       case ((genesis, setScriptTransaction, dataTransaction, transfer)) =>
         assertDiffAndState(smartEnabledFS) { append =>

@@ -19,15 +19,15 @@ object TransactionParsers {
 
   private val old: Map[Byte, TransactionParser] = Seq[TransactionParser](
     GenesisTransaction,
-    PaymentTransaction,
-    IssueTransactionV1,
+//    PaymentTransaction,
+//    IssueTransactionV1,
     TransferTransactionV1,
-    ReissueTransactionV1,
-    BurnTransactionV1,
-    ExchangeTransaction,
+//    ReissueTransactionV1,
+//    BurnTransactionV1,
+//    ExchangeTransaction,
     LeaseTransactionV1,
     LeaseCancelTransactionV1,
-    CreateAliasTransactionV1,
+//    CreateAliasTransactionV1,
     MassTransferTransaction
   ).map { x =>
     x.typeId -> x
@@ -36,14 +36,14 @@ object TransactionParsers {
   private val modern: Map[(Byte, Byte), TransactionParser] = Seq[TransactionParser](
     DataTransaction,
     TransferTransactionV2,
-    SetScriptTransaction,
-    IssueTransactionV2,
-    CreateAliasTransactionV2,
-    ReissueTransactionV2,
-    BurnTransactionV2,
+//    SetScriptTransaction,
+//    IssueTransactionV2,
+//    CreateAliasTransactionV2,
+//    ReissueTransactionV2,
+//    BurnTransactionV2,
     LeaseTransactionV2,
     LeaseCancelTransactionV2,
-    SponsorFeeTransaction
+//    SponsorFeeTransaction
   ).flatMap { x =>
     x.supportedVersions.map { version =>
       ((x.typeId, version), x)

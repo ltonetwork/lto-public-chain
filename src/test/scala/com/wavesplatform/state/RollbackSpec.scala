@@ -183,68 +183,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
         }
     }
 
-    "asset quantity and reissuability" in forAll(accountGen, positiveLongGen, byteArrayGen(10), byteArrayGen(12)) {
-      case (sender, initialBalance, name, description) =>
-        withDomain() { d =>
-          d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
-          val genesisBlockId = d.lastBlockId
-
-          val issueTransaction = IssueTransactionV1.selfSigned(sender, name, description, 2000, 8, true, 1, nextTs).explicitGet()
-          d.blockchainUpdater.assetDescription(issueTransaction.id()) shouldBe 'empty
-
-          d.appendBlock(
-            TestBlock.create(
-              nextTs,
-              genesisBlockId,
-              Seq(issueTransaction)
-            ))
-
-          val blockIdWithIssue = d.lastBlockId
-
-          d.blockchainUpdater.assetDescription(issueTransaction.id()) should contain(
-            AssetDescription(sender, name, description, 8, true, BigInt(2000), None, 0))
-
-          d.appendBlock(
-            TestBlock.create(nextTs,
-                             blockIdWithIssue,
-                             Seq(
-                               ReissueTransactionV1.selfSigned(sender, issueTransaction.id(), 2000, false, 1, nextTs).explicitGet()
-                             )))
-
-          d.blockchainUpdater.assetDescription(issueTransaction.id()) should contain(
-            AssetDescription(sender, name, description, 8, false, BigInt(4000), None, 0))
-
-          d.removeAfter(blockIdWithIssue)
-          d.blockchainUpdater.assetDescription(issueTransaction.id()) should contain(
-            AssetDescription(sender, name, description, 8, true, BigInt(2000), None, 0))
-
-          d.removeAfter(genesisBlockId)
-          d.blockchainUpdater.assetDescription(issueTransaction.id()) shouldBe 'empty
-        }
-    }
-
-    "aliases" in forAll(accountGen, positiveLongGen, aliasGen) {
-      case (sender, initialBalance, alias) =>
-        withDomain() { d =>
-          d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
-          val genesisBlockId = d.lastBlockId
-
-          d.blockchainUpdater.resolveAlias(alias) shouldBe Left(AliasDoesNotExist(alias))
-          d.appendBlock(
-            TestBlock.create(
-              nextTs,
-              genesisBlockId,
-              Seq(CreateAliasTransactionV1.selfSigned(sender, alias, 1, nextTs).explicitGet())
-            ))
-
-          d.blockchainUpdater.resolveAlias(alias) shouldBe Right(sender.toAddress)
-          d.removeAfter(genesisBlockId)
-
-          d.blockchainUpdater.resolveAlias(alias) shouldBe Left(AliasDoesNotExist(alias))
-        }
-    }
-
-    "data transaction" in pendingUntilFixed(forAll(accountGen, positiveLongGen, dataEntryGen(1000)) {
+    "data transaction" in (forAll(accountGen, positiveLongGen, dataEntryGen(1000)) {
       case (sender, initialBalance, dataEntry) =>
         withDomain() { d =>
           d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
@@ -307,68 +246,5 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
           blocksForFeatureActivation = 1,
           featureCheckBlocksPeriod = 1
         )
-
-    "asset sponsorship" in forAll(for {
-      sender      <- accountGen
-      sponsorship <- sponsorFeeCancelSponsorFeeGen(sender)
-    } yield {
-      (sender, sponsorship)
-    }) {
-      case (sender, (issueTransaction, sponsor1, sponsor2, cancel)) =>
-        val ts       = issueTransaction.timestamp
-        val settings = createSettings(BlockchainFeatures.FeeSponsorship -> 0)
-        val wavesSettings = history.DefaultWavesSettings.copy(
-          blockchainSettings = history.DefaultWavesSettings.blockchainSettings.copy(functionalitySettings = settings))
-        withDomain(wavesSettings) { d =>
-          d.appendBlock(genesisBlock(ts, sender, Long.MaxValue / 3))
-          val genesisBlockId = d.lastBlockId
-
-          d.appendBlock(
-            TestBlock.create(
-              ts,
-              genesisBlockId,
-              Seq(issueTransaction)
-            ))
-
-          val blockIdWithIssue = d.lastBlockId
-
-          d.appendBlock(
-            TestBlock.create(
-              ts + 2,
-              d.lastBlockId,
-              Seq(sponsor1)
-            ))
-
-          val blockIdWithSponsor = d.lastBlockId
-
-          d.blockchainUpdater.assetDescription(sponsor1.assetId).get.sponsorship shouldBe sponsor1.minSponsoredAssetFee.get
-
-          d.appendBlock(
-            TestBlock.create(
-              ts + 2,
-              d.lastBlockId,
-              Seq(cancel)
-            ))
-
-          d.blockchainUpdater.assetDescription(sponsor1.assetId).get.sponsorship shouldBe 0
-
-          d.removeAfter(blockIdWithSponsor)
-
-          d.blockchainUpdater.assetDescription(sponsor1.assetId).get.sponsorship shouldBe sponsor1.minSponsoredAssetFee.get
-
-          d.appendBlock(
-            TestBlock.create(
-              ts + 2,
-              d.lastBlockId,
-              Seq(sponsor2)
-            ))
-
-          d.blockchainUpdater.assetDescription(sponsor1.assetId).get.sponsorship shouldBe sponsor2.minSponsoredAssetFee.get
-
-          d.removeAfter(blockIdWithIssue)
-
-          d.blockchainUpdater.assetDescription(sponsor1.assetId).get.sponsorship shouldBe 0
-        }
-    }
   }
 }
