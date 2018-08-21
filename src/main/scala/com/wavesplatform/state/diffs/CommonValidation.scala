@@ -78,27 +78,27 @@ object CommonValidation {
     val disabled = Left(GenericError("tx type is disabled"))
 
     tx match {
-      case _: BurnTransactionV1        => Right(tx)
-      case _: PaymentTransaction       => Right(tx)
+      case _: BurnTransactionV1        => disabled
+      case _: PaymentTransaction       => disabled
       case _: GenesisTransaction       => Right(tx)
       case _: TransferTransactionV1    => Right(tx)
-      case _: IssueTransactionV1       => Right(tx)
-      case _: ReissueTransactionV1     => Right(tx)
-      case _: ExchangeTransaction      => Right(tx)
+      case _: IssueTransactionV1       => disabled
+      case _: ReissueTransactionV1     => disabled
+      case _: ExchangeTransaction      => disabled
       case _: LeaseTransactionV1       => Right(tx)
       case _: LeaseCancelTransactionV1 => Right(tx)
-      case _: CreateAliasTransactionV1 => Right(tx)
+      case _: CreateAliasTransactionV1 => disabled
       case _: MassTransferTransaction  => activationBarrier(BlockchainFeatures.MassTransfer)
       case _: DataTransaction          => activationBarrier(BlockchainFeatures.DataTransaction)
-      case _: SetScriptTransaction     => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case _: SetScriptTransaction     => disabled
       case _: TransferTransactionV2    => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case it: IssueTransactionV2      => activationBarrier(if (it.script.isEmpty) BlockchainFeatures.SmartAccounts else BlockchainFeatures.SmartAssets)
-      case _: ReissueTransactionV2     => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case _: BurnTransactionV2        => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case it: IssueTransactionV2      => disabled
+      case _: ReissueTransactionV2     => disabled
+      case _: BurnTransactionV2        => disabled
       case _: LeaseTransactionV2       => activationBarrier(BlockchainFeatures.SmartAccounts)
       case _: LeaseCancelTransactionV2 => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case _: CreateAliasTransactionV2 => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case _: SponsorFeeTransaction    => activationBarrier(BlockchainFeatures.FeeSponsorship)
+      case _: CreateAliasTransactionV2 => disabled
+      case _: SponsorFeeTransaction    => disabled
       case _                           => Left(GenericError("Unknown transaction must be explicitly activated"))
     }
   }

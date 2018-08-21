@@ -183,27 +183,6 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
         }
     }
 
-    "aliases" in forAll(accountGen, positiveLongGen, aliasGen) {
-      case (sender, initialBalance, alias) =>
-        withDomain() { d =>
-          d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
-          val genesisBlockId = d.lastBlockId
-
-          d.blockchainUpdater.resolveAlias(alias) shouldBe Left(AliasDoesNotExist(alias))
-          d.appendBlock(
-            TestBlock.create(
-              nextTs,
-              genesisBlockId,
-              Seq(CreateAliasTransactionV1.selfSigned(sender, alias, 1, nextTs).explicitGet())
-            ))
-
-          d.blockchainUpdater.resolveAlias(alias) shouldBe Right(sender.toAddress)
-          d.removeAfter(genesisBlockId)
-
-          d.blockchainUpdater.resolveAlias(alias) shouldBe Left(AliasDoesNotExist(alias))
-        }
-    }
-
     "data transaction" in (forAll(accountGen, positiveLongGen, dataEntryGen(1000)) {
       case (sender, initialBalance, dataEntry) =>
         withDomain() { d =>
