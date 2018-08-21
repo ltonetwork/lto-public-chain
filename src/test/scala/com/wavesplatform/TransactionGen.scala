@@ -556,13 +556,7 @@ trait TransactionGenBase extends ScriptGen {
 
   val randomTransactionGen: Gen[SignedTransaction] = (for {
     tr <- transferV1Gen
-    (is, ri, bu) <- issueReissueBurnGen.retryUntil {
-      case (i, r, b) => i.version == 1 && r.version == 1 && b.version == 1
-    }
-    ca <- createAliasGen.retryUntil(_.version == 1).map(_.asInstanceOf[CreateAliasTransactionV1])
-    xt <- exchangeTransactionGen
-    tx <- Gen.oneOf(tr, is.asInstanceOf[IssueTransactionV1], ri.asInstanceOf[ReissueTransactionV1], ca, bu.asInstanceOf[BurnTransactionV1], xt)
-  } yield tx).label("random transaction")
+  } yield tr).label("random transaction")
 
   def randomTransactionsGen(count: Int): Gen[Seq[SignedTransaction]] =
     for {

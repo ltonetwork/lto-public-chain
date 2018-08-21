@@ -23,12 +23,12 @@ class SignVerifySpec extends FunSpec with Matchers {
 
   describe("sign and verify bytes") {
     val seed = "seeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeed".getBytes().take(32) // seed must be 32 bytes
-    def a = assert(SigningKeyPair.apply(seed))(_,_,_)
-    it("1 correct")(a(1,false,true))
-    it("1 incorrect")(a(1,true,false))
-    it("100 correct")(a(100,false,true))
-    it("100 incorrect")(a(100,true,false))
-    it("10000 correct")(a(10000,false,true))
-    it("10000 incorrect")(a(10000,true,false))
+    def a    = assert(SigningKeyPair.apply(seed))(_, _, _)
+    it("1 correct")(a(1, false, true))
+    it("1 incorrect")(a(1, true, false))
+    it("100 correct")(a(100, false, true))
+    it("100 incorrect")(a(100, true, false))
+    it("10000 correct")(a(10000, false, true))
+    it("10000 incorrect")(a(10000, true, false))
   }
 }
