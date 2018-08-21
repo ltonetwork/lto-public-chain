@@ -3,9 +3,7 @@ package com.wavesplatform.api.http.assets
 import play.api.libs.json.{Format, Json}
 
 case class TransferV2Request(version: Byte,
-                             assetId: Option[String],
                              amount: Long,
-                             feeAssetId: Option[String],
                              fee: Long,
                              sender: String,
                              attachment: Option[String],

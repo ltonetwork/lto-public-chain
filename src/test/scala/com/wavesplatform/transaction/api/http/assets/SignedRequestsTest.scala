@@ -39,5 +39,4 @@ class SignedRequestsTest extends FunSuite with Matchers {
     tx.signature.base58 shouldBe "4dPRTW6XyRQUTQwwpuZDCNy1UDHYG9WGsEQnn5v49Lj5uyh4XGDdwtEq3t6ZottweAXHieK32UokHwiTxGFtz9bQ"
   }
 
-
 }

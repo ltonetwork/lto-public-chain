@@ -36,7 +36,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
       LevelDBWriter.merge(Seq(12, 5), Seq(15, 12, 3)) shouldEqual Seq((12, 15), (12, 12), (5, 12), (5, 3))
     }
   }
-  "hasScript" - {
+  "hasScript" ignore {
     "returns false if a script was not set" in {
       val writer = new LevelDBWriter(db, TestFunctionalitySettings.Stub)
       writer.hasScript(accountGen.sample.get.toAddress) shouldBe false
