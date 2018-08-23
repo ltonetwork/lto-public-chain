@@ -15,7 +15,7 @@ val versionSource = Def.task {
   // In case of not updating the version nodes build from headless sources will fail to connect to newer versions
   val FallbackVersion = (0, 14, 0)
 
-  val versionFile      = (sourceManaged in Compile).value / "com" / "wavesplatform" / "Version.scala"
+  val versionFile      = (sourceManaged in Compile).value / "one" / "legalthings" / "Version.scala"
   val versionExtractor = """(\d+)\.(\d+)\.(\d+).*""".r
   val (major, minor, patch) = version.value match {
     case versionExtractor(ma, mi, pa) => (ma.toInt, mi.toInt, pa.toInt)
@@ -23,7 +23,7 @@ val versionSource = Def.task {
   }
   IO.write(
     versionFile,
-    s"""package com.wavesplatform
+    s"""package one.legalthings
        |
        |object Version {
        |  val VersionString = "${version.value}"
@@ -45,7 +45,7 @@ logBuffered := false
 inThisBuild(
   Seq(
     scalaVersion := "2.12.6",
-    organization := "com.wavesplatform",
+    organization := "one.legalthings",
     crossPaths := false,
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-language:implicitConversions", "-Ywarn-unused:-implicits", "-Xlint")
   ))
@@ -93,7 +93,7 @@ inTask(assembly)(
 
 inConfig(Compile)(
   Seq(
-    mainClass := Some("com.wavesplatform.Application"),
+    mainClass := Some("one.legalthings.Application"),
     publishArtifact in packageDoc := false,
     publishArtifact in packageSrc := false,
     sourceGenerators += versionSource

@@ -1,14 +1,14 @@
 import cats.kernel.Monoid
-import com.wavesplatform.lang.Global
-import com.wavesplatform.lang.v1.Serde
-import com.wavesplatform.lang.v1.compiler.CompilerV1
-import com.wavesplatform.lang.v1.compiler.Terms._
-import com.wavesplatform.lang.v1.evaluator.ctx.impl.waves.WavesContext
-import com.wavesplatform.lang.v1.evaluator.ctx.impl.{CryptoContext, PureContext}
-import com.wavesplatform.lang.v1.parser.{Expressions, Parser}
-import com.wavesplatform.lang.v1.traits.{DataType, Environment, Recipient, Tx}
-import com.wavesplatform.lang.v1.FunctionHeader.{Native, User}
+import one.legalthings.lang.v1.Serde
+import one.legalthings.lang.v1.compiler.CompilerV1
+import one.legalthings.lang.v1.compiler.Terms._
+import one.legalthings.lang.v1.evaluator.ctx.impl.waves.WavesContext
+import one.legalthings.lang.v1.evaluator.ctx.impl.{CryptoContext, PureContext}
+import one.legalthings.lang.v1.parser.{Expressions, Parser}
+import one.legalthings.lang.v1.traits.{DataType, Environment, Recipient, Tx}
+import one.legalthings.lang.v1.FunctionHeader.{Native, User}
 import fastparse.core.Parsed.{Failure, Success}
+import one.legalthings.lang.Global
 
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jObj}
