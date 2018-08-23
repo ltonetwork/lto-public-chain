@@ -127,7 +127,7 @@ case class AddressApiRoute(settings: RestAPISettings,
         value = "Json with data",
         required = true,
         paramType = "body",
-        dataType = "one.legalthings.http.SignedMessage",
+        dataType = "one.legalthings.api.http.SignedMessage",
         defaultValue =
           "{\n\t\"message\":\"Base58-encoded message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}"
       )
@@ -148,7 +148,7 @@ case class AddressApiRoute(settings: RestAPISettings,
         value = "Json with data",
         required = true,
         paramType = "body",
-        dataType = "one.legalthings.http.SignedMessage",
+        dataType = "one.legalthings.api.http.SignedMessage",
         defaultValue =
           "{\n\t\"message\":\"Plain message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}"
       )
@@ -260,7 +260,7 @@ case class AddressApiRoute(settings: RestAPISettings,
         value = "Json with data",
         required = true,
         paramType = "body",
-        dataType = "one.legalthings.http.DataRequest",
+        dataType = "one.legalthings.api.http.DataRequest",
         defaultValue = "{\n\t\"version\": 1,\n\t\"sender\": \"3Mx2afTZ2KbRrLNbytyzTtXukZvqEB8SkW7\",\n\t\"fee\": 100000,\n\t\"data\": {}\n}"
       )
     ))

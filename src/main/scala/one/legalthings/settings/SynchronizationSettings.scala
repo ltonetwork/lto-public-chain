@@ -27,7 +27,7 @@ object SynchronizationSettings {
 
   case class UtxSynchronizerSettings(networkTxCacheSize: Int, networkTxCacheTime: FiniteDuration, maxBufferSize: Int, maxBufferTime: FiniteDuration)
 
-  val configPath: String = "waves.synchronization"
+  val configPath: String = "lto.synchronization"
 
   def fromConfig(config: Config): SynchronizationSettings = {
     val maxRollback             = config.as[Int](s"$configPath.max-rollback")
