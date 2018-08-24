@@ -15,7 +15,7 @@ class WavesSettingsSpecification extends FlatSpec with Matchers {
     "WavesSettings" should s"read values from default config with $configName overrides" in {
       val settings = config(configName)
 
-      settings.directory should be(home + "/waves")
+      settings.directory should be(home + "/lto")
       settings.networkSettings should not be null
       settings.walletSettings should not be null
       settings.blockchainSettings should not be null
@@ -34,7 +34,7 @@ class WavesSettingsSpecification extends FlatSpec with Matchers {
   testConfig("devnet")()
 
   "WavesSettings" should "resolve folders correctly" in {
-    val config = loadConfig(ConfigFactory.parseString(s"""waves {
+    val config = loadConfig(ConfigFactory.parseString(s"""lto {
          |  directory = "/xxx"
          |  data-directory = "/xxx/data"
          |}""".stripMargin))
