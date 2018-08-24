@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 class NetworkSettingsSpecification extends FlatSpec with Matchers {
 
   "NetworkSpecification" should "read values from config" in {
-    val config          = loadConfig(ConfigFactory.parseString("""waves.network {
+    val config          = loadConfig(ConfigFactory.parseString("""lto.network {
         |  bind-address: "127.0.0.1"
         |  port: 6868
         |  node-name: "default-node-name"
@@ -40,7 +40,7 @@ class NetworkSettingsSpecification extends FlatSpec with Matchers {
         |    ignore-rx-messages = [23]
         |  }
         |}""".stripMargin))
-    val networkSettings = config.as[NetworkSettings]("waves.network")
+    val networkSettings = config.as[NetworkSettings]("lto.network")
 
     networkSettings.bindAddress should be(new InetSocketAddress("127.0.0.1", 6868))
     networkSettings.nodeName should be("default-node-name")
@@ -65,14 +65,14 @@ class NetworkSettingsSpecification extends FlatSpec with Matchers {
 
   it should "generate random nonce" in {
     val config          = loadConfig(ConfigFactory.empty())
-    val networkSettings = config.as[NetworkSettings]("waves.network")
+    val networkSettings = config.as[NetworkSettings]("lto.network")
 
     networkSettings.nonce should not be 0
   }
 
   it should "build node name using nonce" in {
-    val config          = loadConfig(ConfigFactory.parseString("waves.network.nonce = 12345"))
-    val networkSettings = config.as[NetworkSettings]("waves.network")
+    val config          = loadConfig(ConfigFactory.parseString("lto.network.nonce = 12345"))
+    val networkSettings = config.as[NetworkSettings]("lto.network")
 
     networkSettings.nonce should be(12345)
     networkSettings.nodeName should be("Node-12345")
@@ -80,7 +80,7 @@ class NetworkSettingsSpecification extends FlatSpec with Matchers {
 
   it should "build node name using random nonce" in {
     val config          = loadConfig(ConfigFactory.empty())
-    val networkSettings = config.as[NetworkSettings]("waves.network")
+    val networkSettings = config.as[NetworkSettings]("lto.network")
 
     networkSettings.nonce should not be 0
     networkSettings.nodeName should be(s"Node-${networkSettings.nonce}")
@@ -88,9 +88,9 @@ class NetworkSettingsSpecification extends FlatSpec with Matchers {
 
   it should "fail with IllegalArgumentException on too long node name" in {
     val config = loadConfig(ConfigFactory.parseString(
-      "waves.network.node-name = очень-длинное-название-в-многобайтной-кодировке-отличной-от-однобайтной-кодировки-американского-института-стандартов"))
+      "lto.network.node-name = очень-длинное-название-в-многобайтной-кодировке-отличной-от-однобайтной-кодировки-американского-института-стандартов"))
     intercept[IllegalArgumentException] {
-      config.as[NetworkSettings]("waves.network")
+      config.as[NetworkSettings]("lto.network")
     }
   }
 }

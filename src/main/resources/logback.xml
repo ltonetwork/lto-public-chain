@@ -3,7 +3,7 @@
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator"/>
 
     <property name="default.pattern" value="%date %-5level [%.25thread] %logger{26} - %msg%n"/>
-    <property name="logback.file.final-directory" value="${logback.file.directory:-${waves.directory}/log}"/>
+    <property name="logback.file.final-directory" value="${logback.file.directory:-${lto.directory}/log}"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.out</target>
@@ -19,10 +19,10 @@
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>${logback.file.level:-DEBUG}</level>
         </filter>
-        <file>${logback.file.final-directory}/waves.log</file>
+        <file>${logback.file.final-directory}/lto.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
-            <fileNamePattern>${logback.file.final-directory}/waves.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <fileNamePattern>${logback.file.final-directory}/lto.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
 
             <!-- keep 30 days' worth of history capped at 1GB total size -->
             <maxHistory>30</maxHistory>

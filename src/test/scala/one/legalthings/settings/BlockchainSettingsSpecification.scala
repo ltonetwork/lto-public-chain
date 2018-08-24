@@ -8,7 +8,7 @@ import scala.concurrent.duration._
 
 class BlockchainSettingsSpecification extends FlatSpec with Matchers {
   "BlockchainSettings" should "read custom values" in {
-    val config   = loadConfig(ConfigFactory.parseString("""waves {
+    val config   = loadConfig(ConfigFactory.parseString("""lto {
         |  directory = "/waves"
         |  data-directory = "/waves/data"
         |  blockchain {
@@ -77,7 +77,7 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
   }
 
   it should "read testnet settings" ignore { // regenerated testnet genesis
-    val config   = loadConfig(ConfigFactory.parseString("""waves {
+    val config   = loadConfig(ConfigFactory.parseString("""lto {
         |  directory = "/waves"
         |  data-directory = "/waves/data"
         |  blockchain {
@@ -112,7 +112,7 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
   }
 
   it should "read mainnet settings" in {
-    val config   = loadConfig(ConfigFactory.parseString("""waves {
+    val config   = loadConfig(ConfigFactory.parseString("""lto {
         |  directory = "/waves"
         |  data-directory = "/waves/data"
         |  blockchain {
