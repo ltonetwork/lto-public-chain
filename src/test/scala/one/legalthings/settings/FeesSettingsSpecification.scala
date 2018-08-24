@@ -9,7 +9,7 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
     val config = ConfigFactory.parseString("""lto {
         |  network.file = "xxx"
         |  fees {
-        |    transfer.WAVES = 100000
+        |    transfer.LTO = 100000
         |  }
         |  miner.timeout = 10
         |}
@@ -17,20 +17,20 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
 
     val settings = FeesSettings.fromConfig(config)
     settings.fees.size should be(1)
-    settings.fees(4) should be(List(FeeSettings("WAVES", 100000)))
+    settings.fees(4) should be(List(FeeSettings("LTO", 100000)))
   }
 
   it should "combine read few fees for one transaction type" in {
     val config = ConfigFactory.parseString("""lto.fees {
         |  transfer {
-        |    WAVES4 = 444
+        |    LTO4 = 444
         |  }
         |}
       """.stripMargin).resolve()
 
     val settings = FeesSettings.fromConfig(config)
     settings.fees.size should be(1)
-    settings.fees(4).toSet should equal(Set(FeeSettings("WAVES4", 444)))
+    settings.fees(4).toSet should equal(Set(FeeSettings("LTO4", 444)))
   }
 
   it should "allow empty list" in {
@@ -42,10 +42,10 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
 
   it should "override values" in {
     val config = ConfigFactory
-      .parseString("lto.fees.transfer.WAVES = 100001")
+      .parseString("lto.fees.transfer.LTO = 100001")
       .withFallback(
         ConfigFactory.parseString("""lto.fees {
-          |  transfer.WAVES = 100000
+          |  transfer.LTO = 100000
           |}
         """.stripMargin)
       )
@@ -53,12 +53,12 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
 
     val settings = FeesSettings.fromConfig(config)
     settings.fees.size should be(1)
-    settings.fees(4).toSet should equal(Set(FeeSettings("WAVES", 100001)))
+    settings.fees(4).toSet should equal(Set(FeeSettings("LTO", 100001)))
   }
 
   it should "fail on incorrect long values" in {
     val config = ConfigFactory.parseString("""lto.fees {
-        |  transfer.WAVES=N/A
+        |  transfer.LTO=N/A
         |}""".stripMargin).resolve()
     intercept[WrongType] {
       FeesSettings.fromConfig(config)
@@ -67,15 +67,15 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
 
   it should "not fail on long values as strings" in {
     val config   = ConfigFactory.parseString("""lto.fees {
-        |  transfer.WAVES="1000"
+        |  transfer.LTO="1000"
         |}""".stripMargin).resolve()
     val settings = FeesSettings.fromConfig(config)
-    settings.fees(4).toSet should equal(Set(FeeSettings("WAVES", 1000)))
+    settings.fees(4).toSet should equal(Set(FeeSettings("LTO", 1000)))
   }
 
   it should "fail on unknown transaction type" in {
     val config = ConfigFactory.parseString("""lto.fees {
-        |  shmayment.WAVES=100
+        |  shmayment.LTO=100
         |}""".stripMargin).resolve()
     intercept[NoSuchElementException] {
       FeesSettings.fromConfig(config)
