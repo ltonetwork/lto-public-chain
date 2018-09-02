@@ -616,6 +616,17 @@ trait TransactionGenBase extends ScriptGen {
 
   val dataTransactionGen: Gen[DataTransaction] = dataTransactionGen(DataTransaction.MaxEntryCount)
 
+  val anchorTransactionGen: Gen[AnchorTransaction] = for {
+    sender    <- accountGen
+    timestamp <- timestampGen
+    size      <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
+    data      <- Gen.listOfN(size, genBoundedBytes(AnchorTransaction.EntryLength, AnchorTransaction.EntryLength))
+    version   <- Gen.oneOf(AnchorTransaction.supportedVersions.toSeq)
+  } yield {
+    val anchors = data.map(ByteStr(_))
+    AnchorTransaction.selfSigned(version, sender, anchors, 15000000, timestamp).explicitGet()
+  }
+
   def dataTransactionGen(maxEntryCount: Int, useForScript: Boolean = false) =
     (for {
       sender    <- accountGen
