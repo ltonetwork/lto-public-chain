@@ -19,7 +19,7 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
     parsed.timestamp shouldEqual tx.timestamp
     parsed.fee shouldEqual tx.fee
 
-    parsed.data.zip(tx.data).foreach {
+    parsed.anchors.zip(tx.anchors).foreach {
       case (r, t) =>
         r shouldEqual t
     }
@@ -50,9 +50,9 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
       req.fee shouldEqual tx.fee
       req.timestamp shouldEqual tx.timestamp
 
-      req.anchors zip tx.data foreach {
+      req.anchors zip tx.anchors foreach {
         case (re, te) =>
-          re shouldEqual te
+          re shouldEqual te.base58
       }
     }
   }
@@ -60,7 +60,7 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
   property(testName = "JSON format validation") {
     val js = Json.parse("""{
                        "type": 15,
-                       "id": "87SfuGJXH1cki2RGDH7WMTGnTXeunkc5mEjNKmmMdRzM",
+                       "id": "CrxUUw4xovEg9pro6aTsFM1qbTrnZcy11rhn7HD14GVa",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,

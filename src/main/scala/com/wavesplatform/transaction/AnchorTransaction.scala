@@ -10,7 +10,7 @@ import scorex.crypto.signatures.Curve25519.KeyLength
 
 import scala.util.{Failure, Success, Try}
 
-case class AnchorTransaction private (version: Byte, sender: PublicKeyAccount, data: List[ByteStr], fee: Long, timestamp: Long, proofs: Proofs)
+case class AnchorTransaction private (version: Byte, sender: PublicKeyAccount, anchors: List[ByteStr], fee: Long, timestamp: Long, proofs: Proofs)
     extends ProvenTransaction
     with VersionedTransaction
     with FastHashId {
@@ -20,8 +20,8 @@ case class AnchorTransaction private (version: Byte, sender: PublicKeyAccount, d
     Bytes.concat(
       Array(builder.typeId, version),
       sender.publicKey,
-      Shorts.toByteArray(data.size.toShort),
-      data.flatMap(_.arr).toArray,
+      Shorts.toByteArray(anchors.size.toShort),
+      anchors.flatMap(_.arr).toArray,
       Longs.toByteArray(timestamp),
       Longs.toByteArray(fee)
     )
@@ -32,7 +32,7 @@ case class AnchorTransaction private (version: Byte, sender: PublicKeyAccount, d
   override val json: Coeval[JsObject] = Coeval.evalOnce {
     jsonBase() ++ Json.obj(
       "version" -> version,
-      "anchors" -> Json.toJson(data)
+      "anchors" -> Json.toJson(anchors)
     )
   }
 
