@@ -1,11 +1,10 @@
 package com.wavesplatform.api.http
 
 import cats.implicits._
-import com.wavesplatform.state.{ByteStr, DataEntry}
-import io.swagger.annotations.{ApiModel, ApiModelProperty}
-import play.api.libs.json.Json
 import com.wavesplatform.account.PublicKeyAccount
 import com.wavesplatform.transaction.{AnchorTransaction, Proofs, ValidationError}
+import io.swagger.annotations.{ApiModel, ApiModelProperty}
+import play.api.libs.json.Json
 
 object AnchorRequest {
   implicit val unsignedDataRequestReads = Json.reads[AnchorRequest]
@@ -32,7 +31,7 @@ case class SignedAnchorRequest(@ApiModelProperty(required = true)
     for {
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
-      _anchors    <- anchors.traverse(s => parseBase58(s, "invalid anchor", Proofs.MaxAnchorStringSize))
+      _anchors    <- anchors.traverse(s => parseBase58Exact(s, "invalid anchor: must be exactly 64 bytes", Proofs.MaxAnchorStringSize))
       _proofs     <- Proofs.create(_proofBytes)
       t           <- AnchorTransaction.create(version, _sender, _anchors, fee, timestamp, _proofs)
     } yield t

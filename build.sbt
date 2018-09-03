@@ -47,7 +47,7 @@ inThisBuild(
     scalaVersion := "2.12.6",
     organization := "com.wavesplatform",
     crossPaths := false,
-    scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-language:implicitConversions", "-Ywarn-unused:-implicits", "-Xlint")
+    scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-language:implicitConversions", "-Ywarn-unused:-implicits")
   ))
 
 resolvers += Resolver.bintrayRepo("ethereum", "maven")

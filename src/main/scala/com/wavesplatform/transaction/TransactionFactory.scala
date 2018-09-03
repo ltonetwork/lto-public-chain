@@ -2,7 +2,7 @@ package com.wavesplatform.transaction
 
 import com.google.common.base.Charsets
 import com.wavesplatform.account._
-import com.wavesplatform.api.http.DataRequest
+import com.wavesplatform.api.http.{AnchorRequest, BroadcastRequest, DataRequest}
 import com.wavesplatform.api.http.alias.{CreateAliasV1Request, CreateAliasV2Request}
 import com.wavesplatform.api.http.assets._
 import com.wavesplatform.api.http.leasing.{LeaseCancelV1Request, LeaseCancelV2Request, LeaseV1Request, LeaseV2Request}
@@ -17,7 +17,7 @@ import com.wavesplatform.transaction.transfer._
 import com.wavesplatform.utils.{Base58, Time}
 import com.wavesplatform.wallet.Wallet
 
-object TransactionFactory {
+object TransactionFactory extends BroadcastRequest {
 
   private val EmptySignature = ByteStr(Array.fill(SignatureLength)(0: Byte))
 
@@ -571,6 +571,40 @@ object TransactionFactory {
       0,
       Proofs.empty
     )
+
+  def anchor(request: AnchorRequest, wallet: Wallet, time: Time): Either[ValidationError, AnchorTransaction] =
+    anchor(request, wallet, request.sender, time)
+
+  import cats.implicits._
+  import com.wavesplatform.api.http._
+
+  def anchor(request: AnchorRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AnchorTransaction] =
+    for {
+      sender  <- wallet.findPrivateKey(request.sender)
+      signer  <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
+      anchors <- request.anchors.traverse(s => parseBase58Exact(s, "invalid anchor: must be exactly 64 bytes", Proofs.MaxAnchorStringSize))
+      tx <- AnchorTransaction.signed(
+        request.version,
+        sender,
+        anchors,
+        request.fee,
+        request.timestamp.getOrElse(time.getTimestamp()),
+        signer
+      )
+    } yield tx
+
+  def anchor(request: AnchorRequest, sender: PublicKeyAccount): Either[ValidationError, AnchorTransaction] =
+    for {
+      anchors <- request.anchors.traverse(s => parseBase58Exact(s, "invalid anchor: must be exactly 64 bytes", Proofs.MaxAnchorStringSize))
+      tx <- AnchorTransaction.create(
+        request.version,
+        sender,
+        anchors,
+        request.fee,
+        0,
+        Proofs.empty
+      )
+    } yield tx
 
   def sponsor(request: SponsorFeeRequest, wallet: Wallet, time: Time): Either[ValidationError, SponsorFeeTransaction] =
     sponsor(request, wallet, request.sender, time)
