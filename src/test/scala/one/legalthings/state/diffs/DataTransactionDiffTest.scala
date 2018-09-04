@@ -102,7 +102,7 @@ class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers
     forAll(setup) {
       case (genesis, dataTx) =>
         assertDiffEi(Seq(block(Seq(genesis))), block(Seq(dataTx)), fs) { blockDiffEi =>
-          blockDiffEi should produce("negative waves balance")
+          blockDiffEi should produce("negative lto balance")
         }
     }
   }

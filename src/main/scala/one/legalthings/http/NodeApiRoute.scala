@@ -24,10 +24,10 @@ case class NodeApiRoute(settings: RestAPISettings, blockchain: Blockchain, appli
   }
 
   @Path("/version")
-  @ApiOperation(value = "Version", notes = "Get Waves node version", httpMethod = "GET")
+  @ApiOperation(value = "Version", notes = "Get LTO node version", httpMethod = "GET")
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json Waves node version")
+      new ApiResponse(code = 200, message = "Json LTO node version")
     ))
   def version: Route = (get & path("version")) {
     complete(Json.obj("version" -> Constants.AgentName))

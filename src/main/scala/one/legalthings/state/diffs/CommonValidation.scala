@@ -41,7 +41,7 @@ object CommonValidation {
           Left(
             GenericError(
               "Attempt to transfer unavailable funds: Transaction application leads to " +
-                s"negative waves balance to (at least) temporary negative state, current balance equals $oldWavesBalance, " +
+                s"negative lto balance to (at least) temporary negative state, current balance equals $oldWavesBalance, " +
                 s"spends equals ${spendings.balance}, result is $newWavesBalance"))
         } else Right(tx)
       }
@@ -204,7 +204,7 @@ object CommonValidation {
       if (isSmartToken) {
         val (feeAssetId, feeAmount) = inputFee
         for {
-          _ <- Either.cond(feeAssetId.isEmpty, (), GenericError("Transactions with smart tokens require Waves as fee"))
+          _ <- Either.cond(feeAssetId.isEmpty, (), GenericError("Transactions with smart tokens require LTO as fee"))
           restFeeAmount = feeAmount - ScriptExtraFee
           _ <- Either.cond(
             restFeeAmount >= 0,
