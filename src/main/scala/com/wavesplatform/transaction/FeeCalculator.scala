@@ -30,7 +30,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
         txFeeValue >= minTxFee,
         (),
         GenericError {
-          s"Fee in WAVES for ${tx.builder.classTag} transaction does not exceed minimal value of $minTxFee"
+          s"Fee in LTO for ${tx.builder.classTag} transaction does not exceed minimal value of $minTxFee"
         }
       )
     } yield tx
