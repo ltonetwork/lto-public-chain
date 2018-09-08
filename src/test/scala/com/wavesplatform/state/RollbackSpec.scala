@@ -14,7 +14,7 @@ import com.wavesplatform.transaction.assets.{IssueTransactionV1, ReissueTransact
 import com.wavesplatform.transaction.lease.{LeaseCancelTransactionV1, LeaseTransactionV1}
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.transfer._
-import com.wavesplatform.transaction.{CreateAliasTransactionV1, DataTransaction, GenesisTransaction}
+import com.wavesplatform.transaction.{AnchorTransaction, CreateAliasTransactionV1, DataTransaction, GenesisTransaction}
 import com.wavesplatform.features._
 import com.wavesplatform.settings.{FunctionalitySettings, TestFunctionalitySettings}
 import com.wavesplatform.history
@@ -200,6 +200,28 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
 
           d.removeAfter(genesisBlockId)
           d.blockchainUpdater.accountData(sender, dataEntry.key) shouldBe 'empty
+        }
+    })
+
+    "anchor transaction" in (forAll(accountGen, positiveLongGen, Gen.choose(0, AnchorTransaction.MaxEntryCount).flatMap(Gen.listOfN(_, bytes64gen))) {
+      case (sender, initialBalance, anchors) =>
+        withDomain() { d =>
+          d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
+          val genesisBlockId = d.lastBlockId
+
+          val tx = AnchorTransaction.selfSigned(1, sender, anchors.map(ByteStr(_)), 1, nextTs).explicitGet()
+          d.appendBlock(
+            TestBlock.create(
+              nextTs,
+              genesisBlockId,
+              Seq(tx)
+            ))
+
+          d.blockchainUpdater.containsTransaction(tx.id()) shouldBe true
+
+          d.removeAfter(genesisBlockId)
+
+          d.blockchainUpdater.containsTransaction(tx.id()) shouldBe false
         }
     })
 

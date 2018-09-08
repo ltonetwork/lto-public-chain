@@ -27,8 +27,6 @@ case class AnchorTransaction private (version: Byte, sender: PublicKeyAccount, a
     )
   }
 
-  implicit val dataItemFormat: Format[DataEntry[_]] = DataEntry.Format
-
   override val json: Coeval[JsObject] = Coeval.evalOnce {
     jsonBase() ++ Json.obj(
       "version" -> version,

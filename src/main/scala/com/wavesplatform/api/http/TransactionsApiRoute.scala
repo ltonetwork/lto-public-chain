@@ -245,7 +245,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case LeaseTransactionV2       => TransactionFactory.leaseV2(txJson.as[LeaseV2Request], wallet, signerAddress, time)
               case LeaseCancelTransactionV2 => TransactionFactory.leaseCancelV2(txJson.as[LeaseCancelV2Request], wallet, signerAddress, time)
               case DataTransaction          => TransactionFactory.data(txJson.as[DataRequest], wallet, signerAddress, time)
-              case AnchorTransaction          => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
+              case AnchorTransaction        => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
 //              case SetScriptTransaction     => TransactionFactory.setScript(txJson.as[SetScriptRequest], wallet, signerAddress, time)
             }
         }).fold(ApiError.fromValidationError, _.json())

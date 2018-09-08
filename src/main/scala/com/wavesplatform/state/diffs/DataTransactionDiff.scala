@@ -1,7 +1,7 @@
 package com.wavesplatform.state.diffs
 
 import com.wavesplatform.state._
-import com.wavesplatform.transaction.{DataTransaction, ValidationError}
+import com.wavesplatform.transaction.{AnchorTransaction, DataTransaction, ValidationError}
 
 object DataTransactionDiff {
 
@@ -13,6 +13,19 @@ object DataTransactionDiff {
         tx,
         portfolios = Map(sender  -> Portfolio(-tx.fee, LeaseBalance.empty)),
         accountData = Map(sender -> AccountDataInfo(tx.data.map(item => item.key -> item).toMap))
+      ))
+  }
+}
+object AnchorTransactionDiff {
+
+  def apply(height: Int)(tx: AnchorTransaction): Either[ValidationError, Diff] = {
+    val sender = tx.sender.toAddress
+    Right(
+      Diff(
+        height,
+        tx,
+        portfolios = Map(sender -> Portfolio(-tx.fee, LeaseBalance.empty)),
+        accountData = Map.empty
       ))
   }
 }
