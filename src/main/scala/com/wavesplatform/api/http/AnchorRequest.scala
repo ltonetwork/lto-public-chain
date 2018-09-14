@@ -4,7 +4,7 @@ import cats.implicits._
 import com.wavesplatform.account.PublicKeyAccount
 import com.wavesplatform.transaction.{AnchorTransaction, Proofs, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json, Writes}
 
 object AnchorRequest {
   implicit val unsignedDataRequestReads = Json.reads[AnchorRequest]
