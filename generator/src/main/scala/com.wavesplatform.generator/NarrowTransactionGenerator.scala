@@ -58,14 +58,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
     val tradeAssetDistribution = {
       tradeAssetIssue +: accounts.map(acc => {
         TransferTransactionV1
-          .selfSigned(Some(tradeAssetIssue.id()),
-                      issueTransactionSender,
-                      acc,
-                      5,
-                      System.currentTimeMillis(),
-                      None,
-                      100000,
-                      Array.fill(r.nextInt(100))(r.nextInt().toByte))
+          .selfSigned(issueTransactionSender, acc, 5, System.currentTimeMillis(), 100000, Array.fill(r.nextInt(100))(r.nextInt().toByte))
           .right
           .get
       })
@@ -111,14 +104,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
               case (sender, asset) =>
                 logOption(
                   TransferTransactionV1
-                    .selfSigned(asset,
-                                sender,
-                                recipient,
-                                r.nextInt(500000),
-                                ts,
-                                None,
-                                moreThatStandartFee,
-                                Array.fill(r.nextInt(100))(r.nextInt().toByte)))
+                    .selfSigned(sender, recipient, r.nextInt(500000), ts, moreThatStandartFee, Array.fill(r.nextInt(100))(r.nextInt().toByte)))
             }
           case ReissueTransactionV1 =>
             val reissuable = r.nextBoolean()
@@ -175,7 +161,6 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
               case (sender, asset) =>
                 logOption(
                   MassTransferTransaction.selfSigned(MassTransferTransaction.version,
-                                                     asset,
                                                      sender,
                                                      transfers.toList,
                                                      ts,
