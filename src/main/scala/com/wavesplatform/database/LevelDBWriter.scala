@@ -436,6 +436,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                       rw.filterHistory(Keys.dataHistory(addressId, e.key), currentHeight)
                     }
                   }
+                case a: AnchorTransaction => // do nothinhg specific
 
                 case tx: CreateAliasTransaction =>
                   rw.delete(Keys.addressIdOfAlias(tx.alias))

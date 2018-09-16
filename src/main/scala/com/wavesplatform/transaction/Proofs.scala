@@ -16,10 +16,11 @@ case class Proofs private (proofs: Seq[ByteStr]) {
 
 object Proofs {
 
-  val Version            = 1: Byte
-  val MaxProofs          = 8
-  val MaxProofSize       = 64
-  val MaxProofStringSize = base58Length(MaxProofSize)
+  val Version             = 1: Byte
+  val MaxProofs           = 8
+  val MaxProofSize        = 64
+  val MaxProofStringSize  = base58Length(MaxProofSize)
+  val MaxAnchorStringSize = base58Length(AnchorTransaction.EntryLength)
 
   lazy val empty = create(Seq.empty).explicitGet()
 

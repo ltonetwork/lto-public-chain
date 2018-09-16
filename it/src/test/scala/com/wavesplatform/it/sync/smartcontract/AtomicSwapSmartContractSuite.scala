@@ -105,12 +105,10 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
       TransferTransactionV2
         .selfSigned(
           version = 2,
-          assetId = None,
           sender = pkByAddress(AliceBC1),
           recipient = AddressOrAlias.fromString(swapBC1).explicitGet(),
           amount = transferAmount + minFee + smartFee,
           timestamp = System.currentTimeMillis(),
-          feeAssetId = None,
           feeAmount = minFee + smartFee,
           attachment = Array.emptyByteArray
         )
@@ -127,12 +125,10 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
       TransferTransactionV2
         .selfSigned(
           version = 2,
-          assetId = None,
           sender = pkByAddress(swapBC1),
           recipient = AddressOrAlias.fromString(AliceBC1).explicitGet(),
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAssetId = None,
           feeAmount = minFee + smartFee,
           attachment = Array.emptyByteArray
         )
@@ -152,12 +148,10 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
       TransferTransactionV2
         .create(
           version = 2,
-          assetId = None,
           sender = pkByAddress(swapBC1),
           recipient = AddressOrAlias.fromString(BobBC1).explicitGet(),
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAssetId = None,
           feeAmount = minFee + smartFee,
           attachment = Array.emptyByteArray,
           proofs = Proofs.empty
@@ -186,12 +180,10 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
     val selfSignedToAlice = TransferTransactionV2
       .selfSigned(
         version = 2,
-        assetId = None,
         sender = pkByAddress(swapBC1),
         recipient = AddressOrAlias.fromString(AliceBC1).explicitGet(),
         amount = transferAmount,
         timestamp = System.currentTimeMillis(),
-        feeAssetId = None,
         feeAmount = minFee + smartFee,
         attachment = Array.emptyByteArray
       )

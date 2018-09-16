@@ -34,6 +34,7 @@ object TransactionParsers {
   }(collection.breakOut)
 
   private val modern: Map[(Byte, Byte), TransactionParser] = Seq[TransactionParser](
+    AnchorTransaction,
     DataTransaction,
     TransferTransactionV2,
 //    SetScriptTransaction,
