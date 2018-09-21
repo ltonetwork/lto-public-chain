@@ -12,7 +12,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
   private val map: Map[String, Long] = {
     settings.fees.flatMap { fs =>
       val transactionType = fs._1
-      fs._2.filter(v => v.asset.toUpperCase() == "WAVES").map { v =>
+      fs._2.filter(v => v.asset.toUpperCase() == "LTO").map { v =>
         transactionType.toString -> v.fee
       }
     }
@@ -30,7 +30,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
         txFeeValue >= minTxFee,
         (),
         GenericError {
-          s"Fee in WAVES for ${tx.builder.classTag} transaction does not exceed minimal value of $minTxFee"
+          s"Fee in LTO for ${tx.builder.classTag} transaction does not exceed minimal value of $minTxFee"
         }
       )
     } yield tx

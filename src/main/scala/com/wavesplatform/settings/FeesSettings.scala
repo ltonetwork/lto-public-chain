@@ -11,7 +11,7 @@ case class FeeSettings(asset: String, fee: Long)
 case class FeesSettings(fees: Map[Int, Seq[FeeSettings]])
 
 object FeesSettings {
-  val configPath: String = "waves.fees"
+  val configPath: String = "lto.fees"
 
   def fromConfig(config: Config): FeesSettings = {
     val fees: Map[Int, Seq[FeeSettings]] = config

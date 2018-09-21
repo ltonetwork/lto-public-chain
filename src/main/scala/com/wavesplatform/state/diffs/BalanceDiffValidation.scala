@@ -28,7 +28,7 @@ object BalanceDiffValidation extends ScorexLogging with Instrumented {
         lazy val leasedMoreThanOwn        = newPortfolio.balance < newPortfolio.lease.out && currentHeight > fs.allowLeasedBalanceTransferUntilHeight
 
         val err = if (negativeBalance) {
-          Some(s"negative waves balance: $acc, old: ${oldPortfolio.balance}, new: ${newPortfolio.balance}")
+          Some(s"negative lto balance: $acc, old: ${oldPortfolio.balance}, new: ${newPortfolio.balance}")
         } else if (negativeEffectiveBalance) {
           Some(s"negative effective balance: $acc, old: ${leaseWavesInfo(oldPortfolio)}, new: ${leaseWavesInfo(newPortfolio)}")
         } else if (leasedMoreThanOwn && oldPortfolio.lease.out == newPortfolio.lease.out) {

@@ -16,20 +16,20 @@ import com.wavesplatform.transaction.transfer._
 class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen with MockFactory {
 
   private val configString =
-    """waves {
+    """lto {
       |  fees {
       |    transfer {
-      |      WAVES = 100000
+      |      LTO = 100000
       |      "JAudr64y6YxTgLn9T5giKKqWGkbMfzhdRAxmNNfn6FJN" = 2
       |    }
       |    lease {
-      |      WAVES = 400000
+      |      LTO = 400000
       |    }
       |    lease-cancel {
-      |      WAVES = 500000
+      |      LTO = 500000
       |    }
       |    data {
-      |      WAVES = 100000
+      |      LTO = 100000
       |    }
       |  }
       |}""".stripMargin

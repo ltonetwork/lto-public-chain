@@ -12,7 +12,7 @@ trait RestAPISettingsHelper {
     val keyHash = Base58.encode(crypto.secureHash(apiKey.getBytes()))
     RestAPISettings.fromConfig(
       ConfigFactory
-        .parseString(s"waves.rest-api.api-key-hash = $keyHash")
+        .parseString(s"lto.rest-api.api-key-hash = $keyHash")
         .withFallback(ConfigFactory.load()))
   }
 }
