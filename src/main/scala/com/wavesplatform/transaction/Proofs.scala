@@ -20,7 +20,7 @@ object Proofs {
   val MaxProofs           = 8
   val MaxProofSize        = 64
   val MaxProofStringSize  = base58Length(MaxProofSize)
-  val MaxAnchorStringSize = base58Length(AnchorTransaction.EntryLength)
+  val MaxAnchorStringSize = base58Length(AnchorTransaction.EntryLength.last)
 
   lazy val empty = create(Seq.empty).explicitGet()
 

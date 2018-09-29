@@ -620,7 +620,8 @@ trait TransactionGenBase extends ScriptGen {
     sender    <- accountGen
     timestamp <- timestampGen
     size      <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
-    data      <- Gen.listOfN(size, genBoundedBytes(AnchorTransaction.EntryLength, AnchorTransaction.EntryLength))
+    len       <- Gen.oneOf(AnchorTransaction.EntryLength)
+    data      <- Gen.listOfN(size, genBoundedBytes(len, len))
     version   <- Gen.oneOf(AnchorTransaction.supportedVersions.toSeq)
   } yield {
     val anchors = data.map(ByteStr(_))
