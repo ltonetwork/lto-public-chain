@@ -33,7 +33,7 @@ class AnchorTransactionDiffTest extends PropSpec with PropertyChecks with Matche
     forAll(setup) {
       case (genesis, anchorTx) =>
         assertDiffEi(Seq(block(Seq(genesis))), block(Seq(anchorTx))) { blockDiffEi =>
-          blockDiffEi should produce("negative waves balance")
+          blockDiffEi should produce("negative lto balance")
         }
     }
   }

@@ -21,3 +21,10 @@ trait BroadcastRequest {
       parseBase58(s, error, maxLength).map(b => Option(b))
     }
 }
+
+object BroadcastRequest {
+  def parseBase58(v: String, error: String, maxLength: Int): Validation[ByteStr] =
+    if (v.length > maxLength) Left(ValidationError.GenericError(error))
+    else ByteStr.decodeBase58(v).toOption.toRight(ValidationError.GenericError(error))
+
+}

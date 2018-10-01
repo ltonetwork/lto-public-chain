@@ -8,7 +8,7 @@ import com.wavesplatform.api.http.assets._
 import com.wavesplatform.api.http.leasing.{LeaseCancelV1Request, LeaseCancelV2Request, LeaseV1Request, LeaseV2Request}
 import com.wavesplatform.crypto.SignatureLength
 import com.wavesplatform.state.ByteStr
-import com.wavesplatform.transaction.ValidationError.GenericError
+import com.wavesplatform.transaction.ValidationError.{GenericError, Validation}
 import com.wavesplatform.transaction.assets._
 import com.wavesplatform.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.wavesplatform.transaction.smart.SetScriptTransaction
@@ -572,6 +572,19 @@ object TransactionFactory extends BroadcastRequest {
       Proofs.empty
     )
 
+  private def parseAnchors(l: List[String]): Validation[List[ByteStr]] = {
+    import cats.implicits._
+    l.traverse(s => {
+      val r: Validation[ByteStr] = BroadcastRequest.parseBase58(s, "invalid anchor", Proofs.MaxAnchorStringSize)
+      val r2: Validation[ByteStr] = r.map { bs =>
+        if (bs.arr.length < AnchorTransaction.EntryLength(0))
+          ByteStr(Array.fill(AnchorTransaction.EntryLength(0) - bs.arr.length)(0: Byte))
+        else bs
+      }
+      r2
+    })
+  }
+
   def anchor(request: AnchorRequest, wallet: Wallet, time: Time): Either[ValidationError, AnchorTransaction] =
     anchor(request, wallet, request.sender, time)
 
@@ -582,7 +595,7 @@ object TransactionFactory extends BroadcastRequest {
     for {
       sender  <- wallet.findPrivateKey(request.sender)
       signer  <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      anchors <- request.anchors.traverse(s => parseBase58Exact(s, "invalid anchor: must be exactly 64 bytes", Proofs.MaxAnchorStringSize))
+      anchors <- parseAnchors(request.anchors)
       tx <- AnchorTransaction.signed(
         request.version,
         sender,
@@ -595,7 +608,7 @@ object TransactionFactory extends BroadcastRequest {
 
   def anchor(request: AnchorRequest, sender: PublicKeyAccount): Either[ValidationError, AnchorTransaction] =
     for {
-      anchors <- request.anchors.traverse(s => parseBase58Exact(s, "invalid anchor: must be exactly 64 bytes", Proofs.MaxAnchorStringSize))
+      anchors <- parseAnchors(request.anchors)
       tx <- AnchorTransaction.create(
         request.version,
         sender,

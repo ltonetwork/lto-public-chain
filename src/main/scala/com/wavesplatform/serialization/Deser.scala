@@ -37,6 +37,16 @@ object Deser {
     r._1
   }
 
+  def parseArraysPos(bytes: Array[Byte]): (Seq[Array[Byte]], Int) = {
+    val length = Shorts.fromByteArray(bytes.slice(0, 2))
+    val r = (0 until length).foldLeft((Seq.empty[Array[Byte]], 2)) {
+      case ((acc, pos), _) =>
+        val (arr, nextPos) = parseArraySize(bytes, pos)
+        (acc :+ arr, nextPos)
+    }
+    r
+  }
+
   def serializeOption[T](b: Option[T])(ser: T => Array[Byte]): Array[Byte] = b.map(a => (1: Byte) +: serializeArray(ser(a))).getOrElse(Array(0: Byte))
 
   def serializeArrays(bs: Seq[Array[Byte]]): Array[Byte] = Shorts.toByteArray(bs.length.toShort) ++ Bytes.concat(bs.map(serializeArray): _*)
