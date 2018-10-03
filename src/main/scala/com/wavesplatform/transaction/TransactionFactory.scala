@@ -572,13 +572,13 @@ object TransactionFactory extends BroadcastRequest {
       Proofs.empty
     )
 
-  private def parseAnchors(l: List[String]): Validation[List[ByteStr]] = {
+  def parseAnchors(l: List[String]): Validation[List[ByteStr]] = {
     import cats.implicits._
     l.traverse(s => {
       val r: Validation[ByteStr] = BroadcastRequest.parseBase58(s, "invalid anchor", Proofs.MaxAnchorStringSize)
       val r2: Validation[ByteStr] = r.map { bs =>
         if (bs.arr.length < AnchorTransaction.EntryLength(0))
-          ByteStr(Array.fill(AnchorTransaction.EntryLength(0) - bs.arr.length)(0: Byte))
+          ByteStr(Array.fill(AnchorTransaction.EntryLength(0) - bs.arr.length)(0: Byte) ++ bs.arr)
         else bs
       }
       r2
