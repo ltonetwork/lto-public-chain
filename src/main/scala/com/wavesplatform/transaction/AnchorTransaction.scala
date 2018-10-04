@@ -23,7 +23,8 @@ case class AnchorTransaction private (version: Byte, sender: PublicKeyAccount, a
     Bytes.concat(
       Array(builder.typeId, version),
       sender.publicKey,
-      Deser.serializeArrays(anchors.map(_.arr)),
+      Shorts.toByteArray(anchors.size.toShort),
+      anchors.flatMap(_.arr).toArray,
       Longs.toByteArray(timestamp),
       Longs.toByteArray(fee)
     )
