@@ -44,7 +44,7 @@ object AnchorTransaction extends TransactionParserFor[AnchorTransaction] with Tr
   override val typeId: Byte                 = 15
   override val supportedVersions: Set[Byte] = Set(1)
 
-  val EntryLength   = List(64, 128, 256, 384, 512)
+  val EntryLength   = List(16, 20, 32, 48, 64)
   val MaxBytes      = 150 * 1024
   val MaxEntryCount = 100
 
@@ -66,11 +66,6 @@ object AnchorTransaction extends TransactionParserFor[AnchorTransaction] with Tr
       txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
-  def validateAnchor(a: ByteStr) = {
-    val length = a.arr.length
-    length < EntryLength.head || EntryLength.contains(length)
-  }
-
   def create(version: Byte,
              sender: PublicKeyAccount,
              data: List[ByteStr],
@@ -81,8 +76,8 @@ object AnchorTransaction extends TransactionParserFor[AnchorTransaction] with Tr
       Left(ValidationError.UnsupportedVersion(version))
     } else if (data.lengthCompare(MaxEntryCount) > 0) {
       Left(ValidationError.TooBigArray)
-    } else if (data.exists(a => !validateAnchor(a))) {
-      Left(ValidationError.GenericError(s"Anchor can only be of length $EntryLength or less than ${EntryLength.head}"))
+    } else if (data.exists(a => !EntryLength.contains(a.arr.length))) {
+      Left(ValidationError.GenericError(s"Anchor can only be of length $EntryLength Bytes"))
     } else if (data.distinct.lengthCompare(data.size) < 0) {
       Left(ValidationError.GenericError("Duplicate anchor in one tx found"))
     } else if (feeAmount <= 0) {
