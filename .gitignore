@@ -2,6 +2,7 @@
 .idea
 .ensime
 .ensime_cache/
+waves.directory_IS_UNDEFINED/
 
 # scala build folders and files
 target

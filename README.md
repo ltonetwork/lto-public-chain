@@ -1,8 +1,12 @@
-# Waves [![Build Status](https://travis-ci.org/wavesplatform/Waves.svg?branch=master)](https://travis-ci.org/wavesplatform/Waves) [![](https://images.microbadger.com/badges/version/wavesplatform/waves-testnet.svg)]
+# Orange 
+In the `orange` branch there is a code with functions that is under development. The latest release for each network can be found in the [Releases section], you can switch to the corresponding tag and build the application.
 
-In the master branch there is a code with functions that is under development. The latest release for each network can be found in the [Releases section](https://github.com/wavesplatform/Waves/releases), you can switch to the corresponding tag and build the application.
+To build testnet, use
+```
+sbt -Dnetwork=testnet packageAll
+```
 
-For further information please refer the official [documentation](https://docs.wavesplatform.com).
+For further information please refer the [waves plaform documentation](https://docs.wavesplatform.com).
 
 # Acknowledgement
 
@@ -11,3 +15,4 @@ We use YourKit full-featured Java Profiler to make Waves node faster. YourKit, L
 Take a look at YourKit's leading software products: 
 <a href="http://www.yourkit.com/java/profiler/index.jsp">YourKit Java Profiler</a> and
 <a href="http://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET Profiler</a>.
+

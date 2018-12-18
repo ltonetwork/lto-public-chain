@@ -2,6 +2,7 @@ import com.typesafe.sbt.packager.archetypes.TemplateWriter
 import sbt.Keys.{sourceGenerators, _}
 import sbt._
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
+import sbt.internal.inc.ReflectUtilities
 import sbtassembly.MergeStrategy
 
 enablePlugins(JavaServerAppPackaging, JDebPackaging, SystemdPlugin, GitVersioning)
@@ -34,7 +35,7 @@ val versionSource = Def.task {
 }
 val network = SettingKey[Network]("network")
 network := { Network(sys.props.get("network")) }
-name := "waves"
+name := "lto"
 normalizedName := s"${name.value}${network.value.packageSuffix}"
 
 git.useGitDescribe := true
@@ -46,7 +47,7 @@ inThisBuild(
     scalaVersion := "2.12.6",
     organization := "com.wavesplatform",
     crossPaths := false,
-    scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-language:implicitConversions", "-Ywarn-unused:-implicits", "-Xlint")
+    scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-language:implicitConversions", "-Ywarn-unused:-implicits")
   ))
 
 resolvers += Resolver.bintrayRepo("ethereum", "maven")
@@ -82,7 +83,7 @@ val aopMerge: MergeStrategy = new MergeStrategy {
 inTask(assembly)(
   Seq(
     test := {},
-    assemblyJarName := s"waves-all-${version.value}.jar",
+    assemblyJarName := s"lto-public-all-${version.value}.jar",
     assemblyMergeStrategy := {
       case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.concat
       case PathList("META-INF", "aop.xml")                      => aopMerge
@@ -190,6 +191,22 @@ commands += Command.command("packageAll") { state =>
   "clean" :: "assembly" :: "debian:packageBin" :: state
 }
 
+// https://stackoverflow.com/a/48592704/4050580
+def allProjects: List[ProjectReference] = ReflectUtilities.allVals[Project](this).values.toList map { p =>
+  p: ProjectReference
+}
+
+addCommandAlias("checkPR", """;set scalacOptions in ThisBuild ++= Seq("-Xfatal-warnings"); Global / checkPRRaw""")
+lazy val checkPRRaw = taskKey[Unit]("Build a project and run unit tests")
+checkPRRaw in Global := {
+  try {
+    clean.all(ScopeFilter(inProjects(allProjects: _*), inConfigurations(Compile))).value
+  } finally {
+    test.all(ScopeFilter(inProjects(langJVM, node), inConfigurations(Test))).value
+    compile.all(ScopeFilter(inProjects(generator, benchmark), inConfigurations(Test))).value
+  }
+}
+
 lazy val lang =
   crossProject(JSPlatform, JVMPlatform)
     .withoutSuffixFor(JVMPlatform)
@@ -213,7 +230,7 @@ lazy val lang =
     )
     .jsSettings(
       scalaJSLinkerConfig ~= {
-        _.withModuleKind(ModuleKind.NoModule)
+        _.withModuleKind(ModuleKind.CommonJSModule)
       }
     )
     .jvmSettings(
@@ -224,6 +241,8 @@ lazy val lang =
 
 lazy val langJS  = lang.js
 lazy val langJVM = lang.jvm
+
+lazy val nacl4s = project
 
 lazy val node = project
   .in(file("."))
@@ -247,8 +266,7 @@ lazy val node = project
         Dependencies.monix.value
   )
   .dependsOn(langJVM)
-
-lazy val discovery = project
+  .dependsOn(nacl4s)
 
 lazy val it = project
   .dependsOn(node)

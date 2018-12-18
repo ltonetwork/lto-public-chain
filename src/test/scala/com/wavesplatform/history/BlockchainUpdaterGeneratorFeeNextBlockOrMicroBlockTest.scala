@@ -7,8 +7,8 @@ import com.wavesplatform.state.diffs._
 import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
-import scorex.transaction.GenesisTransaction
-import scorex.transaction.transfer._
+import com.wavesplatform.transaction.GenesisTransaction
+import com.wavesplatform.transaction.transfer._
 
 class BlockchainUpdaterGeneratorFeeNextBlockOrMicroBlockTest
     extends PropSpec
@@ -31,7 +31,7 @@ class BlockchainUpdaterGeneratorFeeNextBlockOrMicroBlockTest
   } yield (genesis, somePayment, generatorPaymentOnFee, someOtherPayment)
 
   property("generator should get fees before applying block before applyMinerFeeWithTransactionAfter in two blocks") {
-    assume(BlockchainFeatures.implemented.contains(BlockchainFeatures.SmartAccounts.id))
+
     scenario(preconditionsAndPayments, DefaultWavesSettings) {
       case (domain: Domain, (genesis, somePayment, generatorPaymentOnFee, someOtherPayment)) =>
         val blocks = chainBlocks(Seq(Seq(genesis, somePayment), Seq(generatorPaymentOnFee, someOtherPayment)))

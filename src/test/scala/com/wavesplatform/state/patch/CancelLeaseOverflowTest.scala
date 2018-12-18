@@ -1,15 +1,15 @@
 package com.wavesplatform.state.patch
 
+import com.wavesplatform.settings.TestFunctionalitySettings
 import com.wavesplatform.state.EitherExt2
 import com.wavesplatform.state.diffs._
 import com.wavesplatform.{NoShrink, TransactionGen}
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
-import scorex.lagonaki.mocks.TestBlock
-import scorex.settings.TestFunctionalitySettings
-import scorex.transaction.GenesisTransaction
-import scorex.transaction.lease.LeaseTransactionV1
-import scorex.transaction.transfer._
+import com.wavesplatform.lagonaki.mocks.TestBlock
+import com.wavesplatform.transaction.GenesisTransaction
+import com.wavesplatform.transaction.lease.LeaseTransactionV1
+import com.wavesplatform.transaction.transfer._
 
 class CancelLeaseOverflowTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
 
@@ -29,7 +29,7 @@ class CancelLeaseOverflowTest extends PropSpec with PropertyChecks with Matchers
         GenesisTransaction.create(sender2, amount + fee * 2, ts).explicitGet(),
         LeaseTransactionV1.selfSigned(sender1, amount, fee, ts, sender2).explicitGet(),
         LeaseTransactionV1.selfSigned(sender2, amount, fee, ts, recipient).explicitGet(),
-        TransferTransactionV1.selfSigned(None, sender2, recipient, amount, ts, None, fee, Array.emptyByteArray).explicitGet()
+        TransferTransactionV1.selfSigned(sender2, recipient, amount, ts, fee, Array.emptyByteArray).explicitGet()
       )
 
     forAll(leaseOverflowGen) {

@@ -32,7 +32,7 @@ object WavesContext {
     val getStringF: BaseFunction  = getdataF("getString", DATA_STRING, DataType.String)
 
     def secureHashExpr(xs: EXPR): EXPR = FUNCTION_CALL(
-      FunctionHeader.Native(KECCAK256),
+      FunctionHeader.Native(SHA256),
       List(
         FUNCTION_CALL(
           FunctionHeader.Native(BLAKE256),

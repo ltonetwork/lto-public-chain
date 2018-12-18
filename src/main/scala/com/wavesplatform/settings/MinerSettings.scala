@@ -17,7 +17,7 @@ case class MinerSettings(enable: Boolean,
 }
 
 object MinerSettings {
-  val configPath = "waves.miner"
+  val configPath = "lto.miner"
   def fromConfig(c: Config): MinerSettings = {
     import net.ceedubs.ficus.Ficus._
 

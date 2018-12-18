@@ -10,21 +10,25 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.stream.ActorMaterializer
 import cats.instances.all._
 import com.typesafe.config._
+import com.wavesplatform.account.AddressScheme
 import com.wavesplatform.actor.RootActorSystem
+import com.wavesplatform.api.http._
 import com.wavesplatform.consensus.PoSSelector
+import com.wavesplatform.consensus.nxt.api.http.NxtConsensusApiRoute
 import com.wavesplatform.db.openDB
 import com.wavesplatform.features.api.ActivationApiRoute
 import com.wavesplatform.history.{CheckpointServiceImpl, StorageFactory}
-import com.wavesplatform.http.NodeApiRoute
-import com.wavesplatform.matcher.Matcher
+import com.wavesplatform.http.{DebugApiRoute, NodeApiRoute}
 import com.wavesplatform.metrics.Metrics
 import com.wavesplatform.mining.{Miner, MinerImpl}
 import com.wavesplatform.network.RxExtensionLoader.RxExtensionLoaderShutdownHook
 import com.wavesplatform.network._
 import com.wavesplatform.settings._
 import com.wavesplatform.state.appender.{BlockAppender, CheckpointAppender, ExtensionAppender, MicroblockAppender}
-import com.wavesplatform.utils.{SystemInformationReporter, forceStopApplication}
-import com.wavesplatform.utx.{MatcherUtxPool, UtxPool, UtxPoolImpl}
+import com.wavesplatform.transaction._
+import com.wavesplatform.utils.{NTP, ScorexLogging, SystemInformationReporter, Time, forceStopApplication}
+import com.wavesplatform.utx.{UtxPool, UtxPoolImpl}
+import com.wavesplatform.wallet.Wallet
 import io.netty.channel.Channel
 import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
@@ -36,16 +40,6 @@ import monix.reactive.Observable
 import monix.reactive.subjects.ConcurrentSubject
 import org.influxdb.dto.Point
 import org.slf4j.bridge.SLF4JBridgeHandler
-import scorex.account.AddressScheme
-import scorex.api.http._
-import scorex.api.http.alias.{AliasApiRoute, AliasBroadcastApiRoute}
-import scorex.api.http.assets.{AssetsApiRoute, AssetsBroadcastApiRoute}
-import scorex.api.http.leasing.{LeaseApiRoute, LeaseBroadcastApiRoute}
-import scorex.consensus.nxt.api.http.NxtConsensusApiRoute
-import scorex.transaction._
-import scorex.utils.{NTP, ScorexLogging, Time}
-import scorex.wallet.Wallet
-import scorex.waves.http.{DebugApiRoute, WavesApiRoute}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -81,7 +75,6 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
   private val historyRepliesScheduler         = fixedPool("history-replier", poolSize = 2, reporter = log.error("Error in History Replier", _))
   private val minerScheduler                  = fixedPool("miner-pool", poolSize = 2, reporter = log.error("Error in Miner", _))
 
-  private var matcher: Option[Matcher]                                         = None
   private var rxExtensionLoaderShutdown: Option[RxExtensionLoaderShutdownHook] = None
   private var maybeUtx: Option[UtxPool]                                        = None
   private var maybeNetwork: Option[NS]                                         = None
@@ -106,21 +99,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
     val innerUtxStorage =
       new UtxPoolImpl(time, blockchainUpdater, feeCalculator, settings.blockchainSettings.functionalitySettings, settings.utxSettings)
 
-    matcher = if (settings.matcherSettings.enable) {
-      val m = new Matcher(actorSystem,
-                          wallet,
-                          innerUtxStorage,
-                          allChannels,
-                          blockchainUpdater,
-                          settings.blockchainSettings,
-                          settings.restAPISettings,
-                          settings.matcherSettings)
-      m.runMatcher()
-      Some(m)
-    } else None
-
-    val utxStorage =
-      if (settings.matcherSettings.enable) new MatcherUtxPool(innerUtxStorage, settings.matcherSettings, actorSystem.eventStream) else innerUtxStorage
+    val utxStorage = innerUtxStorage
     maybeUtx = Some(utxStorage)
 
     val knownInvalidBlocks = new InvalidBlockStorageImpl(settings.synchronizationSettings.invalidBlocksStorage)
@@ -226,10 +205,15 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
       val apiRoutes = Seq(
         NodeApiRoute(settings.restAPISettings, blockchainUpdater, () => apiShutdown()),
         BlocksApiRoute(settings.restAPISettings, blockchainUpdater, allChannels, c => processCheckpoint(None, c)),
-        TransactionsApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, allChannels, time),
+        TransactionsApiRoute(settings.restAPISettings,
+                             settings.blockchainSettings.functionalitySettings,
+                             wallet,
+                             blockchainUpdater,
+                             utxStorage,
+                             allChannels,
+                             time),
         NxtConsensusApiRoute(settings.restAPISettings, blockchainUpdater, settings.blockchainSettings.functionalitySettings),
         WalletApiRoute(settings.restAPISettings, wallet),
-        PaymentApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, time),
         UtilsApiRoute(time, settings.restAPISettings),
         PeersApiRoute(settings.restAPISettings, network.connect, peerDatabase, establishedConnections),
         AddressApiRoute(settings.restAPISettings,
@@ -255,14 +239,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
           scoreStatsReporter,
           configRoot
         ),
-        WavesApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, time),
-        AssetsApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, blockchainUpdater, time),
-        ActivationApiRoute(settings.restAPISettings, settings.blockchainSettings.functionalitySettings, settings.featuresSettings, blockchainUpdater),
-        AssetsBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels),
-        LeaseApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, allChannels, time),
-        LeaseBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels),
-        AliasApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, time, blockchainUpdater),
-        AliasBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels)
+        ActivationApiRoute(settings.restAPISettings, settings.blockchainSettings.functionalitySettings, settings.featuresSettings, blockchainUpdater)
       )
 
       val apiTypes = Seq(
@@ -271,19 +248,11 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
         typeOf[TransactionsApiRoute],
         typeOf[NxtConsensusApiRoute],
         typeOf[WalletApiRoute],
-        typeOf[PaymentApiRoute],
         typeOf[UtilsApiRoute],
         typeOf[PeersApiRoute],
         typeOf[AddressApiRoute],
         typeOf[DebugApiRoute],
-        typeOf[WavesApiRoute],
-        typeOf[AssetsApiRoute],
-        typeOf[ActivationApiRoute],
-        typeOf[AssetsBroadcastApiRoute],
-        typeOf[LeaseApiRoute],
-        typeOf[LeaseBroadcastApiRoute],
-        typeOf[AliasApiRoute],
-        typeOf[AliasBroadcastApiRoute]
+        typeOf[ActivationApiRoute]
       )
       val combinedRoute = CompositeHttpService(actorSystem, apiTypes, apiRoutes, settings.restAPISettings).loggingCompositeRoute
       val httpFuture    = Http().bindAndHandle(combinedRoute, settings.restAPISettings.bindAddress, settings.restAPISettings.port)
@@ -317,8 +286,6 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
       for (addr <- settings.networkSettings.declaredAddress if settings.networkSettings.uPnPSettings.enable) {
         upnp.deletePort(addr.getPort)
       }
-
-      matcher.foreach(_.shutdownMatcher())
 
       log.debug("Closing peer database")
       peerDatabase.close()
@@ -372,10 +339,10 @@ object Application extends ScorexLogging {
       // application config needs to be resolved wrt both system properties *and* user-supplied config.
       case Some(file) =>
         val cfg = ConfigFactory.parseFile(file)
-        if (!cfg.hasPath("waves")) {
+        if (!cfg.hasPath("lto")) {
           log.error("Malformed configuration file was provided! Aborting!")
-          log.error("Please, read following article about configuration file format:")
-          log.error("https://github.com/wavesplatform/Waves/wiki/Waves-Node-configuration-file")
+//          log.error("Please, read following article about configuration file format:")
+//          log.error("https://github.com/wavesplatform/Waves/wiki/Waves-Node-configuration-file")
           forceStopApplication()
         }
         loadConfig(cfg)
@@ -404,7 +371,7 @@ object Application extends ScorexLogging {
     val config = readConfig(args.headOption)
 
     // DO NOT LOG BEFORE THIS LINE, THIS PROPERTY IS USED IN logback.xml
-    System.setProperty("waves.directory", config.getString("waves.directory"))
+    System.setProperty("lto.directory", config.getString("lto.directory"))
     log.info("Starting...")
     sys.addShutdownHook {
       SystemInformationReporter.report(config)

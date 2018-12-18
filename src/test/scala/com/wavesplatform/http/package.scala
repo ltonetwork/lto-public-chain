@@ -6,10 +6,10 @@ import com.wavesplatform.state.ByteStr
 import org.scalatest.matchers.{HavePropertyMatchResult, HavePropertyMatcher}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
-import scorex.account.{AddressOrAlias, PublicKeyAccount}
+import com.wavesplatform.account.{AddressOrAlias, PublicKeyAccount}
 import com.wavesplatform.utils.Base58
-import scorex.transaction.{AssetId, Proofs}
-import scorex.transaction.transfer._
+import com.wavesplatform.transaction.{AssetId, Proofs}
+import com.wavesplatform.transaction.transfer._
 import shapeless.{:+:, CNil, Coproduct}
 
 import scala.reflect.ClassTag
@@ -88,12 +88,10 @@ package object http {
   )
 
   implicit val transferTransactionFormat: Format[TransferTransactionV1] = (
-    (JsPath \ "assetId").formatNullable[AssetId] and
-      (JsPath \ "sender").format[PublicKeyAccount] and
+    (JsPath \ "sender").format[PublicKeyAccount] and
       (JsPath \ "recipient").format[AddressOrAlias] and
       (JsPath \ "amount").format[Long] and
       (JsPath \ "timestamp").format[Long] and
-      (JsPath \ "feeAsset").formatNullable[AssetId] and
       (JsPath \ "fee").format[Long] and
       (JsPath \ "attachment")
         .format[String]
@@ -108,10 +106,8 @@ package object http {
     (JsPath \ "version").format[Byte] and
       (JsPath \ "sender").format[PublicKeyAccount] and
       (JsPath \ "recipient").format[AddressOrAlias] and
-      (JsPath \ "assetId").formatNullable[AssetId] and
       (JsPath \ "amount").format[Long] and
       (JsPath \ "timestamp").format[Long] and
-      (JsPath \ "feeAssetId").formatNullable[AssetId] and
       (JsPath \ "fee").format[Long] and
       (JsPath \ "attachment")
         .format[String]

@@ -8,13 +8,11 @@ import com.wavesplatform.settings.{GenesisSettings, GenesisTransactionSettings}
 import com.wavesplatform.state._
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
-import scorex.account.{Address, AddressScheme, PrivateKeyAccount}
-import scorex.block.Block
-import scorex.consensus.nxt.NxtLikeConsensusBlockData
-import scorex.crypto.signatures.Curve25519.SignatureLength
-import scorex.transaction.GenesisTransaction
-import scorex.wallet.Wallet
-
+import com.wavesplatform.account.{Address, AddressScheme, PrivateKeyAccount}
+import com.wavesplatform.block.Block
+import com.wavesplatform.consensus.nxt.NxtLikeConsensusBlockData
+import com.wavesplatform.transaction.GenesisTransaction
+import com.wavesplatform.wallet.Wallet
 import scala.concurrent.duration._
 
 object GenesisBlockGenerator extends App {
@@ -31,8 +29,8 @@ object GenesisBlockGenerator extends App {
     private val distributionsSum = distributions.values.sum
 
     require(
-      distributionsSum <= initialBalance,
-      s"The sum of all balances should be <= $initialBalance, but it is $distributionsSum"
+      distributionsSum == initialBalance,
+      s"The sum of all balances should be == $initialBalance, but it is $distributionsSum"
     )
 
     val networkByte: Byte = networkType.head.toByte
@@ -70,7 +68,7 @@ object GenesisBlockGenerator extends App {
     ConfigFactory.parseFile(file).as[Settings]("genesis-generator")
   }
 
-  scorex.account.AddressScheme.current = new AddressScheme {
+  com.wavesplatform.account.AddressScheme.current = new AddressScheme {
     override val chainId: Byte = settings.networkByte
   }
 
@@ -86,7 +84,7 @@ object GenesisBlockGenerator extends App {
   }.toSeq
 
   val genesisBlock: Block = {
-    val reference     = ByteStr(Array.fill(SignatureLength)(-1: Byte))
+    val reference     = ByteStr(Array.fill(crypto.SignatureLength)(-1: Byte))
     val genesisSigner = PrivateKeyAccount(Array.empty)
 
     Block

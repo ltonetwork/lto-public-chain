@@ -6,7 +6,7 @@ import net.ceedubs.ficus.Ficus._
 case class RestAPISettings(enable: Boolean, bindAddress: String, port: Int, apiKeyHash: String, cors: Boolean, apiKeyDifferentHost: Boolean)
 
 object RestAPISettings {
-  val configPath: String = "waves.rest-api"
+  val configPath: String = "lto.rest-api"
 
   def fromConfig(config: Config): RestAPISettings = {
     RestAPISettings(

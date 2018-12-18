@@ -6,7 +6,7 @@ import com.wavesplatform.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
-import scorex.lagonaki.mocks.TestBlock
+import com.wavesplatform.lagonaki.mocks.TestBlock
 
 class GenesisTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
   def nelMax[T](g: Gen[T], max: Int = 10): Gen[List[T]] = Gen.choose(1, max).flatMap(Gen.listOfN(_, g))
@@ -17,13 +17,12 @@ class GenesisTransactionDiffTest extends PropSpec with PropertyChecks with Match
     }
   }
 
-  property("Diff establishes Waves invariant") {
+  property("Diff establishes LTO invariant") {
     forAll(nelMax(genesisGen)) { gtxs =>
       assertDiffAndState(Seq.empty, TestBlock.create(gtxs)) { (blockDiff, _) =>
         val totalPortfolioDiff: Portfolio = Monoid.combineAll(blockDiff.portfolios.values)
         totalPortfolioDiff.balance shouldBe gtxs.map(_.amount).sum
         totalPortfolioDiff.effectiveBalance shouldBe gtxs.map(_.amount).sum
-        totalPortfolioDiff.assets shouldBe Map.empty
 
         gtxs.foreach { gtx =>
           blockDiff.portfolios(gtx.recipient).balance shouldBe gtx.amount

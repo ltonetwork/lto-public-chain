@@ -4,12 +4,12 @@ import java.util.concurrent.ThreadLocalRandom
 
 import com.wavesplatform.generator.utils.Implicits._
 import com.wavesplatform.state.ByteStr
-import scorex.account.{Address, PrivateKeyAccount}
-import scorex.crypto.signatures.Curve25519.KeyLength
-import scorex.transaction.smart.script.{Script, ScriptCompiler}
-import scorex.transaction.transfer.MassTransferTransaction.ParsedTransfer
-import scorex.transaction.transfer._
-import scorex.transaction.{Proofs, Transaction}
+import com.wavesplatform.account.{Address, PrivateKeyAccount}
+import com.wavesplatform.transaction.smart.script.{Script, ScriptCompiler}
+import com.wavesplatform.transaction.transfer.MassTransferTransaction.ParsedTransfer
+import com.wavesplatform.transaction.transfer._
+import com.wavesplatform.transaction.{Proofs, Transaction}
+import scorex.crypto.signatures.Curve25519._
 
 object Gen {
   private def random = ThreadLocalRandom.current
@@ -64,7 +64,7 @@ object Gen {
       .zip(feeGen)
       .map {
         case ((src, dst), fee) =>
-          TransferTransactionV1.selfSigned(None, src, dst, fee, System.currentTimeMillis(), None, fee, Array.emptyByteArray)
+          TransferTransactionV1.selfSigned(src, dst, fee, System.currentTimeMillis(), fee, Array.emptyByteArray)
       }
       .collect { case Right(x) => x }
   }
@@ -77,7 +77,7 @@ object Gen {
         case (sender, count) =>
           val transfers = List.tabulate(count)(_ => ParsedTransfer(recipientGen.next(), amountGen.next()))
           val fee       = 100000 + count * 50000
-          MassTransferTransaction.selfSigned(Proofs.Version, None, sender, transfers, System.currentTimeMillis, fee, Array.emptyByteArray)
+          MassTransferTransaction.selfSigned(Proofs.Version, sender, transfers, System.currentTimeMillis, fee, Array.emptyByteArray)
       }
       .collect { case Right(tx) => tx }
   }

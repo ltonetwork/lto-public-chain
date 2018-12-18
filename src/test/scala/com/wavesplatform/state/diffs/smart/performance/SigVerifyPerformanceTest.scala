@@ -12,11 +12,11 @@ import com.wavesplatform.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
-import scorex.account.{PrivateKeyAccount, PublicKeyAccount}
-import scorex.lagonaki.mocks.TestBlock
-import scorex.transaction.GenesisTransaction
-import scorex.transaction.smart.script.v1.ScriptV1
-import scorex.transaction.transfer._
+import com.wavesplatform.account.{PrivateKeyAccount, PublicKeyAccount}
+import com.wavesplatform.lagonaki.mocks.TestBlock
+import com.wavesplatform.transaction.GenesisTransaction
+import com.wavesplatform.transaction.smart.script.v1.ScriptV1
+import com.wavesplatform.transaction.transfer._
 
 class SigVerifyPerformanceTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
 
@@ -26,14 +26,14 @@ class SigVerifyPerformanceTest extends PropSpec with PropertyChecks with Matcher
     for {
       amt <- smallFeeGen
       fee <- smallFeeGen
-    } yield TransferTransactionV1.selfSigned(None, from, to.toAddress, amt, ts, None, fee, Array.emptyByteArray).explicitGet()
+    } yield TransferTransactionV1.selfSigned(from, to.toAddress, amt, ts, fee, Array.emptyByteArray).explicitGet()
 
   private def scriptedSendGen(from: PrivateKeyAccount, to: PublicKeyAccount, ts: Long): Gen[TransferTransactionV2] =
     for {
       version <- Gen.oneOf(TransferTransactionV2.supportedVersions.toSeq)
       amt     <- smallFeeGen
       fee     <- smallFeeGen
-    } yield TransferTransactionV2.selfSigned(version, None, from, to.toAddress, amt, ts, None, fee, Array.emptyByteArray).explicitGet()
+    } yield TransferTransactionV2.selfSigned(version, from, to.toAddress, amt, ts, fee, Array.emptyByteArray).explicitGet()
 
   private def differentTransfers(typed: EXPR) =
     for {

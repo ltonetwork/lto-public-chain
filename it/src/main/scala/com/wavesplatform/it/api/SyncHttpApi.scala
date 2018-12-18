@@ -9,10 +9,10 @@ import org.scalactic.source.Position
 import org.scalatest.{Assertion, Assertions, Matchers}
 import play.api.libs.json.Json.parse
 import play.api.libs.json.{Format, JsObject, Json, Writes}
-import scorex.api.http.AddressApiRoute
-import scorex.api.http.assets.SignedIssueV1Request
-import scorex.transaction.transfer.MassTransferTransaction.Transfer
-import scorex.waves.http.DebugMessage
+import com.wavesplatform.api.http.AddressApiRoute
+import com.wavesplatform.api.http.assets.SignedIssueV1Request
+import com.wavesplatform.http.DebugMessage
+import com.wavesplatform.transaction.transfer.MassTransferTransaction.Transfer
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -131,6 +131,8 @@ object SyncHttpApi extends Assertions {
     def burn(sourceAddress: String, assetId: String, quantity: Long, fee: Long): Transaction =
       Await.result(async(n).burn(sourceAddress, assetId, quantity, fee), RequestAwaitTime)
 
+    def getAddresses: Seq[String] = Await.result(async(n).getAddresses, RequestAwaitTime)
+
     def burn(sourceAddress: String, assetId: String, quantity: Long, fee: Long, version: String): Transaction =
       if (Option(version).nonEmpty) burnV2(sourceAddress, assetId, quantity, fee, version) else burn(sourceAddress, assetId, quantity, fee)
 
@@ -215,12 +217,19 @@ object SyncHttpApi extends Assertions {
     def height: Int =
       Await.result(async(n).height, RequestAwaitTime)
 
-    def blockAt(height: Int) = Await.result(async(n).blockAt(height), RequestAwaitTime)
+    def blockAt(height: Int): Block = Await.result(async(n).blockAt(height), RequestAwaitTime)
+
+    def blockHeadersSeq(from: Int, to: Int): Seq[BlockHeaders] = Await.result(async(n).blockHeadersSeq(from, to), RequestAwaitTime)
 
     def rollback(to: Int, returnToUTX: Boolean = true): Unit =
       Await.result(async(n).rollback(to, returnToUTX), RequestAwaitTime)
 
     def findTransactionInfo(txId: String): Option[TransactionInfo] = Await.result(async(n).findTransactionInfo(txId), RequestAwaitTime)
+
+    def connectedPeers: Seq[Peer] = (Json.parse(get("/peers/connected").getResponseBody) \ "peers").as[Seq[Peer]]
+
+    def calculateFee(tx: JsObject): FeeInfo =
+      Await.result(async(n).calculateFee(tx), RequestAwaitTime)
   }
 
   implicit class NodesExtSync(nodes: Seq[Node]) {
@@ -229,6 +238,9 @@ object SyncHttpApi extends Assertions {
 
     private val TxInBlockchainAwaitTime = 8 * nodes.head.blockDelay
     private val ConditionAwaitTime      = 5.minutes
+
+    def height(implicit pos: Position): Seq[Int] =
+      Await.result(async(nodes).height, TxInBlockchainAwaitTime)
 
     def waitForHeightAriseAndTxPresent(transactionId: String)(implicit pos: Position): Unit =
       Await.result(async(nodes).waitForHeightAriseAndTxPresent(transactionId), TxInBlockchainAwaitTime)

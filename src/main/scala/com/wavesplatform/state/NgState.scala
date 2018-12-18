@@ -4,10 +4,10 @@ import java.util.concurrent.TimeUnit
 
 import cats.kernel.Monoid
 import com.google.common.cache.CacheBuilder
-import scorex.block.Block.BlockId
-import scorex.block.{Block, MicroBlock}
-import scorex.transaction.{DiscardedMicroBlocks, Transaction}
-import scorex.utils.ScorexLogging
+import com.wavesplatform.utils.ScorexLogging
+import com.wavesplatform.block.Block.BlockId
+import com.wavesplatform.block.{Block, MicroBlock}
+import com.wavesplatform.transaction.{DiscardedMicroBlocks, Transaction}
 
 import scala.collection.mutable.{ListBuffer => MList, Map => MMap}
 
@@ -57,7 +57,7 @@ class NgState(val base: Block, val baseBlockDiff: Diff, val approvedFeatures: Se
   def totalDiffOf(id: BlockId): Option[(Block, Diff, DiscardedMicroBlocks)] =
     forgeBlock(id).map { case (b, txs) => (b, diffFor(id), txs) }
 
-  def bestLiquidDiff: Diff = micros.headOption.fold(baseBlockDiff)(m => totalDiffOf(m.totalResBlockSig).get._2)
+  def bestLiquidDiff: Diff = micros.headOption.fold(baseBlockDiff)(m => diffFor(m.totalResBlockSig))
 
   def contains(blockId: BlockId): Boolean = base.uniqueId == blockId || microDiffs.contains(blockId)
 

@@ -12,19 +12,19 @@ import com.wavesplatform.state.diffs.ENOUGH_AMT
 import org.scalacheck.Gen.{alphaLowerChar, alphaUpperChar, frequency, numChar}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{BeforeAndAfterAll, Suite}
-import scorex.account.PublicKeyAccount._
-import scorex.account._
-import scorex.transaction._
-import scorex.transaction.assets._
-import scorex.transaction.assets.exchange._
-import scorex.transaction.lease._
-import scorex.transaction.smart.SetScriptTransaction
-import scorex.transaction.smart.script.Script
-import scorex.transaction.smart.script.v1.ScriptV1
-import scorex.transaction.transfer.MassTransferTransaction.ParsedTransfer
-import scorex.transaction.transfer._
-import scorex.utils.TimeImpl
+import com.wavesplatform.account.PublicKeyAccount._
+import com.wavesplatform.account._
+import com.wavesplatform.transaction._
+import com.wavesplatform.transaction.assets._
+import com.wavesplatform.transaction.assets.exchange._
+import com.wavesplatform.transaction.lease._
+import com.wavesplatform.transaction.smart.SetScriptTransaction
+import com.wavesplatform.transaction.smart.script.Script
+import com.wavesplatform.transaction.smart.script.v1.ScriptV1
+import com.wavesplatform.transaction.transfer.MassTransferTransaction.ParsedTransfer
+import com.wavesplatform.transaction.transfer._
 import MassTransferTransaction.MaxTransferCount
+import com.wavesplatform.utils.TimeImpl
 
 import scala.util.Random
 
@@ -163,18 +163,16 @@ trait TransactionGenBase extends ScriptGen {
   } yield (sender, amount, fee, timestamp, recipient)
 
   def createLease(sender: PrivateKeyAccount, amount: Long, fee: Long, timestamp: Long, recipient: AddressOrAlias) = {
-    val v1 = LeaseTransactionV1.selfSigned(sender, amount, fee, timestamp, recipient).explicitGet()
     val v2 = LeaseTransactionV2.selfSigned(LeaseTransactionV2.supportedVersions.head, sender, amount, fee, timestamp, recipient).explicitGet()
-    Gen.oneOf(v1, v2)
+    Gen.const(v2)
   }
 
   def createLeaseCancel(sender: PrivateKeyAccount, leaseId: ByteStr, cancelFee: Long, timestamp: Long) = {
-    val v1 = LeaseCancelTransactionV1.selfSigned(sender, leaseId, cancelFee, timestamp + 1).explicitGet()
     val v2 = LeaseCancelTransactionV2
       .selfSigned(LeaseTransactionV2.supportedVersions.head, AddressScheme.current.chainId, sender, leaseId, cancelFee, timestamp + 1)
       .right
       .get
-    Gen.oneOf(v1, v2)
+    Gen.const(v2)
   }
   val leaseAndCancelGen: Gen[(LeaseTransaction, LeaseCancelTransaction)] = for {
     (sender, amount, fee, timestamp, recipient) <- leaseParamGen
@@ -217,38 +215,36 @@ trait TransactionGenBase extends ScriptGen {
   val transferParamGen = for {
     amount     <- positiveLongGen
     feeAmount  <- smallFeeGen
-    assetId    <- Gen.option(bytes32gen)
-    feeAssetId <- Gen.option(bytes32gen)
     timestamp  <- timestampGen
     sender     <- accountGen
     attachment <- genBoundedBytes(0, TransferTransaction.MaxAttachmentSize)
     recipient  <- accountOrAliasGen
-  } yield (assetId.map(ByteStr(_)), sender, recipient, amount, timestamp, feeAssetId.map(ByteStr(_)), feeAmount, attachment)
+  } yield (sender, recipient, amount, timestamp, feeAmount, attachment)
 
   def transferGeneratorP(sender: PrivateKeyAccount,
                          recipient: AddressOrAlias,
                          assetId: Option[AssetId],
                          feeAssetId: Option[AssetId]): Gen[TransferTransactionV1] =
     for {
-      (_, _, _, amount, timestamp, _, feeAmount, attachment) <- transferParamGen
-    } yield TransferTransactionV1.selfSigned(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, attachment).explicitGet()
+      (_, _, amount, timestamp, feeAmount, attachment) <- transferParamGen
+    } yield TransferTransactionV1.selfSigned(sender, recipient, amount, timestamp, feeAmount, attachment).explicitGet()
 
   def versionedTransferGeneratorP(sender: PrivateKeyAccount,
                                   recipient: AddressOrAlias,
                                   assetId: Option[AssetId],
                                   feeAssetId: Option[AssetId]): Gen[TransferTransactionV2] =
     for {
-      (_, _, _, amount, timestamp, _, feeAmount, attachment) <- transferParamGen
+      (_, _, amount, timestamp, feeAmount, attachment) <- transferParamGen
     } yield
       TransferTransactionV2
-        .selfSigned(TransferTransactionV2.supportedVersions.head, assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, attachment)
+        .selfSigned(TransferTransactionV2.supportedVersions.head, sender, recipient, amount, timestamp, feeAmount, attachment)
         .explicitGet()
 
   def transferGeneratorP(timestamp: Long, sender: PrivateKeyAccount, recipient: AddressOrAlias, maxAmount: Long): Gen[TransferTransactionV1] =
     for {
-      amount                                    <- Gen.choose(1, maxAmount)
-      (_, _, _, _, _, _, feeAmount, attachment) <- transferParamGen
-    } yield TransferTransactionV1.selfSigned(None, sender, recipient, amount, timestamp, None, feeAmount, attachment).explicitGet()
+      amount                              <- Gen.choose(1, maxAmount)
+      (_, _, _, _, feeAmount, attachment) <- transferParamGen
+    } yield TransferTransactionV1.selfSigned(sender, recipient, amount, timestamp, feeAmount, attachment).explicitGet()
 
   def transferGeneratorP(timestamp: Long,
                          sender: PrivateKeyAccount,
@@ -256,8 +252,8 @@ trait TransactionGenBase extends ScriptGen {
                          assetId: Option[AssetId],
                          feeAssetId: Option[AssetId]): Gen[TransferTransactionV1] =
     for {
-      (_, _, _, amount, _, _, feeAmount, attachment) <- transferParamGen
-    } yield TransferTransactionV1.selfSigned(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, attachment).explicitGet()
+      (_, _, amount, _, feeAmount, attachment) <- transferParamGen
+    } yield TransferTransactionV1.selfSigned(sender, recipient, amount, timestamp, feeAmount, attachment).explicitGet()
 
   def wavesTransferGeneratorP(sender: PrivateKeyAccount, recipient: AddressOrAlias): Gen[TransferTransactionV1] =
     transferGeneratorP(sender, recipient, None, None)
@@ -267,29 +263,29 @@ trait TransactionGenBase extends ScriptGen {
 
   def massTransferGeneratorP(sender: PrivateKeyAccount, transfers: List[ParsedTransfer], assetId: Option[AssetId]): Gen[MassTransferTransaction] =
     for {
-      version                                           <- Gen.oneOf(MassTransferTransaction.supportedVersions.toSeq)
-      (_, _, _, _, timestamp, _, feeAmount, attachment) <- transferParamGen
-    } yield MassTransferTransaction.selfSigned(version, assetId, sender, transfers, timestamp, feeAmount, attachment).explicitGet()
+      version                                     <- Gen.oneOf(MassTransferTransaction.supportedVersions.toSeq)
+      (_, _, _, timestamp, feeAmount, attachment) <- transferParamGen
+    } yield MassTransferTransaction.selfSigned(version, sender, transfers, timestamp, feeAmount, attachment).explicitGet()
 
   def createWavesTransfer(sender: PrivateKeyAccount,
                           recipient: Address,
                           amount: Long,
                           fee: Long,
                           timestamp: Long): Either[ValidationError, TransferTransactionV1] =
-    TransferTransactionV1.selfSigned(None, sender, recipient, amount, timestamp, None, fee, Array())
+    TransferTransactionV1.selfSigned(sender, recipient, amount, timestamp, fee, Array())
 
   val transferV1Gen = (for {
-    (assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, attachment) <- transferParamGen
-  } yield TransferTransactionV1.selfSigned(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, attachment).explicitGet())
+    (sender, recipient, amount, timestamp, feeAmount, attachment) <- transferParamGen
+  } yield TransferTransactionV1.selfSigned(sender, recipient, amount, timestamp, feeAmount, attachment).explicitGet())
     .label("transferTransaction")
 
   val transferV2Gen = (for {
-    version                                                                            <- Gen.oneOf(TransferTransactionV2.supportedVersions.toSeq)
-    (assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, attachment) <- transferParamGen
-    proofs                                                                             <- proofsGen
+    version                                                       <- Gen.oneOf(TransferTransactionV2.supportedVersions.toSeq)
+    (sender, recipient, amount, timestamp, feeAmount, attachment) <- transferParamGen
+    proofs                                                        <- proofsGen
   } yield
     TransferTransactionV2
-      .create(version, assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, attachment, proofs)
+      .create(version, sender, recipient, amount, timestamp, feeAmount, attachment, proofs)
       .explicitGet())
     .label("VersionedTransferTransaction")
 
@@ -299,34 +295,34 @@ trait TransactionGenBase extends ScriptGen {
       amt       <- positiveLongGen
       fee       <- smallFeeGen
       timestamp <- timestampGen
-    } yield TransferTransactionV2.create(version, None, sender, recipient, amt, timestamp, None, fee, Array.emptyByteArray, proofs).explicitGet())
+    } yield TransferTransactionV2.create(version, sender, recipient, amt, timestamp, fee, Array.emptyByteArray, proofs).explicitGet())
       .label("VersionedTransferTransactionP")
 
   val transferWithWavesFeeGen = for {
-    (assetId, sender, recipient, amount, timestamp, _, feeAmount, attachment) <- transferParamGen
-  } yield TransferTransactionV1.selfSigned(assetId, sender, recipient, amount, timestamp, None, feeAmount, attachment).explicitGet()
+    (sender, recipient, amount, timestamp, feeAmount, attachment) <- transferParamGen
+  } yield TransferTransactionV1.selfSigned(sender, recipient, amount, timestamp, feeAmount, attachment).explicitGet()
 
   val selfTransferWithWavesFeeGen: Gen[TransferTransactionV1] = for {
-    (assetId, sender, _, amount, timestamp, _, feeAmount, attachment) <- transferParamGen
-  } yield TransferTransactionV1.selfSigned(assetId, sender, sender, amount, timestamp, None, feeAmount, attachment).explicitGet()
+    (sender, _, amount, timestamp, feeAmount, attachment) <- transferParamGen
+  } yield TransferTransactionV1.selfSigned(sender, sender, amount, timestamp, feeAmount, attachment).explicitGet()
 
   val selfTransferGen: Gen[TransferTransactionV1] = for {
-    (assetId, sender, _, amount, timestamp, feeAssetId, feeAmount, attachment) <- transferParamGen
-  } yield TransferTransactionV1.selfSigned(assetId, sender, sender, amount, timestamp, feeAssetId, feeAmount, attachment).explicitGet()
+    (sender, _, amount, timestamp, feeAmount, attachment) <- transferParamGen
+  } yield TransferTransactionV1.selfSigned(sender, sender, amount, timestamp, feeAmount, attachment).explicitGet()
 
   val massTransferGen: Gen[MassTransferTransaction] = massTransferGen(MaxTransferCount)
 
   def massTransferGen(maxTransfersCount: Int) =
     for {
-      version                                                      <- Gen.oneOf(MassTransferTransaction.supportedVersions.toSeq)
-      (assetId, sender, _, _, timestamp, _, feeAmount, attachment) <- transferParamGen
-      transferCount                                                <- Gen.choose(0, maxTransfersCount)
+      version                                          <- Gen.oneOf(MassTransferTransaction.supportedVersions.toSeq)
+      (sender, _, _, timestamp, feeAmount, attachment) <- transferParamGen
+      transferCount                                    <- Gen.choose(0, maxTransfersCount)
       transferGen = for {
         recipient <- accountOrAliasGen
         amount    <- Gen.choose(1L, Long.MaxValue / maxTransfersCount)
       } yield ParsedTransfer(recipient, amount)
       recipients <- Gen.listOfN(transferCount, transferGen)
-    } yield MassTransferTransaction.selfSigned(version, assetId, sender, recipients, timestamp, feeAmount, attachment).explicitGet()
+    } yield MassTransferTransaction.selfSigned(version, sender, recipients, timestamp, feeAmount, attachment).explicitGet()
 
   val MinIssueFee = 100000000
 
@@ -560,13 +556,7 @@ trait TransactionGenBase extends ScriptGen {
 
   val randomTransactionGen: Gen[SignedTransaction] = (for {
     tr <- transferV1Gen
-    (is, ri, bu) <- issueReissueBurnGen.retryUntil {
-      case (i, r, b) => i.version == 1 && r.version == 1 && b.version == 1
-    }
-    ca <- createAliasGen.retryUntil(_.version == 1).map(_.asInstanceOf[CreateAliasTransactionV1])
-    xt <- exchangeTransactionGen
-    tx <- Gen.oneOf(tr, is.asInstanceOf[IssueTransactionV1], ri.asInstanceOf[ReissueTransactionV1], ca, bu.asInstanceOf[BurnTransactionV1], xt)
-  } yield tx).label("random transaction")
+  } yield tr).label("random transaction")
 
   def randomTransactionsGen(count: Int): Gen[Seq[SignedTransaction]] =
     for {
@@ -625,6 +615,18 @@ trait TransactionGenBase extends ScriptGen {
     Gen.oneOf(longEntryGen(keyGen), booleanEntryGen(keyGen), binaryEntryGen(maxSize, keyGen), stringEntryGen(maxSize, keyGen))
 
   val dataTransactionGen: Gen[DataTransaction] = dataTransactionGen(DataTransaction.MaxEntryCount)
+
+  val anchorTransactionGen: Gen[AnchorTransaction] = for {
+    sender    <- accountGen
+    timestamp <- timestampGen
+    size      <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
+    len       <- Gen.oneOf(AnchorTransaction.EntryLength)
+    data      <- Gen.listOfN(size, genBoundedBytes(len, len))
+    version   <- Gen.oneOf(AnchorTransaction.supportedVersions.toSeq)
+  } yield {
+    val anchors = data.map(ByteStr(_))
+    AnchorTransaction.selfSigned(version, sender, anchors, 15000000, timestamp).explicitGet()
+  }
 
   def dataTransactionGen(maxEntryCount: Int, useForScript: Boolean = false) =
     (for {

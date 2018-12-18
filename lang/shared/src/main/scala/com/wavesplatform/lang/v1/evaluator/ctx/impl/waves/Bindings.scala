@@ -75,14 +75,12 @@ object Bindings {
         CaseObj(genesisTransactionType.typeRef, Map("amount" -> amount) ++ headerPart(h) + mapRecipient(recipient))
       case Tx.Payment(p, amount, recipient) =>
         CaseObj(paymentTransactionType.typeRef, Map("amount" -> amount) ++ provenTxPart(p) + mapRecipient(recipient))
-      case Tx.Transfer(p, feeAssetId, transferAssetId, amount, recipient, attachment) =>
+      case Tx.Transfer(p, amount, recipient, attachment) =>
         CaseObj(
           transferTransactionType.typeRef,
           Map(
-            "amount"          -> amount,
-            "feeAssetId"      -> fromOption(feeAssetId),
-            "transferAssetId" -> fromOption(transferAssetId),
-            "attachment"      -> attachment
+            "amount"     -> amount,
+            "attachment" -> attachment
           ) ++ provenTxPart(p) + mapRecipient(recipient)
         )
       case Issue(p, quantity, name, description, reissuable, decimals, scriptOpt) =>
@@ -133,16 +131,15 @@ object Bindings {
             "alias" -> alias,
           ) ++ provenTxPart(p)
         )
-      case MassTransfer(p, assetId, transferCount, totalAmount, transfers, attachment) =>
+      case MassTransfer(p, transferCount, totalAmount, transfers, attachment) =>
         CaseObj(
           massTransferTransactionType.typeRef,
           Map(
             "transfers" -> transfers
               .map(bv => CaseObj(transfer.typeRef, Map(mapRecipient(bv.recipient), "amount" -> bv.amount))),
-            "transferAssetId" -> fromOption(assetId),
-            "transferCount"   -> transferCount,
-            "totalAmount"     -> totalAmount,
-            "attachment"      -> attachment
+            "transferCount" -> transferCount,
+            "totalAmount"   -> totalAmount,
+            "attachment"    -> attachment
           ) ++ provenTxPart(p)
         )
       case SetScript(p, scriptOpt) =>
@@ -155,9 +152,7 @@ object Bindings {
       case Data(p, data) =>
         CaseObj(
           dataTransactionType.typeRef,
-          Map("data" -> data.map(e =>
-            CaseObj(dataEntryType.typeRef, Map("key"  -> e.key, "value" -> e.value)))
-          ) ++ provenTxPart(p)
+          Map("data" -> data.map(e => CaseObj(dataEntryType.typeRef, Map("key" -> e.key, "value" -> e.value)))) ++ provenTxPart(p)
         )
       case Exchange(p, price, amount, buyMatcherFee, sellMatcherFee, buyOrder, sellOrder) =>
         CaseObj(

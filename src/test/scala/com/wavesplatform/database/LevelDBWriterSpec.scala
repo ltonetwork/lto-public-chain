@@ -1,23 +1,22 @@
 package com.wavesplatform.database
 
 import com.typesafe.config.ConfigFactory
+import com.wavesplatform.account.{Address, PrivateKeyAccount}
+import com.wavesplatform.block.Block
 import com.wavesplatform.features.BlockchainFeatures
+import com.wavesplatform.lagonaki.mocks.TestBlock
 import com.wavesplatform.lang.v1.compiler.Terms
-import com.wavesplatform.settings.{WavesSettings, loadConfig}
+import com.wavesplatform.settings.{TestFunctionalitySettings, WavesSettings, loadConfig}
 import com.wavesplatform.state.diffs.ENOUGH_AMT
 import com.wavesplatform.state.{BlockchainUpdaterImpl, EitherExt2}
+import com.wavesplatform.transaction.smart.SetScriptTransaction
+import com.wavesplatform.transaction.smart.script.v1.ScriptV1
+import com.wavesplatform.transaction.transfer.{TransferTransaction, TransferTransactionV1}
+import com.wavesplatform.transaction.{GenesisTransaction, Transaction}
+import com.wavesplatform.utils.{Time, TimeImpl}
 import com.wavesplatform.{RequestGen, WithDB}
 import org.scalacheck.Gen
 import org.scalatest.{FreeSpec, Matchers}
-import scorex.account.{Address, PrivateKeyAccount}
-import scorex.block.Block
-import scorex.lagonaki.mocks.TestBlock
-import scorex.settings.TestFunctionalitySettings
-import scorex.transaction.smart.SetScriptTransaction
-import scorex.transaction.smart.script.v1.ScriptV1
-import scorex.transaction.transfer.{TransferTransaction, TransferTransactionV1}
-import scorex.transaction.{GenesisTransaction, Transaction}
-import scorex.utils.{Time, TimeImpl}
 
 class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestGen {
   "Slice" - {
@@ -37,14 +36,14 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
       LevelDBWriter.merge(Seq(12, 5), Seq(15, 12, 3)) shouldEqual Seq((12, 15), (12, 12), (5, 12), (5, 3))
     }
   }
-  "hasScript" - {
+  "hasScript" ignore {
     "returns false if a script was not set" in {
       val writer = new LevelDBWriter(db, TestFunctionalitySettings.Stub)
       writer.hasScript(accountGen.sample.get.toAddress) shouldBe false
     }
 
     "returns false if a script was set and then unset" in {
-      assume(BlockchainFeatures.implemented.contains(BlockchainFeatures.SmartAccounts.id))
+
       resetTest { (_, account) =>
         val writer = new LevelDBWriter(db, TestFunctionalitySettings.Stub)
         writer.hasScript(account) shouldBe false
@@ -53,7 +52,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
 
     "returns true" - {
       "if there is a script in db" in {
-        assume(BlockchainFeatures.implemented.contains(BlockchainFeatures.SmartAccounts.id))
+
         test { (_, account) =>
           val writer = new LevelDBWriter(db, TestFunctionalitySettings.Stub)
           writer.hasScript(account) shouldBe true
@@ -61,7 +60,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
       }
 
       "if there is a script in cache" in {
-        assume(BlockchainFeatures.implemented.contains(BlockchainFeatures.SmartAccounts.id))
+
         test { (defaultWriter, account) =>
           defaultWriter.hasScript(account) shouldBe true
         }
@@ -104,7 +103,9 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
   def baseTest(gen: Time => Gen[(PrivateKeyAccount, Seq[Block])])(f: (LevelDBWriter, PrivateKeyAccount) => Unit): Unit = {
     val time          = new TimeImpl
     val defaultWriter = new LevelDBWriter(db, TestFunctionalitySettings.Stub)
-    val bcu           = new BlockchainUpdaterImpl(defaultWriter, WavesSettings.fromConfig(loadConfig(ConfigFactory.load())), time)
+    val settings0     = WavesSettings.fromConfig(loadConfig(ConfigFactory.load()))
+    val settings      = settings0.copy(featuresSettings = settings0.featuresSettings.copy(autoShutdownOnUnsupportedFeature = false))
+    val bcu           = new BlockchainUpdaterImpl(defaultWriter, settings, time)
     try {
       val (account, blocks) = gen(time).sample.get
 
@@ -157,7 +158,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
 
     def createTransfer(master: PrivateKeyAccount, recipient: Address, ts: Long): TransferTransaction = {
       TransferTransactionV1
-        .selfSigned(None, master, recipient, ENOUGH_AMT / 5, ts, None, 1000000, Array.emptyByteArray)
+        .selfSigned(master, recipient, ENOUGH_AMT / 5, ts, 1000000, Array.emptyByteArray)
         .explicitGet()
     }
   }

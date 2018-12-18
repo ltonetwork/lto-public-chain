@@ -2,8 +2,8 @@ package com.wavesplatform.state.diffs
 
 import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.state.{Blockchain, Diff, LeaseBalance, Portfolio}
-import scorex.transaction.ValidationError.GenericError
-import scorex.transaction.{CreateAliasTransaction, ValidationError}
+import com.wavesplatform.transaction.ValidationError.GenericError
+import com.wavesplatform.transaction.{CreateAliasTransaction, ValidationError}
 import com.wavesplatform.features.FeatureProvider._
 
 import scala.util.Right
@@ -16,6 +16,6 @@ object CreateAliasTransactionDiff {
       Right(
         Diff(height = height,
              tx = tx,
-             portfolios = Map(tx.sender.toAddress -> Portfolio(-tx.fee, LeaseBalance.empty, Map.empty)),
+             portfolios = Map(tx.sender.toAddress -> Portfolio(-tx.fee, LeaseBalance.empty)),
              aliases = Map(tx.alias               -> tx.sender.toAddress)))
 }

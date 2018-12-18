@@ -8,19 +8,18 @@ import com.wavesplatform.mining.{MiningConstraint, MiningConstraints, MultiDimen
 import com.wavesplatform.settings.WavesSettings
 import com.wavesplatform.state.diffs.BlockDiffer
 import com.wavesplatform.state.reader.{CompositeBlockchain, LeaseDetails}
-import com.wavesplatform.utils.{UnsupportedFeature, forceStopApplication}
+import com.wavesplatform.utils.{ScorexLogging, Time, UnsupportedFeature, forceStopApplication}
 import kamon.Kamon
 import monix.reactive.Observable
 import monix.reactive.subjects.ConcurrentSubject
-import scorex.account.{Address, Alias}
-import scorex.block.Block.BlockId
-import scorex.block.{Block, BlockHeader, MicroBlock}
-import scorex.transaction.Transaction.Type
-import scorex.transaction.ValidationError.{BlockAppendError, GenericError, MicroBlockAppendError}
-import scorex.transaction._
-import scorex.transaction.lease._
-import scorex.transaction.smart.script.Script
-import scorex.utils.{ScorexLogging, Time}
+import com.wavesplatform.account.{Address, Alias}
+import com.wavesplatform.block.Block.BlockId
+import com.wavesplatform.block.{Block, BlockHeader, MicroBlock}
+import com.wavesplatform.transaction.Transaction.Type
+import com.wavesplatform.transaction.ValidationError.{BlockAppendError, GenericError, MicroBlockAppendError}
+import com.wavesplatform.transaction._
+import com.wavesplatform.transaction.lease._
+import com.wavesplatform.transaction.smart.script.Script
 
 class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, time: Time)
     extends BlockchainUpdater
@@ -476,9 +475,6 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
         } yield address -> f(address)
       }
 
-  override def assetDistribution(assetId: AssetId): Map[Address, Long] =
-    blockchain.assetDistribution(assetId) ++ changedBalances(_.assets.getOrElse(assetId, 0L) != 0, portfolio(_).assets.getOrElse(assetId, 0L))
-
   override def wavesDistribution(height: Int): Map[Address, Long] = ngState.fold(blockchain.wavesDistribution(height)) { ng =>
     val innerDistribution = blockchain.wavesDistribution(height)
     if (height < this.height) innerDistribution
@@ -506,7 +502,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
     ngState.fold(blockchain.collectLposPortfolios(pf)) { ng =>
       val b = Map.newBuilder[Address, A]
       for ((a, p) <- ng.bestLiquidDiff.portfolios if p.lease != LeaseBalance.empty || p.balance != 0) {
-        pf.runWith(b += a -> _)(a -> portfolio(a).copy(assets = Map.empty))
+        pf.runWith(b += a -> _)(a -> portfolio(a).copy())
       }
 
       blockchain.collectLposPortfolios(pf) ++ b.result()
@@ -521,11 +517,11 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
     case None     => blockchain.transactionHeight(id)
   }
 
-  override def balance(address: Address, mayBeAssetId: Option[AssetId]): Long = ngState match {
+  override def balance(address: Address): Long = ngState match {
     case Some(ng) =>
-      blockchain.balance(address, mayBeAssetId) + ng.bestLiquidDiff.portfolios.getOrElse(address, Portfolio.empty).balanceOf(mayBeAssetId)
+      blockchain.balance(address) + ng.bestLiquidDiff.portfolios.getOrElse(address, Portfolio.empty).balance
     case None =>
-      blockchain.balance(address, mayBeAssetId)
+      blockchain.balance(address)
   }
 }
 

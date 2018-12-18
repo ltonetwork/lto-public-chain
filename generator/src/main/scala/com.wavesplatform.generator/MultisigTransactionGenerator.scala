@@ -3,11 +3,11 @@ import cats.Show
 import com.wavesplatform.crypto
 import com.wavesplatform.generator.utils.Gen
 import com.wavesplatform.state._
-import scorex.account.PrivateKeyAccount
-import scorex.transaction.smart.SetScriptTransaction
-import scorex.transaction.smart.script.Script
-import scorex.transaction.transfer.TransferTransactionV2
-import scorex.transaction.{Proofs, Transaction}
+import com.wavesplatform.account.PrivateKeyAccount
+import com.wavesplatform.transaction.smart.SetScriptTransaction
+import com.wavesplatform.transaction.smart.script.Script
+import com.wavesplatform.transaction.transfer.TransferTransactionV2
+import com.wavesplatform.transaction.{Proofs, Transaction}
 import com.wavesplatform.it.util._
 import scala.util.Random
 
@@ -33,12 +33,10 @@ class MultisigTransactionGenerator(settings: MultisigTransactionGenerator.Settin
     val res = Range(0, settings.transactions).map { i =>
       val tx = TransferTransactionV2
         .create(2,
-                None,
                 bank,
                 owners(1),
                 totalAmountOnNewAccount - 2 * enoughFee - i,
                 System.currentTimeMillis(),
-                None,
                 enoughFee,
                 Array.emptyByteArray,
                 Proofs.empty)

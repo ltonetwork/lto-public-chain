@@ -9,11 +9,11 @@ import com.wavesplatform.state.StateSyntheticBenchmark._
 import com.wavesplatform.utils.dummyCompilerContext
 import org.openjdk.jmh.annotations._
 import org.scalacheck.Gen
-import scorex.account.PrivateKeyAccount
-import scorex.transaction.Transaction
-import scorex.transaction.smart.SetScriptTransaction
-import scorex.transaction.smart.script.v1.ScriptV1
-import scorex.transaction.transfer._
+import com.wavesplatform.account.PrivateKeyAccount
+import com.wavesplatform.transaction.Transaction
+import com.wavesplatform.transaction.smart.SetScriptTransaction
+import com.wavesplatform.transaction.smart.script.v1.ScriptV1
+import com.wavesplatform.transaction.transfer._
 
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @BenchmarkMode(Array(Mode.AverageTime))
@@ -39,7 +39,7 @@ object StateSyntheticBenchmark {
       for {
         amount    <- Gen.choose(1, waves(1))
         recipient <- accountGen
-      } yield TransferTransactionV1.selfSigned(None, sender, recipient, amount, ts, None, 100000, Array.emptyByteArray).explicitGet()
+      } yield TransferTransactionV1.selfSigned(sender, recipient, amount, ts, 100000, Array.emptyByteArray).explicitGet()
   }
 
   @State(Scope.Benchmark)
@@ -57,12 +57,10 @@ object StateSyntheticBenchmark {
         TransferTransactionV2
           .selfSigned(
             TransferTransactionV2.supportedVersions.head,
-            None,
             sender,
             recipient.toAddress,
             amount,
             ts,
-            None,
             1000000,
             Array.emptyByteArray
           )

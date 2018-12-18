@@ -1,17 +1,17 @@
 package com.wavesplatform.history
 
 import com.wavesplatform.TransactionGen
+import com.wavesplatform.account.PrivateKeyAccount
 import com.wavesplatform.features.BlockchainFeatures
+import com.wavesplatform.lagonaki.mocks.TestBlock
 import com.wavesplatform.state._
 import com.wavesplatform.state.diffs._
+import com.wavesplatform.transaction.GenesisTransaction
+import com.wavesplatform.transaction.transfer._
 import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
-import scorex.account.PrivateKeyAccount
-import scorex.crypto.signatures.Curve25519.KeyLength
-import scorex.lagonaki.mocks.TestBlock
-import scorex.transaction.GenesisTransaction
-import scorex.transaction.transfer._
+import scorex.crypto.signatures.Curve25519._
 
 class BlockchainUpdaterMicroblockBadSignaturesTest
     extends PropSpec
@@ -30,7 +30,7 @@ class BlockchainUpdaterMicroblockBadSignaturesTest
   } yield (genesis, payment, payment2)
 
   property("bad total resulting block signature") {
-    assume(BlockchainFeatures.implemented.contains(BlockchainFeatures.SmartAccounts.id))
+
     scenario(preconditionsAndPayments) {
       case (domain, (genesis, payment, payment2)) =>
         val block0                 = buildBlockOfTxs(randomSig, Seq(genesis))
@@ -43,7 +43,7 @@ class BlockchainUpdaterMicroblockBadSignaturesTest
   }
 
   property("bad microBlock signature") {
-    assume(BlockchainFeatures.implemented.contains(BlockchainFeatures.SmartAccounts.id))
+
     scenario(preconditionsAndPayments) {
       case (domain, (genesis, payment, payment2)) =>
         val block0                 = buildBlockOfTxs(randomSig, Seq(genesis))
@@ -56,7 +56,7 @@ class BlockchainUpdaterMicroblockBadSignaturesTest
   }
 
   property("other sender") {
-    assume(BlockchainFeatures.implemented.contains(BlockchainFeatures.SmartAccounts.id))
+
     scenario(preconditionsAndPayments) {
       case (domain, (genesis, payment, payment2)) =>
         val otherSigner = PrivateKeyAccount(TestBlock.randomOfLength(KeyLength).arr)

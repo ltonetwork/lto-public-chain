@@ -12,10 +12,10 @@ import org.scalacheck.Gen
 import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json._
-import scorex.account.Address
-import scorex.api.http.{AddressApiRoute, ApiKeyNotValid}
-import scorex.settings.TestFunctionalitySettings
-import scorex.transaction.smart.script.v1.ScriptV1
+import com.wavesplatform.account.Address
+import com.wavesplatform.api.http.{AddressApiRoute, ApiKeyNotValid}
+import com.wavesplatform.settings.TestFunctionalitySettings
+import com.wavesplatform.transaction.smart.script.v1.ScriptV1
 
 class AddressRouteSpec
     extends RouteSpec("/addresses")
@@ -152,7 +152,7 @@ class AddressRouteSpec
     Get(routePath(s"/scriptInfo/${allAddresses(1)}")) ~> route ~> check {
       val response = responseAs[JsObject]
       (response \ "address").as[String] shouldBe allAddresses(1)
-      (response \ "script").as[String] shouldBe "base64:AQa3b8tH"
+      (response \ "script").as[String] shouldBe "base64:AQaEZXhA"
       (response \ "scriptText").as[String] shouldBe "TRUE"
       (response \ "complexity").as[Long] shouldBe 1
       (response \ "extraFee").as[Long] shouldBe CommonValidation.ScriptExtraFee

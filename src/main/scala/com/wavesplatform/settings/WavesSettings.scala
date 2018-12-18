@@ -1,7 +1,6 @@
 package com.wavesplatform.settings
 
 import com.typesafe.config.Config
-import com.wavesplatform.matcher.MatcherSettings
 import com.wavesplatform.metrics.Metrics
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
@@ -14,7 +13,6 @@ case class WavesSettings(directory: String,
                          blockchainSettings: BlockchainSettings,
                          checkpointsSettings: CheckpointsSettings,
                          feesSettings: FeesSettings,
-                         matcherSettings: MatcherSettings,
                          minerSettings: MinerSettings,
                          restAPISettings: RestAPISettings,
                          synchronizationSettings: SynchronizationSettings,
@@ -26,23 +24,22 @@ object WavesSettings {
 
   import NetworkSettings.networkSettingsValueReader
 
-  val configPath: String = "waves"
+  val configPath: String = "lto"
 
   def fromConfig(config: Config): WavesSettings = {
     val directory               = config.as[String](s"$configPath.directory")
     val dataDirectory           = config.as[String](s"$configPath.data-directory")
     val maxCacheSize            = config.as[Int](s"$configPath.max-cache-size")
-    val networkSettings         = config.as[NetworkSettings]("waves.network")
-    val walletSettings          = config.as[WalletSettings]("waves.wallet")
+    val networkSettings         = config.as[NetworkSettings]("lto.network")
+    val walletSettings          = config.as[WalletSettings]("lto.wallet")
     val blockchainSettings      = BlockchainSettings.fromConfig(config)
     val checkpointsSettings     = CheckpointsSettings.fromConfig(config)
     val feesSettings            = FeesSettings.fromConfig(config)
-    val matcherSettings         = MatcherSettings.fromConfig(config)
     val minerSettings           = MinerSettings.fromConfig(config)
     val restAPISettings         = RestAPISettings.fromConfig(config)
     val synchronizationSettings = SynchronizationSettings.fromConfig(config)
-    val utxSettings             = config.as[UtxSettings]("waves.utx")
-    val featuresSettings        = config.as[FeaturesSettings]("waves.features")
+    val utxSettings             = config.as[UtxSettings]("lto.utx")
+    val featuresSettings        = config.as[FeaturesSettings]("lto.features")
     val metrics                 = config.as[Metrics.Settings]("metrics")
 
     WavesSettings(
@@ -54,7 +51,6 @@ object WavesSettings {
       blockchainSettings,
       checkpointsSettings,
       feesSettings,
-      matcherSettings,
       minerSettings,
       restAPISettings,
       synchronizationSettings,

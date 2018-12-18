@@ -11,10 +11,10 @@ import com.wavesplatform.state._
 import com.wavesplatform.utils.dummyCompilerContext
 import org.scalatest.CancelAfterFailure
 import play.api.libs.json.{JsNumber, Json}
-import scorex.transaction.Proofs
-import scorex.transaction.smart.SetScriptTransaction
-import scorex.transaction.smart.script.v1.ScriptV1
-import scorex.transaction.transfer._
+import com.wavesplatform.transaction.Proofs
+import com.wavesplatform.transaction.smart.SetScriptTransaction
+import com.wavesplatform.transaction.smart.script.v1.ScriptV1
+import com.wavesplatform.transaction.transfer._
 
 class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
   private val fourthAddress: String = sender.createAddress()
@@ -29,12 +29,10 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
       TransferTransactionV2
         .selfSigned(
           version = 2,
-          assetId = None,
           sender = sender.privateKey,
           recipient = acc0,
           amount = 3 * transferAmount + 3 * (0.00001.waves + 0.00002.waves), // Script fee
           timestamp = System.currentTimeMillis(),
-          feeAssetId = None,
           feeAmount = minFee,
           attachment = Array.emptyByteArray
         )
@@ -89,12 +87,10 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
       TransferTransactionV2
         .selfSigned(
           version = 2,
-          assetId = None,
           sender = acc0,
           recipient = acc3,
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAssetId = None,
           feeAmount = minFee + 0.00001.waves + 0.00002.waves,
           attachment = Array.emptyByteArray
         )
@@ -107,12 +103,10 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
       TransferTransactionV2
         .create(
           version = 2,
-          assetId = None,
           sender = acc0,
           recipient = acc3,
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAssetId = None,
           feeAmount = minFee + 0.004.waves,
           attachment = Array.emptyByteArray,
           proofs = Proofs.empty
@@ -156,12 +150,10 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
       TransferTransactionV2
         .selfSigned(
           version = 2,
-          assetId = None,
           sender = acc0,
           recipient = acc3,
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAssetId = None,
           feeAmount = minFee + 0.004.waves,
           attachment = Array.emptyByteArray
         )

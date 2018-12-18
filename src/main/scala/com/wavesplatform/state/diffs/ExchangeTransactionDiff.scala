@@ -3,9 +3,9 @@ package com.wavesplatform.state.diffs
 import cats._
 import cats.implicits._
 import com.wavesplatform.state._
-import scorex.transaction.ValidationError
-import scorex.transaction.ValidationError.{GenericError, OrderValidationError}
-import scorex.transaction.assets.exchange.ExchangeTransaction
+import com.wavesplatform.transaction.ValidationError
+import com.wavesplatform.transaction.ValidationError.{GenericError, OrderValidationError}
+import com.wavesplatform.transaction.assets.exchange.ExchangeTransaction
 
 import scala.util.Right
 
@@ -15,14 +15,14 @@ object ExchangeTransactionDiff {
     val matcher = tx.buyOrder.matcherPublicKey.toAddress
     val buyer   = tx.buyOrder.senderPublicKey.toAddress
     val seller  = tx.sellOrder.senderPublicKey.toAddress
-    val assets = Seq(tx.buyOrder.assetPair.amountAsset,
-                     tx.buyOrder.assetPair.priceAsset,
-                     tx.sellOrder.assetPair.amountAsset,
-                     tx.sellOrder.assetPair.priceAsset).flatten
+    val assetIds = Set(tx.buyOrder.assetPair.amountAsset,
+                       tx.buyOrder.assetPair.priceAsset,
+                       tx.sellOrder.assetPair.amountAsset,
+                       tx.sellOrder.assetPair.priceAsset).flatten
+    val assets = assetIds.map(blockchain.assetDescription)
     for {
-      _ <- Either.cond(!assets.exists(blockchain.assetDescription(_).flatMap(_.script).isDefined),
-                       (),
-                       GenericError(s"Smart assets can't participate in ExchangeTransactions"))
+      _ <- Either.cond(assets.forall(_.isDefined), (), GenericError("Assets should be issued before they can be traded"))
+      _ <- Either.cond(!assets.exists(_.flatMap(_.script).isDefined), (), GenericError(s"Smart assets can't participate in ExchangeTransactions"))
       _ <- Either.cond(!blockchain.hasScript(buyer),
                        (),
                        GenericError(s"Buyer $buyer can't participate in ExchangeTransaction because it has assigned Script"))
@@ -36,7 +36,7 @@ object ExchangeTransactionDiff {
       sellAmountAssetChange <- t.sellOrder.getSpendAmount(t.price, t.amount).liftValidationError(tx).map(-_)
     } yield {
 
-      def wavesPortfolio(amt: Long) = Portfolio(amt, LeaseBalance.empty, Map.empty)
+      def wavesPortfolio(amt: Long) = Portfolio(amt, LeaseBalance.empty)
 
       val feeDiff = Monoid.combineAll(
         Seq(
@@ -48,23 +48,23 @@ object ExchangeTransactionDiff {
       val priceDiff = t.buyOrder.assetPair.priceAsset match {
         case Some(assetId) =>
           Monoid.combine(
-            Map(buyer  -> Portfolio(0, LeaseBalance.empty, Map(assetId -> buyPriceAssetChange))),
-            Map(seller -> Portfolio(0, LeaseBalance.empty, Map(assetId -> sellPriceAssetChange)))
+            Map(buyer  -> Portfolio(0, LeaseBalance.empty)),
+            Map(seller -> Portfolio(0, LeaseBalance.empty))
           )
         case None =>
-          Monoid.combine(Map(buyer  -> Portfolio(buyPriceAssetChange, LeaseBalance.empty, Map.empty)),
-                         Map(seller -> Portfolio(sellPriceAssetChange, LeaseBalance.empty, Map.empty)))
+          Monoid.combine(Map(buyer  -> Portfolio(buyPriceAssetChange, LeaseBalance.empty)),
+                         Map(seller -> Portfolio(sellPriceAssetChange, LeaseBalance.empty)))
       }
 
       val amountDiff = t.buyOrder.assetPair.amountAsset match {
         case Some(assetId) =>
           Monoid.combine(
-            Map(buyer  -> Portfolio(0, LeaseBalance.empty, Map(assetId -> buyAmountAssetChange))),
-            Map(seller -> Portfolio(0, LeaseBalance.empty, Map(assetId -> sellAmountAssetChange)))
+            Map(buyer  -> Portfolio(0, LeaseBalance.empty)),
+            Map(seller -> Portfolio(0, LeaseBalance.empty))
           )
         case None =>
-          Monoid.combine(Map(buyer  -> Portfolio(buyAmountAssetChange, LeaseBalance.empty, Map.empty)),
-                         Map(seller -> Portfolio(sellAmountAssetChange, LeaseBalance.empty, Map.empty)))
+          Monoid.combine(Map(buyer  -> Portfolio(buyAmountAssetChange, LeaseBalance.empty)),
+                         Map(seller -> Portfolio(sellAmountAssetChange, LeaseBalance.empty)))
       }
 
       val portfolios = Monoid.combineAll(Seq(feeDiff, priceDiff, amountDiff))

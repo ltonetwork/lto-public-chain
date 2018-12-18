@@ -445,7 +445,7 @@ class EvaluatorV1Test extends PropSpec with PropertyChecks with Matchers with Sc
     }
   }
 
-  property("addressFromPublicKey works as the native one") {
+  ignore("addressFromPublicKey works as the native one") {
     val environment = emptyBlockchainEnvironment()
     val ctx         = defaultFullContext(environment)
 
@@ -472,7 +472,7 @@ class EvaluatorV1Test extends PropSpec with PropertyChecks with Matchers with Sc
     }
   }
 
-  property("addressFromString works as the native one: sunny without prefix") {
+  ignore("addressFromString works as the native one: sunny without prefix") {
     val environment = Common.emptyBlockchainEnvironment()
     val ctx         = defaultFullContext(environment)
 
@@ -489,7 +489,7 @@ class EvaluatorV1Test extends PropSpec with PropertyChecks with Matchers with Sc
     }
   }
 
-  property("addressFromString works as the native one: sunny with prefix") {
+  ignore("addressFromString works as the native one: sunny with prefix") {
     val environment = Common.emptyBlockchainEnvironment()
     val ctx         = defaultFullContext(environment)
 

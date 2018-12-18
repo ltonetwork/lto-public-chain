@@ -13,21 +13,7 @@ object FirstDifferentBlock extends App {
     blockSigAt(node1, h) == blockSigAt(node2, h)
   }
 
-  val TESTNET1 = "http://52.30.47.67:6869"
-  val TESTNET2 = "http://52.28.66.217:6869"
-  val TESTNET3 = "http://52.77.111.219:6869"
-  val TESTNET4 = "http://52.51.92.182:6869"
-
-  val DEVNET1  = "http://34.251.200.245:6869"
-  val DEVNET1D = "http://34.251.200.245:16869"
-  val DEVNET2  = "http://35.157.212.173:6869"
-  val DEVNET2D = "http://35.157.212.173:16869"
-  val DEVNET3  = "http://13.229.61.140:6869"
-  val DEVNET3D = "http://13.229.61.140:16869"
-
-  val MAINNET1 = "http://138.201.152.163"
-  val MAINNET2 = "http://138.201.152.164"
-  val MAINNET3 = "http://138.201.152.165" // 626195
+  val TESTNET1 = "http://1.1.1.1:6869"
 
   def firstDifferent(min: Int, max: Int, areSame: Int => Boolean): Int = {
     println("searching [" + min + ", " + max + ")")
@@ -41,5 +27,5 @@ object FirstDifferentBlock extends App {
     }
   }
 
-  println("first different block height is " + firstDifferent(1, 258, nodeComparator(DEVNET3D, DEVNET3)))
+  println("first different block height is " + firstDifferent(1, 258, nodeComparator(TESTNET1, TESTNET1)))
 }

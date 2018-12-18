@@ -5,16 +5,16 @@ import java.util.concurrent.ThreadLocalRandom
 import cats.Show
 import com.wavesplatform.generator.NarrowTransactionGenerator.Settings
 import com.wavesplatform.state.DataEntry.{MaxValueSize, Type}
-import com.wavesplatform.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, EitherExt2, IntegerDataEntry}
+import com.wavesplatform.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, EitherExt2, IntegerDataEntry, StringDataEntry}
 import org.slf4j.LoggerFactory
-import scorex.account.{Alias, PrivateKeyAccount}
-import scorex.transaction._
-import scorex.transaction.assets._
-import scorex.transaction.assets.exchange.{AssetPair, ExchangeTransaction, Order}
-import scorex.transaction.lease.{LeaseCancelTransaction, LeaseCancelTransactionV1, LeaseTransactionV1}
-import scorex.transaction.transfer.MassTransferTransaction.ParsedTransfer
-import scorex.transaction.transfer._
-import scorex.utils.LoggerFacade
+import com.wavesplatform.account.{Alias, PrivateKeyAccount}
+import com.wavesplatform.utils.LoggerFacade
+import com.wavesplatform.transaction._
+import com.wavesplatform.transaction.assets._
+import com.wavesplatform.transaction.assets.exchange.{AssetPair, ExchangeTransaction, Order}
+import com.wavesplatform.transaction.lease.{LeaseCancelTransaction, LeaseCancelTransactionV1, LeaseTransactionV1}
+import com.wavesplatform.transaction.transfer.MassTransferTransaction.ParsedTransfer
+import com.wavesplatform.transaction.transfer._
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -58,14 +58,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
     val tradeAssetDistribution = {
       tradeAssetIssue +: accounts.map(acc => {
         TransferTransactionV1
-          .selfSigned(Some(tradeAssetIssue.id()),
-                      issueTransactionSender,
-                      acc,
-                      5,
-                      System.currentTimeMillis(),
-                      None,
-                      100000,
-                      Array.fill(r.nextInt(100))(r.nextInt().toByte))
+          .selfSigned(issueTransactionSender, acc, 5, System.currentTimeMillis(), 100000, Array.fill(r.nextInt(100))(r.nextInt().toByte))
           .right
           .get
       })
@@ -111,14 +104,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
               case (sender, asset) =>
                 logOption(
                   TransferTransactionV1
-                    .selfSigned(asset,
-                                sender,
-                                recipient,
-                                r.nextInt(500000),
-                                ts,
-                                None,
-                                moreThatStandartFee,
-                                Array.fill(r.nextInt(100))(r.nextInt().toByte)))
+                    .selfSigned(sender, recipient, r.nextInt(500000), ts, moreThatStandartFee, Array.fill(r.nextInt(100))(r.nextInt().toByte)))
             }
           case ReissueTransactionV1 =>
             val reissuable = r.nextBoolean()
@@ -175,7 +161,6 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
               case (sender, asset) =>
                 logOption(
                   MassTransferTransaction.selfSigned(MassTransferTransaction.version,
-                                                     asset,
                                                      sender,
                                                      transfers.toList,
                                                      ts,
@@ -195,6 +180,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
               etype match {
                 case t if t == Type.Integer.id => IntegerDataEntry(key, r.nextLong)
                 case t if t == Type.Boolean.id => BooleanDataEntry(key, r.nextBoolean)
+                case t if t == Type.String.id  => StringDataEntry(key, r.nextLong.toString)
                 case t if t == Type.Binary.id =>
                   val size = r.nextInt(MaxValueSize + 1)
                   val b    = new Array[Byte](size)

@@ -4,7 +4,7 @@ case class BlockchainFeature private (id: Short, description: String)
 
 object BlockchainFeatures {
 
-  val SmallerMinimalGeneratingBalance = BlockchainFeature(1, "Minimum Generating Balance of 1000 WAVES")
+  val SmallerMinimalGeneratingBalance = BlockchainFeature(1, "Minimum Generating Balance of 1000 LTO")
   val NG                              = BlockchainFeature(2, "NG Protocol")
   val MassTransfer                    = BlockchainFeature(3, "Mass Transfer Transaction")
   val SmartAccounts                   = BlockchainFeature(4, "Smart Accounts")
@@ -12,15 +12,13 @@ object BlockchainFeatures {
   val BurnAnyTokens                   = BlockchainFeature(6, "Burn Any Tokens")
   val FeeSponsorship                  = BlockchainFeature(7, "Fee Sponsorship")
   val FairPoS                         = BlockchainFeature(8, "Fair PoS")
+  val SmartAssets                     = BlockchainFeature(9, "Smart Assets")
 
   private val dict = Seq(
     SmallerMinimalGeneratingBalance,
     NG,
     MassTransfer,
-    SmartAccounts,
     DataTransaction,
-    BurnAnyTokens,
-    FeeSponsorship,
     FairPoS
   ).map(f => f.id -> f).toMap
 

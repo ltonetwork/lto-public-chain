@@ -5,12 +5,11 @@ import monix.execution.schedulers.SchedulerService
 import monix.execution.{Ack, Scheduler}
 import monix.reactive.Observer
 import org.scalatest.{BeforeAndAfterAll, Suite}
-import scorex.account.PrivateKeyAccount
-import scorex.block.{Block, MicroBlock, SignerData}
-import scorex.crypto.signatures.Curve25519.SignatureLength
-import scorex.lagonaki.mocks.TestBlock
-import scorex.transaction.transfer._
-
+import com.wavesplatform.account.PrivateKeyAccount
+import com.wavesplatform.block.{Block, MicroBlock, SignerData}
+import com.wavesplatform.lagonaki.mocks.TestBlock
+import com.wavesplatform.transaction.transfer._
+import scorex.crypto.signatures.Curve25519._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
@@ -36,7 +35,7 @@ trait RxScheduler extends BeforeAndAfterAll { _: Suite =>
   def block(id: Int): Block = TestBlock.create(Seq.empty).copy(signerData = SignerData(signer, byteStr(id)))
 
   def microBlock(total: Int, prev: Int): MicroBlock = {
-    val tx = TransferTransactionV1.selfSigned(None, signer, signer.toAddress, 1, 1, None, 1, Array.emptyByteArray).explicitGet()
+    val tx = TransferTransactionV1.selfSigned(signer, signer.toAddress, 1, 1, 1, Array.emptyByteArray).explicitGet()
     MicroBlock.buildAndSign(signer, Seq(tx), byteStr(prev), byteStr(total)).explicitGet()
   }
 

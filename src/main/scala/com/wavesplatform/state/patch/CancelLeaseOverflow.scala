@@ -1,15 +1,15 @@
 package com.wavesplatform.state.patch
 
 import com.wavesplatform.state.{Blockchain, Diff, LeaseBalance, Portfolio}
-import scorex.transaction.lease.{LeaseTransaction, LeaseTransactionV1}
-import scorex.utils.ScorexLogging
+import com.wavesplatform.utils.ScorexLogging
+import com.wavesplatform.transaction.lease.{LeaseTransaction, LeaseTransactionV1}
 
 object CancelLeaseOverflow extends ScorexLogging {
   def apply(blockchain: Blockchain): Diff = {
     log.info("Cancelling all lease overflows for sender")
 
     val addressesWithLeaseOverflow = blockchain.collectLposPortfolios {
-      case (_, p) if p.balance < p.lease.out => Portfolio(0, LeaseBalance(0, -p.lease.out), Map.empty)
+      case (_, p) if p.balance < p.lease.out => Portfolio(0, LeaseBalance(0, -p.lease.out))
     }
     addressesWithLeaseOverflow.keys.foreach(addr => log.info(s"Resetting lease overflow for $addr"))
 

@@ -6,10 +6,10 @@ import com.wavesplatform.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
-import scorex.account.PrivateKeyAccount
-import scorex.lagonaki.mocks.TestBlock.{create => block}
-import scorex.settings.TestFunctionalitySettings
-import scorex.transaction.{DataTransaction, GenesisTransaction}
+import com.wavesplatform.account.PrivateKeyAccount
+import com.wavesplatform.settings.TestFunctionalitySettings
+import com.wavesplatform.lagonaki.mocks.TestBlock.{create => block}
+import com.wavesplatform.transaction.{DataTransaction, GenesisTransaction}
 
 class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
 
@@ -101,7 +101,7 @@ class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers
     forAll(setup) {
       case (genesis, dataTx) =>
         assertDiffEi(Seq(block(Seq(genesis))), block(Seq(dataTx)), fs) { blockDiffEi =>
-          blockDiffEi should produce("negative waves balance")
+          blockDiffEi should produce("negative lto balance")
         }
     }
   }

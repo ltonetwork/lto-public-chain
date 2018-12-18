@@ -5,10 +5,10 @@ import com.wavesplatform.db.WithState
 import com.wavesplatform.mining.MiningConstraint
 import com.wavesplatform.settings.FunctionalitySettings
 import org.scalatest.Matchers
-import scorex.block.Block
-import scorex.lagonaki.mocks.TestBlock
-import scorex.settings.{TestFunctionalitySettings => TFS}
-import scorex.transaction.{Transaction, ValidationError}
+import com.wavesplatform.block.Block
+import com.wavesplatform.lagonaki.mocks.TestBlock
+import com.wavesplatform.transaction.{Transaction, ValidationError}
+import com.wavesplatform.settings.{TestFunctionalitySettings => TFS}
 
 package object diffs extends WithState with Matchers {
   val ENOUGH_AMT: Long = Long.MaxValue / 3
@@ -53,7 +53,6 @@ package object diffs extends WithState with Matchers {
     val portfolioDiff = Monoid.combineAll(diff.portfolios.values)
     portfolioDiff.balance shouldBe 0
     portfolioDiff.effectiveBalance shouldBe 0
-    portfolioDiff.assets.values.foreach(_ shouldBe 0)
   }
 
   def assertLeft(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings = TFS.Enabled)(errorMessage: String): Unit =

@@ -8,18 +8,18 @@ import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
 import com.wavesplatform.state.reader.LeaseDetails
 import org.iq80.leveldb.{DB, ReadOptions}
-import scorex.account.{Address, Alias}
-import scorex.block.{Block, BlockHeader}
-import scorex.transaction.Transaction.Type
-import scorex.transaction.ValidationError.{AliasDoesNotExist, AliasIsDisabled}
-import scorex.transaction._
-import scorex.transaction.assets._
-import scorex.transaction.assets.exchange.ExchangeTransaction
-import scorex.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
-import scorex.transaction.smart.SetScriptTransaction
-import scorex.transaction.smart.script.Script
-import scorex.transaction.transfer._
-import scorex.utils.ScorexLogging
+import com.wavesplatform.account.{Address, Alias}
+import com.wavesplatform.utils.ScorexLogging
+import com.wavesplatform.block.{Block, BlockHeader}
+import com.wavesplatform.transaction.Transaction.Type
+import com.wavesplatform.transaction.ValidationError.{AliasDoesNotExist, AliasIsDisabled}
+import com.wavesplatform.transaction._
+import com.wavesplatform.transaction.assets._
+import com.wavesplatform.transaction.assets.exchange.ExchangeTransaction
+import com.wavesplatform.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+import com.wavesplatform.transaction.smart.SetScriptTransaction
+import com.wavesplatform.transaction.smart.script.Script
+import com.wavesplatform.transaction.transfer._
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
@@ -140,26 +140,18 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     }
   }
 
-  override def balance(address: Address, mayBeAssetId: Option[AssetId]): Long = readOnly { db =>
+  override def balance(address: Address): Long = readOnly { db =>
     addressId(address).fold(0L) { addressId =>
-      mayBeAssetId match {
-        case Some(assetId) => db.fromHistory(Keys.assetBalanceHistory(addressId, assetId), Keys.assetBalance(addressId, assetId)).getOrElse(0L)
-        case None          => db.fromHistory(Keys.wavesBalanceHistory(addressId), Keys.wavesBalance(addressId)).getOrElse(0L)
-      }
+      db.fromHistory(Keys.wavesBalanceHistory(addressId), Keys.wavesBalance(addressId)).getOrElse(0L)
     }
   }
 
   private def loadLposPortfolio(db: ReadOnlyDB, addressId: BigInt) = Portfolio(
     db.fromHistory(Keys.wavesBalanceHistory(addressId), Keys.wavesBalance(addressId)).getOrElse(0L),
-    db.fromHistory(Keys.leaseBalanceHistory(addressId), Keys.leaseBalance(addressId)).getOrElse(LeaseBalance.empty),
-    Map.empty
+    db.fromHistory(Keys.leaseBalanceHistory(addressId), Keys.leaseBalance(addressId)).getOrElse(LeaseBalance.empty)
   )
 
-  private def loadPortfolio(db: ReadOnlyDB, addressId: BigInt) = loadLposPortfolio(db, addressId).copy(
-    assets = (for {
-      assetId <- db.get(Keys.assetList(addressId))
-    } yield assetId -> db.fromHistory(Keys.assetBalanceHistory(addressId, assetId), Keys.assetBalance(addressId, assetId)).getOrElse(0L)).toMap
-  )
+  private def loadPortfolio(db: ReadOnlyDB, addressId: BigInt) = loadLposPortfolio(db, addressId).copy()
 
   override protected def loadPortfolio(address: Address): Portfolio = readOnly { db =>
     addressId(address).fold(Portfolio.empty)(loadPortfolio(db, _))
@@ -444,6 +436,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                       rw.filterHistory(Keys.dataHistory(addressId, e.key), currentHeight)
                     }
                   }
+                case a: AnchorTransaction => // do nothinhg specific
 
                 case tx: CreateAliasTransaction =>
                   rw.delete(Keys.addressIdOfAlias(tx.alias))
@@ -633,15 +626,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       .flatMap(h => db.get(Keys.blockHeader(h)).fold(Seq.empty[Short])(_._1.featureVotes.toSeq))
       .groupBy(identity)
       .mapValues(_.size)
-  }
-
-  override def assetDistribution(assetId: ByteStr): Map[Address, Long] = readOnly { db =>
-    (for {
-      seqNr     <- (1 to db.get(Keys.addressesForAssetSeqNr(assetId))).par
-      addressId <- db.get(Keys.addressesForAsset(assetId, seqNr)).par
-      balance   <- db.fromHistory(Keys.assetBalanceHistory(addressId, assetId), Keys.assetBalance(addressId, assetId))
-      if balance > 0
-    } yield db.get(Keys.idToAddress(addressId)) -> balance).toMap.seq
   }
 
   override def wavesDistribution(height: Int): Map[Address, Long] = readOnly { db =>
