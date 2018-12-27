@@ -90,7 +90,7 @@ object CommonValidation {
       case _: CreateAliasTransactionV1 => disabled
       case _: MassTransferTransaction  => activationBarrier(BlockchainFeatures.MassTransfer)
       case _: DataTransaction          => activationBarrier(BlockchainFeatures.DataTransaction)
-      case _: SetScriptTransaction     => disabled
+      case _: SetScriptTransaction     => Right(tx)
       case _: TransferTransactionV2    => activationBarrier(BlockchainFeatures.SmartAccounts)
       case it: IssueTransactionV2      => disabled
       case _: ReissueTransactionV2     => disabled

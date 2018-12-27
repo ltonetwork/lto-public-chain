@@ -1,7 +1,7 @@
 package com.wavesplatform.it.sync.smartcontract
 
 import com.typesafe.config.Config
-import com.wavesplatform.account.AddressOrAlias
+import com.wavesplatform.account.{Address, AddressOrAlias}
 import com.wavesplatform.crypto
 import com.wavesplatform.it.NodeConfigs
 import com.wavesplatform.it.api.SyncHttpApi._
@@ -29,6 +29,8 @@ Scenario:
 
 class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfterFailure {
 
+  Address.fromString("3HmNyYvC5NWNPPWThwZYma2CLWXvBmPeM8j")
+
   /*
   One node because:
   1. There is an expected behavior of rollback and a possible issue with this. When the node are going rollback,
@@ -52,6 +54,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
   private val shaSecret  = "BN6RTYGWcwektQfSFzH8raYo9awaLgQ7pLyWLQY4S4F5"
 
   test("step1: Balances initialization") {
+
     val toAliceBC1TxId = sender.transfer(sender.address, AliceBC1, 10 * transferAmount, minFee).id
     nodes.waitForHeightAriseAndTxPresent(toAliceBC1TxId)
 

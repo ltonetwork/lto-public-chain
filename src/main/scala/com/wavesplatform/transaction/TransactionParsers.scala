@@ -37,7 +37,7 @@ object TransactionParsers {
     AnchorTransaction,
     DataTransaction,
     TransferTransactionV2,
-//    SetScriptTransaction,
+    SetScriptTransaction,
 //    IssueTransactionV2,
 //    CreateAliasTransactionV2,
 //    ReissueTransactionV2,

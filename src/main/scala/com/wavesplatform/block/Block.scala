@@ -306,7 +306,13 @@ object Block extends ScorexLogging {
           transactionData = transactionGenesisData,
           featureVotes = Set.empty
         ))
-    else Left(GenericError("Passed genesis signature is not valid"))
+    else {
+
+      val correctSig = ByteStr(crypto.sign(genesisSigner, toSign))
+      if (crypto.verify(correctSig.arr, toSign, genesisSigner.publicKey))
+        Left(GenericError(s"Passed genesis signature is not valid. should be: $correctSig "))
+      else Left(GenericError("pizdets"))
+    }
   }
 
   val GenesisBlockVersion: Byte = 1

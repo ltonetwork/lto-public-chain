@@ -49,7 +49,7 @@ class AddressFromRecipientScenarioTest extends PropSpec with PropertyChecks with
     EvaluatorV1[CaseObj](context, typedExpr)._2
   }
 
-  ignore("Script can resolve AddressOrAlias") {
+  property("Script can resolve AddressOrAlias") {
     forAll(preconditionsAndAliasCreations) {
       case (gen, aliasTx, transferViaAddress, transferViaAlias) =>
         assertDiffAndState(Seq(TestBlock.create(gen)), TestBlock.create(Seq(aliasTx))) {

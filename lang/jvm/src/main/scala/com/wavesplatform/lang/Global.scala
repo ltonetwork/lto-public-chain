@@ -4,6 +4,10 @@ import com.wavesplatform.lang.v1.BaseGlobal
 import com.wavesplatform.utils.{Base58, Base64}
 import scorex.crypto.hash.{Blake2b256, Keccak256, Sha256}
 import scorex.crypto.signatures.{Curve25519, PublicKey, Signature}
+import com.emstlk.nacl4s.crypto.SigningKeyPair
+import com.emstlk.nacl4s.{SigningKey, VerifyKey}
+
+import scala.util.Try
 
 object Global extends BaseGlobal {
   def base58Encode(input: Array[Byte]): Either[String, String] =
@@ -19,7 +23,8 @@ object Global extends BaseGlobal {
   def base64Decode(input: String, limit: Int): Either[String, Array[Byte]] =
     Base64.decode(input).toEither.left.map(_ => "can't parse Base64 string")
 
-  def curve25519verify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean = Curve25519.verify(Signature(sig), message, PublicKey(pub))
+  def curve25519verify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean =
+    Try(VerifyKey(pub).verify(message, sig)).fold(_ => false, _ => true)
 
   def keccak256(message: Array[Byte]): Array[Byte]  = Keccak256.hash(message)
   def blake2b256(message: Array[Byte]): Array[Byte] = Blake2b256.hash(message)

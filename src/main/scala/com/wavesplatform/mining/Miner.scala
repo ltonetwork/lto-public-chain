@@ -109,7 +109,7 @@ class MinerImpl(allChannels: ChannelGroup,
       delay: FiniteDuration): Task[Either[String, (MiningConstraints, Block, MiningConstraint)]] = {
     Task {
       forgeBlock(account, balance)
-    }.delayExecution(delay)
+    }.delayExecution(delay + 1.second)
   }
 
   private def consensusData(height: Int,

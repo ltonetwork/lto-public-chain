@@ -13,6 +13,7 @@ import com.typesafe.config._
 import com.wavesplatform.account.AddressScheme
 import com.wavesplatform.actor.RootActorSystem
 import com.wavesplatform.api.http._
+import com.wavesplatform.api.http.leasing.LeaseApiRoute
 import com.wavesplatform.consensus.PoSSelector
 import com.wavesplatform.consensus.nxt.api.http.NxtConsensusApiRoute
 import com.wavesplatform.db.openDB
@@ -26,7 +27,7 @@ import com.wavesplatform.network._
 import com.wavesplatform.settings._
 import com.wavesplatform.state.appender.{BlockAppender, CheckpointAppender, ExtensionAppender, MicroblockAppender}
 import com.wavesplatform.transaction._
-import com.wavesplatform.utils.{NTP, ScorexLogging, SystemInformationReporter, Time, forceStopApplication}
+import com.wavesplatform.utils.{forceStopApplication, NTP, ScorexLogging, SystemInformationReporter, Time}
 import com.wavesplatform.utx.{UtxPool, UtxPoolImpl}
 import com.wavesplatform.wallet.Wallet
 import io.netty.channel.Channel
@@ -214,6 +215,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
                              time),
         NxtConsensusApiRoute(settings.restAPISettings, blockchainUpdater, settings.blockchainSettings.functionalitySettings),
         WalletApiRoute(settings.restAPISettings, wallet),
+        LeaseApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, allChannels, time),
         UtilsApiRoute(time, settings.restAPISettings),
         PeersApiRoute(settings.restAPISettings, network.connect, peerDatabase, establishedConnections),
         AddressApiRoute(settings.restAPISettings,
@@ -248,6 +250,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
         typeOf[TransactionsApiRoute],
         typeOf[NxtConsensusApiRoute],
         typeOf[WalletApiRoute],
+        typeOf[LeaseApiRoute],
         typeOf[UtilsApiRoute],
         typeOf[PeersApiRoute],
         typeOf[AddressApiRoute],

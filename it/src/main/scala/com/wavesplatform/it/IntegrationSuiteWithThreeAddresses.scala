@@ -66,28 +66,28 @@ trait IntegrationSuiteWithThreeAddresses
     def makeTransfers(accounts: Seq[String]): Future[Seq[String]] = traverse(accounts) { acc =>
       sender.transfer(sender.address, acc, defaultBalance, sender.fee(TransferTransactionV1.typeId)).map(_.id)
     }
-
-    val correctStartBalancesFuture = for {
-      _ <- traverse(nodes)(_.waitForHeight(2))
-      accounts = Seq(firstAddress, secondAddress, thirdAddress)
-
-      _   <- dumpBalances(sender, accounts, "initial")
-      txs <- makeTransfers(accounts)
-
-      height <- traverse(nodes)(_.height).map(_.max)
-      _ <- withClue(s"waitForHeight(${height + 2})") {
-        Await.ready(traverse(nodes)(_.waitForHeight(height + 2)), 3.minutes)
-      }
-
-      _ <- withClue("waitForTxsToReachAllNodes") {
-        Await.ready(waitForTxsToReachAllNodes(txs), 2.minute)
-      }
-      _ <- dumpBalances(sender, accounts, "after transfer")
-      _ <- traverse(accounts)(notMiner.assertBalances(_, defaultBalance, defaultBalance))
-    } yield succeed
-
-    withClue("beforeAll") {
-      Await.result(correctStartBalancesFuture, 5.minutes)
-    }
+//
+//    val correctStartBalancesFuture = for {
+//      _ <- traverse(nodes)(_.waitForHeight(2))
+//      accounts = Seq(firstAddress, secondAddress, thirdAddress)
+//
+//      _   <- dumpBalances(sender, accounts, "initial")
+//      txs <- makeTransfers(accounts)
+//
+//      height <- traverse(nodes)(_.height).map(_.max)
+//      _ <- withClue(s"waitForHeight(${height + 2})") {
+//        Await.ready(traverse(nodes)(_.waitForHeight(height + 2)), 3.minutes)
+//      }
+//
+//      _ <- withClue("waitForTxsToReachAllNodes") {
+//        Await.ready(waitForTxsToReachAllNodes(txs), 2.minute)
+//      }
+//      _ <- dumpBalances(sender, accounts, "after transfer")
+//      _ <- traverse(accounts)(notMiner.assertBalances(_, defaultBalance, defaultBalance))
+//    } yield succeed
+//
+//    withClue("beforeAll") {
+//      Await.result(correctStartBalancesFuture, 5.minutes)
+//    }
   }
 }

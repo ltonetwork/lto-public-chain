@@ -19,8 +19,7 @@ import com.wavesplatform.transaction.transfer._
 import com.wavesplatform.transaction.{CreateAliasTransaction, DataTransaction, GenesisTransaction, Proofs}
 
 class OracleDataTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
-  val preconditions
-    : Gen[(GenesisTransaction, GenesisTransaction, CreateAliasTransaction, SetScriptTransaction, DataTransaction, TransferTransactionV2)] =
+  val preconditions: Gen[(GenesisTransaction, GenesisTransaction, SetScriptTransaction, DataTransaction, TransferTransactionV2)] =
     for {
       master <- accountGen
       oracle <- accountGen
@@ -28,8 +27,6 @@ class OracleDataTest extends PropSpec with PropertyChecks with Matchers with Tra
       ts     <- positiveIntGen
       genesis  = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
       genesis2 = GenesisTransaction.create(oracle, ENOUGH_AMT, ts).explicitGet()
-      alias           <- aliasGen
-      createAlias     <- createAliasGen(oracle, alias, 400000, System.currentTimeMillis())
       long            <- longEntryGen(dataAsciiKeyGen)
       bool            <- booleanEntryGen(dataAsciiKeyGen).filter(_.key != long.key)
       bin             <- binaryEntryGen(MaxBase58Bytes, dataAsciiKeyGen).filter(e => e.key != long.key && e.key != bool.key)
@@ -46,7 +43,7 @@ class OracleDataTest extends PropSpec with PropertyChecks with Matchers with Tra
                                    |   txId && txHeightId
                                    | case t : CreateAliasTransaction => true
                                    | case other =>
-                                   |   let oracle = Alias("${alias.name}")
+                                   |   let oracle = extract(addressFromString("${oracle.address}"))
                                    |   let long = extract(getInteger(oracle,"${long.key}")) == ${long.value}
                                    |   let bool = extract(getBoolean(oracle,"${bool.key}")) == ${bool.value}
                                    |   let bin = extract(getBinary(oracle,"${bin.key}")) == base58'${bin.value.base58}'
@@ -61,17 +58,16 @@ class OracleDataTest extends PropSpec with PropertyChecks with Matchers with Tra
       }
       transferFromScripted <- versionedTransferGenP(master, alice, Proofs.empty)
 
-    } yield (genesis, genesis2, createAlias, setScript, dataTransaction, transferFromScripted)
+    } yield (genesis, genesis2, setScript, dataTransaction, transferFromScripted)
 
-  ignore("simple oracle value required to transfer") {
+  property("simple oracle value required to transfer") {
     forAll(preconditions) {
-      case (genesis, genesis2, createAlias, setScript, dataTransaction, transferFromScripted) =>
-        assertDiffAndState(Seq(TestBlock.create(Seq(genesis, genesis2, createAlias, setScript, dataTransaction))),
+      case (genesis, genesis2, setScript, dataTransaction, transferFromScripted) =>
+        assertDiffAndState(Seq(TestBlock.create(Seq(genesis, genesis2, setScript, dataTransaction))),
                            TestBlock.create(Seq(transferFromScripted)),
                            smartEnabledFS) { case _ => () }
-        assertDiffEi(Seq(TestBlock.create(Seq(genesis, genesis2, createAlias, setScript))),
-                     TestBlock.create(Seq(transferFromScripted)),
-                     smartEnabledFS)(totalDiffEi => totalDiffEi shouldBe Left(_: ScriptExecutionError))
+        assertDiffEi(Seq(TestBlock.create(Seq(genesis, genesis2, setScript))), TestBlock.create(Seq(transferFromScripted)), smartEnabledFS)(
+          totalDiffEi => totalDiffEi shouldBe Left(_: ScriptExecutionError))
     }
   }
 }

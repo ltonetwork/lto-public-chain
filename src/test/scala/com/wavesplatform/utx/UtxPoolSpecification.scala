@@ -404,7 +404,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
     }
 
     // See NODE-702
-    "smart accounts" ignore {
+    "smart accounts" - {
       "not enough fee" in {
         val (utx, tx) = notEnoughFeeTxWithScriptedAccount.sample.getOrElse(throw new IllegalStateException("NO SAMPLE"))
         utx.putIfNew(tx) should produce("InsufficientFee")
