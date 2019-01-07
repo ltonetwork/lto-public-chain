@@ -21,7 +21,7 @@ import com.wavesplatform.account.Address
 @Path("/leasing")
 @Api(value = "/leasing")
 case class LeaseApiRoute(settings: RestAPISettings, wallet: Wallet, blockchain: Blockchain, utx: UtxPool, allChannels: ChannelGroup, time: Time)
-  extends ApiRoute
+    extends ApiRoute
     with BroadcastRoute {
 
   override val route = pathPrefix("leasing") {

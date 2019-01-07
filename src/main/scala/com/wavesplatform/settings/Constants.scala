@@ -15,4 +15,6 @@ object Constants extends ScorexLogging {
 
   val UnitsInLTO = 100000000L
   val TotalLTO   = 1000000000L
+
+  val TotalLTOMain = 500000000L
 }
