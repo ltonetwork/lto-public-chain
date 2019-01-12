@@ -28,7 +28,7 @@ object Importer extends ScorexLogging {
     SLF4JBridgeHandler.removeHandlersForRootLogger()
     SLF4JBridgeHandler.install()
 
-    val configFilename = Try(args(0)).toOption.getOrElse("waves-testnet.conf")
+    val configFilename = Try(args(0)).toOption.getOrElse("lto-testnet.conf")
     val config         = loadConfig(ConfigFactory.parseFile(new File(configFilename)))
     val settings       = WavesSettings.fromConfig(config)
     AddressScheme.current = new AddressScheme {

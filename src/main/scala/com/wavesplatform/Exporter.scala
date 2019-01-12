@@ -20,7 +20,7 @@ object Exporter extends ScorexLogging {
     SLF4JBridgeHandler.removeHandlersForRootLogger()
     SLF4JBridgeHandler.install()
 
-    val configFilename       = Try(args(0)).toOption.getOrElse("waves-testnet.conf")
+    val configFilename       = Try(args(0)).toOption.getOrElse("lto-testnet.conf")
     val outputFilenamePrefix = Try(args(1)).toOption.getOrElse("blockchain")
     val exportHeight         = Try(args(2)).toOption.flatMap(s => Try(s.toInt).toOption)
     val format               = Try(args(3)).toOption.filter(s => s.toUpperCase == "JSON").getOrElse("BINARY").toUpperCase
