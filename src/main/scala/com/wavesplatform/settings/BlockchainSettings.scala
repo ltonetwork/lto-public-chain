@@ -108,15 +108,14 @@ case class GenesisSettings(blockTimestamp: Long,
 
 object GenesisSettings {
   val MAINNET = GenesisSettings(
-    1547046889301L,
-    1547046889301L,
+    1547303338475L,
+    1547303338475L,
     Constants.UnitsInWave * Constants.TotalLTOMain,
-    ByteStr.decodeBase58("6NZTn4eRFRiouWkrph6Hg1qY3Y3jFEtXDreSUgozsGoHSRunvwQRRzCqfedcnLEzjMdvVE7EK943YnzbZk39LAN").toOption,
+    ByteStr.decodeBase58("3xfb8SHvXK1eUT73kqq89Ayvt2w5ivy9CM2HHVYZ6H5zjgmbukadkFhis74vXsfak9YjwUCBMQUKsKmiRPmAWaB3").toOption,
     List(
-      GenesisTransactionSettings("3JqBJaDet2MWisRPNLtN5snCxkGHtKaLRHv", Constants.UnitsInLTO * 1000L),
       GenesisTransactionSettings("3JpzrZcSDhzRVeENoqqB98c6hTNg7WJaBKt", Constants.UnitsInLTO * 1000L),
-      GenesisTransactionSettings("3JoGNXSyTysF6dNbCCUBQrBB5YEHhJJpNHv", Constants.UnitsInLTO * 112500000L),
-      GenesisTransactionSettings("3JygettiPvCrb7rSoWDzRHbBWKdMva2d5tu", Constants.UnitsInLTO * 387497000L),
+      GenesisTransactionSettings("3JqBJaDet2MWisRPNLtN5snCxkGHtKaLRHv", Constants.UnitsInLTO * 1000L),
+      GenesisTransactionSettings("3JygettiPvCrb7rSoWDzRHbBWKdMva2d5tu", Constants.UnitsInLTO * 499997000L),
       GenesisTransactionSettings("3JyxAP1fpeYXv77FzxihgLsDVMccwLE64rd", Constants.UnitsInLTO * 1000L)
     ),
     153722867L,
