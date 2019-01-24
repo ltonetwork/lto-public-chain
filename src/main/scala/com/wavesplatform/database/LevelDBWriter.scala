@@ -173,7 +173,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
   override protected def loadApprovedFeatures(): Map[Short, Int] = readOnly(_.get(Keys.approvedFeatures))
 
-  override protected def loadActivatedFeatures(): Map[Short, Int] = fs.preActivatedFeatures ++ readOnly(_.get(Keys.activatedFeatures))
+  override protected def loadActivatedFeatures(): Map[Short, Int] = readOnly(_.get(Keys.activatedFeatures)) ++ fs.preActivatedFeatures
 
   private def updateHistory(rw: RW, key: Key[Seq[Int]], threshold: Int, kf: Int => Key[_]): Seq[Array[Byte]] =
     updateHistory(rw, rw.get(key), key, threshold, kf)
@@ -327,7 +327,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
         case (featureId, voteCount) if voteCount + (if (block.featureVotes(featureId)) 1 else 0) >= minVotes => featureId -> height
       }
 
-      if (newlyApprovedFeatures.nonEmpty) {
+      if ((newlyApprovedFeatures -- fs.preActivatedFeatures.keySet).nonEmpty) {
         approvedFeaturesCache = newlyApprovedFeatures ++ rw.get(Keys.approvedFeatures)
         rw.put(Keys.approvedFeatures, approvedFeaturesCache)
 
