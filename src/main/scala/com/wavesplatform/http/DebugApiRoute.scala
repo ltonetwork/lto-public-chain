@@ -58,7 +58,7 @@ case class DebugApiRoute(ws: WavesSettings,
 
   override val settings = ws.restAPISettings
   override lazy val route: Route = pathPrefix("debug") {
-    blocks ~ state ~ info ~ rollback ~ rollbackTo ~ blacklist ~ portfolios ~ minerInfo ~ historyInfo ~ configInfo ~ print
+    blocks ~ state ~ info ~ stateAtHeight ~ rollback ~ rollbackTo ~ blacklist ~ portfolios ~ minerInfo ~ historyInfo ~ configInfo ~ print
   }
 
   @Path("/blocks/{howMany}")
@@ -141,6 +141,16 @@ case class DebugApiRoute(ws: WavesSettings,
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json state")))
   def state: Route = (path("state") & get & withAuth) {
     complete(ng.wavesDistribution(ng.height).map { case (a, b) => a.stringRepr -> b })
+  }
+
+  @Path("/stateAtHeight/{height}")
+  @ApiOperation(value = "State at block", notes = "Get state at specified height", httpMethod = "GET")
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(name = "height", value = "height", required = true, dataType = "integer", paramType = "path")
+    ))
+  def stateAtHeight: Route = (path("stateAtHeight" / IntNumber) & get & withAuth) { height =>
+    complete(ng.wavesDistribution(height).map { case (a, b) => a.stringRepr -> b })
   }
 
   private def rollbackToBlock(blockId: ByteStr, returnTransactionsToUtx: Boolean): Future[ToResponseMarshallable] = {
