@@ -166,6 +166,11 @@ object Bindings {
             "sellMatcherFee" -> sellMatcherFee,
           ) ++ provenTxPart(p)
         )
+      case Anchor(p) =>
+        CaseObj(
+          anchorTransactionType.typeRef,
+          provenTxPart(p)
+        )
     }
 
 }
