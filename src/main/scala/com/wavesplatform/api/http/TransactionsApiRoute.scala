@@ -237,12 +237,13 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case Some(x) =>
             x match {
               case AnchorTransaction        => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
+              case TransferTransactionV1    => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], wallet, signerAddress, time)
               case TransferTransactionV2    => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], wallet, signerAddress, time)
               case MassTransferTransaction  => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], wallet, signerAddress, time)
               case LeaseTransactionV2       => TransactionFactory.leaseV2(txJson.as[LeaseV2Request], wallet, signerAddress, time)
               case LeaseCancelTransactionV2 => TransactionFactory.leaseCancelV2(txJson.as[LeaseCancelV2Request], wallet, signerAddress, time)
               case DataTransaction          => TransactionFactory.data(txJson.as[DataRequest], wallet, signerAddress, time)
-//              case SetScriptTransaction     => TransactionFactory.setScript(txJson.as[SetScriptRequest], wallet, signerAddress, time)
+              case SetScriptTransaction     => TransactionFactory.setScript(txJson.as[SetScriptRequest], wallet, signerAddress, time)
             }
         }).fold(ApiError.fromValidationError, _.json())
     }
