@@ -78,4 +78,5 @@ object Tx {
   case class Sponsorship(p: Proven, assetId: ByteVector, minSponsoredAssetFee: Option[Long])                                          extends Tx
   case class Exchange(p: Proven, price: Long, amount: Long, buyMatcherFee: Long, sellMatcherFee: Long, buyOrder: Ord, sellOrder: Ord) extends Tx
   case class Data(p: Proven, data: IndexedSeq[DataItem[_]])                                                                           extends Tx
+  case class Anchor(p: Proven)                                                                                                        extends Tx
 }

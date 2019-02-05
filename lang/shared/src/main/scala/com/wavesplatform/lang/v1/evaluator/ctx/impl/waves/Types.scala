@@ -173,6 +173,11 @@ object Types {
     ) ++ header ++ proven
   )
 
+  val anchorTransactionType = CaseType(
+    "AnchorTransaction",
+    header ++ proven
+  )
+
   val obsoleteTransactionTypes = List(genesisTransactionType, paymentTransactionType)
 
   val activeTransactionTypes = List(
@@ -187,7 +192,8 @@ object Types {
     setScriptTransactionType,
     sponsorFeeTransactionType,
     exchangeTransactionType,
-    dataTransactionType
+    dataTransactionType,
+    anchorTransactionType
   )
 
   val transactionTypes = obsoleteTransactionTypes ++ activeTransactionTypes

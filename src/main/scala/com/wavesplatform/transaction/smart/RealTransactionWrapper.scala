@@ -101,6 +101,7 @@ object RealTransactionWrapper {
             case BinaryDataEntry(key, value)  => DataItem.Bin(key, value)
           }.toIndexedSeq
         )
+      case a: AnchorTransaction => Tx.Anchor(proven(a))
     }
   }
 }

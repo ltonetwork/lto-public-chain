@@ -19,7 +19,7 @@ class ScriptCacheTest extends FreeSpec with Matchers with WithDB with Transactio
 
   val CACHE_SIZE = 1
   val AMOUNT     = 10000000000L
-  val FEE        = 5000000
+  val FEE        = 100000000
 
   def mkScripts(num: Int): List[Script] = {
     (0 until num).map { ind =>

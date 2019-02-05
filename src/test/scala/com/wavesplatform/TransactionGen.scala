@@ -94,7 +94,7 @@ trait TransactionGenBase extends ScriptGen {
 
   val positiveLongGen: Gen[Long] = Gen.choose(1, 100000000L * 100000000L / 100)
   val positiveIntGen: Gen[Int]   = Gen.choose(1, Int.MaxValue / 100)
-  val smallFeeGen: Gen[Long]     = Gen.choose(400000, 100000000)
+  val smallFeeGen: Gen[Long]     = Gen.choose(100000000, 1000000000)
 
   val maxOrderTimeGen: Gen[Long] = Gen.choose(10000L, Order.MaxLiveTime).map(_ + time.correctedTime())
   val timestampGen: Gen[Long]    = Gen.choose(1, Long.MaxValue - 100)
@@ -646,7 +646,7 @@ trait TransactionGenBase extends ScriptGen {
     (for {
       version   <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
       timestamp <- timestampGen
-    } yield DataTransaction.selfSigned(version, sender, data, 15000000, timestamp).explicitGet())
+    } yield DataTransaction.selfSigned(version, sender, data, 100000000, timestamp).explicitGet())
       .label("DataTransactionP")
 
   def preconditionsTransferAndLease(typed: EXPR): Gen[(GenesisTransaction, SetScriptTransaction, LeaseTransaction, TransferTransactionV1)] =
