@@ -63,6 +63,23 @@ object BlockHeader extends ScorexLogging {
         NxtLikeConsensusBlockData(Longs.fromByteArray(cBytes.take(Block.BaseTargetLength)), ByteStr(cBytes.takeRight(Block.GeneratorSignatureLength)))
       position += cBytesLength
 
+      var genPK: Option[Array[Byte]]             = None
+      var signature: Option[ByteStr]             = None
+      var transactionsSignature: Option[ByteStr] = None
+
+      if (version >= Block.SegwitBlockVersion) {
+
+        transactionsSignature = Some(ByteStr(bytes.slice(position, position + SignatureLength)))
+        position += SignatureLength
+
+        genPK = Some(bytes.slice(position, position + KeyLength))
+        position += KeyLength
+
+        signature = Some(ByteStr(bytes.slice(position, position + SignatureLength)))
+        position += SignatureLength
+
+      }
+
       val tBytesLength = Ints.fromByteArray(bytes.slice(position, position + 4))
       position += 4
       val tBytes = bytes.slice(position, position + tBytesLength)
@@ -87,14 +104,22 @@ object BlockHeader extends ScorexLogging {
         supportedFeaturesIds = arr.toSet
       }
 
-      val genPK = bytes.slice(position, position + KeyLength)
-      position += KeyLength
+      if (version < Block.SegwitBlockVersion) {
+        genPK = Some(bytes.slice(position, position + KeyLength))
+        position += KeyLength
 
-      val signature = ByteStr(bytes.slice(position, position + SignatureLength))
-      position += SignatureLength
+        signature = Some(ByteStr(bytes.slice(position, position + SignatureLength)))
+        position += SignatureLength
+      }
 
       val blockHeader =
-        new BlockHeader(timestamp, version, reference, SignerData(PublicKeyAccount(genPK), signature), consData, txCount, supportedFeaturesIds)
+        new BlockHeader(timestamp,
+                        version,
+                        reference,
+                        SignerData(PublicKeyAccount(genPK.get), signature.get),
+                        consData,
+                        txCount,
+                        supportedFeaturesIds)
       (blockHeader, tBytes)
     }.recoverWith {
       case t: Throwable =>
@@ -108,7 +133,6 @@ object BlockHeader extends ScorexLogging {
         "blocksize"        -> blockSize,
         "transactionCount" -> bh.transactionCount
       )
-
 }
 
 case class Block private (override val timestamp: Long,
@@ -318,4 +342,5 @@ object Block extends ScorexLogging {
   val GenesisBlockVersion: Byte = 1
   val PlainBlockVersion: Byte   = 2
   val NgBlockVersion: Byte      = 3
+  val SegwitBlockVersion: Byte  = 4
 }
