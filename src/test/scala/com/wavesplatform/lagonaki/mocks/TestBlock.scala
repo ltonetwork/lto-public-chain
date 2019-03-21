@@ -54,6 +54,7 @@ object TestBlock {
       Block(
         timestamp = time,
         version = version,
+        maybeTxsSignature = None,
         reference = ref,
         signerData = SignerData(signer, ByteStr.empty),
         consensusData = NxtLikeConsensusBlockData(2L, ByteStr(Array.fill(Block.GeneratorSignatureLength)(0: Byte))),
@@ -65,24 +66,30 @@ object TestBlock {
   def withReference(ref: ByteStr): Block =
     sign(
       defaultSigner,
-      Block(0,
-            1,
-            ref,
-            SignerData(defaultSigner, ByteStr.empty),
-            NxtLikeConsensusBlockData(2L, randomOfLength(Block.GeneratorSignatureLength)),
-            Seq.empty,
-            Set.empty)
+      Block(
+        0,
+        1,
+        ref,
+        maybeTxsSignature = None,
+        SignerData(defaultSigner, ByteStr.empty),
+        NxtLikeConsensusBlockData(2L, randomOfLength(Block.GeneratorSignatureLength)),
+        Seq.empty,
+        Set.empty
+      )
     )
 
   def withReferenceAndFeatures(ref: ByteStr, features: Set[Short]): Block =
     sign(
       defaultSigner,
-      Block(0,
-            3,
-            ref,
-            SignerData(defaultSigner, ByteStr.empty),
-            NxtLikeConsensusBlockData(2L, randomOfLength(Block.GeneratorSignatureLength)),
-            Seq.empty,
-            features)
+      Block(
+        0,
+        3,
+        ref,
+        maybeTxsSignature = None,
+        SignerData(defaultSigner, ByteStr.empty),
+        NxtLikeConsensusBlockData(2L, randomOfLength(Block.GeneratorSignatureLength)),
+        Seq.empty,
+        features
+      )
     )
 }

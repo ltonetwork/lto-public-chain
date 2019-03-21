@@ -121,6 +121,7 @@ class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with
       version = version,
       timestamp = timestamp,
       reference = reference,
+      maybeTxsSignature = None,
       consensusData = NxtLikeConsensusBlockData(
         baseTarget = bTarget,
         generationSignature = generationSignature
