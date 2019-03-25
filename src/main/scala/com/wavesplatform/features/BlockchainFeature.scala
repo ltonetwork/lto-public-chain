@@ -13,13 +13,15 @@ object BlockchainFeatures {
   val FeeSponsorship                  = BlockchainFeature(7, "Fee Sponsorship")
   val FairPoS                         = BlockchainFeature(8, "Fair PoS")
   val SmartAssets                     = BlockchainFeature(9, "Smart Assets")
+  val SegWit                          = BlockchainFeature(10, "SegWit")
 
   private val dict = Seq(
     SmallerMinimalGeneratingBalance,
     NG,
     MassTransfer,
     DataTransaction,
-    FairPoS
+    FairPoS,
+    SegWit
   ).map(f => f.id -> f).toMap
 
   val implemented: Set[Short] = dict.keySet
