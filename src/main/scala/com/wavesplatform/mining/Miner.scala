@@ -134,8 +134,12 @@ class MinerImpl(allChannels: ChannelGroup,
 
   private def forgeBlock(account: PrivateKeyAccount, balance: Long): Either[String, (MiningConstraints, Block, MiningConstraint)] = {
     // should take last block right at the time of mining since microblocks might have been added
-    val height              = blockchainUpdater.height
-    val version             = if (height <= blockchainSettings.functionalitySettings.blockVersion3AfterHeight) PlainBlockVersion else NgBlockVersion
+    val height = blockchainUpdater.height
+    val version =
+      if (blockchainUpdater.activatedFeatures.keySet.contains(BlockchainFeatures.SegWit.id))
+        SegwitBlockVersion
+      else if (height <= blockchainSettings.functionalitySettings.blockVersion3AfterHeight) PlainBlockVersion
+      else NgBlockVersion
     val lastBlock           = blockchainUpdater.lastBlock.get
     val referencedBlockInfo = blockchainUpdater.bestLastBlockInfo(System.currentTimeMillis() - minMicroBlockDurationMills).get
     val refBlockBT          = referencedBlockInfo.consensus.baseTarget
