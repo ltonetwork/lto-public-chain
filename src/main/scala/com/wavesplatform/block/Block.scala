@@ -215,7 +215,13 @@ case class Block private (override val timestamp: Long,
       Json.obj("fee" -> transactionData.map(_.fee).sum) ++
       transactionField.json())
 
-  val bytesWithoutSignature: Coeval[Array[Byte]] = Coeval.evalOnce(bytes().dropRight(SignatureLength))
+  val bytesWithoutSignature: Coeval[Array[Byte]] = Coeval.evalOnce {
+    if (version < SegwitBlockVersion)
+      bytes().dropRight(SignatureLength)
+    else {
+      bytesForSignature()
+    }
+  }
 
   val blockScore: Coeval[BigInt] = Coeval.evalOnce((BigInt("18446744073709551616") / consensusData.baseTarget).ensuring(_ > 0))
 
@@ -333,7 +339,7 @@ object Block extends ScorexLogging {
         if (version < SegwitBlockVersion)
           noTxsSignatureBlock
         else {
-          val txBytesSize       = noTxsSignatureBlock.bytes().length
+          val txBytesSize       = noTxsSignatureBlock.transactionField.bytes().length
           val txBytes           = Bytes.ensureCapacity(Ints.toByteArray(txBytesSize), 4, 0) ++ noTxsSignatureBlock.transactionField.bytes()
           val maybeTxsSignature = Some(ByteStr(crypto.fastHash(txBytes)))
           noTxsSignatureBlock.copy(maybeTxsSignature = maybeTxsSignature)
