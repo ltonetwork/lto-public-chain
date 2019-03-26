@@ -70,11 +70,23 @@ object BlockHeader extends ScorexLogging {
       var genPK: Option[Array[Byte]]         = None
       var signature: Option[ByteStr]         = None
       var maybeTxsSignature: Option[ByteStr] = None
+      var supportedFeaturesIds               = Set.empty[Short]
 
       if (version >= Block.SegwitBlockVersion) {
 
-        maybeTxsSignature = Some(ByteStr(bytes.slice(position, position + SignatureLength)))
-        position += SignatureLength
+        maybeTxsSignature = Some(ByteStr(bytes.slice(position, position + crypto.DigestSize)))
+        position += crypto.DigestSize
+
+        if (version > 2) {
+          val featuresCount = Ints.fromByteArray(bytes.slice(position, position + 4))
+          position += 4
+
+          val buffer = ByteBuffer.wrap(bytes.slice(position, position + featuresCount * 2)).asShortBuffer
+          val arr    = new Array[Short](featuresCount)
+          buffer.get(arr)
+          position += featuresCount * 2
+          supportedFeaturesIds = arr.toSet
+        }
 
         genPK = Some(bytes.slice(position, position + KeyLength))
         position += KeyLength
@@ -89,15 +101,13 @@ object BlockHeader extends ScorexLogging {
       val tBytes = bytes.slice(position, position + tBytesLength)
 
       val txCount = version match {
-        case 1 | 2 => tBytes.head
-        case 3     => ByteBuffer.wrap(tBytes, 0, 4).getInt()
+        case 1 | 2       => tBytes.head
+        case x if x >= 3 => ByteBuffer.wrap(tBytes, 0, 4).getInt()
       }
 
       position += tBytesLength
 
-      var supportedFeaturesIds = Set.empty[Short]
-
-      if (version > 2) {
+      if ((version > 2) && (version < Block.SegwitBlockVersion)) {
         val featuresCount = Ints.fromByteArray(bytes.slice(position, position + 4))
         position += 4
 
@@ -270,7 +280,7 @@ object Block extends ScorexLogging {
     } else {
       val v: (Array[Byte], Int) = version match {
         case 1 | 2 => (bytes.tail, bytes.head) //  127 max, won't work properly if greater
-        case 3 =>
+        case x if x >= 3 =>
           val size = ByteBuffer.wrap(bytes, 0, 4).getInt()
           (bytes.drop(4), size)
         case _ => ???
@@ -321,6 +331,9 @@ object Block extends ScorexLogging {
     (for {
       _ <- Either.cond(reference.arr.length == SignatureLength, (), "Incorrect reference")
       _ <- Either.cond(consensusData.generationSignature.arr.length == GeneratorSignatureLength, (), "Incorrect consensusData.generationSignature")
+      _ <- Either.cond(maybeTxsSignature.map(_.arr.length).getOrElse(crypto.DigestSize) == crypto.DigestSize,
+                       (),
+                       "Incorrect transactions hash for SegWit block")
       _ <- Either.cond(signerData.generator.publicKey.length == KeyLength, (), "Incorrect signer.publicKey")
       _ <- Either.cond(version > 2 || featureVotes.isEmpty, (), s"Block version $version could not contain feature votes")
       _ <- Either.cond(featureVotes.size <= MaxFeaturesInBlock, (), s"Block could not contain more than $MaxFeaturesInBlock feature votes")
