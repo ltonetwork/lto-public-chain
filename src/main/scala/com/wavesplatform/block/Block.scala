@@ -219,7 +219,8 @@ case class Block private (override val timestamp: Long,
     if (version < SegwitBlockVersion)
       bytes().dropRight(SignatureLength)
     else {
-      bytesForSignature()
+      // TODO: Optimize
+      copy(signerData = SignerData(signerData.generator, ByteStr.empty)).bytesForSignature.apply
     }
   }
 
