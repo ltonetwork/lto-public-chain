@@ -331,12 +331,18 @@ object Block extends ScorexLogging {
     (for {
       _ <- Either.cond(reference.arr.length == SignatureLength, (), "Incorrect reference")
       _ <- Either.cond(consensusData.generationSignature.arr.length == GeneratorSignatureLength, (), "Incorrect consensusData.generationSignature")
-      _ <- Either.cond(maybeTxsSignature.map(_.arr.length).getOrElse(crypto.DigestSize) == crypto.DigestSize,
-                       (),
-                       "Incorrect transactions hash for SegWit block")
       _ <- Either.cond(signerData.generator.publicKey.length == KeyLength, (), "Incorrect signer.publicKey")
       _ <- Either.cond(version > 2 || featureVotes.isEmpty, (), s"Block version $version could not contain feature votes")
       _ <- Either.cond(featureVotes.size <= MaxFeaturesInBlock, (), s"Block could not contain more than $MaxFeaturesInBlock feature votes")
+      _ <- maybeTxsSignature
+        .map(
+          txsSignature =>
+            Either.cond(
+              generateTxsSignature(TransactionsBlockField(version.toInt, transactionData)) == txsSignature,
+              (),
+              "Incorrect transactions hash for SegWit block"
+          ))
+        .getOrElse(Right(()))
     } yield
       Block(timestamp, version, reference, maybeTxsSignature, signerData, consensusData, transactionData, featureVotes)).left.map(GenericError(_))
   }
@@ -353,10 +359,7 @@ object Block extends ScorexLogging {
         if (version < SegwitBlockVersion)
           noTxsSignatureBlock
         else {
-          val txBytesSize       = noTxsSignatureBlock.transactionField.bytes().length
-          val txBytes           = Bytes.ensureCapacity(Ints.toByteArray(txBytesSize), 4, 0) ++ noTxsSignatureBlock.transactionField.bytes()
-          val maybeTxsSignature = Some(ByteStr(crypto.fastHash(txBytes)))
-          noTxsSignatureBlock.copy(maybeTxsSignature = maybeTxsSignature)
+          noTxsSignatureBlock.copy(maybeTxsSignature = Some(generateTxsSignature(noTxsSignatureBlock.transactionField)))
         }
       })
       .map(unsigned => unsigned.copy(signerData = SignerData(signer, ByteStr(crypto.sign(signer, unsigned.bytesForSignature())))))
@@ -419,4 +422,10 @@ object Block extends ScorexLogging {
   val PlainBlockVersion: Byte   = 2
   val NgBlockVersion: Byte      = 3
   val SegwitBlockVersion: Byte  = 4
+
+  private def generateTxsSignature(transactionField: TransactionsBlockField): ByteStr = {
+    val txBytesSize = transactionField.bytes().length
+    val txBytes     = Bytes.ensureCapacity(Ints.toByteArray(txBytesSize), 4, 0) ++ transactionField.bytes()
+    ByteStr(crypto.fastHash(txBytes))
+  }
 }
