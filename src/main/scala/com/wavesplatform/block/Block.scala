@@ -195,6 +195,14 @@ case class Block private (override val timestamp: Long,
         txBytes
   }
 
+  def convertBytesToHex(bytes: Seq[Byte]): String = {
+    val sb = new StringBuilder
+    for (b <- bytes) {
+      sb.append(String.format("%02x", Byte.box(b)))
+    }
+    sb.toString
+  }
+
   val bytesForSignature: Coeval[Array[Byte]] = Coeval.evalOnce {
     val txBytesSize = transactionField.bytes().length
     val txBytes     = Bytes.ensureCapacity(Ints.toByteArray(txBytesSize), 4, 0) ++ transactionField.bytes()
@@ -202,6 +210,14 @@ case class Block private (override val timestamp: Long,
     val cBytesSize = consensusField.bytes().length
     val cBytes     = Bytes.ensureCapacity(Ints.toByteArray(cBytesSize), 4, 0) ++ consensusField.bytes()
 
+    if (version == SegwitBlockVersion) {
+      println(s"v: ${convertBytesToHex(versionField.bytes())}")
+      println(s"timestamp: ${convertBytesToHex(timestampField.bytes())}")
+      println(s"reference: ${convertBytesToHex(referenceField.bytes())}")
+      println(s"txsSign: ${convertBytesToHex(maybeTxsSignatureField.get.bytes())}")
+      println(s"features: ${convertBytesToHex(supportedFeaturesField.bytes())}")
+      println(s"signer: ${convertBytesToHex(signerField.bytes())}")
+    }
     if (version < SegwitBlockVersion)
       versionField.bytes() ++
         timestampField.bytes() ++
