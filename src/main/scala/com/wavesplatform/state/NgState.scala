@@ -51,7 +51,7 @@ class NgState(val base: Block, val baseBlockDiff: Diff, val approvedFeatures: Se
     if (micros.isEmpty) {
       base
     } else {
-      base.copy(signerData = base.signerData.copy(signature = micros.head.totalResBlockSig), transactionData = transactions)
+      base.copy(signerData = base.signerData.copy(signature = micros.head.totalResBlockSig), transactionData = transactions).deriveTxsSignature
     }
 
   def totalDiffOf(id: BlockId): Option[(Block, Diff, DiscardedMicroBlocks)] =
@@ -81,9 +81,11 @@ class NgState(val base: Block, val baseBlockDiff: Diff, val approvedFeatures: Se
           }
       }
       maybeFound.map {
-        case (sig, discardedMicroblocks) =>
-          (base.copy(signerData = base.signerData.copy(signature = sig), transactionData = base.transactionData ++ accumulatedTxs),
-           discardedMicroblocks)
+        case (sig, discardedMicroblocks) => {
+          val newBlock =
+            base.copy(signerData = base.signerData.copy(signature = sig), transactionData = base.transactionData ++ accumulatedTxs).deriveTxsSignature
+          (newBlock, discardedMicroblocks)
+        }
       }
     }
   }

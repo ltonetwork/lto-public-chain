@@ -195,6 +195,14 @@ case class Block private (override val timestamp: Long,
         txBytes
   }
 
+  def convertBytesToHex(bytes: Seq[Byte]): String = {
+    val sb = new StringBuilder
+    for (b <- bytes) {
+      sb.append(String.format("%02x", Byte.box(b)))
+    }
+    sb.toString
+  }
+
   val bytesForSignature: Coeval[Array[Byte]] = Coeval.evalOnce {
     val txBytesSize = transactionField.bytes().length
     val txBytes     = Bytes.ensureCapacity(Ints.toByteArray(txBytesSize), 4, 0) ++ transactionField.bytes()
@@ -229,7 +237,6 @@ case class Block private (override val timestamp: Long,
     if (version < SegwitBlockVersion)
       bytes().dropRight(SignatureLength)
     else {
-      // TODO: Optimize
       copy(signerData = SignerData(signerData.generator, ByteStr.empty)).bytesForSignature.apply
     }
   }
@@ -250,6 +257,15 @@ case class Block private (override val timestamp: Long,
 
   override def toString: String =
     s"Block(${signerData.signature} -> ${reference.trim}, txs=${transactionData.size}, features=$featureVotes)"
+
+  def deriveTxsSignature: Block = {
+    if (version >= SegwitBlockVersion) {
+      copy(maybeTxsSignature = Some(generateTxsSignature(transactionField)))
+    } else {
+      this
+    }
+
+  }
 
 }
 
@@ -331,12 +347,18 @@ object Block extends ScorexLogging {
     (for {
       _ <- Either.cond(reference.arr.length == SignatureLength, (), "Incorrect reference")
       _ <- Either.cond(consensusData.generationSignature.arr.length == GeneratorSignatureLength, (), "Incorrect consensusData.generationSignature")
-      _ <- Either.cond(maybeTxsSignature.map(_.arr.length).getOrElse(crypto.DigestSize) == crypto.DigestSize,
-                       (),
-                       "Incorrect transactions hash for SegWit block")
       _ <- Either.cond(signerData.generator.publicKey.length == KeyLength, (), "Incorrect signer.publicKey")
       _ <- Either.cond(version > 2 || featureVotes.isEmpty, (), s"Block version $version could not contain feature votes")
       _ <- Either.cond(featureVotes.size <= MaxFeaturesInBlock, (), s"Block could not contain more than $MaxFeaturesInBlock feature votes")
+      _ <- maybeTxsSignature
+        .map(
+          txsSignature =>
+            Either.cond(
+              generateTxsSignature(TransactionsBlockField(version.toInt, transactionData)) == txsSignature,
+              (),
+              "Incorrect transactions hash for SegWit block"
+          ))
+        .getOrElse(Right(()))
     } yield
       Block(timestamp, version, reference, maybeTxsSignature, signerData, consensusData, transactionData, featureVotes)).left.map(GenericError(_))
   }
@@ -353,13 +375,12 @@ object Block extends ScorexLogging {
         if (version < SegwitBlockVersion)
           noTxsSignatureBlock
         else {
-          val txBytesSize       = noTxsSignatureBlock.transactionField.bytes().length
-          val txBytes           = Bytes.ensureCapacity(Ints.toByteArray(txBytesSize), 4, 0) ++ noTxsSignatureBlock.transactionField.bytes()
-          val maybeTxsSignature = Some(ByteStr(crypto.fastHash(txBytes)))
-          noTxsSignatureBlock.copy(maybeTxsSignature = maybeTxsSignature)
+          noTxsSignatureBlock.deriveTxsSignature
         }
       })
-      .map(unsigned => unsigned.copy(signerData = SignerData(signer, ByteStr(crypto.sign(signer, unsigned.bytesForSignature())))))
+      .map(unsigned => {
+        unsigned.copy(signerData = SignerData(signer, ByteStr(crypto.sign(signer, unsigned.bytesForSignature()))))
+      })
   }
 
   def genesisTransactions(gs: GenesisSettings): Seq[GenesisTransaction] = {
@@ -419,4 +440,10 @@ object Block extends ScorexLogging {
   val PlainBlockVersion: Byte   = 2
   val NgBlockVersion: Byte      = 3
   val SegwitBlockVersion: Byte  = 4
+
+  def generateTxsSignature(transactionField: TransactionsBlockField): ByteStr = {
+    val txBytesSize = transactionField.bytes().length
+    val txBytes     = Bytes.ensureCapacity(Ints.toByteArray(txBytesSize), 4, 0) ++ transactionField.bytes()
+    ByteStr(crypto.fastHash(txBytes))
+  }
 }
