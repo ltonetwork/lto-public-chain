@@ -217,7 +217,7 @@ class MinerImpl(allChannels: ChannelGroup,
         (for {
           signedBlock <- EitherT.fromEither[Task](
             Block.buildAndSign(
-              version = 3,
+              version = if (accumulatedBlock.version <= 3) 3 else accumulatedBlock.version,
               timestamp = accumulatedBlock.timestamp,
               reference = accumulatedBlock.reference,
               consensusData = accumulatedBlock.consensusData,

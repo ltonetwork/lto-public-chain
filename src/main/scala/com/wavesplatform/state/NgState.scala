@@ -81,9 +81,11 @@ class NgState(val base: Block, val baseBlockDiff: Diff, val approvedFeatures: Se
           }
       }
       maybeFound.map {
-        case (sig, discardedMicroblocks) =>
-          (base.copy(signerData = base.signerData.copy(signature = sig), transactionData = base.transactionData ++ accumulatedTxs),
-           discardedMicroblocks)
+        case (sig, discardedMicroblocks) => {
+          val newBlock =
+            base.copy(signerData = base.signerData.copy(signature = sig), transactionData = base.transactionData ++ accumulatedTxs).deriveTxsSignature
+          (newBlock, discardedMicroblocks)
+        }
       }
     }
   }
