@@ -74,8 +74,8 @@ object BlockHeader extends ScorexLogging {
 
       if (version >= Block.SegwitBlockVersion) {
 
-        maybeTxsSignature = Some(ByteStr(bytes.slice(position, position + crypto.DigestSize)))
-        position += crypto.DigestSize
+        maybeTxsSignature = Some(ByteStr(bytes.slice(position, position + Block.TxsSignatureLength)))
+        position += Block.TxsSignatureLength
 
         if (version > 2) {
           val featuresCount = Ints.fromByteArray(bytes.slice(position, position + 4))
@@ -285,6 +285,7 @@ object Block extends ScorexLogging {
   val MaxFeaturesInBlock: Int              = 64
   val BaseTargetLength: Int                = 8
   val GeneratorSignatureLength: Int        = 32
+  val TxsSignatureLength: Int              = crypto.DigestSize
 
   val BlockIdLength: Int = SignatureLength
 

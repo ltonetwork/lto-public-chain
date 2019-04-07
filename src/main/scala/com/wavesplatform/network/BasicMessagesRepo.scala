@@ -132,7 +132,7 @@ object GetBlockSpec extends MessageSpec[GetBlock] {
 object BlockSpec extends MessageSpec[Block] {
   override val messageCode: MessageCode = 23: Byte
 
-  override val maxLength: Int = 271 + TransactionSpec.maxLength * Block.MaxTransactionsPerBlockVer3
+  override val maxLength: Int = 271 + TransactionSpec.maxLength * Block.MaxTransactionsPerBlockVer3 + Block.TxsSignatureLength
 
   override def serializeData(block: Block): Array[Byte] = block.bytes()
 
