@@ -21,5 +21,5 @@ trait BaseGlobal {
   def blake2b256(message: Array[Byte]): Array[Byte]
   def sha256(message: Array[Byte]): Array[Byte]
 
-  def secureHash(a: Array[Byte]): Array[Byte] = keccak256(blake2b256(a))
+  def secureHash(a: Array[Byte]): Array[Byte] = sha256(blake2b256(a))
 }
