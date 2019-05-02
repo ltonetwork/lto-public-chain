@@ -23,7 +23,7 @@ object CryptoContext {
     val sigVerifyF: BaseFunction =
       NativeFunction("sigVerify", 100, SIGVERIFY, BOOLEAN, "message" -> BYTEVECTOR, "sig" -> BYTEVECTOR, "pub" -> BYTEVECTOR) {
         case (m: ByteVector) :: (s: ByteVector) :: (p: ByteVector) :: Nil =>
-          Right(global.curve25519verify(m.toArray, s.toArray, p.toArray))
+          Right(global.signatureVerify(m.toArray, s.toArray, p.toArray))
         case _ => ???
       }
 
