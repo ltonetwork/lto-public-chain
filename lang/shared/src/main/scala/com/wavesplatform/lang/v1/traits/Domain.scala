@@ -44,13 +44,16 @@ case class Ord(id: ByteVector,
                timestamp: Long,
                expiration: Long,
                matcherFee: Long,
-               signature: ByteVector)
+               bodyBytes: ByteVector,
+               proofs: IndexedSeq[ByteVector])
 trait Tx
 object Tx {
 
   case class Genesis(header: Header, amount: Long, recipient: Recipient) extends Tx
   case class Payment(p: Proven, amount: Long, recipient: Recipient)      extends Tx
   case class Transfer(p: Proven,
+                      feeAssetId: Option[ByteVector],
+                      assetId: Option[ByteVector],
                       amount: Long,
                       recipient: Recipient,
                       attachment: ByteVector)
@@ -70,6 +73,7 @@ object Tx {
   case class CreateAlias(p: Proven, alias: String)                                        extends Tx
   case class SetScript(p: Proven, script: Option[ByteVector])                             extends Tx
   case class MassTransfer(p: Proven,
+                          assetId: Option[ByteVector],
                           transferCount: Long,
                           totalAmount: Long,
                           transfers: IndexedSeq[TransferItem],
@@ -78,5 +82,4 @@ object Tx {
   case class Sponsorship(p: Proven, assetId: ByteVector, minSponsoredAssetFee: Option[Long])                                          extends Tx
   case class Exchange(p: Proven, price: Long, amount: Long, buyMatcherFee: Long, sellMatcherFee: Long, buyOrder: Ord, sellOrder: Ord) extends Tx
   case class Data(p: Proven, data: IndexedSeq[DataItem[_]])                                                                           extends Tx
-  case class Anchor(p: Proven)                                                                                                        extends Tx
 }

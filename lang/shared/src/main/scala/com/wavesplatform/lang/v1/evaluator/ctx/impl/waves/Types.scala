@@ -122,8 +122,6 @@ object Types {
     "Order",
     List(
       "id"               -> BYTEVECTOR,
-      "sender"           -> addressType.typeRef,
-      "senderPublicKey"  -> BYTEVECTOR,
       "matcherPublicKey" -> BYTEVECTOR,
       "assetPair"        -> assetPairType.typeRef,
       "orderType"        -> ordTypeType,
@@ -132,8 +130,7 @@ object Types {
       "timestamp"        -> LONG,
       "expiration"       -> LONG,
       "matcherFee"       -> LONG,
-      "signature"        -> BYTEVECTOR
-    )
+    ) ++ proven
   )
   val exchangeTransactionType = CaseType(
     "ExchangeTransaction",
@@ -173,11 +170,6 @@ object Types {
     ) ++ header ++ proven
   )
 
-  val anchorTransactionType = CaseType(
-    "AnchorTransaction",
-    header ++ proven
-  )
-
   val obsoleteTransactionTypes = List(genesisTransactionType, paymentTransactionType)
 
   val activeTransactionTypes = List(
@@ -192,8 +184,7 @@ object Types {
     setScriptTransactionType,
     sponsorFeeTransactionType,
     exchangeTransactionType,
-    dataTransactionType,
-    anchorTransactionType
+    dataTransactionType
   )
 
   val transactionTypes = obsoleteTransactionTypes ++ activeTransactionTypes

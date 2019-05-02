@@ -33,7 +33,7 @@ object CryptoContext {
     }
 
     def fromBase58StringF: BaseFunction = NativeFunction("fromBase58String", 10, FROMBASE58, BYTEVECTOR, "str" -> STRING) {
-      case (str: String) :: Nil => global.base58Decode(str).map(ByteVector(_))
+      case (str: String) :: Nil => global.base58Decode(str, global.MaxBase58String).map(ByteVector(_))
       case xs                   => notImplemented("fromBase58String(str: String)", xs)
     }
 
@@ -43,7 +43,7 @@ object CryptoContext {
     }
 
     def fromBase64StringF: BaseFunction = NativeFunction("fromBase64String", 10, FROMBASE64, BYTEVECTOR, "str" -> STRING) {
-      case (str: String) :: Nil => global.base64Decode(str).map(ByteVector(_))
+      case (str: String) :: Nil => global.base64Decode(str, global.MaxBase64String).map(ByteVector(_))
       case xs                   => notImplemented("fromBase64String(str: String)", xs)
     }
 

@@ -16,15 +16,15 @@ object Bindings {
     "version"   -> tx.version,
   )
 
+  private def proofsPart(existingProofs: IndexedSeq[ByteVector]) =
+    "proofs" -> (existingProofs ++ Seq.fill(8 - existingProofs.size)(ByteVector.empty)).toIndexedSeq
+
   private def provenTxPart(tx: Proven): Map[String, Any] =
     Map(
       "sender"          -> senderObject(tx.sender),
       "senderPublicKey" -> tx.senderPk,
       "bodyBytes"       -> tx.bodyBytes,
-      "proofs" -> {
-        val existingProofs = tx.proofs
-        (existingProofs ++ Seq.fill(8 - existingProofs.size)(ByteVector.empty)).toIndexedSeq
-      }
+      proofsPart(tx.proofs)
     ) ++ headerPart(tx.h)
 
   private def mapRecipient(r: Recipient) =
@@ -63,7 +63,8 @@ object Bindings {
         "timestamp"        -> ord.timestamp,
         "expiration"       -> ord.expiration,
         "matcherFee"       -> ord.matcherFee,
-        "signature"        -> ord.signature
+        "bodyBytes"        -> ord.bodyBytes,
+        proofsPart(ord.proofs)
       )
     )
 
@@ -75,11 +76,13 @@ object Bindings {
         CaseObj(genesisTransactionType.typeRef, Map("amount" -> amount) ++ headerPart(h) + mapRecipient(recipient))
       case Tx.Payment(p, amount, recipient) =>
         CaseObj(paymentTransactionType.typeRef, Map("amount" -> amount) ++ provenTxPart(p) + mapRecipient(recipient))
-      case Tx.Transfer(p, amount, recipient, attachment) =>
+      case Tx.Transfer(p, feeAssetId, assetId, amount, recipient, attachment) =>
         CaseObj(
           transferTransactionType.typeRef,
           Map(
             "amount"     -> amount,
+            "feeAssetId" -> fromOption(feeAssetId),
+            "assetId"    -> fromOption(assetId),
             "attachment" -> attachment
           ) ++ provenTxPart(p) + mapRecipient(recipient)
         )
@@ -131,12 +134,13 @@ object Bindings {
             "alias" -> alias,
           ) ++ provenTxPart(p)
         )
-      case MassTransfer(p, transferCount, totalAmount, transfers, attachment) =>
+      case MassTransfer(p, assetId, transferCount, totalAmount, transfers, attachment) =>
         CaseObj(
           massTransferTransactionType.typeRef,
           Map(
             "transfers" -> transfers
               .map(bv => CaseObj(transfer.typeRef, Map(mapRecipient(bv.recipient), "amount" -> bv.amount))),
+            "assetId"       -> fromOption(assetId),
             "transferCount" -> transferCount,
             "totalAmount"   -> totalAmount,
             "attachment"    -> attachment
@@ -165,11 +169,6 @@ object Bindings {
             "buyMatcherFee"  -> buyMatcherFee,
             "sellMatcherFee" -> sellMatcherFee,
           ) ++ provenTxPart(p)
-        )
-      case Anchor(p) =>
-        CaseObj(
-          anchorTransactionType.typeRef,
-          provenTxPart(p)
         )
     }
 
