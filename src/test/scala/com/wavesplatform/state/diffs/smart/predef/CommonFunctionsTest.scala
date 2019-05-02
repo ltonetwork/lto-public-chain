@@ -20,7 +20,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
     runScript[Boolean](s"isDefined($some3)") shouldBe Right(true)
     runScript[Boolean](s"isDefined($none)") shouldBe Right(false)
     runScript[Long](s"extract($some3)") shouldBe Right(3L)
-    runScript[Long](s"extract($none)") should produce("termination")
+    runScript[Long](s"extract($none)") should produce("called on unit value")
   }
 
   property("size()") {
@@ -37,7 +37,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
           """
             |match tx {
             | case mttx : MassTransferTransaction  =>  mttx.transfers[0].amount
-            | case other => throw
+            | case other => throw()
             | }
             |""".stripMargin,
           massTransfer
@@ -49,9 +49,9 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
                                                       | case mttx : MassTransferTransaction  =>
                                                       |       match mttx.transfers[0].recipient {
                                                       |           case address : Address => address.bytes
-                                                      |           case other => throw
+                                                      |           case other => throw()
                                                       |       }
-                                                      | case other => throw
+                                                      | case other => throw()
                                                       | }
                                                       |""".stripMargin,
           massTransfer
@@ -61,7 +61,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
           """
                                            |match tx {
                                            | case mttx : MassTransferTransaction  =>  size(mttx.transfers)
-                                           | case other => throw
+                                           | case other => throw()
                                            | }
                                            |""".stripMargin,
           massTransfer
@@ -84,7 +84,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
             | case tx : TransferTransaction  => tx.id == base58'${transfer.id().base58}'
             | case tx : IssueTransaction => tx.fee == ${transfer.fee}
             | case tx : MassTransferTransaction => tx.timestamp == ${transfer.timestamp}
-            | case other => throw
+            | case other => throw()
             | }
             |""".stripMargin,
           transfer
@@ -104,7 +104,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
                | case t: TransferTransaction  => t.id == base58'${transfer.id().base58}'
                | case t: IssueTransaction => t.fee == ${transfer.fee}
                | case t: MassTransferTransaction => t.timestamp == ${transfer.timestamp}
-               | case other => throw
+               | case other => throw()
                | }
                |""".stripMargin,
             transfer
@@ -123,7 +123,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
         s"""
                |match p {
                | case tx: TransferTransaction  => true
-               | case other => throw
+               | case other => throw()
                | }
                |""".stripMargin
       )
@@ -146,7 +146,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
                |    case tx: IssueTransaction => tx.fee == ${transfer.fee}
                |  }
                |  }
-               | case other => throw
+               | case other => throw()
                |}
                |""".stripMargin,
             transfer
@@ -165,7 +165,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
            |  tx
            |} {
            |     case tx: TransferTransaction  => true
-           |     case other => throw
+           |     case other => throw()
            | }
            |""".stripMargin
       )
@@ -192,7 +192,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
            |    let badAliasEq = tx.recipient == Alias("Ramakafana")
            |    let badAliasNe = tx.recipient != Alias("Nuripitia")
            |    goodEq && !badAddressEq && badAddressNe && !badAliasEq && badAliasNe
-           |  case _ => throw
+           |  case _ => throw()
            |}
            |""".stripMargin,
         t
@@ -213,7 +213,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
            |    let strEq = tx.data[0] == DataEntry("${entry.key}", "${entry.value}")
            |    let strNe = tx.data[0] != DataEntry("${entry.key}", "Zam")
            |    intEq && !intNe && !boolEq && boolNe && !binEq && binNe && !strEq && strNe
-           |  case _ => throw
+           |  case _ => throw()
            |}
          """.stripMargin,
         dataTx
@@ -237,8 +237,8 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
              |match tx {
              |  case tx: TransferTransaction =>
              |    let dza = $clause
-             |    throw
-             |  case _ => throw
+             |    throw()
+             |  case _ => throw()
              |}
              |""".stripMargin
         )
