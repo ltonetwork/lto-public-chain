@@ -23,7 +23,6 @@ package object predef {
     } yield r
   }
 
-
   private def dropLastLine(str: String): String = str.replace("\r", "").split('\n').init.mkString("\n")
 
   def scriptWithAllFunctions(tx: DataTransaction, t: TransferTransaction): String =
@@ -44,7 +43,7 @@ package object predef {
        |     case d0: DataTransaction =>
        |      let body = d0.bodyBytes
        |      body + base64'${ByteStr(tx.bodyBytes.apply()).base64}' == base64'${ByteStr(tx.bodyBytes.apply()).base64}' + base64'${ByteStr(
-      tx.bodyBytes.apply()).base64}'
+         tx.bodyBytes.apply()).base64}'
        |     case _: TransferTransaction => true
        |     case _ => false
        |   }
