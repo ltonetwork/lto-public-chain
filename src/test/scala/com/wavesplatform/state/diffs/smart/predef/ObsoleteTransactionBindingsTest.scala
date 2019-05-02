@@ -75,8 +75,7 @@ class ObsoleteTransactionBindingsTest extends PropSpec with PropertyChecks with 
     payment                     = PaymentTransaction.create(master, recipient, ENOUGH_AMT * 2, fee, ts).explicitGet()
     untypedScript = {
       val r = Parser(script(genesis, payment)).get.value
-      assert(r.size == 1)
-      r.head
+      r
     }
     typedScript = ScriptV1(CompilerV1(dummyCompilerContext, untypedScript).explicitGet()._1).explicitGet()
     setScriptTransaction: SetScriptTransaction = SetScriptTransaction

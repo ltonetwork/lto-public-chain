@@ -32,24 +32,6 @@ object RealTransactionWrapper {
   implicit def toByteVector(s: ByteStr): ByteVector = ByteVector(s.arr)
 
   implicit def assetPair(a: AssetPair): APair = APair(a.amountAsset.map(toByteVector), a.priceAsset.map(toByteVector))
-  implicit def ord(o: Order): Ord =
-    Ord(
-      id = ByteVector(o.id.value),
-      sender = Recipient.Address(ByteVector(o.sender.bytes.arr)),
-      senderPublicKey = ByteVector(o.senderPublicKey.publicKey),
-      matcherPublicKey = ByteVector(o.matcherPublicKey.publicKey),
-      assetPair = o.assetPair,
-      orderType = o.orderType match {
-        case BUY  => OrdType.Buy
-        case SELL => OrdType.Sell
-      },
-      price = o.price,
-      amount = o.amount,
-      timestamp = o.timestamp,
-      expiration = o.expiration,
-      matcherFee = o.matcherFee,
-      signature = ByteVector(o.signature)
-    )
 
   implicit def aoaToRecipient(aoa: AddressOrAlias): Recipient = aoa match {
     case a: Address => Recipient.Address(ByteVector(a.bytes.arr))
@@ -64,7 +46,9 @@ object RealTransactionWrapper {
           proven(t),
           amount = t.amount,
           recipient = t.recipient,
-          attachment = ByteVector(t.attachment)
+          attachment = ByteVector(t.attachment),
+          feeAssetId = None,
+          assetId = None
         )
       case i: IssueTransaction =>
         Tx.Issue(proven(i),
@@ -85,11 +69,11 @@ object RealTransactionWrapper {
           transferCount = ms.transfers.length,
           totalAmount = ms.transfers.map(_.amount).sum,
           transfers = ms.transfers.map(r => com.wavesplatform.lang.v1.traits.TransferItem(r.address, r.amount)).toIndexedSeq,
-          attachment = ByteVector(ms.attachment)
+          attachment = ByteVector(ms.attachment),
+          assetId = None
         )
       case ss: SetScriptTransaction => Tx.SetScript(proven(ss), ss.script.map(_.bytes()).map(toByteVector))
       case p: PaymentTransaction    => Tx.Payment(proven(p), p.amount, p.recipient)
-      case e: ExchangeTransaction   => Tx.Exchange(proven(e), e.price, e.amount, e.buyMatcherFee, e.sellMatcherFee, e.buyOrder, e.sellOrder)
       case s: SponsorFeeTransaction => Tx.Sponsorship(proven(s), s.assetId, s.minSponsoredAssetFee)
       case d: DataTransaction =>
         Tx.Data(

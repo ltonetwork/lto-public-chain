@@ -44,9 +44,8 @@ class AddressFromRecipientScenarioTest extends PropSpec with PropertyChecks with
         |  case other => throw
         |  }
         |  """.stripMargin)
-    assert(expr.size == 1)
-    val Right((typedExpr, _)) = CompilerV1(com.wavesplatform.utils.dummyCompilerContext, expr.head)
-    EvaluatorV1[CaseObj](context, typedExpr)._2
+    val Right((typedExpr, _))   = CompilerV1(com.wavesplatform.utils.dummyCompilerContext, expr)
+    EvaluatorV1.applywithLogging[CaseObj](context, typedExpr)._2
   }
 
   ignore("Script can resolve AddressOrAlias") { // alias tx is disabled

@@ -30,8 +30,7 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
 
     untypedScript = {
       val r = Parser(scriptWithAllFunctions(dataTransaction, transfer)).get.value
-      assert(r.size == 1)
-      r.head
+      r
     }
 
     typedScript = {
