@@ -56,12 +56,10 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
       TransferTransactionV2
         .selfSigned(
           version = 2,
-          assetId = None,
           sender = accounts(0),
           recipient = accounts(0),
           amount = 1.waves,
           timestamp = System.currentTimeMillis(),
-          feeAssetId = None,
           feeAmount = minFee + 0.004.waves,
           attachment = Array.emptyByteArray
         )
@@ -76,12 +74,10 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
       TransferTransactionV2
         .selfSigned(
           version = 2,
-          assetId = None,
           sender = accounts(1),
           recipient = accounts(1),
           amount = 1.waves,
           timestamp = System.currentTimeMillis(),
-          feeAssetId = None,
           feeAmount = minFee + 0.004.waves,
           attachment = Array.emptyByteArray
         )
