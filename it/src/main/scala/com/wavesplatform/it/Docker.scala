@@ -220,9 +220,9 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
         .withFallback(defaultReference())
         .resolve()
 
-      val restApiPort    = actualConfig.getString("waves.rest-api.port")
-      val networkPort    = actualConfig.getString("waves.network.port")
-      val matcherApiPort = actualConfig.getString("waves.matcher.port")
+      val restApiPort    = actualConfig.getString("lto.rest-api.port")
+      val networkPort    = actualConfig.getString("lto.network.port")
+      val matcherApiPort = actualConfig.getString("lto.matcher.port")
 
       val portBindings = new ImmutableMap.Builder[String, java.util.List[PortBinding]]()
         .put(s"$ProfilerPort", singletonList(PortBinding.randomPort("0.0.0.0")))
@@ -236,7 +236,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
         .portBindings(portBindings)
         .build()
 
-      val nodeName   = actualConfig.getString("waves.network.node-name")
+      val nodeName   = actualConfig.getString("lto.network.node-name")
       val nodeNumber = nodeName.replace("node", "").toInt
       val ip         = ipForNode(nodeNumber)
 
