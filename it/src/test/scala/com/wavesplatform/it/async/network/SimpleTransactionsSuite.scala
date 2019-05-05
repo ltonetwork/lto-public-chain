@@ -34,7 +34,7 @@ class SimpleTransactionsSuite extends BaseTransactionSuite with Matchers with Sc
 
   test("valid tx send by network to node should be in blockchain") {
     val tx = TransferTransactionV1
-      .selfSigned(node.privateKey, Address.fromString(node.address).explicitGet(), 1L, System.currentTimeMillis(), 100000L, Array())
+      .selfSigned(None, node.privateKey, Address.fromString(node.address).explicitGet(), 1L, System.currentTimeMillis(), None, 100000L, Array())
       .right
       .get
     val f = for {
@@ -48,10 +48,12 @@ class SimpleTransactionsSuite extends BaseTransactionSuite with Matchers with Sc
 
   test("invalid tx send by network to node should be not in UTX or blockchain") {
     val tx = TransferTransactionV1
-      .selfSigned(node.privateKey,
+      .selfSigned(None,
+                  node.privateKey,
                   Address.fromString(node.address).explicitGet(),
                   1L,
                   System.currentTimeMillis() + (1 days).toMillis,
+                  None,
                   100000L,
                   Array())
       .right

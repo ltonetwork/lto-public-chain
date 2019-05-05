@@ -173,6 +173,8 @@ object AsyncHttpApi extends Assertions {
 
     def waitForHeight(expectedHeight: Int): Future[Int] = waitFor[Int](s"height >= $expectedHeight")(_.height, h => h >= expectedHeight, 5.seconds)
 
+    def rawTransactionInfo(txId: String): Future[JsValue] = get(s"/transactions/info/$txId").map(r => Json.parse(r.getResponseBody))
+
     def transactionInfo(txId: String): Future[TransactionInfo] = get(s"/transactions/info/$txId").as[TransactionInfo]
 
     def transactionsByAddress(address: String, limit: Int): Future[Seq[Seq[TransactionInfo]]] =
@@ -271,7 +273,7 @@ object AsyncHttpApi extends Assertions {
     def signedIssue(issue: SignedIssueV1Request): Future[Transaction] =
       postJson("/assets/broadcast/issue", issue).as[Transaction]
 
-    def batchSignedTransfer(transfers: Seq[SignedTransferV1Request], timeout: FiniteDuration = 1.minute): Future[Seq[Transaction]] = {
+    def batchSignedTransfer(transfers: Seq[SignedTransferV2Request], timeout: FiniteDuration = 1.minute): Future[Seq[Transaction]] = {
       val request = _post(s"${n.nodeApiEndpoint}/assets/broadcast/batch-transfer")
         .setHeader("Content-type", "application/json")
         .withApiKey(n.apiKey)
@@ -434,7 +436,7 @@ object AsyncHttpApi extends Assertions {
     }
 
     def once(r: Request): Future[Response] = {
-      n.log.debug(s"Request: ${r.getUrl}")
+      n.log.debug(s"Request: ${r.getMethod} ${r.getUrl}")
       n.client
         .executeRequest(
           r,

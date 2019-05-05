@@ -2,14 +2,13 @@ package com.wavesplatform.it.sync.transactions
 
 import com.wavesplatform.api.http.assets.SignedExchangeRequest
 import com.wavesplatform.it.api.SyncHttpApi._
-import com.wavesplatform.it.sync.CustomFeeTransactionSuite.defaultAssetQuantity
-import com.wavesplatform.it.util._
 import com.wavesplatform.it.sync._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
+import com.wavesplatform.it.util._
 import com.wavesplatform.transaction.assets.IssueTransactionV1
 import com.wavesplatform.transaction.assets.exchange.{AssetPair, ExchangeTransaction, Order}
 import com.wavesplatform.utils.{Base58, NTP}
-import play.api.libs.json.{JsNumber, JsObject, Json, Writes}
+import play.api.libs.json._
 
 class ExchangeTransactionSuite extends BaseTransactionSuite {
 
@@ -63,9 +62,9 @@ class ExchangeTransactionSuite extends BaseTransactionSuite {
       .right
       .get
 
-    implicit val o = Writes[Order](_.json())
+    implicit val o: Writes[Order] = Writes[Order](_.json())
 
-    implicit val w =
+    implicit val w: Writes[SignedExchangeRequest] =
       Json.writes[SignedExchangeRequest].transform((jsobj: JsObject) => jsobj + ("type" -> JsNumber(ExchangeTransaction.typeId.toInt)))
 
     def request(tx: ExchangeTransaction): SignedExchangeRequest =

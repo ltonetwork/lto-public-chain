@@ -53,14 +53,13 @@ class MassTransferSmartContractSuite extends BaseTransactionSuite with CancelAft
                     let txToGov = (massTxSize && totalAmountToGov)
                     let txToGovComplete = (ttx.timestamp > mt2.timestamp + 30000) && sigVerify(mt2.bodyBytes,mt2.proofs[0], accountPK)
                     txToGovComplete && accSig && txToGov
-                  case other => false
+                  case _ => false
                 }
             else false
-        case other => false
+        case _ => false
         }
         """.stripMargin).get.value
-      assert(untyped.size == 1)
-      CompilerV1(dummyCompilerContext, untyped.head).explicitGet()._1
+      CompilerV1(dummyCompilerContext, untyped).explicitGet()._1
     }
 
     // set script
@@ -89,7 +88,7 @@ class MassTransferSmartContractSuite extends BaseTransactionSuite with CancelAft
 
     val unsigned =
       MassTransferTransaction
-        .create(1, sender.publicKey, transfers, currTime, calcMassTransferFee(2) + smartFee, Array.emptyByteArray, Proofs.empty)
+        .create(1, None, sender.publicKey, transfers, currTime, calcMassTransferFee(2) + smartFee, Array.emptyByteArray, Proofs.empty)
         .explicitGet()
 
     val accountSig = ByteStr(crypto.sign(sender.privateKey, unsigned.bodyBytes()))
@@ -106,7 +105,7 @@ class MassTransferSmartContractSuite extends BaseTransactionSuite with CancelAft
 
     val unsignedToGov =
       MassTransferTransaction
-        .create(1, sender.publicKey, transfersToGov, currTime, calcMassTransferFee(2) + smartFee, Array.emptyByteArray, Proofs.empty)
+        .create(1, None, sender.publicKey, transfersToGov, currTime, calcMassTransferFee(2) + smartFee, Array.emptyByteArray, Proofs.empty)
         .explicitGet()
     val accountSigToGovFail = ByteStr(crypto.sign(sender.privateKey, unsignedToGov.bodyBytes()))
     val signedToGovFail     = unsignedToGov.copy(proofs = Proofs(Seq(accountSigToGovFail)))
@@ -120,6 +119,7 @@ class MassTransferSmartContractSuite extends BaseTransactionSuite with CancelAft
     val unsignedToGovSecond =
       MassTransferTransaction
         .create(1,
+                None,
                 sender.publicKey,
                 transfersToGov,
                 System.currentTimeMillis(),

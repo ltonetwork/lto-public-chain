@@ -1,6 +1,10 @@
 package com.wavesplatform.it.api
 
-import play.api.libs.json.{Format, Json}
+import com.wavesplatform.state.ByteStr
+import com.wavesplatform.transaction.assets.exchange.AssetPair
+import play.api.libs.json._
+
+import scala.util.{Failure, Success}
 
 // USCE no longer contains references to non-serializable Request/Response objects
 // to work around https://github.com/scalatest/scalatest/issues/556
@@ -83,6 +87,45 @@ object TransactionInfo {
   implicit val format: Format[TransactionInfo] = Json.format
 }
 
+case class OrderInfo(id: String,
+                     sender: String,
+                     senderPublicKey: String,
+                     matcherPublicKey: String,
+                     assetPair: AssetPairResponse,
+                     orderType: String,
+                     price: Long,
+                     amount: Long,
+                     timestamp: Long,
+                     expiration: Long,
+                     matcherFee: Long,
+                     signature: String)
+object OrderInfo {
+  implicit val transactionFormat: Format[OrderInfo] = Json.format
+}
+
+case class AssetPairResponse(amountAsset: Option[String], priceAsset: Option[String])
+object AssetPairResponse {
+  implicit val pairResponseFormat: Format[AssetPairResponse] = Json.format
+}
+
+case class ExchangeTransaction(`type`: Int,
+                               id: String,
+                               sender: String,
+                               senderPublicKey: String,
+                               fee: Long,
+                               timestamp: Long,
+                               signature: String,
+                               order1: OrderInfo,
+                               order2: OrderInfo,
+                               price: Long,
+                               amount: Long,
+                               buyMatcherFee: Long,
+                               sellMatcherFee: Long,
+                               height: Option[Int])
+object ExchangeTransaction {
+  implicit val transactionFormat: Format[ExchangeTransaction] = Json.format
+}
+
 case class Block(signature: String,
                  height: Int,
                  timestamp: Long,
@@ -115,7 +158,26 @@ object MatcherResponse {
   implicit val matcherResponseFormat: Format[MatcherResponse] = Json.format
 }
 
-case class MatcherStatusResponse(status: String)
+case class MarketDataInfo(matcherPublicKey: String, markets: Seq[MarketData])
+object MarketDataInfo {
+  implicit val marketDataInfoResponseFormat: Format[MarketDataInfo] = Json.format
+}
+
+case class AssetDecimalsInfo(decimals: Byte)
+object AssetDecimalsInfo {
+  implicit val assetDecimalsInfoResponseFormat: Format[AssetDecimalsInfo] = Json.format
+}
+
+case class MarketData(amountAssetName: String,
+                      priceAssetName: String,
+                      created: Long,
+                      amountAssetInfo: Option[AssetDecimalsInfo],
+                      priceAssetInfo: Option[AssetDecimalsInfo])
+object MarketData {
+  implicit val marketData: Format[MarketData] = Json.format
+}
+
+case class MatcherStatusResponse(status: String, filledAmount: Option[Long])
 object MatcherStatusResponse {
   implicit val matcherStatusResponseFormat: Format[MatcherStatusResponse] = Json.format
 }
@@ -125,8 +187,32 @@ object MessageMatcherResponse {
   implicit val messageMatcherResponseFormat: Format[MessageMatcherResponse] = Json.format
 }
 
-case class OrderbookHistory(id: String, `type`: String, amount: Long, price: Long, timestamp: Long, filled: Int, status: String)
+case class OrderbookHistory(id: String,
+                            `type`: String,
+                            amount: Long,
+                            price: Long,
+                            timestamp: Long,
+                            filled: Int,
+                            status: String,
+                            assetPair: AssetPair) {
+  def isActive: Boolean = status == "PartiallyFilled" || status == "Accepted"
+}
 object OrderbookHistory {
+  implicit val byteStrFormat: Format[ByteStr] = Format(
+    Reads {
+      case JsString(str) =>
+        ByteStr.decodeBase58(str) match {
+          case Success(x) => JsSuccess(x)
+          case Failure(e) => JsError(e.getMessage)
+        }
+
+      case _ => JsError("Can't read ByteStr")
+    },
+    Writes(x => JsString(x.base58))
+  )
+
+  implicit val assetPairFormat: Format[AssetPair] = Json.format[AssetPair]
+
   implicit val orderbookHistory: Format[OrderbookHistory] = Json.format
 }
 
@@ -143,11 +229,6 @@ object LevelResponse {
 case class OrderBookResponse(timestamp: Long, pair: PairResponse, bids: List[LevelResponse], asks: List[LevelResponse])
 object OrderBookResponse {
   implicit val orderBookResponseFormat: Format[OrderBookResponse] = Json.format
-}
-
-case class MarketStatusResponse(lastPrice: Option[Long], lastSide: Option[String], bestBid: Option[Long], bestAsk: Option[Long])
-object MarketStatusResponse {
-  implicit val marketResponseFormat: Format[MarketStatusResponse] = Json.format
 }
 
 case class DebugInfo(stateHeight: Long, stateHash: Long)

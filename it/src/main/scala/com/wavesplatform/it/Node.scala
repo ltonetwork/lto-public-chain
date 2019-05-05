@@ -29,6 +29,7 @@ abstract class Node(config: Config) extends AutoCloseable {
   val address: String               = config.getString("address")
 
   def nodeApiEndpoint: URL
+  def matcherApiEndpoint: URL
   def apiKey: String
 
   /** An address which can be reached from the host running IT (may not match the declared address) */
@@ -43,7 +44,7 @@ object Node {
 
     def publicKeyStr = Base58.encode(n.publicKey.publicKey)
 
-    def fee(txTypeId: Byte, asset: String = "LTO"): Long = n.settings.feesSettings.fees(txTypeId).find(_.asset == asset).get.fee
+    def fee(txTypeId: Byte, asset: String = "WAVES"): Long = n.settings.feesSettings.fees(txTypeId).find(_.asset == asset).get.fee
 
     def blockDelay: FiniteDuration = n.settings.blockchainSettings.genesisSettings.averageBlockDelay
   }
