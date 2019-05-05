@@ -67,21 +67,21 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
   private[it] val configTemplate = parseResources("template.conf")
 
   AddressScheme.current = new AddressScheme {
-    override val chainId = configTemplate.as[String]("waves.blockchain.custom.address-scheme-character").charAt(0).toByte
+    override val chainId = configTemplate.as[String]("lto.blockchain.custom.address-scheme-character").charAt(0).toByte
   }
 
   private[it] val genesisOverride = {
     val genesisTs          = System.currentTimeMillis()
-    val timestampOverrides = parseString(s"""waves.blockchain.custom.genesis {
+    val timestampOverrides = parseString(s"""lto.blockchain.custom.genesis {
          |  timestamp = $genesisTs
          |  block-timestamp = $genesisTs
          |}""".stripMargin)
 
     val genesisConfig    = configTemplate.withFallback(timestampOverrides)
-    val gs               = genesisConfig.as[GenesisSettings]("waves.blockchain.custom.genesis")
+    val gs               = genesisConfig.as[GenesisSettings]("lto.blockchain.custom.genesis")
     val genesisSignature = Block.genesis(gs).explicitGet().uniqueId
 
-    timestampOverrides.withFallback(parseString(s"waves.blockchain.custom.genesis.signature = $genesisSignature"))
+    timestampOverrides.withFallback(parseString(s"lto.blockchain.custom.genesis.signature = $genesisSignature"))
   }
 
   // a random network in 10.x.x.x range
@@ -90,7 +90,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
   private val networkPrefix = s"${InetAddress.getByAddress(toByteArray(networkSeed)).getHostAddress}/28"
 
   private val logDir: Coeval[Path] = Coeval.evalOnce {
-    val r = Option(System.getProperty("waves.it.logging.dir"))
+    val r = Option(System.getProperty("lto.it.logging.dir"))
       .map(Paths.get(_))
       .getOrElse(Paths.get(System.getProperty("user.dir"), "target", "logs"))
 
@@ -243,7 +243,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
       val javaOptions = Option(System.getenv("CONTAINER_JAVA_OPTS")).getOrElse("")
       val configOverrides: String = {
         var config = s"$javaOptions ${renderProperties(asProperties(overrides))} " +
-          s"-Dlogback.stdout.level=TRACE -Dlogback.file.level=OFF -Dwaves.network.declared-address=$ip:$networkPort "
+          s"-Dlogback.stdout.level=TRACE -Dlogback.file.level=OFF -Dlto.network.declared-address=$ip:$networkPort "
 
         if (enableProfiling) {
           config += s"-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=$ProfilerPort,listen=all," +

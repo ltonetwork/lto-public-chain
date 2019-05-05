@@ -27,7 +27,7 @@ object BaseTargetChecker {
     bu.processBlock(genesisBlock)
 
     NodeConfigs.Default.map(_.withFallback(sharedConfig)).collect {
-      case cfg if cfg.as[Boolean]("waves.miner.enable") =>
+      case cfg if cfg.as[Boolean]("lto.miner.enable") =>
         val account   = PublicKeyAccount(cfg.as[ByteStr]("public-key").arr)
         val address   = account.toAddress
         val balance   = bu.balance(address)

@@ -14,7 +14,7 @@
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>${logback.file.level:-TRACE}</level>
         </filter>
-        <file>${waves.it.logging.dir:-target/logs}/test.log</file>
+        <file>${lto.it.logging.dir:-target/logs}/test.log</file>
         <append>false</append>
         <encoder>
             <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{26} - %msg%n</pattern>
@@ -26,6 +26,6 @@
     <logger name="io.swagger" level="OFF"/>
 
     <root level="TRACE">
-        <appender-ref ref="${waves.it.logging.appender:-STDOUT}"/>
+        <appender-ref ref="${lto.it.logging.appender:-STDOUT}"/>
     </root>
 </configuration>

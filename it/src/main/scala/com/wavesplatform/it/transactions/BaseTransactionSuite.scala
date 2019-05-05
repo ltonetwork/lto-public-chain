@@ -30,7 +30,7 @@ abstract class BaseTransactionSuite
 
   // protected because https://github.com/sbt/zinc/issues/292
   protected val theNodes: Coeval[Seq[Node]] = Coeval.evalOnce {
-    Option(System.getProperty("waves.it.config.file")) match {
+    Option(System.getProperty("lto.it.config.file")) match {
       case None => dockerNodes()
       case Some(filePath) =>
         val defaultConfig = ConfigFactory.load()

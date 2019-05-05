@@ -85,8 +85,8 @@ lazy val itTestsCommonSettings: Seq[Def.Setting[_]] = Seq(
             runJVMOptions = Vector(
               "-XX:+IgnoreUnrecognizedVMOptions",
               "--add-modules=java.xml.bind",
-              "-Dwaves.it.logging.appender=FILE",
-              s"-Dwaves.it.logging.dir=${logDirectoryValue / suite.name.replaceAll("""(\w)\w*\.""", "$1.")}"
+              "-Dlto.it.logging.appender=FILE",
+              s"-Dlto.it.logging.dir=${logDirectoryValue / suite.name.replaceAll("""(\w)\w*\.""", "$1.")}"
             ) ++ javaOptionsValue,
             connectInput = false,
             envVars = envVarsValue

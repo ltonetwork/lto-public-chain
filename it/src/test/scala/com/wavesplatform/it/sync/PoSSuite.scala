@@ -200,7 +200,7 @@ class PoSSuite extends FunSuite with Matchers with NodesFromDocker with WaitForH
         ))
       .overrideBase(_.nonMiner)
       .withDefault(3)
-      .withSpecial(_.raw("waves.miner.enable = yes"))
+      .withSpecial(_.raw("lto.miner.enable = yes"))
       .buildNonConflicting()
 
   private def generatorSignature(signature: Array[Byte], publicKey: Array[Byte]): Array[Byte] = {
