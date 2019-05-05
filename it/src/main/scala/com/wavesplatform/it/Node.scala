@@ -29,7 +29,6 @@ abstract class Node(config: Config) extends AutoCloseable {
   val address: String               = config.getString("address")
 
   def nodeApiEndpoint: URL
-  def matcherApiEndpoint: URL
   def apiKey: String
 
   /** An address which can be reached from the host running IT (may not match the declared address) */
