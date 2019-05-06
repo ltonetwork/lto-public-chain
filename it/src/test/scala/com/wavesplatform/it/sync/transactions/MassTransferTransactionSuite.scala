@@ -21,25 +21,6 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
 
   private def fakeSignature = Base58.encode(Array.fill(64)(Random.nextInt.toByte))
 
-  test("asset mass transfer changes asset balances and sender's.waves balance is decreased by fee.") {
-
-    val (balance1, eff1) = notMiner.accountBalances(firstAddress)
-    val (balance2, eff2) = notMiner.accountBalances(secondAddress)
-
-    val transfers = List(Transfer(secondAddress, transferAmount))
-    val assetId   = sender.issue(firstAddress, "name", "description", issueAmount, 8, reissuable = false, issueFee).id
-    nodes.waitForHeightAriseAndTxPresent(assetId)
-
-    val massTransferTransactionFee = calcMassTransferFee(transfers.size)
-    val transferId                 = sender.massTransfer(firstAddress, transfers, massTransferTransactionFee, Some(assetId)).id
-    nodes.waitForHeightAriseAndTxPresent(transferId)
-
-    notMiner.assertBalances(firstAddress, balance1 - massTransferTransactionFee - issueFee, eff1 - massTransferTransactionFee - issueFee)
-    notMiner.assertAssetBalance(firstAddress, assetId, issueAmount - transferAmount)
-    notMiner.assertBalances(secondAddress, balance2, eff2)
-    notMiner.assertAssetBalance(secondAddress, assetId, transferAmount)
-  }
-
   test("waves mass transfer changes waves balances") {
 
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
@@ -187,31 +168,6 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     nodes.waitForHeightAriseAndTxPresent(id(withProof))
   }
 
-  test("try to make mass transfer if use alias for address") {
-
-    val (balance1, eff1) = notMiner.accountBalances(firstAddress)
-    val (balance2, eff2) = notMiner.accountBalances(secondAddress)
-
-    val alias = "masstest_alias"
-
-    val aliasFee = if (!sender.aliasByAddress(secondAddress).exists(_.endsWith(alias))) {
-      val aliasId = sender.createAlias(secondAddress, alias, minFee).id
-      nodes.waitForHeightAriseAndTxPresent(aliasId)
-      minFee
-    } else 0
-
-    val aliasFull = sender.aliasByAddress(secondAddress).find(_.endsWith(alias)).get
-
-    val transfers = List(Transfer(firstAddress, 0), Transfer(aliasFull, transferAmount))
-
-    val massTransferTransactionFee = calcMassTransferFee(transfers.size)
-    val transferId                 = sender.massTransfer(firstAddress, transfers, massTransferTransactionFee).id
-    nodes.waitForHeightAriseAndTxPresent(transferId)
-
-    notMiner.assertBalances(firstAddress, balance1 - massTransferTransactionFee - transferAmount, eff1 - massTransferTransactionFee - transferAmount)
-    notMiner.assertBalances(secondAddress, balance2 + transferAmount - aliasFee, eff2 + transferAmount - aliasFee)
-  }
-
   private def extractTransactionByType(json: JsValue, t: Int): Seq[JsValue] = {
     json.validate[Seq[JsObject]].getOrElse(Seq.empty[JsValue]).filter(_("type").as[Int] == t)
   }
@@ -260,27 +216,5 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     assert((txRecipient \ "totalAmount").as[Long] == 10.waves)
     val transferToSecond = txRecipient.as[MassTransferRequest].transfers.head
     assert(transfers contains transferToSecond)
-  }
-
-  test("reporting MassTransfer transactions to aliases") {
-    val aliases        = List("alias1", "alias2")
-    val createAliasTxs = aliases.map(sender.createAlias(secondAddress, _, 100000).id)
-    createAliasTxs.foreach(sender.waitForTransaction(_))
-
-    val transfers = aliases.map { alias =>
-      Transfer(Alias.buildWithCurrentNetworkByte(alias).explicitGet().stringRepr, 2.waves)
-    }
-    val txId = sender.massTransfer(firstAddress, transfers, 300000).id
-    nodes.waitForHeightAriseAndTxPresent(txId)
-
-    val rawTxs = sender
-      .get(s"/transactions/address/$secondAddress/limit/10")
-      .getResponseBody
-
-    val recipientTx =
-      extractTransactionById(Json.parse(rawTxs).as[JsArray].head.getOrElse(fail("The returned array is empty")), txId)
-        .getOrElse(fail(s"Can't find a mass transfer transaction $txId"))
-
-    assert((recipientTx \ "transfers").as[Seq[Transfer]].size == 2)
   }
 }

@@ -16,26 +16,6 @@ import scala.concurrent.duration._
 
 class TransferTransactionV1Suite extends BaseTransactionSuite with CancelAfterFailure {
 
-  test("asset transfer changes sender's and recipient's asset balance; issuer's.waves balance is decreased by fee") {
-    val (firstBalance, firstEffBalance)   = notMiner.accountBalances(firstAddress)
-    val (secondBalance, secondEffBalance) = notMiner.accountBalances(secondAddress)
-
-    val issuedAssetId = sender.issue(firstAddress, "name", "description", someAssetAmount, 2, reissuable = false, issueFee).id
-
-    nodes.waitForHeightAriseAndTxPresent(issuedAssetId)
-
-    notMiner.assertBalances(firstAddress, firstBalance - issueFee, firstEffBalance - issueFee)
-    notMiner.assertAssetBalance(firstAddress, issuedAssetId, someAssetAmount)
-
-    val transferTransactionId = sender.transfer(firstAddress, secondAddress, someAssetAmount, minFee, Some(issuedAssetId)).id
-    nodes.waitForHeightAriseAndTxPresent(transferTransactionId)
-
-    notMiner.assertBalances(firstAddress, firstBalance - minFee - issueFee, firstEffBalance - minFee - issueFee)
-    notMiner.assertBalances(secondAddress, secondBalance, secondEffBalance)
-    notMiner.assertAssetBalance(firstAddress, issuedAssetId, 0)
-    notMiner.assertAssetBalance(secondAddress, issuedAssetId, someAssetAmount)
-  }
-
   test("waves transfer changes waves balances and eff.b.") {
     val (firstBalance, firstEffBalance)   = notMiner.accountBalances(firstAddress)
     val (secondBalance, secondEffBalance) = notMiner.accountBalances(secondAddress)
@@ -103,24 +83,4 @@ class TransferTransactionV1Suite extends BaseTransactionSuite with CancelAfterFa
     notMiner.assertBalances(secondAddress, secondBalance, secondEffBalance)
   }
 
-  test("can forge block with sending majority of some asset to self and to other account") {
-    val (firstBalance, firstEffBalance)   = notMiner.accountBalances(firstAddress)
-    val (secondBalance, secondEffBalance) = notMiner.accountBalances(secondAddress)
-
-    val assetId = sender.issue(firstAddress, "second asset", "description", someAssetAmount, 0, reissuable = false, fee = issueFee).id
-
-    nodes.waitForHeightAriseAndTxPresent(assetId)
-
-    notMiner.assertBalances(firstAddress, firstBalance - issueFee, firstEffBalance - issueFee)
-    notMiner.assertAssetBalance(firstAddress, assetId, someAssetAmount)
-
-    val tx1 = sender.transfer(firstAddress, firstAddress, someAssetAmount, minFee, Some(assetId)).id
-    nodes.waitForHeightAriseAndTxPresent(tx1)
-
-    val tx2 = sender.transfer(firstAddress, secondAddress, someAssetAmount / 2, minFee, Some(assetId)).id
-    nodes.waitForHeightAriseAndTxPresent(tx2)
-
-    notMiner.assertBalances(firstAddress, firstBalance - issueFee - 2 * minFee, firstEffBalance - issueFee - 2 * minFee)
-    notMiner.assertBalances(secondAddress, secondBalance, secondEffBalance)
-  }
 }

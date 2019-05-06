@@ -72,25 +72,6 @@ class RollbackSuite extends FunSuite with CancelAfterFailure with TransferSendin
 
   }
 
-  test("Alias transaction rollback should work fine") {
-    val alias = "test_alias4"
-
-    val aliasTxId = sender.createAlias(firstAddress, alias, transferAmount).id
-    nodes.waitForHeightAriseAndTxPresent(aliasTxId)
-
-    val txsBefore = sender.transactionsByAddress(firstAddress, 10)
-
-    val txHeight = sender.waitForTransaction(aliasTxId).height
-
-    nodes.rollback(txHeight - 1, returnToUTX = false)
-    nodes.waitForHeight(txHeight + 1)
-
-    val secondAliasTxId = sender.createAlias(firstAddress, alias, transferAmount).id
-    nodes.waitForHeightAriseAndTxPresent(secondAliasTxId)
-    sender.transactionsByAddress(firstAddress, 10) shouldNot contain theSameElementsAs txsBefore
-
-  }
-
   test("Data transaction rollback") {
     val node       = nodes.head
     val entry1     = IntegerDataEntry("1", 0)
@@ -123,36 +104,5 @@ class RollbackSuite extends FunSuite with CancelAfterFailure with TransferSendin
     val data0 = node.getData(firstAddress)
     assert(data0 == List.empty)
     sender.transactionsByAddress(firstAddress, 10) should contain theSameElementsAs txsBefore0
-  }
-
-  test("Sponsorship transaction rollback") {
-    val sponsorAssetTotal = 100 * 100L
-
-    val sponsorAssetId =
-      sender
-        .issue(sender.address, "SponsoredAsset", "For test usage", sponsorAssetTotal, decimals = 2, reissuable = false, fee = issueFee)
-        .id
-    nodes.waitForHeightAriseAndTxPresent(sponsorAssetId)
-
-    val sponsorId = sender.sponsorAsset(sender.address, sponsorAssetId, baseFee = 100L, fee = issueFee).id
-    nodes.waitForHeightAriseAndTxPresent(sponsorId)
-
-    val height     = sender.waitForTransaction(sponsorId).height
-    val txsBefore1 = sender.transactionsByAddress(firstAddress, 10)
-
-    val assetDetailsBefore = sender.assetsDetails(sponsorAssetId)
-
-    nodes.waitForHeightArise()
-    val sponsorSecondId = sender.sponsorAsset(sender.address, sponsorAssetId, baseFee = 2 * 100L, fee = issueFee).id
-    nodes.waitForHeightAriseAndTxPresent(sponsorSecondId)
-
-    nodes.rollback(height, false)
-
-    nodes.waitForHeightArise()
-
-    val assetDetailsAfter = sender.assetsDetails(sponsorAssetId)
-
-    assert(assetDetailsAfter.minSponsoredAssetFee == assetDetailsBefore.minSponsoredAssetFee)
-    sender.transactionsByAddress(sender.address, 10) should contain theSameElementsAs txsBefore1
   }
 }

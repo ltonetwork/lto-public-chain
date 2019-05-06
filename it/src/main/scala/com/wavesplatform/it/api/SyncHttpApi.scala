@@ -111,15 +111,6 @@ object SyncHttpApi extends Assertions {
     def assetsBalance(address: String): FullAssetsInfo =
       Await.result(async(n).assetsBalance(address), RequestAwaitTime)
 
-    def issue(sourceAddress: String, name: String, description: String, quantity: Long, decimals: Byte, reissuable: Boolean, fee: Long): Transaction =
-      Await.result(async(n).issue(sourceAddress, name, description, quantity, decimals, reissuable, fee), RequestAwaitTime)
-
-    def reissue(sourceAddress: String, assetId: String, quantity: Long, reissuable: Boolean, fee: Long): Transaction =
-      Await.result(async(n).reissue(sourceAddress, assetId, quantity, reissuable, fee), RequestAwaitTime)
-
-    def payment(sourceAddress: String, recipient: String, amount: Long, fee: Long): Transaction =
-      Await.result(async(n).payment(sourceAddress, recipient, amount, fee), RequestAwaitTime)
-
     def transactionInfo(txId: String): TransactionInfo =
       Await.result(async(n).transactionInfo(txId), RequestAwaitTime)
 
@@ -129,41 +120,15 @@ object SyncHttpApi extends Assertions {
     def scriptCompile(code: String): CompiledScript =
       Await.result(async(n).scriptCompile(code), RequestAwaitTime)
 
-    def burn(sourceAddress: String, assetId: String, quantity: Long, fee: Long): Transaction =
-      Await.result(async(n).burn(sourceAddress, assetId, quantity, fee), RequestAwaitTime)
-
     def getAddresses: Seq[String] = Await.result(async(n).getAddresses, RequestAwaitTime)
-
-    def burn(sourceAddress: String, assetId: String, quantity: Long, fee: Long, version: String): Transaction =
-      if (Option(version).nonEmpty) burnV2(sourceAddress, assetId, quantity, fee, version) else burn(sourceAddress, assetId, quantity, fee)
-
-    def burnV2(sourceAddress: String, assetId: String, quantity: Long, fee: Long, version: String): Transaction = {
-      signAndBroadcast(
-        Json.obj("type" -> 6, "quantity" -> quantity, "assetId" -> assetId, "sender" -> sourceAddress, "fee" -> fee, "version" -> version))
-    }
-
-    def sponsorAsset(sourceAddress: String, assetId: String, baseFee: Long, fee: Long): Transaction =
-      Await.result(async(n).sponsorAsset(sourceAddress, assetId, baseFee, fee), RequestAwaitTime)
-
-    def cancelSponsorship(sourceAddress: String, assetId: String, fee: Long): Transaction =
-      Await.result(async(n).cancelSponsorship(sourceAddress, assetId, fee), RequestAwaitTime)
 
     def sign(jsObject: JsObject): JsObject =
       Await.result(async(n).sign(jsObject), RequestAwaitTime)
-
-    def createAlias(targetAddress: String, alias: String, fee: Long): Transaction =
-      Await.result(async(n).createAlias(targetAddress, alias, fee), RequestAwaitTime)
-
     def aliasByAddress(targetAddress: String): Seq[String] =
       Await.result(async(n).aliasByAddress(targetAddress), RequestAwaitTime)
 
-    def transfer(sourceAddress: String,
-                 recipient: String,
-                 amount: Long,
-                 fee: Long,
-                 assetId: Option[String] = None,
-                 feeAssetId: Option[String] = None): Transaction =
-      Await.result(async(n).transfer(sourceAddress, recipient, amount, fee, assetId, feeAssetId), RequestAwaitTime)
+    def transfer(sourceAddress: String, recipient: String, amount: Long, fee: Long): Transaction =
+      Await.result(async(n).transfer(sourceAddress, recipient, amount, fee), RequestAwaitTime)
 
     def massTransfer(sourceAddress: String, transfers: List[Transfer], fee: Long, assetId: Option[String] = None): Transaction =
       Await.result(async(n).massTransfer(sourceAddress, transfers, fee, assetId), RequestAwaitTime)
