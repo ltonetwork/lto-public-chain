@@ -43,7 +43,10 @@ object Node {
 
     def publicKeyStr = Base58.encode(n.publicKey.publicKey)
 
-    def fee(txTypeId: Byte, asset: String = "LTO"): Long = n.settings.feesSettings.fees(txTypeId).find(_.asset == asset).get.fee
+    def fee(txTypeId: Byte): Long = n.settings.feesSettings.fees(txTypeId).find(_.asset == "LTO") match {
+      case None => throw new Exception(n.settings.feesSettings.fees.toString())
+      case Some(f) => f.fee
+    }
 
     def blockDelay: FiniteDuration = n.settings.blockchainSettings.genesisSettings.averageBlockDelay
   }
