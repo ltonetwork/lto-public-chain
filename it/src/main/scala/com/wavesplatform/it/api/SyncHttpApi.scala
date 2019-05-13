@@ -181,8 +181,6 @@ object SyncHttpApi extends Assertions {
     def debugMinerInfo(): Seq[State] =
       Await.result(async(n).debugMinerInfo(), RequestAwaitTime)
 
-    def debugStateAt(height: Long): Map[String, Long] = Await.result(async(n).debugStateAt(height), RequestAwaitTime)
-
     def height: Int =
       Await.result(async(n).height, RequestAwaitTime)
 

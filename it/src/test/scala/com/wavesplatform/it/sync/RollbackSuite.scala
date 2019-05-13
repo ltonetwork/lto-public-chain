@@ -22,56 +22,6 @@ class RollbackSuite extends FunSuite with CancelAfterFailure with TransferSendin
   private def sender        = nodes.last
   private def firstAddress  = sender.address
 
-  test("Apply the same transfer transactions twice with return to UTX") {
-
-    val startHeight = sender.height
-
-    Await.result(processRequests(generateTransfersToRandomAddresses(190, nodeAddresses)), 2.minutes)
-
-    nodes.waitFor[Int]("empty utx")(1.second)(_.utxSize, _.forall(_ == 0))
-
-    nodes.waitForHeightArise()
-
-    val stateAfterFirstTry = nodes.head.debugStateAt(sender.height)
-
-    nodes.rollback(startHeight)
-
-    nodes.waitFor[Int]("empty utx")(1.second)(_.utxSize, _.forall(_ == 0))
-
-    nodes.waitForHeightArise()
-
-    val stateAfterSecondTry = nodes.head.debugStateAt(sender.height)
-
-    assert(stateAfterSecondTry.size == stateAfterFirstTry.size)
-
-    stateAfterSecondTry should contain theSameElementsAs stateAfterFirstTry
-  }
-
-  test("Just rollback transactions") {
-    val startHeight      = sender.height
-    val stateBeforeApply = sender.debugStateAt(startHeight)
-
-    val requests = generateTransfersToRandomAddresses(190, nodeAddresses)
-    Await.result(processRequests(requests), 2.minutes)
-
-    nodes.waitFor[Int]("empty utx")(1.second)(_.utxSize, _.forall(_ == 0))
-
-    nodes.waitForHeightArise()
-
-    sender.debugStateAt(sender.height).size shouldBe stateBeforeApply.size + 190
-
-    nodes.rollback(startHeight, returnToUTX = false)
-
-    nodes.waitFor[Int]("empty utx")(1.second)(_.utxSize, _.forall(_ == 0))
-
-    nodes.waitForHeightArise()
-
-    val stateAfterApply = sender.debugStateAt(sender.height)
-
-    stateAfterApply should contain theSameElementsAs stateBeforeApply
-
-  }
-
   test("Data transaction rollback") {
     val node       = nodes.head
     val entry1     = IntegerDataEntry("1", 0)
