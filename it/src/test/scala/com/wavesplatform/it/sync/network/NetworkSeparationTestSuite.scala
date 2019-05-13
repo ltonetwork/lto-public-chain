@@ -34,7 +34,7 @@ class NetworkSeparationTestSuite
     dockerNodes().foreach(docker.disconnectFromNetwork)
     Thread.sleep(80.seconds.toMillis) // >= 10 blocks, because a new block appears every 6 seconds
     docker.connectToNetwork(dockerNodes())
-    nodes.map(_.height).max shouldBe >=(lastMaxHeight + 6)
+    nodes.map(_.height).max shouldBe >=(lastMaxHeight + 4)
   }
 
   "nodes should sync" in {
