@@ -208,6 +208,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
         BlocksApiRoute(settings.restAPISettings, blockchainUpdater, allChannels, c => processCheckpoint(None, c)),
         TransactionsApiRoute(settings.restAPISettings,
                              settings.blockchainSettings.functionalitySettings,
+          settings.feesSettings,
                              wallet,
                              blockchainUpdater,
                              utxStorage,
