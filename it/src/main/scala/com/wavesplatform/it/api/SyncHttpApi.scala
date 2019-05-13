@@ -158,9 +158,6 @@ object SyncHttpApi extends Assertions {
     def signedBroadcast(tx: JsObject): Transaction =
       Await.result(async(n).signedBroadcast(tx), RequestAwaitTime)
 
-    def signedIssue(tx: SignedIssueV1Request): Transaction =
-      Await.result(async(n).signedIssue(tx), RequestAwaitTime)
-
     def ensureTxDoesntExist(txId: String): Unit =
       Await.result(async(n).ensureTxDoesntExist(txId), RequestAwaitTime)
 

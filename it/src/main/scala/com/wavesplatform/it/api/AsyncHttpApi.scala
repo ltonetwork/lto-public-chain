@@ -262,9 +262,6 @@ object AsyncHttpApi extends Assertions {
 
     def signAndBroadcast(jsobj: JsObject): Future[Transaction] = sign(jsobj).flatMap(signedBroadcast)
 
-    def signedIssue(issue: SignedIssueV1Request): Future[Transaction] =
-      postJson("/assets/broadcast/issue", issue).as[Transaction]
-
     def batchSignedTransfer(transfers: Seq[SignedTransferV2Request], timeout: FiniteDuration = 1.minute): Future[Seq[Transaction]] = {
       val request = _post(s"${n.nodeApiEndpoint}/assets/broadcast/batch-transfer")
         .setHeader("Content-type", "application/json")
