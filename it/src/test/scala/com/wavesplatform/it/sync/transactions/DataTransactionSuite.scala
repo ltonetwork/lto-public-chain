@@ -46,7 +46,7 @@ class DataTransactionSuite extends BaseTransactionSuite {
 
   test("invalid transaction should not be in UTX or blockchain") {
     def data(entries: List[DataEntry[_]] = List(IntegerDataEntry("int", 177)),
-             fee: Long = 100000,
+             fee: Long = 100000000,
              timestamp: Long = System.currentTimeMillis,
              version: Byte = DataTransaction.supportedVersions.head): DataTransaction =
       DataTransaction.selfSigned(version, sender.privateKey, entries, fee, timestamp).explicitGet()
