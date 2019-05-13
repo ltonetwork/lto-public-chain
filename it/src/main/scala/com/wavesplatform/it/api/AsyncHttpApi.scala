@@ -220,16 +220,18 @@ object AsyncHttpApi extends Assertions {
       get(s"/assets/details/$assetId").as[AssetInfo]
 
     def transfer(sourceAddress: String, recipient: String, amount: Long, fee: Long): Future[Transaction] = {
-      val value = toJson(TransferV1Request(None, None, amount, fee, sourceAddress, None, recipient))
+      val value    = toJson(TransferV1Request(None, None, amount, fee, sourceAddress, None, recipient))
       val jsObject = value.as[JsObject]
-      val r = jsObject + ("type" -> JsNumber(TransferTransactionV1.typeId.toInt))
+      val r        = jsObject + ("type" -> JsNumber(TransferTransactionV1.typeId.toInt))
       signAndBroadcast(r)
     }
 
     def massTransfer(sourceAddress: String, transfers: List[Transfer], fee: Long, assetId: Option[String] = None): Future[Transaction] = {
       implicit val w: Writes[MassTransferRequest] = Json.writes[MassTransferRequest]
-      postJson("/assets/masstransfer", MassTransferRequest(MassTransferTransaction.version, sourceAddress, transfers, fee, None))
-        .as[Transaction]
+      val value                                   = toJson(MassTransferRequest(MassTransferTransaction.version, sourceAddress, transfers, fee, None))
+      val jsObject                                = value.as[JsObject]
+      val r                                       = jsObject + ("type" -> JsNumber(MassTransferTransaction.typeId.toInt))
+      signAndBroadcast(r)
     }
 
     def putData(sourceAddress: String, data: List[DataEntry[_]], fee: Long): Future[Transaction] = {

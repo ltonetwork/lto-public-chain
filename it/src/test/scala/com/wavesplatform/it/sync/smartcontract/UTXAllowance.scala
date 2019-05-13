@@ -30,7 +30,7 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
       val nodeAddress = i.createAddress()
       val acc         = PrivateKeyAccount.fromSeed(i.seed(nodeAddress)).right.get
 
-      val tx = i.transfer(i.address, nodeAddress, 10.waves, 0.005.waves).id
+      val tx = i.transfer(i.address, nodeAddress, 10.waves, 1.waves).id
       nodes.waitForHeightAriseAndTxPresent(tx)
 
       val scriptText = {

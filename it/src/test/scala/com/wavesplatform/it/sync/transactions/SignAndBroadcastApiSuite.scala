@@ -182,7 +182,6 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite {
     assert(crypto.verify(signature, tx.bodyBytes(), privateKey.publicKey))
   }
 
-
   private def signBroadcastAndCalcFee(json: JsObject, usesProofs: Boolean, version: String = null): String = {
     val jsWithPK  = json ++ Json.obj("senderPublicKey" -> sender.publicKey.toString)
     val jsWithFee = jsWithPK ++ Json.obj("fee" -> sender.calculateFee(jsWithPK).feeAmount)
