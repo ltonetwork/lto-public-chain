@@ -72,7 +72,7 @@ class NetworkSeparationTestSuite
 object NetworkSeparationTestSuite {
   import com.wavesplatform.it.NodeConfigs._
   private val withFeatureConfig = ConfigFactory.parseString(s"""
-                                                                |waves {
+                                                                |lto {
                                                                 |  synchronization.synchronization-timeout = 10s
                                                                 |  blockchain.custom.functionality {
                                                                 |    pre-activated-features = {
@@ -84,7 +84,7 @@ object NetworkSeparationTestSuite {
                                                                 |}""".stripMargin)
 
   private val woFeatureConfig = ConfigFactory.parseString(s"""
-                                                            |waves {
+                                                            |lto {
                                                             |  synchronization.synchronization-timeout = 10s
                                                             |  blockchain.custom.functionality {
                                                             |    pre-activated-features = {

@@ -34,7 +34,7 @@ object FairPoSTestSuite {
 
   private val config =
     ConfigFactory.parseString(s"""
-    |waves {
+    |lto {
     |   blockchain.custom {
     |      functionality {
     |        pre-activated-features {1 = $microblockActivationHeight, 8 = $fairPoSActivationHeight}

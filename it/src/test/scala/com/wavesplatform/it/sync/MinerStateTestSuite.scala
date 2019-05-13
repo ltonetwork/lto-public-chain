@@ -41,7 +41,7 @@ class MinerStateTestSuite extends FunSuite with CancelAfterFailure with NodesFro
 object MinerStateTestSuite {
   import com.wavesplatform.it.NodeConfigs._
   private val minerConfig = ConfigFactory.parseString(s"""
-    |waves {
+    |lto {
     |  synchronization.synchronization-timeout = 10s
     |  blockchain.custom.functionality {
     |    pre-activated-features.1 = 0
@@ -51,7 +51,7 @@ object MinerStateTestSuite {
     |}""".stripMargin)
 
   private val notMinerConfig = ConfigFactory.parseString(s"""
-    |waves {
+    |lto {
     |  synchronization.synchronization-timeout = 10s
     |  blockchain.custom.functionality {
     |    pre-activated-features.1 = 0

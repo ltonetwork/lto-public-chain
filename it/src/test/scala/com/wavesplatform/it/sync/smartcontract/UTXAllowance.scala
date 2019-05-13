@@ -94,7 +94,7 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
 object UTXAllowance {
   import com.wavesplatform.it.NodeConfigs._
   private val FirstNode = ConfigFactory.parseString(s"""
-                                                         |waves {
+                                                         |lto {
                                                          |  utx.allow-transactions-from-smart-accounts = false
                                                          |  miner {
                                                          |      quorum = 0
@@ -103,7 +103,7 @@ object UTXAllowance {
                                                          |}""".stripMargin)
 
   private val SecondNode = ConfigFactory.parseString(s"""
-                                                          |waves {
+                                                          |lto {
                                                           |  utx.allow-transactions-from-smart-accounts = true
                                                           |  miner {
                                                           |      enable = no

@@ -175,7 +175,7 @@ class PoSSuite extends FunSuite with Matchers with NodesFromDocker with WaitForH
       .overrideBase(
         _.raw(
           """
-          |waves {
+          |lto {
           |  miner {
           |      quorum = 1
           |  }

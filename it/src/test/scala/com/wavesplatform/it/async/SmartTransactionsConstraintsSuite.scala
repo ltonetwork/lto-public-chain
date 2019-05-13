@@ -29,7 +29,7 @@ class SmartTransactionsConstraintsSuite extends FreeSpec with Matchers with Tran
          |  request-timeout = 60s
          |}
          |
-         |waves {
+         |lto {
          |  network.enable-peers-exchange = no
          |
          |  miner {
