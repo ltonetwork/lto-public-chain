@@ -27,7 +27,7 @@ class FeatureActivationTestSuite
 
   override protected def nodeConfigs: Seq[Config] = {
     NodeConfigs.newBuilder
-      .overrideBase(_.raw(s"""waves {
+      .overrideBase(_.raw(s"""lto {
                                |  blockchain.custom.functionality {
                                |    pre-activated-features = null
                                |    feature-check-blocks-period = $votingInterval

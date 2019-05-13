@@ -82,7 +82,7 @@ class MicroblocksFeeTestSuite extends FreeSpec with Matchers with CancelAfterFai
 
   private val microblockActivationHeight = 10
   private val minerConfig = ConfigFactory.parseString(
-    s"""waves {
+    s"""lto {
        |  blockchain.custom.functionality.pre-activated-features.2 = $microblockActivationHeight
        |  miner.quorum = 3
        |}
@@ -90,7 +90,7 @@ class MicroblocksFeeTestSuite extends FreeSpec with Matchers with CancelAfterFai
   )
 
   private val notMinerConfig = ConfigFactory.parseString(
-    s"""waves {
+    s"""lto {
        |  blockchain.custom.functionality.pre-activated-features.2 = $microblockActivationHeight
        |  miner.enable = no
        |}

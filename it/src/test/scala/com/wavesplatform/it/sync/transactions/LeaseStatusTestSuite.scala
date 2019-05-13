@@ -39,7 +39,7 @@ object LeaseStatusTestSuite {
   private val blockGenerationOffset = "10000ms"
   import com.wavesplatform.it.NodeConfigs.Default
 
-  private val minerConfig = ConfigFactory.parseString(s"""waves {
+  private val minerConfig = ConfigFactory.parseString(s"""lto {
        |   miner{
        |      enable = yes
        |      minimal-block-generation-offset = $blockGenerationOffset
@@ -50,7 +50,7 @@ object LeaseStatusTestSuite {
        |}
      """.stripMargin)
 
-  private val notMinerConfig = ConfigFactory.parseString(s"""waves {
+  private val notMinerConfig = ConfigFactory.parseString(s"""lto {
        |   miner.enable = no
        |   miner.minimal-block-generation-offset = $blockGenerationOffset
        |}
