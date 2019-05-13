@@ -31,7 +31,7 @@ class DataTransactionSuite extends BaseTransactionSuite {
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
 
     val data = List(BooleanDataEntry("bool", false))
-    assertBadRequestAndResponse(sender.putData(firstAddress, data, balance1 + 1), "negative waves balance")
+    assertBadRequestAndResponse(sender.putData(firstAddress, data, balance1 + 1), "negative lto balance")
     nodes.waitForHeightArise()
     notMiner.assertBalances(firstAddress, balance1, eff1)
 
