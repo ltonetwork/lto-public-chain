@@ -10,7 +10,7 @@ import com.wavesplatform.api.http.DataRequest._
 import com.wavesplatform.api.http.assets._
 import com.wavesplatform.api.http.leasing._
 import com.wavesplatform.http.BroadcastRoute
-import com.wavesplatform.settings.{FunctionalitySettings, RestAPISettings}
+import com.wavesplatform.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
 import com.wavesplatform.state.diffs.CommonValidation
 import com.wavesplatform.state.{Blockchain, ByteStr}
 import com.wavesplatform.transaction.ValidationError.GenericError
@@ -33,6 +33,7 @@ import scala.util.control.Exception
 @Api(value = "/transactions")
 case class TransactionsApiRoute(settings: RestAPISettings,
                                 functionalitySettings: FunctionalitySettings,
+                                feesSettings: FeesSettings,
                                 wallet: Wallet,
                                 blockchain: Blockchain,
                                 utx: UtxPool,
@@ -171,13 +172,16 @@ case class TransactionsApiRoute(settings: RestAPISettings,
             "sender" -> senderPk
           )
           createTransaction(senderPk, enrichedJsv) { tx =>
-            CommonValidation.getMinFee(blockchain, functionalitySettings, blockchain.height, tx).map {
+            val r1 = CommonValidation.getMinFee(blockchain, functionalitySettings, blockchain.height, tx).map {
               case (assetId, assetAmount) =>
+                val utxMinFee = new FeeCalculator(feesSettings,blockchain).map.get(tx.builder.typeId.toInt.toString).getOrElse(0L)
+                val minFee = Math.max(utxMinFee, assetAmount)
                 Json.obj(
                   "feeAssetId" -> assetId,
-                  "feeAmount"  -> assetAmount
+                  "feeAmount"  -> minFee
                 )
             }
+            r1
           }
         }
       }

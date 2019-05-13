@@ -9,7 +9,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
 
   private val Kb = 1024
 
-  private val map: Map[String, Long] = {
+  val map: Map[String, Long] = {
     settings.fees.flatMap { fs =>
       val transactionType = fs._1
       fs._2.filter(v => v.asset.toUpperCase() == "LTO").map { v =>
