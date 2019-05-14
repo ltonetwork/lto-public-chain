@@ -244,7 +244,6 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
           configRoot
         ),
         AssetsBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels),
-
         ActivationApiRoute(settings.restAPISettings, settings.blockchainSettings.functionalitySettings, settings.featuresSettings, blockchainUpdater)
       )
 
