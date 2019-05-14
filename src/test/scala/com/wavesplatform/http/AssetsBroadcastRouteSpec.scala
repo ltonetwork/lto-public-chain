@@ -76,7 +76,6 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
         .right
         .get)
 
-
     "/batch-transfer" - {
       def posting[A: Writes](v: A): RouteTestResult = Post(routePath("batch-transfer"), v).addHeader(ApiKeyHeader) ~> route
 

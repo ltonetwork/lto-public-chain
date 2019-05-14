@@ -256,8 +256,8 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
     (sender, senderBalance, utx, bcu.lastBlock.fold(0L)(_.timestamp))
   }
 
-  private def transactionGen(sender: PrivateKeyAccount, ts: Long, feeAmount: Long): Gen[TransferTransactionV1] = accountGen.map { recipient =>
-    TransferTransactionV1.selfSigned(sender, recipient, waves(1), ts, feeAmount, Array.emptyByteArray).explicitGet()
+  private def transactionGen(sender: PrivateKeyAccount, ts: Long, feeAmount: Long): Gen[TransferTransactionV2] = accountGen.map { recipient =>
+    TransferTransactionV2.selfSigned(2:Byte, sender, recipient, waves(1), ts, feeAmount, Array.emptyByteArray).explicitGet()
   }
 
   private val notEnoughFeeTxWithScriptedAccount = for {
