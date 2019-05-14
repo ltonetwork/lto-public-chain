@@ -29,7 +29,7 @@ class TransferTransactionV1Suite extends BaseTransactionSuite with CancelAfterFa
   }
 
   test("invalid signed waves transfer should not be in UTX or blockchain") {
-    def invalidTx(timestamp: Long = System.currentTimeMillis, fee: Long = 100000) =
+    def invalidTx(timestamp: Long = System.currentTimeMillis, fee: Long = 25000000) =
       TransferTransactionV1
         .selfSigned(sender.privateKey, AddressOrAlias.fromString(sender.address).explicitGet(), 1, timestamp, fee, Array.emptyByteArray)
         .right

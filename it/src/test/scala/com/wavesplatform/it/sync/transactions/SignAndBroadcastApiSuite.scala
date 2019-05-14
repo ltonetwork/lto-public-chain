@@ -114,7 +114,7 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite {
         "transfers"  -> Json.toJson(Seq(Transfer(secondAddress, 1.waves), Transfer(thirdAddress, 2.waves))),
         "attachment" -> Base58.encode("masspay".getBytes)
       ),
-      usesProofs = true
+      usesProofs = true,fee=Some(45000000L)
     )
   }
 
@@ -182,9 +182,9 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite {
     assert(crypto.verify(signature, tx.bodyBytes(), privateKey.publicKey))
   }
 
-  private def signBroadcastAndCalcFee(json: JsObject, usesProofs: Boolean, version: String = null): String = {
+  private def signBroadcastAndCalcFee(json: JsObject, usesProofs: Boolean, version: String = null, fee: Option[Long] = None): String = {
     val jsWithPK  = json ++ Json.obj("senderPublicKey" -> sender.publicKey.toString)
-    val jsWithFee = jsWithPK ++ Json.obj("fee" -> sender.calculateFee(jsWithPK).feeAmount)
+    val jsWithFee = jsWithPK ++ Json.obj("fee" -> fee.getOrElse(sender.calculateFee(jsWithPK).feeAmount))
     val js        = if (Option(version).isDefined) jsWithFee ++ Json.obj("version" -> version.toInt) else jsWithFee
     val rs        = sender.postJsonWithApiKey("/transactions/sign", js)
     assert(rs.getStatusCode == HttpConstants.ResponseStatusCodes.OK_200)

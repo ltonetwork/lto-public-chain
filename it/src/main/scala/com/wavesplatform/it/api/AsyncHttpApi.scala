@@ -432,6 +432,7 @@ object AsyncHttpApi extends Assertions {
           new AsyncCompletionHandler[Response] {
             override def onCompleted(response: Response): Response = {
               n.log.debug(s"Response for ${r.getUrl} is ${response.getStatusCode}")
+              n.log.debug(response.getResponseBody())
               response
             }
           }
