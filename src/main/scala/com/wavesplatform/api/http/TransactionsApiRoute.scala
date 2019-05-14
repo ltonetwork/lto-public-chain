@@ -245,7 +245,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case TransferTransactionV2    => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], wallet, signerAddress, time)
               case MassTransferTransaction  => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], wallet, signerAddress, time)
               case LeaseTransactionV1       => TransactionFactory.leaseV1(txJson.as[LeaseV1Request], wallet, signerAddress, time)
-              case LeaseTransactionV2      => TransactionFactory.leaseV2(txJson.as[LeaseV2Request], wallet, signerAddress, time)
+              case LeaseTransactionV2       => TransactionFactory.leaseV2(txJson.as[LeaseV2Request], wallet, signerAddress, time)
               case LeaseCancelTransactionV1 => TransactionFactory.leaseCancelV1(txJson.as[LeaseCancelV1Request], wallet, signerAddress, time)
               case LeaseCancelTransactionV2 => TransactionFactory.leaseCancelV2(txJson.as[LeaseCancelV2Request], wallet, signerAddress, time)
               case DataTransaction          => TransactionFactory.data(txJson.as[DataRequest], wallet, signerAddress, time)
@@ -310,16 +310,16 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             x match {
-              case AnchorTransaction       => jsv.as[SignedAnchorRequest].toTx
-              case TransferTransactionV1   => jsv.as[SignedTransferV1Request].toTx
-              case TransferTransactionV2   => jsv.as[SignedTransferV2Request].toTx
-              case MassTransferTransaction => jsv.as[SignedMassTransferRequest].toTx
+              case AnchorTransaction        => jsv.as[SignedAnchorRequest].toTx
+              case TransferTransactionV1    => jsv.as[SignedTransferV1Request].toTx
+              case TransferTransactionV2    => jsv.as[SignedTransferV2Request].toTx
+              case MassTransferTransaction  => jsv.as[SignedMassTransferRequest].toTx
               case LeaseTransactionV1       => jsv.as[SignedLeaseV1Request].toTx
               case LeaseTransactionV2       => jsv.as[SignedLeaseV2Request].toTx
               case LeaseCancelTransactionV1 => jsv.as[SignedLeaseCancelV1Request].toTx
               case LeaseCancelTransactionV2 => jsv.as[SignedLeaseCancelV2Request].toTx
-              case DataTransaction      => jsv.as[SignedDataRequest].toTx
-              case SetScriptTransaction => jsv.as[SignedSetScriptRequest].toTx
+              case DataTransaction          => jsv.as[SignedDataRequest].toTx
+              case SetScriptTransaction     => jsv.as[SignedSetScriptRequest].toTx
             }
         }
         doBroadcast(r)

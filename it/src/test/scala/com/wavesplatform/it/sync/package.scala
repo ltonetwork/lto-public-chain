@@ -19,7 +19,7 @@ package object sync {
   def calcDataFee(data: List[DataEntry[_]]): Long = {
     val dataSize = data.map(_.toBytes.length).sum + 128
     if (dataSize > 1024) {
-      minFee  + 0.001.waves * (dataSize / 1024 + 1)
+      minFee + 0.001.waves * (dataSize / 1024 + 1)
     } else minFee
   }
 
