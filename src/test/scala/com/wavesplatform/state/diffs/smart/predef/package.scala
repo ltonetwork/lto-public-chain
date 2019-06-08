@@ -77,7 +77,7 @@ package object predef {
        |#    takeRightString, dropRightString, isDefined
        | let frAction = fraction(12, 3, 4) == 9
        | let bytesOps = match tx {
-       |     case t1: TransferTransaction => isDefined(t1.feeAssetId) == false
+       |     case t1: TransferTransaction => true
        |     case _ => false
        |   }
        | let strOps = size("haha") != 0 && take("haha", 1) != "" && drop("haha", 0) != "" && takeRight("haha", 1) != "" && dropRight("haha", 0) != ""
