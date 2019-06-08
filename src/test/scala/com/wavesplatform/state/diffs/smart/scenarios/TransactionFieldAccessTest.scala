@@ -30,7 +30,7 @@ class TransactionFieldAccessTest extends PropSpec with PropertyChecks with Match
       |
       | match tx {
       | case ttx: TransferTransaction =>
-      |       isDefined(ttx.assetId)==false
+      |       tx.fee < 0
       |   case other =>
       |       false
       | }

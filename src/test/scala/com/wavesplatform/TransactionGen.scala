@@ -88,7 +88,7 @@ trait TransactionGenBase extends ScriptGen {
     aliasChars <- Gen.listOfN(length, invalidAliasAlphabetGen)
   } yield aliasChars.mkString
 
-  val accountOrAliasGen: Gen[AddressOrAlias] = Gen.oneOf(aliasGen, accountGen.map(PublicKeyAccount.toAddress(_)))
+  val accountOrAliasGen: Gen[AddressOrAlias] = accountGen.map(PublicKeyAccount.toAddress(_))
 
   def otherAccountGen(candidate: PrivateKeyAccount): Gen[PrivateKeyAccount] = accountGen.flatMap(Gen.oneOf(candidate, _))
 

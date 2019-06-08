@@ -15,23 +15,6 @@ import scorex.crypto.encode.Base64
 
 class SerContextFunctionsTest extends PropSpec with PropertyChecks with Matchers with NoShrink with TransactionGen {
   property("check serializion of script with all functions") {
-    val entry1 = IntegerDataEntry("int", 24)
-    val entry2 = BooleanDataEntry("bool", true)
-    val entry3 = BinaryDataEntry("blob", ByteStr(Base64.decode("YWxpY2U=")))
-    val entry4 = StringDataEntry("str", "test")
-
-    val dtx = DataTransaction
-      .create(
-        1,
-        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").right.get,
-        List(entry1, entry2, entry3, entry4),
-        100000,
-        1526911531530L,
-        Proofs(Seq(ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get))
-      )
-      .right
-      .get
-
     val ttx = TransferTransactionV2
       .create(
         2,
@@ -46,7 +29,7 @@ class SerContextFunctionsTest extends PropSpec with PropertyChecks with Matchers
       .right
       .get
 
-    val untypedScript  = Parser(scriptWithAllFunctions(dtx, ttx)).get.value
+    val untypedScript  = Parser(scriptWithAllFunctions(ttx)).get.value
     val compiledScript = CompilerV1(dummyCompilerContext, untypedScript).explicitGet()._1
     val bytes = Array[Byte](4, 0, 0, 0, 3, 114, 110, 100, 9, 0, 0, 0, 0, 0, 0, 2, 9, 0, 0, 106, 0, 0, 0, 2, 8, 5, 0, 0, 0, 2, 116, 120, 0, 0, 0, 9,
       116, 105, 109, 101, 115, 116, 97, 109, 112, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 7, 108, 111, 110, 103, 65, 108,
