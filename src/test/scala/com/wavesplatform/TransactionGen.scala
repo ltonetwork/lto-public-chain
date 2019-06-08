@@ -215,10 +215,10 @@ trait TransactionGenBase extends ScriptGen {
   val leaseCancelGen: Gen[LeaseCancelTransaction] = leaseAndCancelGen.map(_._2)
 
   val transferParamGen = for {
-    amount     <- positiveLongGen
-    feeAmount  <- smallFeeGen
-    assetId    <- Gen.option(bytes32gen)
-    feeAssetId <- Gen.option(bytes32gen)
+    amount    <- positiveLongGen
+    feeAmount <- smallFeeGen
+    assetId    = None
+    feeAssetId = None
     timestamp  <- timestampGen
     sender     <- accountGen
     attachment <- genBoundedBytes(0, TransferTransaction.MaxAttachmentSize)

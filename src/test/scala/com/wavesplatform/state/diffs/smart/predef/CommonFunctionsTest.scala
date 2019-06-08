@@ -2,7 +2,7 @@ package com.wavesplatform.state.diffs.smart.predef
 
 import com.wavesplatform.state._
 import com.wavesplatform.state.diffs._
-import com.wavesplatform.{NoShrink, TransactionGen}
+import com.wavesplatform.{NoShrink, TransactionGen, account}
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Assertions, Matchers, PropSpec}
 import scodec.bits.ByteVector
@@ -47,10 +47,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
           """
                                                       |match tx {
                                                       | case mttx : MassTransferTransaction  =>
-                                                      |       match mttx.transfers[0].recipient {
-                                                      |           case address : Address => address.bytes
-                                                      |           case other => throw()
-                                                      |       }
+                                                      |        mttx.transfers[0].recipient.bytes
                                                       | case other => throw()
                                                       | }
                                                       |""".stripMargin,
@@ -76,13 +73,12 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
   }
 
   property("general shadowing verification") {
-    forAll(Gen.oneOf(transferV1Gen, transferV2Gen, issueGen, massTransferGen(10))) {
+    forAll(Gen.oneOf(transferV1Gen, transferV2Gen, massTransferGen(10))) {
       case (transfer) =>
         val result = runScript[Boolean](
           s"""
             |match tx {
             | case tx : TransferTransaction  => tx.id == base58'${transfer.id().base58}'
-            | case tx : IssueTransaction => tx.fee == ${transfer.fee}
             | case tx : MassTransferTransaction => tx.timestamp == ${transfer.timestamp}
             | case other => throw()
             | }
@@ -94,7 +90,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
   }
 
   property("negative shadowing verification") {
-    forAll(Gen.oneOf(transferV2Gen, issueGen, massTransferGen(10))) {
+    forAll(Gen.oneOf(transferV2Gen, massTransferGen(10))) {
       case (transfer) =>
         try {
           runScript[Boolean](
@@ -134,16 +130,15 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
   }
 
   property("shadowing of inner pattern matching") {
-    forAll(Gen.oneOf(transferV2Gen, issueGen)) {
-      case (transfer) =>
+    forAll(transferV2Gen) {
+      case transfer =>
         val result =
           runScript[Boolean](
             s"""
                |match tx {
-               | case tx: TransferTransaction | IssueTransaction => {
+               | case tx: TransferTransaction => {
                |  match tx {
                |    case tx: TransferTransaction  => tx.id == base58'${transfer.id().base58}'
-               |    case tx: IssueTransaction => tx.fee == ${transfer.fee}
                |  }
                |  }
                | case other => throw()
@@ -178,47 +173,20 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
 
   property("data constructors") {
     forAll(transferV2Gen, longEntryGen(dataAsciiKeyGen)) { (t, entry) =>
-      val compareClause = t.recipient match {
-        case addr: Address => s"tx.recipient == Address(base58'${addr.address}')"
-        case alias: Alias  => s"""tx.recipient == Alias("${alias.name}")"""
-      }
       val transferResult = runScript[Boolean](
         s"""
            |match tx {
            |  case tx: TransferTransaction =>
-           |    let goodEq = $compareClause
+           |    let goodEq = tx.recipient == Address(base58'${t.recipient.asInstanceOf[account.Address].address}')
            |    let badAddressEq = tx.recipient == Address(base58'Mbembangwana')
            |    let badAddressNe = tx.recipient != Address(base58'3AfZaKieM5')
-           |    let badAliasEq = tx.recipient == Alias("Ramakafana")
-           |    let badAliasNe = tx.recipient != Alias("Nuripitia")
-           |    goodEq && !badAddressEq && badAddressNe && !badAliasEq && badAliasNe
+           |    goodEq && !badAddressEq && badAddressNe
            |  case _ => throw()
            |}
            |""".stripMargin,
         t
       )
       transferResult shouldBe Right(true)
-
-      val dataTx = DataTransaction.create(1: Byte, t.sender, List(entry), 100000L, t.timestamp, Proofs(Seq.empty)).explicitGet()
-      val dataResult = runScript[Boolean](
-        s"""
-           |match tx {
-           |  case tx: DataTransaction =>
-           |    let intEq = tx.data[0] == DataEntry("${entry.key}", ${entry.value})
-           |    let intNe = tx.data[0] != DataEntry("${entry.key}", ${entry.value})
-           |    let boolEq = tx.data[0] == DataEntry("${entry.key}", true)
-           |    let boolNe = tx.data[0] != DataEntry("${entry.key}", true)
-           |    let binEq = tx.data[0] == DataEntry("${entry.key}", base64'WROOooommmmm')
-           |    let binNe = tx.data[0] != DataEntry("${entry.key}", base64'FlapFlap')
-           |    let strEq = tx.data[0] == DataEntry("${entry.key}", "${entry.value}")
-           |    let strNe = tx.data[0] != DataEntry("${entry.key}", "Zam")
-           |    intEq && !intNe && !boolEq && boolNe && !binEq && binNe && !strEq && strNe
-           |  case _ => throw()
-           |}
-         """.stripMargin,
-        dataTx
-      )
-      dataResult shouldBe Right(true)
     }
   }
 
