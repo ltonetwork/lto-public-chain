@@ -29,10 +29,8 @@ class TransactionFieldAccessTest extends PropSpec with PropertyChecks with Match
     """
       |
       | match tx {
-      | case ttx: TransferTransaction =>
-      |       tx.fee < 0
-      |   case other =>
-      |       false
+      | case ttx: TransferTransaction => tx.fee > 0
+      | case other => false
       | }
     """.stripMargin
 
