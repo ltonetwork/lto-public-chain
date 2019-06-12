@@ -20,7 +20,6 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
 //   funding  = TransferTransactionV2.selfSigned(2,master,acc, ENOUGH_AMT/2,ts, 100*1000*1000,Array.emptyByteArray )
 //  } yield (genesis, funding)
 
-
   property("disallows double spending") {
     val preconditionsAndPayment: Gen[(GenesisTransaction, TransferTransactionV1)] = for {
       master    <- accountGen
@@ -41,6 +40,5 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
         }
     }
   }
-
 
 }

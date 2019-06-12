@@ -272,8 +272,10 @@ object CommonValidation {
     }
 
     def newFees() =
-      newFeeInUnits(tx).map(_ * Sponsorship.FeeUnit).flatMap(minFee =>
-        Either.cond(tx.fee >= minFee * Sponsorship.FeeUnit, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
+      newFeeInUnits(tx)
+        .map(_ * Sponsorship.FeeUnit)
+        .flatMap(minFee =>
+          Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
 
     if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
       newFees()

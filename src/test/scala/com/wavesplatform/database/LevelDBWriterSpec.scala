@@ -76,7 +76,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
     def resetGen(ts: Long): Gen[(PrivateKeyAccount, Seq[Block])] = baseGen(ts).map {
       case (master, blocks) =>
         val unsetScriptTx = SetScriptTransaction
-          .selfSigned(1, master, None, 100*1000*1000L, ts + 1)
+          .selfSigned(1, master, None, 100 * 1000 * 1000L, ts + 1)
           .explicitGet()
 
         val block1 = TestBlock.create(ts + 1, blocks.last.uniqueId, Seq(unsetScriptTx))
@@ -87,7 +87,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
     def baseGen(ts: Long): Gen[(PrivateKeyAccount, Seq[Block])] = accountGen.map { master =>
       val genesisTx = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
       val setScriptTx = SetScriptTransaction
-        .selfSigned(1, master, Some(ScriptV1(Terms.TRUE).explicitGet()), 100*1000*1000L, ts)
+        .selfSigned(1, master, Some(ScriptV1(Terms.TRUE).explicitGet()), 100 * 1000 * 1000L, ts)
         .explicitGet()
 
       val block = TestBlock.create(ts, Seq(genesisTx, setScriptTx))
@@ -158,7 +158,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
 
     def createTransfer(master: PrivateKeyAccount, recipient: Address, ts: Long): TransferTransaction = {
       TransferTransactionV1
-        .selfSigned(master, recipient, ENOUGH_AMT / 5, ts, 100*1000*1000L, Array.emptyByteArray)
+        .selfSigned(master, recipient, ENOUGH_AMT / 5, ts, 100 * 1000 * 1000L, Array.emptyByteArray)
         .explicitGet()
     }
   }
