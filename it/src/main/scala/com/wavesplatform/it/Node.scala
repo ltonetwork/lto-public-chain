@@ -3,14 +3,18 @@ package com.wavesplatform.it
 import java.net.{InetSocketAddress, URL}
 
 import com.typesafe.config.Config
+import com.wavesplatform.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.wavesplatform.it.util.GlobalTimer
 import com.wavesplatform.settings.WavesSettings
 import com.wavesplatform.state.EitherExt2
+import com.wavesplatform.transaction.lease.{LeaseCancelTransactionV2, LeaseTransactionV2}
+import com.wavesplatform.transaction.smart.SetScriptTransaction
+import com.wavesplatform.transaction.transfer.{MassTransferTransaction, TransferTransactionV2}
+import com.wavesplatform.transaction.{AnchorTransaction, GenesisTransaction}
 import com.wavesplatform.utils.{Base58, LoggerFacade}
 import org.asynchttpclient.Dsl.{config => clientConfig, _}
 import org.asynchttpclient._
 import org.slf4j.LoggerFactory
-import com.wavesplatform.account.{PrivateKeyAccount, PublicKeyAccount}
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -43,10 +47,17 @@ object Node {
 
     def publicKeyStr = Base58.encode(n.publicKey.publicKey)
 
-    def fee(txTypeId: Byte): Long = n.settings.feesSettings.fees(txTypeId).find(_.asset == "LTO") match {
-      case None    => throw new Exception(n.settings.feesSettings.fees.toString())
-      case Some(f) => f.fee
-    }
+    def fee(txTypeId: Byte): Long =
+      (txTypeId match {
+        case GenesisTransaction.typeId       => 0
+        case TransferTransactionV2.typeId    => 1000
+        case LeaseTransactionV2.typeId       => 1000
+        case SetScriptTransaction.typeId     => 1000
+        case LeaseCancelTransactionV2.typeId => 1000
+        case MassTransferTransaction.typeId  => 1000
+        case AnchorTransaction.typeId        => 100
+        case _                               => throw new Exception("it: tx not supported")
+      }) * 100 * 1000
 
     def blockDelay: FiniteDuration = n.settings.blockchainSettings.genesisSettings.averageBlockDelay
   }

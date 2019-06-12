@@ -45,8 +45,8 @@ class NetworkUniqueConnectionsTestSuite extends FreeSpec with Matchers with Dock
 
 private object NetworkUniqueConnectionsTestSuite {
 
-  private val configs          = NodeConfigs.newBuilder.withDefault(0).withSpecial(2, _.nonMiner).build()
   val FirstNodeConfig: Config  = configs.head
   val SecondNodeConfig: Config = configs.last
+  private val configs          = NodeConfigs.newBuilder.withDefault(0).withSpecial(2, _.nonMiner).build()
 
 }

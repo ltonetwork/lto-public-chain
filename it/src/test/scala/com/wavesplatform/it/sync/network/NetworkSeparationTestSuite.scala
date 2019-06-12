@@ -2,7 +2,7 @@ package com.wavesplatform.it.sync.network
 
 import com.typesafe.config.{Config, ConfigFactory}
 import com.wavesplatform.it.api.SyncHttpApi._
-import com.wavesplatform.it.sync.{issueAmount, issueFee, minFee}
+import com.wavesplatform.it.sync.minFee
 import com.wavesplatform.it.transactions.NodesFromDocker
 import com.wavesplatform.it.{ReportingTestName, WaitForHeight2}
 import org.scalatest.{CancelAfterFailure, FreeSpec, Matchers}
@@ -71,6 +71,10 @@ class NetworkSeparationTestSuite
 
 object NetworkSeparationTestSuite {
   import com.wavesplatform.it.NodeConfigs._
+  val Configs: Seq[Config] = Seq(
+    woFeatureConfig.withFallback(Default.head),
+    withFeatureConfig.withFallback(Default(1))
+  )
   private val withFeatureConfig = ConfigFactory.parseString(s"""
                                                                 |lto {
                                                                 |  synchronization.synchronization-timeout = 10s
@@ -82,7 +86,6 @@ object NetworkSeparationTestSuite {
                                                                 |  }
                                                                 |  miner.quorum = 0
                                                                 |}""".stripMargin)
-
   private val woFeatureConfig = ConfigFactory.parseString(s"""
                                                             |lto {
                                                             |  synchronization.synchronization-timeout = 10s
@@ -92,11 +95,6 @@ object NetworkSeparationTestSuite {
                                                             |     6 = 100
                                                             |     }
                                                             |  }
-                                                            |  miner.quorum = 0 
+                                                            |  miner.quorum = 0
                                                             |}""".stripMargin)
-
-  val Configs: Seq[Config] = Seq(
-    woFeatureConfig.withFallback(Default.head),
-    withFeatureConfig.withFallback(Default(1))
-  )
 }

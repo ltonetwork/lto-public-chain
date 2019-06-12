@@ -8,13 +8,13 @@ import com.wavesplatform.it.util._
 import com.wavesplatform.lang.v1.compiler.CompilerV1
 import com.wavesplatform.lang.v1.parser.Parser
 import com.wavesplatform.state._
-import com.wavesplatform.utils.dummyCompilerContext
-import org.scalatest.CancelAfterFailure
-import play.api.libs.json.{JsNumber, Json}
 import com.wavesplatform.transaction.Proofs
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.v1.ScriptV1
 import com.wavesplatform.transaction.transfer._
+import com.wavesplatform.utils.dummyCompilerContext
+import org.scalatest.CancelAfterFailure
+import play.api.libs.json.{JsNumber, Json}
 
 class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
   private val fourthAddress: String = sender.createAddress()

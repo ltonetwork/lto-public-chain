@@ -3,15 +3,15 @@ package com.wavesplatform.it.sync.smartcontract
 import com.typesafe.config.{Config, ConfigFactory}
 import com.wavesplatform.account.PrivateKeyAccount
 import com.wavesplatform.it.api.SyncHttpApi._
+import com.wavesplatform.it.sync._
 import com.wavesplatform.it.transactions.NodesFromDocker
+import com.wavesplatform.it.util._
 import com.wavesplatform.it.{ReportingTestName, WaitForHeight2}
 import com.wavesplatform.lang.v1.compiler.CompilerV1
 import com.wavesplatform.lang.v1.parser.Parser
-import com.wavesplatform.it.util._
-import com.wavesplatform.it.sync._
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.v1.ScriptV1
-import com.wavesplatform.transaction.transfer.{TransferTransactionV2}
+import com.wavesplatform.transaction.transfer.TransferTransactionV2
 import com.wavesplatform.utils.dummyCompilerContext
 import org.scalatest.{CancelAfterFailure, FreeSpec, Matchers}
 import play.api.libs.json.JsNumber
@@ -93,6 +93,10 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
 
 object UTXAllowance {
   import com.wavesplatform.it.NodeConfigs._
+  val Configs: Seq[Config] = Seq(
+    FirstNode.withFallback(Default.head),
+    SecondNode.withFallback(Default(1))
+  )
   private val FirstNode = ConfigFactory.parseString(s"""
                                                          |lto {
                                                          |  utx.allow-transactions-from-smart-accounts = false
@@ -101,7 +105,6 @@ object UTXAllowance {
                                                          |      enable = yes
                                                          |  }
                                                          |}""".stripMargin)
-
   private val SecondNode = ConfigFactory.parseString(s"""
                                                           |lto {
                                                           |  utx.allow-transactions-from-smart-accounts = true
@@ -109,10 +112,5 @@ object UTXAllowance {
                                                           |      enable = no
                                                           |  }
                                                           |}""".stripMargin)
-
-  val Configs: Seq[Config] = Seq(
-    FirstNode.withFallback(Default.head),
-    SecondNode.withFallback(Default(1))
-  )
 
 }

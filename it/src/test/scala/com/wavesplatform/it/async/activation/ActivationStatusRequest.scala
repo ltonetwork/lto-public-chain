@@ -17,6 +17,10 @@ trait ActivationStatusRequest extends Matchers {
       timeout
     )
 
+  private def activationStatusInternal(node: Node, height: Int): Future[ActivationStatus] = {
+    node.waitFor[ActivationStatus](s"activationStatusInternal: height should be >= $height")(_.activationStatus, _.height >= height, 2.second)
+  }
+
   def activationStatus(nodes: Seq[Node], height: Int, featureNum: Short, timeout: Duration)(implicit ec: ExecutionContext): FeatureActivationStatus =
     Await.result(
       Future
@@ -26,10 +30,6 @@ trait ActivationStatusRequest extends Matchers {
         },
       timeout
     )
-
-  private def activationStatusInternal(node: Node, height: Int): Future[ActivationStatus] = {
-    node.waitFor[ActivationStatus](s"activationStatusInternal: height should be >= $height")(_.activationStatus, _.height >= height, 2.second)
-  }
 
   def assertVotingStatus(fas: FeatureActivationStatus,
                          supportedBlocks: Int,

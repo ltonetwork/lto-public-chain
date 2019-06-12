@@ -225,7 +225,7 @@ object CommonValidation {
             _ <- Either.cond(
               restFeeAmount >= 0,
               (),
-              GenericError(s"Fee in WAVES for ${tx.builder.classTag} does not exceed minimal value of $minimumFee WAVES: $feeAmount")
+              GenericError(s"Fee in LTO for ${tx.builder.classTag} does not exceed minimal value of $minimumFee LTOs: $feeAmount")
             )
           } yield (None, restFeeAmount)
         }
@@ -274,8 +274,7 @@ object CommonValidation {
     def newFees() =
       newFeeInUnits(tx)
         .map(_ * Sponsorship.FeeUnit)
-        .flatMap(minFee =>
-          Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
+        .flatMap(minFee => Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
 
     if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
       newFees()

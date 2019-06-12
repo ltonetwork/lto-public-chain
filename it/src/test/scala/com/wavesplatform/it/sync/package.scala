@@ -1,7 +1,7 @@
 package com.wavesplatform.it
 
-import com.wavesplatform.state.DataEntry
 import com.wavesplatform.it.util._
+import com.wavesplatform.state.DataEntry
 
 package object sync {
   val minFee                     = 1.waves
@@ -15,6 +15,7 @@ package object sync {
   val issueAmount                = transferAmount
   val massTransferFeePerTransfer = 1.waves
   val someAssetAmount            = 9999999999999l
+  val supportedVersions = List(null, "2") //sign and broadcast use default for V1
 
   def calcDataFee(data: List[DataEntry[_]]): Long = {
     val dataSize = data.map(_.toBytes.length).sum + 128
@@ -26,6 +27,4 @@ package object sync {
   def calcMassTransferFee(numberOfRecipients: Int): Long = {
     minFee + massTransferFeePerTransfer * (numberOfRecipients + 1)
   }
-
-  val supportedVersions = List(null, "2") //sign and broadcast use default for V1
 }

@@ -1,16 +1,16 @@
 package com.wavesplatform.it.sync.transactions
 
+import com.wavesplatform.account.AddressOrAlias
+import com.wavesplatform.api.http.assets.SignedTransferV1Request
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.sync._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.it.util._
 import com.wavesplatform.state.EitherExt2
+import com.wavesplatform.transaction.transfer._
 import com.wavesplatform.utils.Base58
 import org.scalatest.CancelAfterFailure
 import play.api.libs.json._
-import com.wavesplatform.account.AddressOrAlias
-import com.wavesplatform.api.http.assets.SignedTransferV1Request
-import com.wavesplatform.transaction.transfer._
 
 import scala.concurrent.duration._
 
@@ -29,7 +29,7 @@ class TransferTransactionV1Suite extends BaseTransactionSuite with CancelAfterFa
   }
 
   test("invalid signed waves transfer should not be in UTX or blockchain") {
-    def invalidTx(timestamp: Long = System.currentTimeMillis, fee: Long = 25000000) =
+    def invalidTx(timestamp: Long = System.currentTimeMillis, fee: Long = com.wavesplatform.it.STD_FEE) =
       TransferTransactionV1
         .selfSigned(sender.privateKey, AddressOrAlias.fromString(sender.address).explicitGet(), 1, timestamp, fee, Array.emptyByteArray)
         .right

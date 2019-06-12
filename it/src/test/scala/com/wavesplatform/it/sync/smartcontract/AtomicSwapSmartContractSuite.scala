@@ -29,6 +29,13 @@ Scenario:
 
 class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfterFailure {
 
+  private val BobBC1: String   = sender.createAddress()
+  private val AliceBC1: String = sender.createAddress()
+  private val swapBC1: String  = sender.createAddress()
+  private val AlicesPK = pkByAddress(AliceBC1)
+  private val secretText = "some secret message from Alice"
+  private val shaSecret  = "BN6RTYGWcwektQfSFzH8raYo9awaLgQ7pLyWLQY4S4F5"
+
   /*
   One node because:
   1. There is an expected behavior of rollback and a possible issue with this. When the node are going rollback,
@@ -41,15 +48,6 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
       .overrideBase(_.quorum(0))
       .withDefault(1)
       .buildNonConflicting()
-
-  private val BobBC1: String   = sender.createAddress()
-  private val AliceBC1: String = sender.createAddress()
-  private val swapBC1: String  = sender.createAddress()
-
-  private val AlicesPK = pkByAddress(AliceBC1)
-
-  private val secretText = "some secret message from Alice"
-  private val shaSecret  = "BN6RTYGWcwektQfSFzH8raYo9awaLgQ7pLyWLQY4S4F5"
 
   test("step1: Balances initialization") {
     val toAliceBC1TxId = sender.transfer(sender.address, AliceBC1, 10 * transferAmount, minFee).id

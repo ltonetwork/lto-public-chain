@@ -16,6 +16,14 @@ import scala.concurrent.{Await, Future}
 
 class WideStateGenerationSuite extends FreeSpec with WaitForHeight2 with Matchers with TransferSending with NodesFromDocker {
 
+  override protected val nodeConfigs: Seq[Config] = NodeConfigs.newBuilder
+    .overrideBase(_.quorum(3))
+    .withDefault(2)
+    .withSpecial(2, _.nonMiner)
+    .buildNonConflicting()
+  private val nodeAddresses = nodeConfigs.map(_.getString("address")).toSet
+  private val requestsCount = 10000
+
   override protected def createDocker: Docker = new Docker(
     suiteConfig = ConfigFactory.parseString(
       """akka.http.server {
@@ -39,15 +47,6 @@ class WideStateGenerationSuite extends FreeSpec with WaitForHeight2 with Matcher
     tag = getClass.getSimpleName,
     enableProfiling = true
   )
-
-  override protected val nodeConfigs: Seq[Config] = NodeConfigs.newBuilder
-    .overrideBase(_.quorum(3))
-    .withDefault(2)
-    .withSpecial(2, _.nonMiner)
-    .buildNonConflicting()
-
-  private val nodeAddresses = nodeConfigs.map(_.getString("address")).toSet
-  private val requestsCount = 10000
 
   "Generate a lot of transactions and synchronise" in {
     val test = for {

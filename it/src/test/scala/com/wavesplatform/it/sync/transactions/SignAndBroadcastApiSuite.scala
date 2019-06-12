@@ -8,13 +8,10 @@ import com.wavesplatform.it.sync._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.it.util._
 import com.wavesplatform.state._
-import com.wavesplatform.transaction.assets.exchange.{AssetPair, ExchangeTransaction, Order}
 import com.wavesplatform.transaction.transfer.MassTransferTransaction.Transfer
-import com.wavesplatform.utils.{Base58, NTP}
+import com.wavesplatform.utils.Base58
 import org.asynchttpclient.util.HttpConstants
 import play.api.libs.json._
-
-import scala.util.Random
 
 class SignAndBroadcastApiSuite extends BaseTransactionSuite {
   test("height should always be reported for transactions") {

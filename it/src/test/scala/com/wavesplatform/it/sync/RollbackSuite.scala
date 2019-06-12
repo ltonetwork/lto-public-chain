@@ -7,10 +7,9 @@ import com.wavesplatform.it.{NodeConfigs, TransferSending}
 import com.wavesplatform.state.{BooleanDataEntry, IntegerDataEntry}
 import org.scalatest.{CancelAfterFailure, FunSuite, Matchers}
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
-
 class RollbackSuite extends FunSuite with CancelAfterFailure with TransferSending with NodesFromDocker with Matchers {
+  private val nodeAddresses = nodeConfigs.map(_.getString("address")).toSet
+
   override def nodeConfigs: Seq[Config] =
     NodeConfigs.newBuilder
       .overrideBase(_.quorum(0))
@@ -18,9 +17,9 @@ class RollbackSuite extends FunSuite with CancelAfterFailure with TransferSendin
       .withSpecial(1, _.nonMiner)
       .buildNonConflicting()
 
-  private val nodeAddresses = nodeConfigs.map(_.getString("address")).toSet
-  private def sender        = nodes.last
   private def firstAddress  = sender.address
+
+  private def sender        = nodes.last
 
   test("Data transaction rollback") {
     val node       = nodes.head

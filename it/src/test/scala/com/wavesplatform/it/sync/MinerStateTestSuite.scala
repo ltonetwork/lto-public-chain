@@ -12,9 +12,9 @@ import scala.concurrent.duration._
 class MinerStateTestSuite extends FunSuite with CancelAfterFailure with NodesFromDocker with Matchers {
   import MinerStateTestSuite._
 
-  override protected def nodeConfigs: Seq[Config] = Configs
-
   private val transferAmount = 1000.waves
+
+  override protected def nodeConfigs: Seq[Config] = Configs
 
   private def miner               = nodes.head
   private def nodeWithZeroBalance = nodes.last
@@ -40,6 +40,13 @@ class MinerStateTestSuite extends FunSuite with CancelAfterFailure with NodesFro
 
 object MinerStateTestSuite {
   import com.wavesplatform.it.NodeConfigs._
+  val Configs: Seq[Config] = Seq(
+    minerConfig.withFallback(Default.head),
+    minerConfig.withFallback(Default(1)),
+    notMinerConfig.withFallback(Default(2)),
+    notMinerConfig.withFallback(Default(3)),
+    minerConfig.withFallback(Default(4)) // node w/o balance
+  )
   private val minerConfig = ConfigFactory.parseString(s"""
     |lto {
     |  synchronization.synchronization-timeout = 10s
@@ -49,7 +56,6 @@ object MinerStateTestSuite {
     |  }
     |  miner.quorum = 0
     |}""".stripMargin)
-
   private val notMinerConfig = ConfigFactory.parseString(s"""
     |lto {
     |  synchronization.synchronization-timeout = 10s
@@ -59,13 +65,5 @@ object MinerStateTestSuite {
     |  }
     |  miner.enable = no
     |}""".stripMargin)
-
-  val Configs: Seq[Config] = Seq(
-    minerConfig.withFallback(Default.head),
-    minerConfig.withFallback(Default(1)),
-    notMinerConfig.withFallback(Default(2)),
-    notMinerConfig.withFallback(Default(3)),
-    minerConfig.withFallback(Default(4)) // node w/o balance
-  )
 
 }

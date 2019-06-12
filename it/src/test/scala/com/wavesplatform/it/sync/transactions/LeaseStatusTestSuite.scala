@@ -2,11 +2,11 @@ package com.wavesplatform.it.sync.transactions
 
 import com.typesafe.config.{Config, ConfigFactory}
 import com.wavesplatform.it.api.SyncHttpApi._
+import com.wavesplatform.it.sync._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
+import com.wavesplatform.transaction.lease.LeaseTransaction.Status.{Active, Canceled}
 import org.scalatest.CancelAfterFailure
 import play.api.libs.json.Json
-import com.wavesplatform.it.sync._
-import com.wavesplatform.transaction.lease.LeaseTransaction.Status.{Active, Canceled}
 
 class LeaseStatusTestSuite extends BaseTransactionSuite with CancelAfterFailure {
   import LeaseStatusTestSuite._
@@ -36,9 +36,12 @@ class LeaseStatusTestSuite extends BaseTransactionSuite with CancelAfterFailure 
 }
 
 object LeaseStatusTestSuite {
-  private val blockGenerationOffset = "10000ms"
+  val Configs: Seq[Config] = Seq(
+    minerConfig.withFallback(Default.head),
+    notMinerConfig.withFallback(Default(1))
+  )
   import com.wavesplatform.it.NodeConfigs.Default
-
+  private val blockGenerationOffset = "10000ms"
   private val minerConfig = ConfigFactory.parseString(s"""lto {
        |   miner{
        |      enable = yes
@@ -49,16 +52,10 @@ object LeaseStatusTestSuite {
        |   }
        |}
      """.stripMargin)
-
   private val notMinerConfig = ConfigFactory.parseString(s"""lto {
        |   miner.enable = no
        |   miner.minimal-block-generation-offset = $blockGenerationOffset
        |}
      """.stripMargin)
-
-  val Configs: Seq[Config] = Seq(
-    minerConfig.withFallback(Default.head),
-    notMinerConfig.withFallback(Default(1))
-  )
 
 }

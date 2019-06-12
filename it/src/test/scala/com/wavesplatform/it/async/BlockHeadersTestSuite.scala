@@ -24,16 +24,19 @@ class BlockHeadersTestSuite
     with ReportingTestName
     with ScorexLogging {
 
+  def assertBlockInfo(blocks: Seq[Block], blockHeaders: Seq[BlockHeaders]): Unit = {
+    blockHeaders.head.generator shouldBe blocks.head.generator
+    blockHeaders.head.timestamp shouldBe blocks.head.timestamp
+    blockHeaders.head.signature shouldBe blocks.head.signature
+    blockHeaders.head.transactionCount shouldBe blocks.head.transactions.size
+  }
+
   override protected def nodeConfigs: Seq[Config] =
     NodeConfigs.newBuilder
       .overrideBase(_.quorum(2))
       .withDefault(2)
       .withSpecial(_.nonMiner)
       .buildNonConflicting()
-
-  private def notMiner: Node = nodes.last
-
-  private def firstAddress = nodes(1).address
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
@@ -61,12 +64,9 @@ class BlockHeadersTestSuite
     }
   }
 
-  def assertBlockInfo(blocks: Seq[Block], blockHeaders: Seq[BlockHeaders]): Unit = {
-    blockHeaders.head.generator shouldBe blocks.head.generator
-    blockHeaders.head.timestamp shouldBe blocks.head.timestamp
-    blockHeaders.head.signature shouldBe blocks.head.signature
-    blockHeaders.head.transactionCount shouldBe blocks.head.transactions.size
-  }
+  private def notMiner: Node = nodes.last
+
+  private def firstAddress = nodes(1).address
 
   "blockAt content should be equal to blockHeaderAt, except transactions info" in {
     val f = for {
