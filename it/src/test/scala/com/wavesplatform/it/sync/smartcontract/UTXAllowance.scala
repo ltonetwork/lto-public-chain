@@ -60,7 +60,7 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
           recipient = accounts(0),
           amount = 1.waves,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee + 0.004.waves,
+          feeAmount = 1.waves,
           attachment = Array.emptyByteArray
         )
         .right

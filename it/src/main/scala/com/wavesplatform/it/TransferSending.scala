@@ -30,7 +30,7 @@ trait TransferSending extends ScorexLogging {
   }
 
   def generateTransfersFromAccount(n: Int, accountAddress: String): Seq[Req] = {
-    val fee      = 100000 + 400000 // + 400000 for scripted accounts
+    val fee      = 100000000 // + 400000 for scripted accounts
     val seedSize = 32
 
     val srcSeed = NodeConfigs.Default

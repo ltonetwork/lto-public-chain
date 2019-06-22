@@ -37,10 +37,6 @@ class LeaseStatusTestSuite extends BaseTransactionSuite with CancelAfterFailure 
 
 object LeaseStatusTestSuite {
   import com.wavesplatform.it.NodeConfigs.Default
-  val Configs: Seq[Config] = Seq(
-    minerConfig.withFallback(Default.head),
-    notMinerConfig.withFallback(Default(1))
-  )
   private val blockGenerationOffset = "10000ms"
   private val minerConfig           = ConfigFactory.parseString(s"""lto {
        |   miner{
@@ -57,5 +53,9 @@ object LeaseStatusTestSuite {
        |   miner.minimal-block-generation-offset = $blockGenerationOffset
        |}
      """.stripMargin)
+  val Configs: Seq[Config] = Seq(
+    minerConfig.withFallback(Default.head),
+    notMinerConfig.withFallback(Default(1))
+  )
 
 }
