@@ -32,9 +32,9 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
   private val BobBC1: String   = sender.createAddress()
   private val AliceBC1: String = sender.createAddress()
   private val swapBC1: String  = sender.createAddress()
-  private val AlicesPK = pkByAddress(AliceBC1)
-  private val secretText = "some secret message from Alice"
-  private val shaSecret  = "BN6RTYGWcwektQfSFzH8raYo9awaLgQ7pLyWLQY4S4F5"
+  private val AlicesPK         = pkByAddress(AliceBC1)
+  private val secretText       = "some secret message from Alice"
+  private val shaSecret        = "BN6RTYGWcwektQfSFzH8raYo9awaLgQ7pLyWLQY4S4F5"
 
   /*
   One node because:

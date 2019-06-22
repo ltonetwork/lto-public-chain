@@ -47,7 +47,7 @@ object MinerStateTestSuite {
     notMinerConfig.withFallback(Default(3)),
     minerConfig.withFallback(Default(4)) // node w/o balance
   )
-  private val minerConfig = ConfigFactory.parseString(s"""
+  private val minerConfig    = ConfigFactory.parseString(s"""
     |lto {
     |  synchronization.synchronization-timeout = 10s
     |  blockchain.custom.functionality {

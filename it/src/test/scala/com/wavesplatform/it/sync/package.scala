@@ -15,7 +15,7 @@ package object sync {
   val issueAmount                = transferAmount
   val massTransferFeePerTransfer = 1.waves
   val someAssetAmount            = 9999999999999l
-  val supportedVersions = List(null, "2") //sign and broadcast use default for V1
+  val supportedVersions          = List(null, "2") //sign and broadcast use default for V1
 
   def calcDataFee(data: List[DataEntry[_]]): Long = {
     val dataSize = data.map(_.toBytes.length).sum + 128

@@ -30,7 +30,7 @@ class FairPoSTestSuite extends FunSuite with CancelAfterFailure with NodesFromDo
 
 object FairPoSTestSuite {
   import com.wavesplatform.it.NodeConfigs._
-  val Configs: Seq[Config] = Default.map(config.withFallback(_)).take(4)
+  val Configs: Seq[Config]               = Default.map(config.withFallback(_)).take(4)
   private val microblockActivationHeight = 0
   private val fairPoSActivationHeight    = 10
   private val config =

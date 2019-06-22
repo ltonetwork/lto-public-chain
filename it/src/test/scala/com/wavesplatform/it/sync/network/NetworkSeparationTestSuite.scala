@@ -86,7 +86,7 @@ object NetworkSeparationTestSuite {
                                                                 |  }
                                                                 |  miner.quorum = 0
                                                                 |}""".stripMargin)
-  private val woFeatureConfig = ConfigFactory.parseString(s"""
+  private val woFeatureConfig   = ConfigFactory.parseString(s"""
                                                             |lto {
                                                             |  synchronization.synchronization-timeout = 10s
                                                             |  blockchain.custom.functionality {

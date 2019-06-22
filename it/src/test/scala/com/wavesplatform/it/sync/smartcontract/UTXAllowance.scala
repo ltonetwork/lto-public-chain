@@ -97,7 +97,7 @@ object UTXAllowance {
     FirstNode.withFallback(Default.head),
     SecondNode.withFallback(Default(1))
   )
-  private val FirstNode = ConfigFactory.parseString(s"""
+  private val FirstNode  = ConfigFactory.parseString(s"""
                                                          |lto {
                                                          |  utx.allow-transactions-from-smart-accounts = false
                                                          |  miner {

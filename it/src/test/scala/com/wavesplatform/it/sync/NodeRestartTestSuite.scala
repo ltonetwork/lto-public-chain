@@ -34,7 +34,7 @@ object NodeRestartTestSuite {
     FirstNode.withFallback(Default.head),
     SecondNode.withFallback(Default(1))
   )
-  private val FirstNode = ConfigFactory.parseString(s"""
+  private val FirstNode  = ConfigFactory.parseString(s"""
                                                          |lto {
                                                          |  synchronization.synchronization-timeout = 10s
                                                          |  blockchain.custom.functionality {

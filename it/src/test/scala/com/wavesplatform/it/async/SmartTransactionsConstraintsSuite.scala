@@ -62,7 +62,7 @@ class SmartTransactionsConstraintsSuite extends FreeSpec with Matchers with Tran
   private val smartAccountPrivateKey  = PrivateKeyAccount.fromSeed(NodeConfigs.Default(1).getString("account-seed")).explicitGet()
   private val simpleAccountPrivateKey = PrivateKeyAccount.fromSeed(NodeConfigs.Default(2).getString("account-seed")).explicitGet()
 
-  private def miner                   = nodes.head
+  private def miner = nodes.head
 
   s"Block is limited by size after activation" in result(
     for {

@@ -17,9 +17,9 @@ class RollbackSuite extends FunSuite with CancelAfterFailure with TransferSendin
       .withSpecial(1, _.nonMiner)
       .buildNonConflicting()
 
-  private def firstAddress  = sender.address
+  private def firstAddress = sender.address
 
-  private def sender        = nodes.last
+  private def sender = nodes.last
 
   test("Data transaction rollback") {
     val node       = nodes.head
