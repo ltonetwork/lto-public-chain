@@ -7,7 +7,7 @@ import com.wavesplatform.it.util._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-class LeaseStatusTestSuiteDebugPortfoliosSuite extends BaseTransactionSuite {
+class DebugPortfoliosSuite extends BaseTransactionSuite {
 
   private val waitCompletion = 2.minutes
 
