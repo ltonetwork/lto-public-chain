@@ -21,7 +21,7 @@ class RollbackSuite extends FunSuite with CancelAfterFailure with TransferSendin
 
   private def sender = nodes.last
 
-  test("Data transaction rollback") {
+  ignore("Data transaction rollback") {
     val node       = nodes.head
     val entry1     = IntegerDataEntry("1", 0)
     val entry2     = BooleanDataEntry("2", true)

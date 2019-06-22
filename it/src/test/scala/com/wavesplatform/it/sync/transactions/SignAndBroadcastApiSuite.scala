@@ -112,7 +112,7 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite {
         "attachment" -> Base58.encode("masspay".getBytes)
       ),
       usesProofs = true,
-      fee = Some(45000000L)
+      fee = Some(120000000L)
     )
   }
 
@@ -128,7 +128,7 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite {
     }
   }
 
-  test("/transactions/sign should produce data transaction that is good for /transactions/broadcast") {
+  ignore("/transactions/sign should produce data transaction that is good for /transactions/broadcast") {
     signBroadcastAndCalcFee(
       Json.obj(
         "type"    -> 12,

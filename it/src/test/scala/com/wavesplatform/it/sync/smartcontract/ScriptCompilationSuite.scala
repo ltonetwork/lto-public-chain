@@ -7,6 +7,6 @@ import com.wavesplatform.it.transactions.BaseTransactionSuite
 class ScriptCompilationSuite extends BaseTransactionSuite {
   test("Sign broadcast via rest") {
     val sender = notMiner.publicKey.address
-    notMiner.signAndBroadcast(SetScriptRequest(1, sender, None, 100000, None).toJsObject)
+    notMiner.signAndBroadcast(SetScriptRequest(1, sender, None, 1000000, None).toJsObject)
   }
 }

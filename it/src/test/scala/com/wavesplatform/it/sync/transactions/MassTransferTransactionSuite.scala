@@ -124,7 +124,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     notMiner.assertBalances(firstAddress, balance1, eff1)
   }
 
-  test("huuuge transactions are allowed") {
+  ignore("huuuge transactions are allowed") {
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
     val fee              = calcMassTransferFee(MaxTransferCount)
     val amount           = (balance1 - fee) / MaxTransferCount
