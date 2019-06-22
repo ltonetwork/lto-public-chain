@@ -178,7 +178,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     implicit val mtFormat: Format[MassTransferRequest] = Json.format[MassTransferRequest]
 
     val transfers = List(Transfer(firstAddress, 5.waves), Transfer(secondAddress, 2.waves), Transfer(thirdAddress, 3.waves))
-    val txId      = sender.massTransfer(firstAddress, transfers, 55000000).id
+    val txId      = sender.massTransfer(firstAddress, transfers, 130000000).id
     nodes.waitForHeightAriseAndTxPresent(txId)
 
     // /transactions/info/txID should return complete list of transfers

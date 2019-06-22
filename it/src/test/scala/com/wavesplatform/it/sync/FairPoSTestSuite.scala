@@ -30,18 +30,18 @@ class FairPoSTestSuite extends FunSuite with CancelAfterFailure with NodesFromDo
 
 object FairPoSTestSuite {
   import com.wavesplatform.it.NodeConfigs._
-  val Configs: Seq[Config]               = Default.map(config.withFallback(_)).take(4)
   private val microblockActivationHeight = 0
   private val fairPoSActivationHeight    = 10
   private val config =
-    ConfigFactory.parseString(s"""
-    |lto {
-    |   blockchain.custom {
-    |      functionality {
-    |        pre-activated-features {1 = $microblockActivationHeight, 8 = $fairPoSActivationHeight}
-    |        generation-balance-depth-from-50-to-1000-after-height = 1000
-    |      }
-    |   }
-    |   miner.quorum = 1
-    |}""".stripMargin)
+  ConfigFactory.parseString(s"""
+                                 |lto {
+                                 |   blockchain.custom {
+                                 |      functionality {
+                                 |        pre-activated-features {1 = $microblockActivationHeight, 8 = $fairPoSActivationHeight}
+                                 |        generation-balance-depth-from-50-to-1000-after-height = 1000
+                                 |      }
+                                 |   }
+                                 |   miner.quorum = 1
+                                 |}""".stripMargin)
+  val Configs: Seq[Config]               = Default.map(config.withFallback(_)).take(4)
 }

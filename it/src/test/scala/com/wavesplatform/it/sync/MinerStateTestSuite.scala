@@ -40,13 +40,6 @@ class MinerStateTestSuite extends FunSuite with CancelAfterFailure with NodesFro
 
 object MinerStateTestSuite {
   import com.wavesplatform.it.NodeConfigs._
-  val Configs: Seq[Config] = Seq(
-    minerConfig.withFallback(Default.head),
-    minerConfig.withFallback(Default(1)),
-    notMinerConfig.withFallback(Default(2)),
-    notMinerConfig.withFallback(Default(3)),
-    minerConfig.withFallback(Default(4)) // node w/o balance
-  )
   private val minerConfig    = ConfigFactory.parseString(s"""
     |lto {
     |  synchronization.synchronization-timeout = 10s
@@ -66,4 +59,11 @@ object MinerStateTestSuite {
     |  miner.enable = no
     |}""".stripMargin)
 
+  val Configs: Seq[Config] = Seq(
+    minerConfig.withFallback(Default.head),
+    minerConfig.withFallback(Default(1)),
+    notMinerConfig.withFallback(Default(2)),
+    notMinerConfig.withFallback(Default(3)),
+    minerConfig.withFallback(Default(4)) // node w/o balance
+  )
 }
