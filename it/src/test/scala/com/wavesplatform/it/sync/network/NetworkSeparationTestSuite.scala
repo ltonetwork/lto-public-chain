@@ -43,7 +43,7 @@ class NetworkSeparationTestSuite
     nodes.waitForSameBlockHeadesAt(maxHeight + 5)
   }
 
-  "after fork node should apply correct subchain" in {
+  "after fork node should apply correct subchain" ignore {
 
     val heightBeforeDis = nodeA.height
     docker.disconnectFromNetwork(dockerNodes().head)

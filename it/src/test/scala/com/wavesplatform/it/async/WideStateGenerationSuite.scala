@@ -22,7 +22,7 @@ class WideStateGenerationSuite extends FreeSpec with WaitForHeight2 with Matcher
     .withSpecial(2, _.nonMiner)
     .buildNonConflicting()
   private val nodeAddresses = nodeConfigs.map(_.getString("address")).toSet
-  private val requestsCount = 10000
+  private val requestsCount = 1000
 
   override protected def createDocker: Docker = new Docker(
     suiteConfig = ConfigFactory.parseString(
