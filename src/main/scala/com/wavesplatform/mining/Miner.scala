@@ -311,7 +311,9 @@ class MinerImpl(allChannels: ChannelGroup,
             BlockAppender(checkpoint, blockchainUpdater, timeService, utx, pos, settings, appenderScheduler)(block)
               .asyncBoundary(minerScheduler)
               .map {
-                case Left(err) => log.warn("Error mining Block: " + err.toString)
+                case Left(err) =>
+                  log.warn("Error mining Block: " + err.toString)
+                  scheduleMining()
                 case Right(Some(score)) =>
                   log.debug(s"Forged and applied $block by ${account.address} with cumulative score $score")
                   BlockStats.mined(block, blockchainUpdater.height)
