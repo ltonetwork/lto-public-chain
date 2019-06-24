@@ -31,7 +31,7 @@ class MinerStateTestSuite extends FunSuite with CancelAfterFailure with NodesFro
 
     nodeWithZeroBalance.assertBalances(newMinerAddress, balance1 + transferAmount, eff1 + transferAmount)
 
-    nodeWithZeroBalance.waitForHeight(heightAfterTransfer + 51, 6.minutes) // if you know how to reduce test time, please ping @monroid
+    nodeWithZeroBalance.waitForHeight(heightAfterTransfer + 51, 10.minutes) // if you know how to reduce test time, please ping @monroid
 
     val nodeMinerInfoAfter = nodeWithZeroBalance.debugMinerInfo()
     atMost(1, nodeMinerInfoAfter) should matchPattern { case State(`newMinerAddress`, _, ts) if ts > 0 => }
