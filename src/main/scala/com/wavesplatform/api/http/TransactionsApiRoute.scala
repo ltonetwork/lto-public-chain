@@ -9,11 +9,12 @@ import com.wavesplatform.account.{Address, PublicKeyAccount}
 import com.wavesplatform.api.http.DataRequest._
 import com.wavesplatform.api.http.assets._
 import com.wavesplatform.api.http.leasing._
+import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.http.BroadcastRoute
 import com.wavesplatform.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
 import com.wavesplatform.state.diffs.CommonValidation
 import com.wavesplatform.state.{Blockchain, ByteStr}
-import com.wavesplatform.transaction.ValidationError.GenericError
+import com.wavesplatform.transaction.ValidationError.{ActivationError, GenericError}
 import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.lease._
 import com.wavesplatform.transaction.smart.SetScriptTransaction
@@ -322,7 +323,14 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case SetScriptTransaction     => jsv.as[SignedSetScriptRequest].toTx
             }
         }
-        doBroadcast(r)
+        import com.wavesplatform.features.FeatureProvider._
+        val r0 = r match {
+          case Right(tx) if tx.builder.typeId == SetScriptTransaction.typeId &&
+            !blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, blockchain.height)
+            => Left(ActivationError("SmartAccounts feature has not been activated yet"))
+          case x => x
+        }
+        doBroadcast(r0)
       }
     }
   }
