@@ -1,22 +1,23 @@
 package com.wavesplatform.it.api
 
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.StatusCodes.BadRequest
+import com.wavesplatform.api.http.AddressApiRoute
+import com.wavesplatform.api.http.assets.SignedIssueV1Request
 import com.wavesplatform.features.api.ActivationStatus
+import com.wavesplatform.http.DebugMessage
 import com.wavesplatform.it.Node
 import com.wavesplatform.state.DataEntry
+import com.wavesplatform.transaction.transfer.MassTransferTransaction.Transfer
 import org.asynchttpclient.Response
 import org.scalactic.source.Position
 import org.scalatest.{Assertion, Assertions, Matchers}
 import play.api.libs.json.Json.parse
-import play.api.libs.json.{Format, JsObject, Json, Writes}
-import com.wavesplatform.api.http.AddressApiRoute
-import com.wavesplatform.api.http.assets.SignedIssueV1Request
-import com.wavesplatform.http.DebugMessage
-import com.wavesplatform.transaction.transfer.MassTransferTransaction.Transfer
+import play.api.libs.json._
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Try}
 
 object SyncHttpApi extends Assertions {
@@ -29,24 +30,25 @@ object SyncHttpApi extends Assertions {
     implicit val format: Format[NotFoundErrorMessage] = Json.format
   }
 
-  def assertBadRequest[R](f: => R): Assertion = Try(f) match {
-    case Failure(UnexpectedStatusCodeException(_, statusCode, _)) => Assertions.assert(statusCode == StatusCodes.BadRequest.intValue)
+  def assertBadRequest[R](f: => R, expectedStatusCode: Int = 400): Assertion = Try(f) match {
+    case Failure(UnexpectedStatusCodeException(_, statusCode, _)) => Assertions.assert(statusCode == expectedStatusCode)
     case Failure(e)                                               => Assertions.fail(e)
     case _                                                        => Assertions.fail("Expecting bad request")
   }
 
   def assertBadRequestAndResponse[R](f: => R, errorRegex: String): Assertion = Try(f) match {
     case Failure(UnexpectedStatusCodeException(_, statusCode, responseBody)) =>
-      Assertions.assert(
-        statusCode == StatusCodes.BadRequest.intValue &&
-          responseBody.replace("\n", "").matches(s".*$errorRegex.*"))
+      lazy val assert = responseBody.replace("\n", "").matches(s".*$errorRegex.*")
+      Assertions.assert(statusCode == BadRequest.intValue &&
+                          responseBody.replace("\n", "").matches(s".*$errorRegex.*"),
+                        s"expected '$errorRegex' but got '$responseBody")
     case Failure(e) => Assertions.fail(e)
     case _          => Assertions.fail("Expecting bad request")
   }
 
   def assertBadRequestAndMessage[R](f: => R, errorMessage: String): Assertion = Try(f) match {
     case Failure(UnexpectedStatusCodeException(_, statusCode, responseBody)) =>
-      Assertions.assert(statusCode == StatusCodes.BadRequest.intValue && parse(responseBody).as[ErrorMessage].message.contains(errorMessage))
+      Assertions.assert(statusCode == BadRequest.intValue && parse(responseBody).as[ErrorMessage].message.contains(errorMessage))
     case Failure(e) => Assertions.fail(e)
     case _          => Assertions.fail(s"Expecting bad request")
   }
@@ -110,15 +112,6 @@ object SyncHttpApi extends Assertions {
     def assetsBalance(address: String): FullAssetsInfo =
       Await.result(async(n).assetsBalance(address), RequestAwaitTime)
 
-    def issue(sourceAddress: String, name: String, description: String, quantity: Long, decimals: Byte, reissuable: Boolean, fee: Long): Transaction =
-      Await.result(async(n).issue(sourceAddress, name, description, quantity, decimals, reissuable, fee), RequestAwaitTime)
-
-    def reissue(sourceAddress: String, assetId: String, quantity: Long, reissuable: Boolean, fee: Long): Transaction =
-      Await.result(async(n).reissue(sourceAddress, assetId, quantity, reissuable, fee), RequestAwaitTime)
-
-    def payment(sourceAddress: String, recipient: String, amount: Long, fee: Long): Transaction =
-      Await.result(async(n).payment(sourceAddress, recipient, amount, fee), RequestAwaitTime)
-
     def transactionInfo(txId: String): TransactionInfo =
       Await.result(async(n).transactionInfo(txId), RequestAwaitTime)
 
@@ -128,41 +121,15 @@ object SyncHttpApi extends Assertions {
     def scriptCompile(code: String): CompiledScript =
       Await.result(async(n).scriptCompile(code), RequestAwaitTime)
 
-    def burn(sourceAddress: String, assetId: String, quantity: Long, fee: Long): Transaction =
-      Await.result(async(n).burn(sourceAddress, assetId, quantity, fee), RequestAwaitTime)
-
     def getAddresses: Seq[String] = Await.result(async(n).getAddresses, RequestAwaitTime)
-
-    def burn(sourceAddress: String, assetId: String, quantity: Long, fee: Long, version: String): Transaction =
-      if (Option(version).nonEmpty) burnV2(sourceAddress, assetId, quantity, fee, version) else burn(sourceAddress, assetId, quantity, fee)
-
-    def burnV2(sourceAddress: String, assetId: String, quantity: Long, fee: Long, version: String): Transaction = {
-      signAndBroadcast(
-        Json.obj("type" -> 6, "quantity" -> quantity, "assetId" -> assetId, "sender" -> sourceAddress, "fee" -> fee, "version" -> version))
-    }
-
-    def sponsorAsset(sourceAddress: String, assetId: String, baseFee: Long, fee: Long): Transaction =
-      Await.result(async(n).sponsorAsset(sourceAddress, assetId, baseFee, fee), RequestAwaitTime)
-
-    def cancelSponsorship(sourceAddress: String, assetId: String, fee: Long): Transaction =
-      Await.result(async(n).cancelSponsorship(sourceAddress, assetId, fee), RequestAwaitTime)
 
     def sign(jsObject: JsObject): JsObject =
       Await.result(async(n).sign(jsObject), RequestAwaitTime)
-
-    def createAlias(targetAddress: String, alias: String, fee: Long): Transaction =
-      Await.result(async(n).createAlias(targetAddress, alias, fee), RequestAwaitTime)
-
     def aliasByAddress(targetAddress: String): Seq[String] =
       Await.result(async(n).aliasByAddress(targetAddress), RequestAwaitTime)
 
-    def transfer(sourceAddress: String,
-                 recipient: String,
-                 amount: Long,
-                 fee: Long,
-                 assetId: Option[String] = None,
-                 feeAssetId: Option[String] = None): Transaction =
-      Await.result(async(n).transfer(sourceAddress, recipient, amount, fee, assetId, feeAssetId), RequestAwaitTime)
+    def transfer(sourceAddress: String, recipient: String, amount: Long, fee: Long): Transaction =
+      Await.result(async(n).transfer(sourceAddress, recipient, amount, fee), RequestAwaitTime)
 
     def massTransfer(sourceAddress: String, transfers: List[Transfer], fee: Long, assetId: Option[String] = None): Transaction =
       Await.result(async(n).massTransfer(sourceAddress, transfers, fee, assetId), RequestAwaitTime)
@@ -191,14 +158,14 @@ object SyncHttpApi extends Assertions {
     def signedBroadcast(tx: JsObject): Transaction =
       Await.result(async(n).signedBroadcast(tx), RequestAwaitTime)
 
-    def signedIssue(tx: SignedIssueV1Request): Transaction =
-      Await.result(async(n).signedIssue(tx), RequestAwaitTime)
-
     def ensureTxDoesntExist(txId: String): Unit =
       Await.result(async(n).ensureTxDoesntExist(txId), RequestAwaitTime)
 
     def createAddress(): String =
       Await.result(async(n).createAddress, RequestAwaitTime)
+
+    def rawTransactionInfo(txId: String): JsValue =
+      Await.result(async(n).rawTransactionInfo(txId), RequestAwaitTime)
 
     def waitForTransaction(txId: String, retryInterval: FiniteDuration = 1.second): TransactionInfo =
       Await.result(async(n).waitForTransaction(txId), RequestAwaitTime)
@@ -211,8 +178,6 @@ object SyncHttpApi extends Assertions {
 
     def debugMinerInfo(): Seq[State] =
       Await.result(async(n).debugMinerInfo(), RequestAwaitTime)
-
-    def debugStateAt(height: Long): Map[String, Long] = Await.result(async(n).debugStateAt(height), RequestAwaitTime)
 
     def height: Int =
       Await.result(async(n).height, RequestAwaitTime)

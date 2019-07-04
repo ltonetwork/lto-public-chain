@@ -77,14 +77,7 @@ object EnvironmentFunctionsBenchmark {
     override def height: Int                                                                                     = 1
     override def networkByte: Byte                                                                               = NetworkByte
     override def transaction: Tx                                                                                 = ???
-    override def transactionById(id: Array[Byte]): Option[Tx]                                                    = ???
-    override def data(recipient: Recipient, key: String, dataType: DataType): Option[Any]                        = ???
-    override def resolveAlias(alias: String): Either[String, Recipient.Address]                                  = ???
-    override def transactionHeightById(id: Array[Byte]): Option[Int]                                             = ???
-    override def accountBalanceOf(addressOrAlias: Recipient, assetId: Option[Array[Byte]]): Either[String, Long] = ???
   }
-
-  val environmentFunctions = new EnvironmentFunctions(defaultEnvironment)
 
   def randomBytes(length: Int): Array[Byte] = {
     val bytes = Array.fill[Byte](length)(0)

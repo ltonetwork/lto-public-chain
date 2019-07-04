@@ -6,6 +6,9 @@ package com.wavesplatform.lang.v1
   */
 trait BaseGlobal {
   val MaxBase58Bytes = 64
+  val MaxBase58String = 100
+  val MaxBase64Bytes = 32 * 1024
+  val MaxBase64String = 44 * 1024
   val MaxLiteralLength = 12 * 1024
   val MaxAddressLength = 36
 
@@ -15,11 +18,11 @@ trait BaseGlobal {
   def base64Encode(input: Array[Byte]): Either[String, String]
   def base64Decode(input: String, limit: Int = MaxLiteralLength): Either[String, Array[Byte]]
 
-  def curve25519verify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean
+  def signatureVerify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean
 
   def keccak256(message: Array[Byte]): Array[Byte]
   def blake2b256(message: Array[Byte]): Array[Byte]
   def sha256(message: Array[Byte]): Array[Byte]
 
-  def secureHash(a: Array[Byte]): Array[Byte] = keccak256(blake2b256(a))
+  def secureHash(a: Array[Byte]): Array[Byte] = sha256(blake2b256(a))
 }

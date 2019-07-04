@@ -6,7 +6,7 @@ import com.wavesplatform.api.http.{InvalidAddress, InvalidSignature, TooBigArray
 import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.http.ApiMarshallers._
 import com.wavesplatform.lang.v1.compiler.Terms.TRUE
-import com.wavesplatform.settings.{TestFunctionalitySettings, WalletSettings}
+import com.wavesplatform.settings.{FeeSettings, FeesSettings, TestFunctionalitySettings, WalletSettings}
 import com.wavesplatform.state.{AssetDescription, Blockchain, ByteStr}
 import com.wavesplatform.transaction.smart.script.v1.ScriptV1
 import com.wavesplatform.utils.Base58
@@ -32,12 +32,13 @@ class TransactionsRouteSpec
 
   import TransactionsApiRoute.MaxTransactionsPerRequest
 
-  private val wallet      = Wallet(WalletSettings(None, "qwerty", None))
-  private val blockchain  = mock[Blockchain]
-  private val utx         = mock[UtxPool]
-  private val allChannels = mock[ChannelGroup]
-  private val route       = TransactionsApiRoute(restAPISettings, TestFunctionalitySettings.Stub, wallet, blockchain, utx, allChannels, new TestTime).route
-
+  private val wallet       = Wallet(WalletSettings(None, "qwerty", None))
+  private val blockchain   = mock[Blockchain]
+  private val utx          = mock[UtxPool]
+  private val allChannels  = mock[ChannelGroup]
+  private val feesSettings = FeesSettings(List(1, 2, 3).map(x => (x, Seq(FeeSettings("LTO", 100000000L)))).toMap)
+  private val route =
+    TransactionsApiRoute(restAPISettings, TestFunctionalitySettings.Stub, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
   routePath("/calculateFee") - {
     "transfer with Waves fee" - {
       "TransferTransaction" in {
@@ -58,12 +59,12 @@ class TransactionsRouteSpec
         (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
         (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures)
 
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
 
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
           (responseAs[JsObject] \ "feeAssetId").asOpt[String] shouldBe empty
-          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 100000
+          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 100 * 1000 * 1000L
         }
       }
 
@@ -93,12 +94,12 @@ class TransactionsRouteSpec
         (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
         (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures)
 
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
 
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
           (responseAs[JsObject] \ "feeAssetId").asOpt[String] shouldBe empty
-          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 200000
+          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual (100 * 1000 * 1000L + 2 * 10 * 1000 * 1000L)
         }
       }
     }
@@ -124,12 +125,12 @@ class TransactionsRouteSpec
         (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
         (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures)
 
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
 
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
           (responseAs[JsObject] \ "feeAssetId").asOpt[String] shouldBe empty
-          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 100000
+          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 100 * 1000 * 1000L
         }
       }
     }

@@ -1,11 +1,9 @@
 package com.wavesplatform.lang
 
+import com.emstlk.nacl4s.VerifyKey
 import com.wavesplatform.lang.v1.BaseGlobal
 import com.wavesplatform.utils.{Base58, Base64}
 import scorex.crypto.hash.{Blake2b256, Keccak256, Sha256}
-import scorex.crypto.signatures.{Curve25519, PublicKey, Signature}
-import com.emstlk.nacl4s.crypto.SigningKeyPair
-import com.emstlk.nacl4s.{SigningKey, VerifyKey}
 
 import scala.util.Try
 
@@ -18,12 +16,16 @@ object Global extends BaseGlobal {
     if (input.length > limit) Left(s"base58Decode input exceeds $limit")
     else Base58.decode(input).toEither.left.map(_ => "can't parse Base58 string")
 
-  def base64Encode(input: Array[Byte]): Either[String, String] = Right(Base64.encode(input))
+  def base64Encode(input: Array[Byte]): Either[String, String] =
+    Either.cond(input.length <= MaxBase64Bytes, Base64.encode(input), s"base64Encode input exceeds $MaxBase64Bytes")
 
   def base64Decode(input: String, limit: Int): Either[String, Array[Byte]] =
-    Base64.decode(input).toEither.left.map(_ => "can't parse Base64 string")
+    for {
+      _      <- Either.cond(input.length <= limit, (), s"base64Decode input exceeds $limit")
+      result <- Base64.decode(input).toEither.left.map(_ => "can't parse Base64 string")
+    } yield result
 
-  def curve25519verify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean =
+  def signatureVerify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean =
     Try(VerifyKey(pub).verify(message, sig)).fold(_ => false, _ => true)
 
   def keccak256(message: Array[Byte]): Array[Byte]  = Keccak256.hash(message)

@@ -1,7 +1,7 @@
 package com.wavesplatform.it.sync.smartcontract
 
 import com.typesafe.config.Config
-import com.wavesplatform.account.{Address, AddressOrAlias}
+import com.wavesplatform.account.AddressOrAlias
 import com.wavesplatform.crypto
 import com.wavesplatform.it.NodeConfigs
 import com.wavesplatform.it.api.SyncHttpApi._
@@ -29,7 +29,12 @@ Scenario:
 
 class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfterFailure {
 
-  Address.fromString("3HmNyYvC5NWNPPWThwZYma2CLWXvBmPeM8j")
+  private val BobBC1: String   = sender.createAddress()
+  private val AliceBC1: String = sender.createAddress()
+  private val swapBC1: String  = sender.createAddress()
+  private val AlicesPK         = pkByAddress(AliceBC1)
+  private val secretText       = "some secret message from Alice"
+  private val shaSecret        = "BN6RTYGWcwektQfSFzH8raYo9awaLgQ7pLyWLQY4S4F5"
 
   /*
   One node because:
@@ -44,17 +49,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
       .withDefault(1)
       .buildNonConflicting()
 
-  private val BobBC1: String   = sender.createAddress()
-  private val AliceBC1: String = sender.createAddress()
-  private val swapBC1: String  = sender.createAddress()
-
-  private val AlicesPK = pkByAddress(AliceBC1)
-
-  private val secretText = "some secret message from Alice"
-  private val shaSecret  = "BN6RTYGWcwektQfSFzH8raYo9awaLgQ7pLyWLQY4S4F5"
-
   test("step1: Balances initialization") {
-
     val toAliceBC1TxId = sender.transfer(sender.address, AliceBC1, 10 * transferAmount, minFee).id
     nodes.waitForHeightAriseAndTxPresent(toAliceBC1TxId)
 
@@ -77,8 +72,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
         txToBob || backToAliceAfterHeight
       case other => false
     }""".stripMargin).get.value
-      assert(untyped.size == 1)
-      CompilerV1(dummyCompilerContext, untyped.head).explicitGet()._1
+      CompilerV1(dummyCompilerContext, untyped).explicitGet()._1
     }
 
     val pkSwapBC1 = pkByAddress(swapBC1)

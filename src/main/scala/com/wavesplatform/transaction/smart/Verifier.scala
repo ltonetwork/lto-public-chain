@@ -5,9 +5,7 @@ import com.wavesplatform.crypto
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.ValidationError.{GenericError, ScriptExecutionError, TransactionNotAllowedByScript}
 import com.wavesplatform.transaction._
-import com.wavesplatform.transaction.assets._
 import com.wavesplatform.transaction.smart.script.{Script, ScriptRunner}
-import com.wavesplatform.transaction.transfer._
 
 object Verifier {
 
@@ -16,9 +14,10 @@ object Verifier {
       case _: GenesisTransaction => Right(tx)
       case pt: ProvenTransaction =>
         (pt, blockchain.accountScript(pt.sender)) match {
-          case (_, Some(script))              => verify(blockchain, script, currentBlockHeight, pt, false)
-          case (stx: SignedTransaction, None) => stx.signaturesValid()
-          case _                              => verifyAsEllipticCurveSignature(pt)
+          case (stx: SignedTransaction, None)       => stx.signaturesValid()
+          case (_: SignedTransaction, Some(_))      => Left(GenericError("Can't process transaction  with signature from scripted account"))
+          case (_: ProvenTransaction, Some(script)) => verify(blockchain, script, currentBlockHeight, pt, false)
+          case (_: ProvenTransaction, None)         => verifyAsEllipticCurveSignature(pt)
         }
     }
 
@@ -28,10 +27,9 @@ object Verifier {
                                transaction: T,
                                isTokenScript: Boolean): Either[ValidationError, T] = {
     ScriptRunner[Boolean, T](height, transaction, blockchain, script) match {
-      case (ctx, Left(execError)) => Left(ScriptExecutionError(script.text, execError, ctx.letDefs, isTokenScript))
-      case (ctx, Right(false)) =>
-        Left(TransactionNotAllowedByScript(ctx.letDefs, script.text, isTokenScript))
-      case (_, Right(true)) => Right(transaction)
+      case (log, Left(execError)) => Left(ScriptExecutionError(execError, script.text, log, isTokenScript))
+      case (log, Right(false))    => Left(TransactionNotAllowedByScript(log, script.text, isTokenScript))
+      case (_, Right(true))       => Right(transaction)
     }
   }
 

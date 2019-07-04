@@ -12,9 +12,9 @@ import scala.concurrent.duration._
 class MinerStateTestSuite extends FunSuite with CancelAfterFailure with NodesFromDocker with Matchers {
   import MinerStateTestSuite._
 
-  override protected def nodeConfigs: Seq[Config] = Configs
-
   private val transferAmount = 1000.waves
+
+  override protected def nodeConfigs: Seq[Config] = Configs
 
   private def miner               = nodes.head
   private def nodeWithZeroBalance = nodes.last
@@ -31,7 +31,7 @@ class MinerStateTestSuite extends FunSuite with CancelAfterFailure with NodesFro
 
     nodeWithZeroBalance.assertBalances(newMinerAddress, balance1 + transferAmount, eff1 + transferAmount)
 
-    nodeWithZeroBalance.waitForHeight(heightAfterTransfer + 51, 6.minutes) // if you know how to reduce test time, please ping @monroid
+    nodeWithZeroBalance.waitForHeight(heightAfterTransfer + 51, 10.minutes) // if you know how to reduce test time, please ping @monroid
 
     val nodeMinerInfoAfter = nodeWithZeroBalance.debugMinerInfo()
     atMost(1, nodeMinerInfoAfter) should matchPattern { case State(`newMinerAddress`, _, ts) if ts > 0 => }
@@ -40,8 +40,8 @@ class MinerStateTestSuite extends FunSuite with CancelAfterFailure with NodesFro
 
 object MinerStateTestSuite {
   import com.wavesplatform.it.NodeConfigs._
-  private val minerConfig = ConfigFactory.parseString(s"""
-    |waves {
+  private val minerConfig    = ConfigFactory.parseString(s"""
+    |lto {
     |  synchronization.synchronization-timeout = 10s
     |  blockchain.custom.functionality {
     |    pre-activated-features.1 = 0
@@ -49,9 +49,8 @@ object MinerStateTestSuite {
     |  }
     |  miner.quorum = 0
     |}""".stripMargin)
-
   private val notMinerConfig = ConfigFactory.parseString(s"""
-    |waves {
+    |lto {
     |  synchronization.synchronization-timeout = 10s
     |  blockchain.custom.functionality {
     |    pre-activated-features.1 = 0
@@ -67,5 +66,4 @@ object MinerStateTestSuite {
     notMinerConfig.withFallback(Default(3)),
     minerConfig.withFallback(Default(4)) // node w/o balance
   )
-
 }

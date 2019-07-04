@@ -19,6 +19,6 @@ case class Settings(networkConfigFile: String,
 object Settings {
   def fromConfig(config: Config): Settings = {
     implicit val _ = net.ceedubs.ficus.readers.namemappers.HyphenNameMapper
-    config.as[Settings]("waves.benchmark.state")
+    config.as[Settings]("lto.benchmark.state")
   }
 }

@@ -13,6 +13,7 @@ import com.typesafe.config._
 import com.wavesplatform.account.AddressScheme
 import com.wavesplatform.actor.RootActorSystem
 import com.wavesplatform.api.http._
+import com.wavesplatform.api.http.assets.AssetsBroadcastApiRoute
 import com.wavesplatform.api.http.leasing.LeaseApiRoute
 import com.wavesplatform.consensus.PoSSelector
 import com.wavesplatform.consensus.nxt.api.http.NxtConsensusApiRoute
@@ -27,7 +28,7 @@ import com.wavesplatform.network._
 import com.wavesplatform.settings._
 import com.wavesplatform.state.appender.{BlockAppender, CheckpointAppender, ExtensionAppender, MicroblockAppender}
 import com.wavesplatform.transaction._
-import com.wavesplatform.utils.{forceStopApplication, NTP, ScorexLogging, SystemInformationReporter, Time}
+import com.wavesplatform.utils.{NTP, ScorexLogging, SystemInformationReporter, Time, forceStopApplication}
 import com.wavesplatform.utx.{UtxPool, UtxPoolImpl}
 import com.wavesplatform.wallet.Wallet
 import io.netty.channel.Channel
@@ -208,6 +209,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
         BlocksApiRoute(settings.restAPISettings, blockchainUpdater, allChannels, c => processCheckpoint(None, c)),
         TransactionsApiRoute(settings.restAPISettings,
                              settings.blockchainSettings.functionalitySettings,
+                             settings.feesSettings,
                              wallet,
                              blockchainUpdater,
                              utxStorage,
@@ -241,6 +243,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
           scoreStatsReporter,
           configRoot
         ),
+        AssetsBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels),
         ActivationApiRoute(settings.restAPISettings, settings.blockchainSettings.functionalitySettings, settings.featuresSettings, blockchainUpdater)
       )
 
@@ -254,6 +257,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
         typeOf[UtilsApiRoute],
         typeOf[PeersApiRoute],
         typeOf[AddressApiRoute],
+        typeOf[AssetsBroadcastApiRoute],
         typeOf[DebugApiRoute],
         typeOf[ActivationApiRoute]
       )

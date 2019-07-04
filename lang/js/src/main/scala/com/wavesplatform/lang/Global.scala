@@ -28,7 +28,7 @@ object Global extends BaseGlobal {
         .toRight("Cannot decode")
     } yield x
 
-  def curve25519verify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean =
+  def signatureVerify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean =
     impl.Global.curve25519verify(toBuffer(message), toBuffer(sig), toBuffer(pub))
 
   def keccak256(message: Array[Byte]): Array[Byte]  = hash(message)(impl.Global.keccak256)

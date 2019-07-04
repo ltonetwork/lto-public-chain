@@ -40,7 +40,7 @@ class MicroblocksGenerationSuite extends FreeSpec with Matchers with TransferSen
 object MicroblocksGenerationSuite {
   private val txsInMicroBlock = 200
   private val maxTxs          = 2000
-  private val ConfigOverrides = ConfigFactory.parseString(s"""waves {
+  private val ConfigOverrides = ConfigFactory.parseString(s"""lto {
                                                              |    miner {
                                                              |      quorum = 0
                                                              |      minimal-block-generation-offset = 1m

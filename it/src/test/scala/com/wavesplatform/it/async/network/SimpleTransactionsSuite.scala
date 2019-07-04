@@ -3,6 +3,7 @@ package com.wavesplatform.it.async.network
 import java.nio.charset.StandardCharsets
 
 import com.typesafe.config.Config
+import com.wavesplatform.account.Address
 import com.wavesplatform.it._
 import com.wavesplatform.it.api.AsyncHttpApi._
 import com.wavesplatform.it.api.AsyncNetworkApi._
@@ -10,10 +11,9 @@ import com.wavesplatform.it.api._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.network.{RawBytes, TransactionSpec}
 import com.wavesplatform.state.EitherExt2
+import com.wavesplatform.transaction.transfer._
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import com.wavesplatform.account.Address
-import com.wavesplatform.transaction.transfer._
 
 import scala.concurrent.Await
 import scala.concurrent.Future.traverse
@@ -34,7 +34,7 @@ class SimpleTransactionsSuite extends BaseTransactionSuite with Matchers with Sc
 
   test("valid tx send by network to node should be in blockchain") {
     val tx = TransferTransactionV1
-      .selfSigned(node.privateKey, Address.fromString(node.address).explicitGet(), 1L, System.currentTimeMillis(), 100000L, Array())
+      .selfSigned(node.privateKey, Address.fromString(node.address).explicitGet(), 1L, System.currentTimeMillis(), 100000000L, Array())
       .right
       .get
     val f = for {

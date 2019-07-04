@@ -5,11 +5,9 @@ import com.wavesplatform.lang.v1.evaluator.ctx.CaseType
 
 object Types {
 
-  val addressType        = CaseType("Address", List("bytes" -> BYTEVECTOR))
-  val aliasType          = CaseType("Alias", List("alias" -> STRING))
-  val addressOrAliasType = UNION(addressType.typeRef, aliasType.typeRef)
+  val addressType = CaseType("Address", List("bytes" -> BYTEVECTOR))
 
-  val transfer = CaseType("Transfer", List("recipient" -> addressOrAliasType, "amount" -> LONG))
+  val transfer = CaseType("Transfer", List("recipient" -> addressType.typeRef, "amount" -> LONG))
 
   val optionByteVector     = UNION(BYTEVECTOR, UNIT)
   val optionAddress        = UNION(addressType.typeRef, UNIT)
@@ -32,53 +30,23 @@ object Types {
 
   val genesisTransactionType = CaseType(
     "GenesisTransaction",
-    List("amount" -> LONG, "recipient" -> addressOrAliasType) ++ header
+    List("amount" -> LONG, "recipient" -> addressType.typeRef) ++ header
   )
 
   val transferTransactionType = CaseType(
     "TransferTransaction",
     List(
-      "feeAssetId" -> optionByteVector,
       "amount"     -> LONG,
-      "assetId"    -> optionByteVector,
-      "recipient"  -> addressOrAliasType,
+      "recipient"  -> addressType.typeRef,
       "attachment" -> BYTEVECTOR
     ) ++ header ++ proven
   )
 
-  val issueTransactionType = CaseType(
-    "IssueTransaction",
-    List(
-      "quantity"    -> LONG,
-      "name"        -> BYTEVECTOR,
-      "description" -> BYTEVECTOR,
-      "reissuable"  -> BOOLEAN,
-      "decimals"    -> LONG,
-      "script"      -> optionByteVector
-    ) ++ header ++ proven
-  )
-
-  val reissueTransactionType = CaseType(
-    "ReissueTransaction",
-    List(
-      "quantity"   -> LONG,
-      "assetId"    -> BYTEVECTOR,
-      "reissuable" -> BOOLEAN,
-    ) ++ header ++ proven
-  )
-
-  val burnTransactionType = CaseType(
-    "BurnTransaction",
-    List(
-      "quantity" -> LONG,
-      "assetId"  -> BYTEVECTOR
-    ) ++ header ++ proven
-  )
   val leaseTransactionType = CaseType(
     "LeaseTransaction",
     List(
       "amount"    -> LONG,
-      "recipient" -> addressOrAliasType,
+      "recipient" -> addressType.typeRef,
     ) ++ header ++ proven
   )
 
@@ -100,7 +68,7 @@ object Types {
     "PaymentTransaction",
     List(
       "amount"    -> LONG,
-      "recipient" -> addressOrAliasType,
+      "recipient" -> addressType.typeRef,
     ) ++ header ++ proven
   )
 
@@ -122,8 +90,6 @@ object Types {
     "Order",
     List(
       "id"               -> BYTEVECTOR,
-      "sender"           -> addressType.typeRef,
-      "senderPublicKey"  -> BYTEVECTOR,
       "matcherPublicKey" -> BYTEVECTOR,
       "assetPair"        -> assetPairType.typeRef,
       "orderType"        -> ordTypeType,
@@ -132,8 +98,7 @@ object Types {
       "timestamp"        -> LONG,
       "expiration"       -> LONG,
       "matcherFee"       -> LONG,
-      "signature"        -> BYTEVECTOR
-    )
+    ) ++ proven
   )
   val exchangeTransactionType = CaseType(
     "ExchangeTransaction",
@@ -157,8 +122,6 @@ object Types {
   val massTransferTransactionType = CaseType(
     "MassTransferTransaction",
     List(
-      "feeAssetId"    -> optionByteVector,
-      "assetId"       -> optionByteVector,
       "totalAmount"   -> LONG,
       "transfers"     -> listTransfers,
       "transferCount" -> LONG,
@@ -172,27 +135,15 @@ object Types {
       "script" -> optionByteVector
     ) ++ header ++ proven
   )
-
-  val anchorTransactionType = CaseType(
-    "AnchorTransaction",
-    header ++ proven
-  )
-
-  val obsoleteTransactionTypes = List(genesisTransactionType, paymentTransactionType)
+  val anchorTransactionType    = CaseType("AnchorTransaction", List() ++ header ++ proven)
+  val obsoleteTransactionTypes = List(genesisTransactionType)
 
   val activeTransactionTypes = List(
     transferTransactionType,
-    issueTransactionType,
-    reissueTransactionType,
-    burnTransactionType,
     leaseTransactionType,
     leaseCancelTransactionType,
     massTransferTransactionType,
-    createAliasTransactionType,
     setScriptTransactionType,
-    sponsorFeeTransactionType,
-    exchangeTransactionType,
-    dataTransactionType,
     anchorTransactionType
   )
 
@@ -201,5 +152,5 @@ object Types {
   val outgoingTransactionType = UNION.create(activeTransactionTypes.map(_.typeRef))
   val anyTransactionType      = UNION.create(transactionTypes.map(_.typeRef))
 
-  val wavesTypes = Seq(addressType, aliasType, transfer, orderType, assetPairType, dataEntryType) ++ transactionTypes
+  val wavesTypes = Seq(addressType, transfer) ++ transactionTypes
 }

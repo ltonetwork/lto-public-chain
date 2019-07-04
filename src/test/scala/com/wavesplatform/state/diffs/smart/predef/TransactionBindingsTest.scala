@@ -41,103 +41,12 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
            | case t : TransferTransaction  =>
            |   ${provenPart(t)}
            |   let amount = t.amount == ${t.amount}
-           |   let recipient = match (t.recipient) {
-           |       case a: Address => a.bytes == base58'${t.recipient.cast[Address].map(_.bytes.base58).getOrElse("")}'
-           |       case a: Alias => a.alias == ${Json.toJson(t.recipient.cast[Alias].map(_.name).getOrElse(""))}
-           |      }
+           |   let recipient = t.recipient.bytes == base58'${t.recipient.cast[Address].map(_.bytes.base58).getOrElse("")}'
            |    let attachment = t.attachment == base58'${ByteStr(t.attachment).base58}'
            |   $assertProvenPart && amount && recipient && attachment
-           | case other => throw
+           | case other => throw()
            | }
            |""".stripMargin,
-        t,
-        'T'
-      )
-      result shouldBe Right(true)
-    }
-  }
-
-  property("IssueTransaction binding") {
-    forAll(issueGen) { t =>
-      val s = s"""
-                 |match tx {
-                 | case t : IssueTransaction =>
-                 |   ${provenPart(t)}
-                 |   let quantity = t.quantity == ${t.quantity}
-                 |   let decimals = t.decimals == ${t.decimals}
-                 |   let reissuable = t.reissuable == ${t.reissuable}
-                 |   let name = t.name == base58'${ByteStr(t.name).base58}'
-                 |   let description = t.description == base58'${ByteStr(t.description).base58}'
-                 |   let script = if (${t.script.isDefined}) then extract(t.script) == base64'${t.script
-                   .map(_.bytes().base64)
-                   .getOrElse("")}' else isDefined(t.script) == false
-                 |   $assertProvenPart && quantity && decimals && reissuable && script && name && description
-                 | case other => throw
-                 | }
-                 |""".stripMargin
-
-      val result = runScript[Boolean](
-        s,
-        t,
-        'T'
-      )
-      result shouldBe Right(true)
-    }
-  }
-
-  property("BurnTransaction binding") {
-    forAll(burnGen) { t =>
-      val result = runScript[Boolean](
-        s"""
-          |match tx {
-          | case t : BurnTransaction =>
-          |   ${provenPart(t)}
-          |   let quantity = t.quantity == ${t.quantity}
-          |   let assetId = t.assetId == base58'${t.assetId.base58}'
-          |   $assertProvenPart && quantity && assetId
-          | case other => throw
-          | }
-          |""".stripMargin,
-        t,
-        'T'
-      )
-      result shouldBe Right(true)
-    }
-  }
-
-  property("ReissueTransaction binding") {
-    forAll(reissueGen) { t =>
-      val result = runScript[Boolean](
-        s"""
-          |match tx {
-          | case t : ReissueTransaction =>
-          |   ${provenPart(t)}
-          |   let quantity = t.quantity == ${t.quantity}
-          |   let assetId = t.assetId == base58'${t.assetId.base58}'
-          |   let reissuable = t.reissuable == ${t.reissuable}
-          |   $assertProvenPart && quantity && assetId && reissuable
-          | case other => throw
-          | }
-          |""".stripMargin,
-        t,
-        'T'
-      )
-      result shouldBe Right(true)
-    }
-  }
-
-  property("CreateAliasTransaction binding") {
-    forAll(createAliasGen) { t =>
-      val result = runScript[Boolean](
-        s"""
-          |match tx {
-          | case t : CreateAliasTransaction =>
-          |   ${provenPart(t)}
-          |   let alias = t.alias == ${Json.toJson(t.alias.name)}
-          |   $assertProvenPart && alias
-          | case other => throw
-          | }
-          |""".stripMargin,
         t,
         'T'
       )
@@ -153,12 +62,9 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
           | case t : LeaseTransaction =>
           |   ${provenPart(t)}
           |   let amount = t.amount == ${t.amount}
-          |   let recipient = match (t.recipient) {
-          |       case a: Address => a.bytes == base58'${t.recipient.cast[Address].map(_.bytes.base58).getOrElse("")}'
-          |       case a: Alias => a.alias == ${Json.toJson(t.recipient.cast[Alias].map(_.name).getOrElse(""))}
-          |      }
+          |   let recipient = t.recipient.bytes == base58'${t.recipient.cast[Address].map(_.bytes.base58).getOrElse("")}'
           |   $assertProvenPart && amount && recipient
-          | case other => throw
+          | case other => throw()
           | }
           |""".stripMargin,
         t,
@@ -177,28 +83,7 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
           |   ${provenPart(t)}
           |   let leaseId = t.leaseId == base58'${t.leaseId.base58}'
           |   $assertProvenPart && leaseId
-          | case other => throw
-          | }
-          |""".stripMargin,
-        t,
-        'T'
-      )
-      result shouldBe Right(true)
-    }
-  }
-
-  property("SponsorFeeTransaction binding (+ cancel sponsorship transaction)") {
-    forAll(Gen.oneOf(sponsorFeeGen, cancelFeeSponsorshipGen)) { t =>
-      val result = runScript[Boolean](
-        s"""
-          |match tx {
-          | case t : SponsorFeeTransaction =>
-          |   ${provenPart(t)}
-          |   let assetId = t.assetId == base58'${t.assetId.base58}'
-          |   let minSponsoredAssetFee = if (${t.minSponsoredAssetFee.isDefined}) then extract(t.minSponsoredAssetFee) == ${t.minSponsoredAssetFee
-             .getOrElse(0)} else isDefined(t.minSponsoredAssetFee) == false
-          |   $assertProvenPart && assetId && minSponsoredAssetFee
-          | case other => throw
+          | case other => throw()
           | }
           |""".stripMargin,
         t,
@@ -219,7 +104,7 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
              .map(_.bytes().base64)
              .getOrElse("")}' else isDefined(t.script) == false
            |   $assertProvenPart && script
-           | case other => throw
+           | case other => throw()
            | }
            |""".stripMargin,
         t,
@@ -228,51 +113,11 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
       result shouldBe Right(true)
     }
   }
-
-  property("DataTransaction binding") {
-    forAll(dataTransactionGen(10)) { t =>
-      def pg(i: Int) = {
-        val v = t.data(i) match {
-          case e: IntegerDataEntry => e.value.toString
-          case e: BooleanDataEntry => e.value.toString
-          case e: BinaryDataEntry  => s"base64'${e.value.base64}'"
-          case e: StringDataEntry  => Json.toJson(e.value)
-        }
-
-        s"""let key$i = t.data[$i].key == ${Json.toJson(t.data(i).key)}
-           |let value$i = t.data[$i].value == $v
-         """.stripMargin
-      }
-
-      val resString =
-        if (t.data.isEmpty) assertProvenPart else assertProvenPart + s" && ${t.data.indices.map(i => s"key$i && value$i").mkString(" && ")}"
-
-      val s = s"""
-                 |match tx {
-                 | case t : DataTransaction =>
-                 |   ${provenPart(t)}
-                 |   ${Range(0, t.data.length).map(pg).mkString("\n")}
-                 |   $resString
-                 | case other => throw
-                 | }
-                 |""".stripMargin
-
-      val result = runScript[Boolean](
-        s,
-        t,
-        'T'
-      )
-      result shouldBe Right(true)
-    }
-  }
-
   property("MassTransferTransaction binding") {
     forAll(massTransferGen) { t =>
       def pg(i: Int) =
-        s"""let recipient$i = match (t.transfers[$i].recipient) {
-           |case a: Address => a.bytes == base58'${t.transfers(i).address.cast[Address].map(_.bytes.base58).getOrElse("")}'
-           |case a: Alias => a.alias == ${Json.toJson(t.transfers(i).address.cast[Alias].map(_.name).getOrElse(""))}
-           |}
+        s"""let recipient$i =
+           | t.transfers[$i].recipient.bytes == base58'${t.transfers(i).address.cast[Address].map(_.bytes.base58).getOrElse("")}'
            |let amount$i = t.transfers[$i].amount == ${t.transfers(i).amount}
          """.stripMargin
 
@@ -294,79 +139,12 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
                       |     ${Range(0, t.transfers.length).map(pg).mkString("\n")}
                       |   ${provenPart(t)}
                       |   $resString && transferCount && totalAmount && attachment
-                      | case other => throw
+                      | case other => throw()
                       | }
                       |""".stripMargin
 
       val result = runScript[Boolean](
         script,
-        t,
-        'T'
-      )
-      result shouldBe Right(true)
-    }
-  }
-
-  property("ExchangeTransaction binding") {
-    forAll(exchangeTransactionGen) { t =>
-      def pg(ord: Order) = {
-        val oType = ord.orderType.toString
-        val script = s"""
-           |   let ${oType}Id = t.${oType}Order.id == base58'${ByteStr(ord.id.value).base58}'
-           |   let ${oType}Sender = t.${oType}Order.sender == addressFromPublicKey(base58'${ByteStr(ord.sender.publicKey).base58}')
-           |   let ${oType}SenderPk = t.${oType}Order.senderPublicKey == base58'${ByteStr(ord.sender.publicKey).base58}'
-           |   let ${oType}MatcherPk = t.${oType}Order.matcherPublicKey == base58'${ByteStr(ord.matcherPublicKey.publicKey).base58}'
-           |   let ${oType}Price = t.${oType}Order.price == ${ord.price}
-           |   let ${oType}Amount = t.${oType}Order.amount == ${ord.amount}
-           |   let ${oType}Timestamp = t.${oType}Order.timestamp == ${ord.timestamp}
-           |   let ${oType}Expiration = t.${oType}Order.expiration == ${ord.expiration}
-           |   let ${oType}OrderMatcherFee = t.${oType}Order.matcherFee == ${ord.matcherFee}
-           |   let ${oType}Signature = t.${oType}Order.signature == base58'${ByteStr(ord.signature).base58}'
-           |   let ${oType}AssetPairAmount = if (${ord.assetPair.amountAsset.isDefined}) then extract(t.${oType}Order.assetPair.amountAsset) == base58'${ord.assetPair.amountAsset
-                          .getOrElse(ByteStr.empty)
-                          .base58}'
-           |   else isDefined(t.${oType}Order.assetPair.amountAsset) == false
-           |   let ${oType}AssetPairPrice = if (${ord.assetPair.priceAsset.isDefined}) then extract(t.${oType}Order.assetPair.priceAsset) == base58'${ord.assetPair.priceAsset
-                          .getOrElse(ByteStr.empty)
-                          .base58}'
-           |   else isDefined(t.${oType}Order.assetPair.priceAsset) == false
-           |   # let ${oType}OrderType = t.${oType}Order.orderType ==
-         """.stripMargin
-
-        val lets = List("Id",
-                        "Sender",
-                        "SenderPk",
-                        "MatcherPk",
-                        "Price",
-                        "Amount",
-                        "Timestamp",
-                        "Expiration",
-                        "OrderMatcherFee",
-                        "Signature",
-                        "AssetPairAmount",
-                        "AssetPairPrice")
-          .map(i => s"${oType}$i")
-          .mkString(" && ")
-
-        (script, lets)
-      }
-
-      val s = s"""|match tx {
-                | case t : ExchangeTransaction =>
-                |   ${provenPart(t)}
-                |   let price = t.price == ${t.price}
-                |   let amount = t.amount == ${t.amount}
-                |   let buyMatcherFee = t.buyMatcherFee == ${t.buyMatcherFee}
-                |   let sellMatcherFee = t.sellMatcherFee == ${t.sellMatcherFee} 
-                |   ${pg(t.buyOrder)._1}
-                |   ${pg(t.sellOrder)._1}
-                |   $assertProvenPart && price && amount && buyMatcherFee && sellMatcherFee && ${pg(t.buyOrder)._2} && ${pg(t.sellOrder)._2}
-                | case other => throw
-                | }
-                |""".stripMargin
-
-      val result = runScript[Boolean](
-        s,
         t,
         'T'
       )

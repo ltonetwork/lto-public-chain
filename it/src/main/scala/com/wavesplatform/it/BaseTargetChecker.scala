@@ -1,7 +1,5 @@
 package com.wavesplatform.it
 
-import java.time.Instant
-
 import com.typesafe.config.ConfigFactory.{defaultApplication, defaultReference}
 import com.wavesplatform.consensus.PoSSelector
 import com.wavesplatform.db.openDB
@@ -28,10 +26,8 @@ object BaseTargetChecker {
     val pos          = new PoSSelector(bu, settings.blockchainSettings)
     bu.processBlock(genesisBlock)
 
-    println(s"Genesis TS = ${Instant.ofEpochMilli(genesisBlock.timestamp)}")
-
-    val m = NodeConfigs.Default.map(_.withFallback(sharedConfig)).collect {
-      case cfg if cfg.as[Boolean]("waves.miner.enable") =>
+    NodeConfigs.Default.map(_.withFallback(sharedConfig)).collect {
+      case cfg if cfg.as[Boolean]("lto.miner.enable") =>
         val account   = PublicKeyAccount(cfg.as[ByteStr]("public-key").arr)
         val address   = account.toAddress
         val balance   = bu.balance(address)
@@ -44,7 +40,5 @@ object BaseTargetChecker {
     }
 
     docker.close()
-
-    println(m.mkString("\n"))
   }
 }

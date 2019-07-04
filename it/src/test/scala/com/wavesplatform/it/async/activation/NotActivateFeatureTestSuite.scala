@@ -25,12 +25,14 @@ class NotActivateFeatureTestSuite
   private val blocksForActivation        = 14
   private val votingFeatureNum: Short    = 1
   private val nonVotingFeatureNum: Short = 2
+  private var activationStatusInfoBefore = Option.empty[FeatureActivationStatus]
+  private var activationStatusInfoAfter  = Option.empty[FeatureActivationStatus]
 
   override protected def nodeConfigs: Seq[Config] =
     NodeConfigs.newBuilder
       .overrideBase(
         _.raw(
-          s"""waves {
+          s"""lto {
          |  blockchain {
          |    custom {
          |      functionality {
@@ -46,9 +48,6 @@ class NotActivateFeatureTestSuite
         ))
       .withDefault(4)
       .buildNonConflicting()
-
-  private var activationStatusInfoBefore = Option.empty[FeatureActivationStatus]
-  private var activationStatusInfoAfter  = Option.empty[FeatureActivationStatus]
 
   "get activation status info" in {
     activationStatusInfoBefore = Some(activationStatus(nodes, votingInterval - 1, votingFeatureNum, 4.minute))

@@ -19,7 +19,8 @@ object BlockchainFeatures {
     NG,
     MassTransfer,
     DataTransaction,
-    FairPoS
+    FairPoS,
+    SmartAccounts
   ).map(f => f.id -> f).toMap
 
   val implemented: Set[Short] = dict.keySet

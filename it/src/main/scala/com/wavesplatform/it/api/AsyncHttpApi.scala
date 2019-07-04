@@ -173,20 +173,14 @@ object AsyncHttpApi extends Assertions {
 
     def waitForHeight(expectedHeight: Int): Future[Int] = waitFor[Int](s"height >= $expectedHeight")(_.height, h => h >= expectedHeight, 5.seconds)
 
+    def rawTransactionInfo(txId: String): Future[JsValue] = get(s"/transactions/info/$txId").map(r => Json.parse(r.getResponseBody))
+
     def transactionInfo(txId: String): Future[TransactionInfo] = get(s"/transactions/info/$txId").as[TransactionInfo]
 
     def transactionsByAddress(address: String, limit: Int): Future[Seq[Seq[TransactionInfo]]] =
       get(s"/transactions/address/$address/limit/$limit").as[Seq[Seq[TransactionInfo]]]
 
     def effectiveBalance(address: String): Future[Balance] = get(s"/addresses/effectiveBalance/$address").as[Balance]
-
-    def transfer(sourceAddress: String,
-                 recipient: String,
-                 amount: Long,
-                 fee: Long,
-                 assetId: Option[String] = None,
-                 feeAssetId: Option[String] = None): Future[Transaction] =
-      postJson("/assets/transfer", TransferV1Request(assetId, feeAssetId, amount, fee, sourceAddress, None, recipient)).as[Transaction]
 
     def payment(sourceAddress: String, recipient: String, amount: Long, fee: Long): Future[Transaction] =
       postJson("/waves/payment", PaymentRequest(amount, fee, sourceAddress, recipient)).as[Transaction]
@@ -225,19 +219,19 @@ object AsyncHttpApi extends Assertions {
     def assetsDetails(assetId: String): Future[AssetInfo] =
       get(s"/assets/details/$assetId").as[AssetInfo]
 
-    def sponsorAsset(sourceAddress: String, assetId: String, minSponsoredAssetFee: Long, fee: Long): Future[Transaction] =
-      postJson("/assets/sponsor", SponsorFeeRequest(1, sourceAddress, assetId, Some(minSponsoredAssetFee), fee)).as[Transaction]
-
-    def cancelSponsorship(sourceAddress: String, assetId: String, fee: Long): Future[Transaction] =
-      postJson("/assets/sponsor", SponsorFeeRequest(1, sourceAddress, assetId, None, fee)).as[Transaction]
-
-    def transfer(sourceAddress: String, recipient: String, amount: Long, fee: Long): Future[Transaction] =
-      postJson("/assets/transfer", TransferV1Request(None, None, amount, fee, sourceAddress, None, recipient)).as[Transaction]
+    def transfer(sourceAddress: String, recipient: String, amount: Long, fee: Long): Future[Transaction] = {
+      val value    = toJson(TransferV1Request(None, None, amount, fee, sourceAddress, None, recipient))
+      val jsObject = value.as[JsObject]
+      val r        = jsObject + ("type" -> JsNumber(TransferTransactionV1.typeId.toInt))
+      signAndBroadcast(r)
+    }
 
     def massTransfer(sourceAddress: String, transfers: List[Transfer], fee: Long, assetId: Option[String] = None): Future[Transaction] = {
       implicit val w: Writes[MassTransferRequest] = Json.writes[MassTransferRequest]
-      postJson("/assets/masstransfer", MassTransferRequest(MassTransferTransaction.version, sourceAddress, transfers, fee, None))
-        .as[Transaction]
+      val value                                   = toJson(MassTransferRequest(MassTransferTransaction.version, sourceAddress, transfers, fee, None))
+      val jsObject                                = value.as[JsObject]
+      val r                                       = jsObject + ("type" -> JsNumber(MassTransferTransaction.typeId.toInt))
+      signAndBroadcast(r)
     }
 
     def putData(sourceAddress: String, data: List[DataEntry[_]], fee: Long): Future[Transaction] = {
@@ -268,10 +262,7 @@ object AsyncHttpApi extends Assertions {
 
     def signAndBroadcast(jsobj: JsObject): Future[Transaction] = sign(jsobj).flatMap(signedBroadcast)
 
-    def signedIssue(issue: SignedIssueV1Request): Future[Transaction] =
-      postJson("/assets/broadcast/issue", issue).as[Transaction]
-
-    def batchSignedTransfer(transfers: Seq[SignedTransferV1Request], timeout: FiniteDuration = 1.minute): Future[Seq[Transaction]] = {
+    def batchSignedTransfer(transfers: Seq[SignedTransferV2Request], timeout: FiniteDuration = 1.minute): Future[Seq[Transaction]] = {
       val request = _post(s"${n.nodeApiEndpoint}/assets/broadcast/batch-transfer")
         .setHeader("Content-type", "application/json")
         .withApiKey(n.apiKey)
@@ -434,13 +425,14 @@ object AsyncHttpApi extends Assertions {
     }
 
     def once(r: Request): Future[Response] = {
-      n.log.debug(s"Request: ${r.getUrl}")
+      n.log.debug(s"Request: ${r.getMethod} ${r.getUrl}")
       n.client
         .executeRequest(
           r,
           new AsyncCompletionHandler[Response] {
             override def onCompleted(response: Response): Response = {
               n.log.debug(s"Response for ${r.getUrl} is ${response.getStatusCode}")
+              n.log.debug(response.getResponseBody())
               response
             }
           }
@@ -448,8 +440,6 @@ object AsyncHttpApi extends Assertions {
         .toCompletableFuture
         .toScala
     }
-
-    def debugStateAt(height: Long): Future[Map[String, Long]] = getWithApiKey(s"/debug/stateWaves/$height").as[Map[String, Long]]
 
     def debugPortfoliosFor(address: String, considerUnspent: Boolean): Future[Portfolio] = {
       getWithApiKey(s"/debug/portfolios/$address?considerUnspent=$considerUnspent")

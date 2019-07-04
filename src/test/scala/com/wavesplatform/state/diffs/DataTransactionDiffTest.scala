@@ -85,6 +85,11 @@ class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers
             state.accountData(sender, item2.key) shouldBe Some(item2)
             state.accountData(sender).data.get(item2.key) shouldBe Some(item2)
         }
+
+        assertDiffEi(Seq(genesis), blocks(0), fs.copy(preActivatedFeatures = fs.preActivatedFeatures + (BlockchainFeatures.SmartAccounts.id -> 0))) {
+          _ should produce("deactivated")
+        }
+
     }
   }
 

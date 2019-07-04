@@ -54,18 +54,18 @@ class WavesEnvironmentBenchmark {
 
   @Benchmark
   def accountBalanceOf_waves_test(st: AccountBalanceOfWavesSt, bh: Blackhole): Unit = {
-    bh.consume(st.environment.accountBalanceOf(Recipient.Address(ByteVector(st.accounts.random)), None))
+    bh.consume(st.environment.accountBalanceOf(LangAddress(ByteVector(st.accounts.random)), None))
   }
 
   @Benchmark
   def accountBalanceOf_asset_test(st: AccountBalanceOfAssetSt, bh: Blackhole): Unit = {
-    bh.consume(st.environment.accountBalanceOf(Recipient.Address(ByteVector(st.accounts.random)), Some(st.assets.random)))
+    bh.consume(st.environment.accountBalanceOf(LangAddress(ByteVector(st.accounts.random)), Some(st.assets.random)))
   }
 
   @Benchmark
   def data_test(st: DataSt, bh: Blackhole): Unit = {
     val x = st.data.random
-    bh.consume(st.environment.data(Recipient.Address(x.addr), x.key, x.dataType))
+    bh.consume(st.environment.data(LangAddress(x.addr), x.key, x.dataType))
   }
 
 }

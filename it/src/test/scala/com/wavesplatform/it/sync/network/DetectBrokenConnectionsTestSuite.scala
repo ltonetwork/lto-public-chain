@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 class DetectBrokenConnectionsTestSuite extends FreeSpec with Matchers with ReportingTestName with NodesFromDocker {
 
   override protected def nodeConfigs: Seq[Config] = {
-    val highPriorityConfig = ConfigFactory.parseString("waves.network.break-idle-connections-timeout = 20s")
+    val highPriorityConfig = ConfigFactory.parseString("lto.network.break-idle-connections-timeout = 20s")
     Default.take(2).map(highPriorityConfig.withFallback)
   }
 

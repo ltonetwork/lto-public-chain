@@ -1,12 +1,12 @@
 package com.wavesplatform.lang
 
 import cats.data.EitherT
-import com.wavesplatform.lang.v1.compiler.Types._
 import com.wavesplatform.lang.v1.compiler.Terms.EXPR
+import com.wavesplatform.lang.v1.compiler.Types._
 import com.wavesplatform.lang.v1.evaluator.EvaluatorV1
 import com.wavesplatform.lang.v1.evaluator.ctx._
 import com.wavesplatform.lang.v1.evaluator.ctx.impl.{EnvironmentFunctions, PureContext}
-import com.wavesplatform.lang.v1.traits.{DataType, Environment, Recipient, Tx}
+import com.wavesplatform.lang.v1.traits.{Environment, Tx}
 import monix.eval.Coeval
 import org.scalacheck.Shrink
 import org.scalatest.matchers.{MatchResult, Matcher}
@@ -15,8 +15,7 @@ import scala.util.{Left, Right, Try}
 
 object Common {
 
-  def ev[T](context: EvaluationContext = PureContext.evalContext, expr: EXPR): (EvaluationContext, Either[ExecutionError, T]) =
-    EvaluatorV1[T](context, expr)
+  def ev[T](context: EvaluationContext = PureContext.evalContext, expr: EXPR): Either[ExecutionError, T] = EvaluatorV1[T](context, expr)
 
   trait NoShrink {
     implicit def noShrink[A]: Shrink[A] = Shrink(_ => Stream.empty)
@@ -71,12 +70,6 @@ object Common {
     override def height: Int       = h
     override def networkByte: Byte = nByte
     override def transaction: Tx   = tx()
-
-    override def transactionById(id: Array[Byte]): Option[Tx]                                                    = ???
-    override def transactionHeightById(id: Array[Byte]): Option[Int]                                             = ???
-    override def data(recipient: Recipient, key: String, dataType: DataType): Option[Any]                        = ???
-    override def resolveAlias(name: String): Either[String, Recipient.Address]                                   = ???
-    override def accountBalanceOf(addressOrAlias: Recipient, assetId: Option[Array[Byte]]): Either[String, Long] = ???
   }
 
   def addressFromPublicKey(networkByte: Byte, pk: Array[Byte], addressVersion: Byte = EnvironmentFunctions.AddressVersion): Array[Byte] = {

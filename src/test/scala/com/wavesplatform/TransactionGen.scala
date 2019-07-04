@@ -88,7 +88,7 @@ trait TransactionGenBase extends ScriptGen {
     aliasChars <- Gen.listOfN(length, invalidAliasAlphabetGen)
   } yield aliasChars.mkString
 
-  val accountOrAliasGen: Gen[AddressOrAlias] = Gen.oneOf(aliasGen, accountGen.map(PublicKeyAccount.toAddress(_)))
+  val accountOrAliasGen: Gen[AddressOrAlias] = accountGen.map(PublicKeyAccount.toAddress(_))
 
   def otherAccountGen(candidate: PrivateKeyAccount): Gen[PrivateKeyAccount] = accountGen.flatMap(Gen.oneOf(candidate, _))
 
@@ -163,16 +163,18 @@ trait TransactionGenBase extends ScriptGen {
   } yield (sender, amount, fee, timestamp, recipient)
 
   def createLease(sender: PrivateKeyAccount, amount: Long, fee: Long, timestamp: Long, recipient: AddressOrAlias) = {
+    val v1 = LeaseTransactionV1.selfSigned(sender, amount, fee, timestamp, recipient).explicitGet()
     val v2 = LeaseTransactionV2.selfSigned(LeaseTransactionV2.supportedVersions.head, sender, amount, fee, timestamp, recipient).explicitGet()
-    Gen.const(v2)
+    Gen.oneOf(v1, v2)
   }
 
   def createLeaseCancel(sender: PrivateKeyAccount, leaseId: ByteStr, cancelFee: Long, timestamp: Long) = {
+    val v1 = LeaseCancelTransactionV1.selfSigned(sender, leaseId, cancelFee, timestamp + 1).explicitGet()
     val v2 = LeaseCancelTransactionV2
       .selfSigned(LeaseTransactionV2.supportedVersions.head, AddressScheme.current.chainId, sender, leaseId, cancelFee, timestamp + 1)
       .right
       .get
-    Gen.const(v2)
+    Gen.oneOf(v1, v2)
   }
   val leaseAndCancelGen: Gen[(LeaseTransaction, LeaseCancelTransaction)] = for {
     (sender, amount, fee, timestamp, recipient) <- leaseParamGen
@@ -213,8 +215,10 @@ trait TransactionGenBase extends ScriptGen {
   val leaseCancelGen: Gen[LeaseCancelTransaction] = leaseAndCancelGen.map(_._2)
 
   val transferParamGen = for {
-    amount     <- positiveLongGen
-    feeAmount  <- smallFeeGen
+    amount    <- positiveLongGen
+    feeAmount <- smallFeeGen
+    assetId    = None
+    feeAssetId = None
     timestamp  <- timestampGen
     sender     <- accountGen
     attachment <- genBoundedBytes(0, TransferTransaction.MaxAttachmentSize)
@@ -245,6 +249,12 @@ trait TransactionGenBase extends ScriptGen {
       amount                              <- Gen.choose(1, maxAmount)
       (_, _, _, _, feeAmount, attachment) <- transferParamGen
     } yield TransferTransactionV1.selfSigned(sender, recipient, amount, timestamp, feeAmount, attachment).explicitGet()
+
+  def transferGeneratorPV2(timestamp: Long, sender: PrivateKeyAccount, recipient: AddressOrAlias, maxAmount: Long): Gen[TransferTransactionV2] =
+    for {
+      amount                              <- Gen.choose(1, maxAmount)
+      (_, _, _, _, feeAmount, attachment) <- transferParamGen
+    } yield TransferTransactionV2.selfSigned(2, sender, recipient, amount, timestamp, feeAmount, attachment).explicitGet()
 
   def transferGeneratorP(timestamp: Long,
                          sender: PrivateKeyAccount,
@@ -616,18 +626,6 @@ trait TransactionGenBase extends ScriptGen {
 
   val dataTransactionGen: Gen[DataTransaction] = dataTransactionGen(DataTransaction.MaxEntryCount)
 
-  val anchorTransactionGen: Gen[AnchorTransaction] = for {
-    sender    <- accountGen
-    timestamp <- timestampGen
-    size      <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
-    len       <- Gen.oneOf(AnchorTransaction.EntryLength)
-    data      <- Gen.listOfN(size, genBoundedBytes(len, len))
-    version   <- Gen.oneOf(AnchorTransaction.supportedVersions.toSeq)
-  } yield {
-    val anchors = data.map(ByteStr(_))
-    AnchorTransaction.selfSigned(version, sender, anchors, 15000000, timestamp).explicitGet()
-  }
-
   def dataTransactionGen(maxEntryCount: Int, useForScript: Boolean = false) =
     (for {
       sender    <- accountGen
@@ -646,23 +644,32 @@ trait TransactionGenBase extends ScriptGen {
     (for {
       version   <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
       timestamp <- timestampGen
-    } yield DataTransaction.selfSigned(version, sender, data, 100000000, timestamp).explicitGet())
+    } yield DataTransaction.selfSigned(version, sender, data, 150000000, timestamp).explicitGet())
       .label("DataTransactionP")
 
-  def preconditionsTransferAndLease(typed: EXPR): Gen[(GenesisTransaction, SetScriptTransaction, LeaseTransaction, TransferTransactionV1)] =
+  def preconditionsTransferAndLease(typed: EXPR): Gen[(GenesisTransaction, SetScriptTransaction, LeaseTransaction, TransferTransactionV2)] =
     for {
       master    <- accountGen
       recipient <- accountGen
       ts        <- positiveIntGen
       genesis = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
       setScript <- selfSignedSetScriptTransactionGenP(master, ScriptV1(typed).explicitGet())
-      transfer  <- transferGeneratorP(master, recipient.toAddress, None, None)
-      lease     <- leaseAndCancelGeneratorP(master, recipient.toAddress, master)
-    } yield (genesis, setScript, lease._1, transfer)
+      transfer  <- transferGeneratorPV2(ts, master, recipient.toAddress, ENOUGH_AMT / 2)
+      fee       <- smallFeeGen
+      lease = LeaseTransactionV2.selfSigned(LeaseTransactionV2.supportedVersions.head, master, ENOUGH_AMT / 2, fee, ts, recipient).explicitGet()
+    } yield (genesis, setScript, lease, transfer)
 
-  val setSimpleScriptTransactionGen = for {
-    (_, tx, _, _) <- preconditionsTransferAndLease(TRUE)
-  } yield tx
+  val anchorTransactionGen: Gen[AnchorTransaction] = for {
+    sender    <- accountGen
+    timestamp <- timestampGen
+    size      <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
+    len       <- Gen.oneOf(AnchorTransaction.EntryLength)
+    data      <- Gen.listOfN(size, genBoundedBytes(len, len))
+    version   <- Gen.oneOf(AnchorTransaction.supportedVersions.toSeq)
+  } yield {
+    val anchors = data.map(ByteStr(_))
+    AnchorTransaction.selfSigned(version, sender, anchors, 15000000, timestamp).explicitGet()
+  }
 
   def smartIssueTransactionGen(senderGen: Gen[PrivateKeyAccount] = accountGen,
                                sGen: Gen[Option[Script]] = Gen.option(scriptGen)): Gen[IssueTransactionV2] =

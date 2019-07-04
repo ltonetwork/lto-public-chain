@@ -1,8 +1,12 @@
 package com.wavesplatform.it.sync
 
 import com.typesafe.config.Config
+import com.wavesplatform.account.PrivateKeyAccount
+import com.wavesplatform.block.{Block, SignerData}
 import com.wavesplatform.consensus.FairPoSCalculator
+import com.wavesplatform.consensus.nxt.NxtLikeConsensusBlockData
 import com.wavesplatform.crypto
+import com.wavesplatform.http.DebugMessage
 import com.wavesplatform.it.api.AsyncNetworkApi.NodeAsyncNetworkApi
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.transactions.NodesFromDocker
@@ -12,10 +16,6 @@ import com.wavesplatform.state._
 import com.wavesplatform.utils.Base58
 import org.scalatest.{CancelAfterFailure, FunSuite, Matchers}
 import play.api.libs.json.{JsSuccess, Json, Reads}
-import com.wavesplatform.account.PrivateKeyAccount
-import com.wavesplatform.block.{Block, SignerData}
-import com.wavesplatform.consensus.nxt.NxtLikeConsensusBlockData
-import com.wavesplatform.http.DebugMessage
 
 import scala.util.Random
 
@@ -141,15 +141,6 @@ class PoSSuite extends FunSuite with Matchers with NodesFromDocker with WaitForH
     if (timeout > 0) Thread.sleep(timeout)
   }
 
-  def blockInfo(height: Int): (Array[Byte], Long, NxtLikeConsensusBlockData) = {
-    val lastBlock      = Json.parse(nodes.head.get(s"/blocks/at/$height").getResponseBody)
-    val lastBlockId    = Base58.decode((lastBlock \ "signature").as[String]).get
-    val lastBlockTS    = (lastBlock \ "timestamp").as[Long]
-    val lastBlockCData = (lastBlock \ "nxt-consensus").as[NxtLikeConsensusBlockData]
-
-    (lastBlockId, lastBlockTS, lastBlockCData)
-  }
-
   def blockTimestamp(h: Int): Long = {
     (Json.parse(
       nodes.head
@@ -167,47 +158,6 @@ class PoSSuite extends FunSuite with Matchers with NodesFromDocker with WaitForH
             .getResponseBody
         ) \ "signature").as[String])
       .get
-  }
-
-  override protected def nodeConfigs: Seq[Config] =
-    NodeConfigs.newBuilder
-      .overrideBase(_.quorum(3))
-      .overrideBase(
-        _.raw(
-          """
-          |waves {
-          |  miner {
-          |      quorum = 1
-          |  }
-          |
-          |  blockchain {
-          |    custom {
-          |      functionality {
-          |        pre-activated-features = {
-          |          2 = 0
-          |          3 = 0
-          |          4 = 0
-          |          5 = 0
-          |          6 = 0
-          |          7 = 0
-          |          8 = 0
-          |        }
-          |      }
-          |    }
-          |  }
-          |}
-        """.stripMargin
-        ))
-      .overrideBase(_.nonMiner)
-      .withDefault(3)
-      .withSpecial(_.raw("waves.miner.enable = yes"))
-      .buildNonConflicting()
-
-  private def generatorSignature(signature: Array[Byte], publicKey: Array[Byte]): Array[Byte] = {
-    val s = new Array[Byte](crypto.DigestSize * 2)
-    System.arraycopy(signature, 0, s, 0, crypto.DigestSize)
-    System.arraycopy(publicKey, 0, s, crypto.DigestSize, crypto.DigestSize)
-    crypto.fastHash(s)
   }
 
   def forgeBlock(height: Int, signerPK: PrivateKeyAccount)(updateDelay: Long => Long = identity,
@@ -264,5 +214,55 @@ class PoSSuite extends FunSuite with Matchers with NodesFromDocker with WaitForH
       .explicitGet()
   }
 
+  def blockInfo(height: Int): (Array[Byte], Long, NxtLikeConsensusBlockData) = {
+    val lastBlock      = Json.parse(nodes.head.get(s"/blocks/at/$height").getResponseBody)
+    val lastBlockId    = Base58.decode((lastBlock \ "signature").as[String]).get
+    val lastBlockTS    = (lastBlock \ "timestamp").as[Long]
+    val lastBlockCData = (lastBlock \ "nxt-consensus").as[NxtLikeConsensusBlockData]
+
+    (lastBlockId, lastBlockTS, lastBlockCData)
+  }
+
+  private def generatorSignature(signature: Array[Byte], publicKey: Array[Byte]): Array[Byte] = {
+    val s = new Array[Byte](crypto.DigestSize * 2)
+    System.arraycopy(signature, 0, s, 0, crypto.DigestSize)
+    System.arraycopy(publicKey, 0, s, crypto.DigestSize, crypto.DigestSize)
+    crypto.fastHash(s)
+  }
+
   private def hit(generatorSignature: Array[Byte]): BigInt = BigInt(1, generatorSignature.take(8).reverse)
+
+  override protected def nodeConfigs: Seq[Config] =
+    NodeConfigs.newBuilder
+      .overrideBase(_.quorum(3))
+      .overrideBase(
+        _.raw(
+          """
+          |lto {
+          |  miner {
+          |      quorum = 1
+          |  }
+          |
+          |  blockchain {
+          |    custom {
+          |      functionality {
+          |        pre-activated-features = {
+          |          2 = 0
+          |          3 = 0
+          |          4 = 0
+          |          5 = 0
+          |          6 = 0
+          |          7 = 0
+          |          8 = 0
+          |        }
+          |      }
+          |    }
+          |  }
+          |}
+        """.stripMargin
+        ))
+      .overrideBase(_.nonMiner)
+      .withDefault(3)
+      .withSpecial(_.raw("lto.miner.enable = yes"))
+      .buildNonConflicting()
 }

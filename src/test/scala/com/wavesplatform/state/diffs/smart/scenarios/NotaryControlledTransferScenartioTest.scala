@@ -53,14 +53,13 @@ class NotaryControlledTransferScenartioTest extends PropSpec with PropertyChecks
                     |      let isRecipientAgreed = if(isDefined(recipientAgreement)) then extract(recipientAgreement) else false
                     |      let senderAddress = addressFromPublicKey(ttx.senderPublicKey)
                     |      senderAddress.bytes == company.bytes || (isNotary1Agreed && isRecipientAgreed)
-                    |   case other => throw
+                    |   case other => throw()
                     | }
         """.stripMargin
 
       untypedScript = {
         val r = Parser(assetScript).get.value
-        assert(r.size == 1)
-        r.head
+        r
       }
 
       typedScript = ScriptV1(CompilerV1(dummyCompilerContext, untypedScript).explicitGet()._1).explicitGet()
@@ -113,9 +112,8 @@ class NotaryControlledTransferScenartioTest extends PropSpec with PropertyChecks
 
   private def eval[T](code: String) = {
     val untyped = Parser(code).get.value
-    assert(untyped.size == 1)
-    val typed = CompilerV1(dummyCompilerContext, untyped.head).map(_._1)
-    typed.flatMap(EvaluatorV1[T](dummyEvaluationContext, _)._2)
+    val typed   = CompilerV1(dummyCompilerContext, untyped).map(_._1)
+    typed.flatMap(EvaluatorV1.applywithLogging[T](dummyEvaluationContext, _)._2)
   }
 
   property("Script toBase58String") {

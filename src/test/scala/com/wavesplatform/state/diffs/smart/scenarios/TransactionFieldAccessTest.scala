@@ -9,21 +9,19 @@ import com.wavesplatform.utils.dummyCompilerContext
 import com.wavesplatform.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Ignore, Matchers, PropSpec}
+import org.scalatest.{Matchers, PropSpec}
 import com.wavesplatform.lagonaki.mocks.TestBlock
 import com.wavesplatform.transaction.GenesisTransaction
 import com.wavesplatform.transaction.lease.LeaseTransaction
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.transfer._
 
-@Ignore
 class TransactionFieldAccessTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
 
   private def preconditionsTransferAndLease(
-      code: String): Gen[(GenesisTransaction, SetScriptTransaction, LeaseTransaction, TransferTransactionV1)] = {
+      code: String): Gen[(GenesisTransaction, SetScriptTransaction, LeaseTransaction, TransferTransactionV2)] = {
     val untyped = Parser(code).get.value
-    assert(untyped.size == 1)
-    val typed = CompilerV1(dummyCompilerContext, untyped.head).explicitGet()._1
+    val typed   = CompilerV1(dummyCompilerContext, untyped).explicitGet()._1
     preconditionsTransferAndLease(typed)
   }
 
@@ -31,12 +29,10 @@ class TransactionFieldAccessTest extends PropSpec with PropertyChecks with Match
     """
       |
       | match tx {
-      | case ttx: TransferTransaction =>
-      |       isDefined(ttx.assetId)==false
-      |   case other =>
-      |       false
+      | case ttx: TransferTransaction => tx.fee > 0
+      | case other => false
       | }
-      """.stripMargin
+    """.stripMargin
 
   property("accessing field of transaction without checking its type first results on exception") {
     forAll(preconditionsTransferAndLease(script)) {
