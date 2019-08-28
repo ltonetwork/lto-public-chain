@@ -8,8 +8,6 @@ import com.wavesplatform.state._
 import com.wavesplatform.account.Address
 import com.wavesplatform.transaction.ValidationError._
 import com.wavesplatform.transaction._
-import com.wavesplatform.transaction.assets._
-import com.wavesplatform.transaction.assets.exchange.ExchangeTransaction
 import com.wavesplatform.transaction.lease._
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.transfer._
@@ -97,20 +95,10 @@ object CommonValidation {
           _ <- activationBarrier(BlockchainFeatures.DataTransaction)
           _ <- deactivationBarrier(BlockchainFeatures.SmartAccounts)
         } yield tx
-      case _: SetScriptTransaction     => Right(tx)
-      case _: AnchorTransaction        => Right(tx)
-      case _: BurnTransactionV2        => disabled
-      case _: CreateAliasTransactionV2 => disabled
-      case _: SponsorFeeTransaction    => disabled
-      case _: BurnTransactionV1        => disabled
-      case _: PaymentTransaction       => disabled
-      case _: IssueTransactionV1       => disabled
-      case _: ReissueTransactionV1     => disabled
-      case _: ExchangeTransaction      => disabled
-      case _: CreateAliasTransactionV1 => disabled
-      case it: IssueTransactionV2      => disabled
-      case _: ReissueTransactionV2     => disabled
-      case _                           => Left(GenericError("Unknown transaction must be explicitly activated"))
+      case _: SetScriptTransaction => Right(tx)
+      case _: AnchorTransaction    => Right(tx)
+      case _: PaymentTransaction   => disabled
+      case _                       => Left(GenericError("Unknown transaction must be explicitly activated"))
     }
   }
 
@@ -131,22 +119,16 @@ object CommonValidation {
   private def oldFeeInUnits(blockchain: Blockchain, height: Int, tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: GenesisTransaction       => Right(0)
     case _: PaymentTransaction       => Right(1)
-    case _: IssueTransaction         => Right(1000)
-    case _: ReissueTransaction       => Right(1000)
-    case _: BurnTransaction          => Right(1)
     case _: TransferTransaction      => Right(1)
     case tx: MassTransferTransaction => Right(1 + (tx.transfers.size + 1) / 2)
     case _: LeaseTransaction         => Right(1)
     case _: LeaseCancelTransaction   => Right(1)
-    case _: ExchangeTransaction      => Right(3)
-    case _: CreateAliasTransaction   => Right(1)
     case tx: DataTransaction =>
       val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
       Right(1 + (base.length - 1) / 1024)
-    case tx: AnchorTransaction    => Right(1 + (tx.bodyBytes().length - 1) / 1024)
-    case _: SetScriptTransaction  => Right(1)
-    case _: SponsorFeeTransaction => Right(1000)
-    case _                        => Left(UnsupportedTransactionType)
+    case tx: AnchorTransaction   => Right(1 + (tx.bodyBytes().length - 1) / 1024)
+    case _: SetScriptTransaction => Right(1)
+    case _                       => Left(UnsupportedTransactionType)
   }
 
   private def newFeeInUnits(tx: Transaction): Either[ValidationError, Long] = tx match {
@@ -175,15 +157,6 @@ object CommonValidation {
             r          <- Right((None, feeInUnits * Sponsorship.FeeUnit))
           } yield r
 
-      def isSmartToken(input: FeeInfo): Boolean = input._1.map(_._1).flatMap(blockchain.assetDescription).exists(_.script.isDefined)
-
-      def feeAfterSmartTokens(inputFee: FeeInfo): Either[ValidationError, FeeInfo] = Right {
-        if (isSmartToken(inputFee)) {
-          val (feeAssetInfo, feeAmount) = inputFee
-          (feeAssetInfo, feeAmount + ScriptExtraFee)
-        } else inputFee
-      }
-
       def hasSmartAccountScript: Boolean = tx match {
         case tx: Transaction with Authorized => blockchain.hasScript(tx.sender)
         case _                               => false
@@ -197,7 +170,6 @@ object CommonValidation {
       }
 
       feeAfterSponsorship(None)
-        .flatMap(feeAfterSmartTokens)
         .flatMap(feeAfterSmartAccounts)
         .map {
           case (Some((assetId, assetInfo)), amountInWaves) => (Some(assetId), Sponsorship.fromWaves(amountInWaves, assetInfo.sponsorship))

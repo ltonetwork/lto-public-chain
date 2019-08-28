@@ -325,9 +325,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         }
         import com.wavesplatform.features.FeatureProvider._
         val r0 = r match {
-          case Right(tx) if tx.builder.typeId == SetScriptTransaction.typeId &&
-            !blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, blockchain.height)
-            => Left(ActivationError("SmartAccounts feature has not been activated yet"))
+          case Right(tx)
+              if tx.builder.typeId == SetScriptTransaction.typeId &&
+                !blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, blockchain.height) =>
+            Left(ActivationError("SmartAccounts feature has not been activated yet"))
           case x => x
         }
         doBroadcast(r0)
@@ -355,8 +356,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     import com.wavesplatform.transaction.transfer._
     tx match {
       case mtt: MassTransferTransaction if mtt.sender.toAddress != address =>
-        val addresses = blockchain.aliasesOfAddress(address) :+ address
-        mtt.compactJson(addresses.toSet)
+        mtt.compactJson(Set(address))
       case _ => txToExtendedJson(tx)
     }
   }

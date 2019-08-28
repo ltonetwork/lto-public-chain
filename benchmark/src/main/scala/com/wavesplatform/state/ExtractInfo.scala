@@ -15,7 +15,7 @@ import com.wavesplatform.account.AddressScheme
 import com.wavesplatform.utils.ScorexLogging
 import com.wavesplatform.block.Block
 import com.wavesplatform.transaction.assets.IssueTransaction
-import com.wavesplatform.transaction.{Authorized, CreateAliasTransactionV1, DataTransaction, Transaction}
+import com.wavesplatform.transaction.{Authorized, DataTransaction, Transaction}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -62,12 +62,6 @@ object ExtractInfo extends App with ScorexLogging {
       nonEmptyBlockHeights(from)
         .flatMap(state.blockAt(_))
 
-    val aliasTxs = nonEmptyBlocks(benchSettings.aliasesFromHeight)
-      .flatMap(_.transactionData)
-      .collect {
-        case _: CreateAliasTransactionV1 => true
-      }
-
     val restTxs = nonEmptyBlocks(benchSettings.restTxsFromHeight)
       .flatMap(_.transactionData)
 
@@ -80,9 +74,6 @@ object ExtractInfo extends App with ScorexLogging {
         .take(100)
     } yield sender.toAddress.stringRepr
     write("accounts", benchSettings.accountsFile, takeUniq(1000, accounts))
-
-    val aliasTxIds = aliasTxs.map(_.asInstanceOf[CreateAliasTransactionV1].alias.stringRepr)
-    write("aliases", benchSettings.aliasesFile, aliasTxIds.take(1000))
 
     val restTxIds = restTxs.map(_.id().base58)
     write("rest transactions", benchSettings.restTxsFile, restTxIds.take(10000))

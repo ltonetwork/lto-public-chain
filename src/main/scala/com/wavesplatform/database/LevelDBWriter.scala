@@ -2,24 +2,19 @@ package com.wavesplatform.database
 
 import cats.kernel.Monoid
 import com.google.common.cache.CacheBuilder
-import com.wavesplatform.database.patch.DisableHijackedAliases
-import com.wavesplatform.features.BlockchainFeatures
+import com.wavesplatform.account.{Address, Alias}
+import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
 import com.wavesplatform.state.reader.LeaseDetails
-import org.iq80.leveldb.{DB, ReadOptions}
-import com.wavesplatform.account.{Address, Alias}
-import com.wavesplatform.utils.ScorexLogging
-import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.transaction.Transaction.Type
-import com.wavesplatform.transaction.ValidationError.{AliasDoesNotExist, AliasIsDisabled}
 import com.wavesplatform.transaction._
-import com.wavesplatform.transaction.assets._
-import com.wavesplatform.transaction.assets.exchange.ExchangeTransaction
 import com.wavesplatform.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.transaction.transfer._
+import com.wavesplatform.utils.ScorexLogging
+import org.iq80.leveldb.{DB, ReadOptions}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
@@ -155,16 +150,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
   override protected def loadPortfolio(address: Address): Portfolio = readOnly { db =>
     addressId(address).fold(Portfolio.empty)(loadPortfolio(db, _))
-  }
-
-  override protected def loadAssetDescription(assetId: ByteStr): Option[AssetDescription] = readOnly { db =>
-    db.get(Keys.transactionInfo(assetId)) match {
-      case Some((_, i: IssueTransaction)) =>
-        val ai          = db.fromHistory(Keys.assetInfoHistory(assetId), Keys.assetInfo(assetId)).getOrElse(AssetInfo(i.reissuable, i.quantity, i.script))
-        val sponsorship = db.fromHistory(Keys.sponsorshipHistory(assetId), Keys.sponsorship(assetId)).fold(0L)(_.minFee)
-        Some(AssetDescription(i.sender, i.name, i.description, i.decimals, ai.isReissuable, ai.volume, ai.script, sponsorship))
-      case _ => None
-    }
   }
 
   override protected def loadVolumeAndFee(orderId: ByteStr): VolumeAndFee = readOnly { db =>
@@ -347,9 +332,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
     expiredKeys.foreach(rw.delete)
 
-    if (activatedFeatures.get(BlockchainFeatures.DataTransaction.id).contains(height)) {
-      DisableHijackedAliases(rw)
-    }
   }
 
   override protected def doRollback(targetBlockId: ByteStr): Seq[Block] = {
@@ -406,14 +388,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                 case _: PaymentTransaction | _: TransferTransaction | _: MassTransferTransaction =>
                 // balances already restored
 
-                case tx: IssueTransaction =>
-                  assetInfoToInvalidate += rollbackAssetInfo(rw, tx.id(), currentHeight)
-                case tx: ReissueTransaction =>
-                  assetInfoToInvalidate += rollbackAssetInfo(rw, tx.assetId, currentHeight)
-                case tx: BurnTransaction =>
-                  assetInfoToInvalidate += rollbackAssetInfo(rw, tx.assetId, currentHeight)
-                case tx: SponsorFeeTransaction =>
-                  assetInfoToInvalidate += rollbackSponsorship(rw, tx.assetId, currentHeight)
                 case tx: LeaseTransaction =>
                   rollbackLeaseStatus(rw, tx.id(), currentHeight)
                 case tx: LeaseCancelTransaction =>
@@ -438,13 +412,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                   }
                 case a: AnchorTransaction => // do nothinhg specific
 
-                case tx: CreateAliasTransaction =>
-                  rw.delete(Keys.addressIdOfAlias(tx.alias))
-
-                case tx: ExchangeTransaction =>
-                  ordersToInvalidate += rollbackOrderFill(rw, ByteStr(tx.buyOrder.id()), currentHeight)
-                  ordersToInvalidate += rollbackOrderFill(rw, ByteStr(tx.sellOrder.id()), currentHeight)
-
                 case _ => ???
               }
             }
@@ -461,14 +428,10 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
           rw.delete(Keys.blockAt(currentHeight))
           rw.delete(Keys.heightOf(discardedBlock.uniqueId))
 
-          if (activatedFeatures.get(BlockchainFeatures.DataTransaction.id).contains(currentHeight)) {
-            DisableHijackedAliases.revert(rw)
-          }
           discardedBlock
         }
 
         portfoliosToInvalidate.result().foreach(discardPortfolio)
-        assetInfoToInvalidate.result().foreach(discardAssetDescription)
         ordersToInvalidate.result().foreach(discardVolumeAndFee)
         scriptsToDiscard.result().foreach(discardScript)
         discardedBlock
@@ -518,14 +481,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
       txs.slice(from, count).force
     }
-  }
-
-  override def resolveAlias(alias: Alias): Either[ValidationError, Address] = readOnly { db =>
-    if (db.get(Keys.aliasIsDisabled(alias))) Left(AliasIsDisabled(alias))
-    else
-      db.get(Keys.addressIdOfAlias(alias))
-        .map(addressId => db.get(Keys.idToAddress(addressId)))
-        .toRight(AliasDoesNotExist(alias))
   }
 
   override def leaseDetails(leaseId: ByteStr): Option[LeaseDetails] = readOnly { db =>

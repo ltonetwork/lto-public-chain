@@ -10,7 +10,6 @@ import com.wavesplatform.account.{Address, PrivateKeyAccount}
 import com.wavesplatform.settings.TestFunctionalitySettings
 import com.wavesplatform.lagonaki.mocks.TestBlock.{create => block}
 import com.wavesplatform.transaction.GenesisTransaction
-import com.wavesplatform.transaction.assets.IssueTransactionV1
 import com.wavesplatform.transaction.transfer.MassTransferTransaction.ParsedTransfer
 
 class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
@@ -60,29 +59,11 @@ class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with 
     Gen.choose(2, Max - 1) map testDiff
   }
 
-  property("MassTransfer fails on non-existent alias") {
-    val setup = for {
-      (genesis, master) <- baseSetup
-      recipient         <- aliasGen
-      amount            <- Gen.choose(100000L, 1000000000L)
-      transfer          <- massTransferGeneratorP(master, List(ParsedTransfer(recipient, amount)), None)
-    } yield (genesis, transfer)
-
-    forAll(setup) {
-      case (genesis, transfer) =>
-        assertDiffEi(Seq(block(Seq(genesis))), block(Seq(transfer)), fs) { blockDiffEi =>
-          blockDiffEi should produce("AliasDoesNotExist")
-        }
-    }
-  }
-
   property("MassTransfer cannot overspend funds") {
     val setup = for {
-      (genesis, master)                      <- baseSetup
-      recipients                             <- Gen.listOfN(2, accountGen.map(acc => ParsedTransfer(acc.toAddress, ENOUGH_AMT / 2 + 1)))
-      (assetIssue: IssueTransactionV1, _, _) <- issueReissueBurnGeneratorP(ENOUGH_AMT, master)
-      maybeAsset                             <- Gen.option(assetIssue)
-      transfer                               <- massTransferGeneratorP(master, recipients, maybeAsset.map(_.id()))
+      (genesis, master) <- baseSetup
+      recipients        <- Gen.listOfN(2, accountGen.map(acc => ParsedTransfer(acc.toAddress, ENOUGH_AMT / 2 + 1)))
+      transfer          <- massTransferGeneratorP(master, recipients, None)
     } yield (genesis, transfer)
 
     forAll(setup) {

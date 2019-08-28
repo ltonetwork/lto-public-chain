@@ -193,22 +193,7 @@ object AsyncHttpApi extends Assertions {
 
     def activeLeases(sourceAddress: String) = get(s"/leasing/active/$sourceAddress").as[Seq[Transaction]]
 
-    def issue(sourceAddress: String,
-              name: String,
-              description: String,
-              quantity: Long,
-              decimals: Byte,
-              reissuable: Boolean,
-              fee: Long): Future[Transaction] =
-      postJson("/assets/issue", IssueV1Request(sourceAddress, name, description, quantity, decimals, reissuable, fee)).as[Transaction]
-
     def scriptCompile(code: String) = post("/utils/script/compile", code).as[CompiledScript]
-
-    def reissue(sourceAddress: String, assetId: String, quantity: Long, reissuable: Boolean, fee: Long): Future[Transaction] =
-      postJson("/assets/reissue", ReissueV1Request(sourceAddress, assetId, quantity, reissuable, fee)).as[Transaction]
-
-    def burn(sourceAddress: String, assetId: String, quantity: Long, fee: Long): Future[Transaction] =
-      postJson("/assets/burn", BurnV1Request(sourceAddress, assetId, quantity, fee)).as[Transaction]
 
     def assetBalance(address: String, asset: String): Future[AssetBalance] =
       get(s"/assets/balance/$address/$asset").as[AssetBalance]
@@ -377,15 +362,6 @@ object AsyncHttpApi extends Assertions {
 
     def getGeneratedBlocks(address: String, from: Long, to: Long): Future[Seq[Block]] =
       get(s"/blocks/address/$address/$from/$to").as[Seq[Block]]
-
-    def issueAsset(address: String,
-                   name: String,
-                   description: String,
-                   quantity: Long,
-                   decimals: Byte,
-                   fee: Long,
-                   reissuable: Boolean): Future[Transaction] =
-      postJson("/assets/issue", IssueV1Request(address, name, description, quantity, decimals, reissuable, fee)).as[Transaction]
 
     def retrying(r: Request,
                  interval: FiniteDuration = 1.second,

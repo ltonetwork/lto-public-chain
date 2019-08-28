@@ -2,16 +2,15 @@ package com.wavesplatform.transaction
 
 import com.typesafe.config.ConfigFactory
 import com.wavesplatform.TransactionGen
+import com.wavesplatform.account.Address
 import com.wavesplatform.settings.FeesSettings
 import com.wavesplatform.state.{ByteStr, _}
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Assertion, Matchers, PropSpec}
-import com.wavesplatform.account.{Address, PrivateKeyAccount}
-import com.wavesplatform.transaction.assets._
 import com.wavesplatform.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.transaction.transfer._
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.prop.PropertyChecks
+import org.scalatest.{Assertion, Matchers, PropSpec}
 
 class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen with MockFactory {
 

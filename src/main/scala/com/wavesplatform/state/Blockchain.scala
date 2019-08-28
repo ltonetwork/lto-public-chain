@@ -45,10 +45,6 @@ trait Blockchain {
   def forgetTransactions(pred: (ByteStr, Long) => Boolean): Map[ByteStr, Long]
   def learnTransactions(values: Map[ByteStr, Long]): Unit
 
-  def assetDescription(id: ByteStr): Option[AssetDescription]
-
-  def resolveAlias(a: Alias): Either[ValidationError, Address]
-
   def leaseDetails(leaseId: ByteStr): Option[LeaseDetails]
 
   def filledVolumeAndFee(orderId: ByteStr): VolumeAndFee

@@ -1,12 +1,10 @@
 package com.wavesplatform.transaction
 
 import com.google.common.base.Throwables
-import com.wavesplatform.lang.v1.evaluator.ctx.LazyVal
-import com.wavesplatform.state.ByteStr
-import com.wavesplatform.account.{Address, Alias}
+import com.wavesplatform.account.Address
 import com.wavesplatform.block.{Block, MicroBlock}
 import com.wavesplatform.lang.ExprEvaluator.Log
-import com.wavesplatform.transaction.assets.exchange.Order
+import com.wavesplatform.state.ByteStr
 
 import scala.util.Either
 
@@ -30,9 +28,6 @@ object ValidationError {
   case class ScriptParseError(m: String)                       extends ValidationError
   case class AlreadyInTheState(txId: ByteStr, txHeight: Int)   extends ValidationError
   case class AccountBalanceError(errs: Map[Address, String])   extends ValidationError
-  case class AliasDoesNotExist(a: Alias)                       extends ValidationError
-  case class AliasIsDisabled(a: Alias)                         extends ValidationError
-  case class OrderValidationError(order: Order, err: String)   extends ValidationError
   case class SenderIsBlacklisted(addr: String)                 extends ValidationError
   case class Mistiming(err: String)                            extends ValidationError
   case class BlockAppendError(err: String, b: Block)           extends ValidationError

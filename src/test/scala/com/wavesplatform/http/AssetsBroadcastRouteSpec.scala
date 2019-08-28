@@ -108,9 +108,6 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
         }
       }
 
-      "returns a error if it is not a transfer request" in posting(List(issueReq.sample.get)) ~> check {
-        status shouldNot be(StatusCodes.OK)
-      }
     }
 
   }

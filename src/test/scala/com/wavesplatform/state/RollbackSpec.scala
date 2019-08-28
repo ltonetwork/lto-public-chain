@@ -9,12 +9,10 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FreeSpec, Matchers}
 import com.wavesplatform.account.{Address, PrivateKeyAccount}
 import com.wavesplatform.lagonaki.mocks.TestBlock
-import com.wavesplatform.transaction.ValidationError.AliasDoesNotExist
-import com.wavesplatform.transaction.assets.{IssueTransactionV1, ReissueTransactionV1}
 import com.wavesplatform.transaction.lease.{LeaseCancelTransactionV1, LeaseTransactionV1}
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.transfer._
-import com.wavesplatform.transaction.{AnchorTransaction, CreateAliasTransactionV1, DataTransaction, GenesisTransaction}
+import com.wavesplatform.transaction.{AnchorTransaction, DataTransaction, GenesisTransaction}
 import com.wavesplatform.features._
 import com.wavesplatform.settings.{FunctionalitySettings, TestFunctionalitySettings}
 import com.wavesplatform.history

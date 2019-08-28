@@ -410,15 +410,6 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
 
   override def learnTransactions(values: Map[AssetId, Long]): Unit = blockchain.learnTransactions(values)
 
-  override def assetDescription(id: AssetId): Option[AssetDescription] = ngState.fold(blockchain.assetDescription(id)) { ng =>
-    val diff = ng.bestLiquidDiff
-    CompositeBlockchain.composite(blockchain, diff).assetDescription(id)
-  }
-
-  override def resolveAlias(alias: Alias): Either[ValidationError, Address] = ngState.fold(blockchain.resolveAlias(alias)) { ng =>
-    CompositeBlockchain.composite(blockchain, ng.bestLiquidDiff).resolveAlias(alias)
-  }
-
   override def leaseDetails(leaseId: AssetId): Option[LeaseDetails] = ngState match {
     case Some(ng) =>
       blockchain.leaseDetails(leaseId).map(ld => ld.copy(isActive = ng.bestLiquidDiff.leaseState.getOrElse(leaseId, ld.isActive))) orElse
