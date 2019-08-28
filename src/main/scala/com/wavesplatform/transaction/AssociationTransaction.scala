@@ -5,13 +5,14 @@ import com.wavesplatform.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.wavesplatform.crypto
 import com.wavesplatform.serialization.Deser
 import com.wavesplatform.state._
+import com.wavesplatform.transaction.AssociationTransaction.Assoc
 import monix.eval.Coeval
 import play.api.libs.json._
 import scorex.crypto.signatures.Curve25519.KeyLength
 
 import scala.util.Try
 
-case class AssociationTransaction private (version: Byte, sender: PublicKeyAccount, party: Address, assocType: Int, hash: Option[ByteStr], fee: Long, timestamp: Long, proofs: Proofs)
+case class AssociationTransaction private (version: Byte, sender: PublicKeyAccount, assoc: Assoc, fee: Long, timestamp: Long, proofs: Proofs)
     extends ProvenTransaction
     with VersionedTransaction
     with FastHashId {
@@ -21,8 +22,8 @@ case class AssociationTransaction private (version: Byte, sender: PublicKeyAccou
     Bytes.concat(
       Array(builder.typeId, version),
       sender.publicKey,
-      party.bytes.arr,
-      hash.map(a => (1: Byte) +: Deser.serializeArray(a.arr)).getOrElse(Array(0: Byte)),
+      assoc.party.bytes.arr,
+      assoc.hash.map(a => (1: Byte) +: Deser.serializeArray(a.arr)).getOrElse(Array(0: Byte)),
       Longs.toByteArray(timestamp),
       Longs.toByteArray(fee)
     )
@@ -30,10 +31,10 @@ case class AssociationTransaction private (version: Byte, sender: PublicKeyAccou
 
   override val json: Coeval[JsObject] = Coeval.evalOnce {
     jsonBase() ++ Json.obj(
-      "version" -> version,
-      "party" -> party.stringRepr,
-      "associationType" -> assocType,
-      "hash" -> hash
+      "version"         -> version,
+      "party"           -> assoc.party.stringRepr,
+      "associationType" -> assoc.assocType,
+      "hash"            -> assoc.hash
     )
   }
 
@@ -42,10 +43,12 @@ case class AssociationTransaction private (version: Byte, sender: PublicKeyAccou
 
 object AssociationTransaction extends TransactionParserFor[AssociationTransaction] with TransactionParser.MultipleVersions {
 
+  case class Assoc(party: Address, assocType: Int, hash: Option[ByteStr])
+
   override val typeId: Byte                 = 16
   override val supportedVersions: Set[Byte] = Set(1)
 
-  val HashLength      = 64
+  val HashLength = 64
 
   override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
     Try {
@@ -68,7 +71,9 @@ object AssociationTransaction extends TransactionParserFor[AssociationTransactio
 
   def create(version: Byte,
              sender: PublicKeyAccount,
-             party: Address, assocType: Int, hash: Option[ByteStr],
+             party: Address,
+             assocType: Int,
+             hash: Option[ByteStr],
              feeAmount: Long,
              timestamp: Long,
              proofs: Proofs): Either[ValidationError, TransactionT] = {
@@ -79,28 +84,30 @@ object AssociationTransaction extends TransactionParserFor[AssociationTransactio
     } else if (feeAmount <= 0) {
       Left(ValidationError.InsufficientFee())
     } else {
-      Right( AssociationTransaction(version, sender, party,assocType,hash, feeAmount, timestamp, proofs))
+      Right(AssociationTransaction(version, sender, Assoc(party, assocType, hash), feeAmount, timestamp, proofs))
     }
   }
 
   def signed(version: Byte,
              sender: PublicKeyAccount,
-             party: Address, assocType: Int, hash: Option[ByteStr],
+             party: Address,
+             assocType: Int,
+             hash: Option[ByteStr],
              feeAmount: Long,
              timestamp: Long,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    create(version, sender,   party, assocType, hash, feeAmount, timestamp, Proofs.empty).right.map { unsigned =>
+    create(version, sender, party, assocType, hash, feeAmount, timestamp, Proofs.empty).right.map { unsigned =>
       unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes())))).explicitGet())
     }
   }
 
   def selfSigned(version: Byte,
                  sender: PrivateKeyAccount,
-                 party: Address, assocType: Int, hash: Option[ByteStr],
+                 party: Address,
+                 assocType: Int,
+                 hash: Option[ByteStr],
                  feeAmount: Long,
                  timestamp: Long): Either[ValidationError, TransactionT] = {
     signed(version, sender, party, assocType, hash, feeAmount, timestamp, sender)
   }
 }
-
-
