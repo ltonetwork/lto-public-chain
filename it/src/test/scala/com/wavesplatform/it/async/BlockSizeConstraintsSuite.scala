@@ -16,9 +16,9 @@ class BlockSizeConstraintsSuite extends FreeSpec with Matchers with TransferSend
 
   override protected val nodeConfigs: Seq[Config] =
     Seq(ConfigOverrides.withFallback(NodeConfigs.randomMiner))
-  private val nodeAddresses = nodeConfigs.map(_.getString("address")).toSet
+  private val nodeAddresses               = nodeConfigs.map(_.getString("address")).toSet
   val transfers: Seq[TransferSending.Req] = generateTransfersToRandomAddresses(maxTxsGroup, nodeAddresses)
-  private val miner         = nodes.head
+  private val miner                       = nodes.head
   s"Block is limited by size after activation" in result(
     for {
       _                 <- Future.sequence((0 to maxGroups).map(_ => processRequests(transfers, includeAttachment = true)))

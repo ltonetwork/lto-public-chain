@@ -5,7 +5,6 @@ import java.net.InetSocketAddress
 import java.util.concurrent.TimeoutException
 
 import com.wavesplatform.api.http.PeersApiRoute.{ConnectReq, connectFormat}
-import com.wavesplatform.api.http.alias.CreateAliasV1Request
 import com.wavesplatform.api.http.assets._
 import com.wavesplatform.api.http.leasing.{LeaseCancelV1Request, LeaseV1Request, SignedLeaseCancelV1Request, SignedLeaseV1Request}
 import com.wavesplatform.api.http.{AddressApiRoute, DataRequest}
@@ -270,15 +269,6 @@ object AsyncHttpApi extends Assertions {
 
       aux.as[Seq[Transaction]]
     }
-
-    def createAlias(targetAddress: String, alias: String, fee: Long): Future[Transaction] =
-      postJson("/alias/create", CreateAliasV1Request(targetAddress, alias, fee)).as[Transaction]
-
-    def aliasByAddress(targetAddress: String): Future[Seq[String]] =
-      get(s"/alias/by-address/$targetAddress").as[Seq[String]]
-
-    def addressByAlias(targetAlias: String): Future[Address] =
-      get(s"/alias/by-alias/$targetAlias").as[Address]
 
     def rollback(to: Int, returnToUTX: Boolean = true): Future[Unit] =
       postJson("/debug/rollback", RollbackParams(to, returnToUTX)).map(_ => ())

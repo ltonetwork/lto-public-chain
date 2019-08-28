@@ -3,7 +3,6 @@ package com.wavesplatform.it.api
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.StatusCodes.BadRequest
 import com.wavesplatform.api.http.AddressApiRoute
-import com.wavesplatform.api.http.assets.SignedIssueV1Request
 import com.wavesplatform.features.api.ActivationStatus
 import com.wavesplatform.http.DebugMessage
 import com.wavesplatform.it.Node
@@ -125,8 +124,6 @@ object SyncHttpApi extends Assertions {
 
     def sign(jsObject: JsObject): JsObject =
       Await.result(async(n).sign(jsObject), RequestAwaitTime)
-    def aliasByAddress(targetAddress: String): Seq[String] =
-      Await.result(async(n).aliasByAddress(targetAddress), RequestAwaitTime)
 
     def transfer(sourceAddress: String, recipient: String, amount: Long, fee: Long): Transaction =
       Await.result(async(n).transfer(sourceAddress, recipient, amount, fee), RequestAwaitTime)
