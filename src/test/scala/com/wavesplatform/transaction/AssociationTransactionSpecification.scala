@@ -46,7 +46,8 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
       req.timestamp shouldEqual tx.timestamp
       req.associationType shouldEqual tx.assoc.assocType
       req.party shouldEqual tx.assoc.party.toString
-      req.hash shouldEqual tx.assoc.hash.map(_.base58)
+      if (tx.assoc.hash.isDefined)
+        req.hash shouldEqual tx.assoc.hash.map(_.base58)
     }
   }
 

@@ -242,6 +242,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case Some(x) =>
             x match {
               case AnchorTransaction        => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
+              case AssociationTransaction   => TransactionFactory.association(txJson.as[AssociationRequest], wallet, signerAddress, time)
               case TransferTransactionV1    => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], wallet, signerAddress, time)
               case TransferTransactionV2    => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], wallet, signerAddress, time)
               case MassTransferTransaction  => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], wallet, signerAddress, time)
@@ -273,6 +274,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case Some(x) =>
                 x match {
                   case AnchorTransaction        => TransactionFactory.anchor(txJson.as[AnchorRequest], senderPk)
+                  case AssociationTransaction   => TransactionFactory.association(txJson.as[AssociationRequest], senderPk)
                   case TransferTransactionV1    => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], senderPk)
                   case TransferTransactionV2    => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], senderPk)
                   case MassTransferTransaction  => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], senderPk)
@@ -305,13 +307,15 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         val typeId  = (jsv \ "type").as[Byte]
         val version = (jsv \ "version").asOpt[Byte](versionReads).getOrElse(1.toByte)
 
-        implicit val broadcastAnchorRequestReadsFormat: Format[SignedAnchorRequest] = Json.format
+        implicit val broadcastAnchorRequestReadsFormat: Format[SignedAnchorRequest]     = Json.format
+        implicit val broadcastAssocRequestReadsFormat: Format[SignedAssociationRequest] = Json.format
 
         val r = TransactionParsers.by(typeId, version) match {
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             x match {
               case AnchorTransaction        => jsv.as[SignedAnchorRequest].toTx
+              case AssociationTransaction   => jsv.as[SignedAssociationRequest].toTx
               case TransferTransactionV1    => jsv.as[SignedTransferV1Request].toTx
               case TransferTransactionV2    => jsv.as[SignedTransferV2Request].toTx
               case MassTransferTransaction  => jsv.as[SignedMassTransferRequest].toTx

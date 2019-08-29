@@ -43,7 +43,7 @@ case class AddressApiRoute(settings: RestAPISettings,
   override lazy val route =
     pathPrefix("addresses") {
       validate ~ seed ~ balanceWithConfirmations ~ balanceDetails ~ balance ~ balanceWithConfirmations ~ verify ~ sign ~ deleteAddress ~ verifyText ~
-        signText ~ seq ~ publicKey ~ effectiveBalance ~ effectiveBalanceWithConfirmations ~ getData ~ getDataItem ~ postData ~ postAnchor ~ scriptInfo
+        signText ~ seq ~ publicKey ~ effectiveBalance ~ effectiveBalanceWithConfirmations ~ getData ~ getDataItem ~ postData ~ postAnchor ~ postAssociation ~ scriptInfo
     } ~ root ~ create
 
   @Path("/scriptInfo/{address}")
@@ -282,6 +282,10 @@ case class AddressApiRoute(settings: RestAPISettings,
     ))
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def postAnchor: Route = processRequest("anchor", (req: AnchorRequest) => doBroadcast(TransactionFactory.anchor(req, wallet, time)))
+
+  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
+  def postAssociation: Route =
+    processRequest("association", (req: AssociationRequest) => doBroadcast(TransactionFactory.association(req, wallet, time)))
 
   @Path("/data/{address}")
   @ApiOperation(value = "Complete Data", notes = "Read all data posted by an account", httpMethod = "GET")

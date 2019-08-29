@@ -6,7 +6,6 @@ import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.features.FeatureProvider._
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.account.{Address, Alias, PublicKeyAccount}
-import com.wavesplatform.transaction.AssociationTransaction.Assoc
 import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.transaction.{AssetId, Transaction}
 
@@ -124,8 +123,7 @@ case class Diff(transactions: Map[ByteStr, (Int, Transaction, Set[Address])],
                 leaseState: Map[ByteStr, Boolean],
                 scripts: Map[Address, Option[Script]],
                 accountData: Map[Address, AccountDataInfo],
-                sponsorship: Map[AssetId, Sponsorship],
-                assocs: Map[Address, List[Assoc]]) {
+                sponsorship: Map[AssetId, Sponsorship]) {
 
   lazy val accountTransactionIds: Map[Address, List[(Int, ByteStr)]] = {
     val map: List[(Address, Set[(Int, Byte, Long, ByteStr)])] = transactions.toList
@@ -151,8 +149,7 @@ object Diff {
             leaseState: Map[ByteStr, Boolean] = Map.empty,
             scripts: Map[Address, Option[Script]] = Map.empty,
             accountData: Map[Address, AccountDataInfo] = Map.empty,
-            sponsorship: Map[AssetId, Sponsorship] = Map.empty,
-            assocs: Map[Address, List[Assoc]] = Map.empty): Diff =
+            sponsorship: Map[AssetId, Sponsorship] = Map.empty): Diff =
     Diff(
       transactions = Map((tx.id(), (height, tx, portfolios.keys.toSet))),
       portfolios = portfolios,
@@ -162,13 +159,10 @@ object Diff {
       leaseState = leaseState,
       scripts = scripts,
       accountData = accountData,
-      sponsorship = sponsorship,
-      assocs = assocs
+      sponsorship = sponsorship
     )
 
-  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
-
-  def combineAsscos(older: Map[Address, List[Assoc]], newer: Map[Address, List[Assoc]]): Map[Address, List[Assoc]] = older.combine(newer)
+  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
 
   implicit val diffMonoid = new Monoid[Diff] {
     override def empty: Diff = Diff.empty
@@ -183,8 +177,7 @@ object Diff {
         leaseState = older.leaseState ++ newer.leaseState,
         scripts = older.scripts ++ newer.scripts,
         accountData = older.accountData.combine(newer.accountData),
-        sponsorship = older.sponsorship.combine(newer.sponsorship),
-        assocs = combineAsscos(older.assocs, newer.assocs)
+        sponsorship = older.sponsorship.combine(newer.sponsorship)
       )
   }
 }

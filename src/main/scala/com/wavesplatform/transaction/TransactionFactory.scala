@@ -321,8 +321,7 @@ object TransactionFactory extends BroadcastRequest {
   import com.wavesplatform.api.http._
 
   def anchor(request: AnchorRequest, wallet: Wallet, time: Time): Either[ValidationError, AnchorTransaction] =
-  anchor(request, wallet, request.sender, time)
-
+    anchor(request, wallet, request.sender, time)
 
   def anchor(request: AnchorRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AnchorTransaction] =
     for {
@@ -349,6 +348,44 @@ object TransactionFactory extends BroadcastRequest {
         request.fee,
         0,
         Proofs.empty
+      )
+    } yield tx
+
+  def association(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, AssociationTransaction] =
+    association(request, wallet, request.sender, time)
+
+  def association(request: AssociationRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AssociationTransaction] =
+    for {
+      sender <- wallet.findPrivateKey(request.sender)
+      signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
+      party  <- Address.fromString(request.party)
+      hash   <- if (request.hash == "") Right(None) else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.HashLength).map(Some(_))
+      tx <- AssociationTransaction.signed(
+        request.version,
+        sender,
+        party,
+        request.associationType,
+        hash,
+        request.fee,
+        request.timestamp.getOrElse(time.getTimestamp()),
+        signer
+      )
+    } yield tx
+
+  def association(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, AssociationTransaction] =
+    for {
+      party <- Address.fromString(request.party)
+      hash  <- if (request.hash == "") Right(None) else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.HashLength).map(Some(_))
+
+      tx <- AssociationTransaction.create(
+        version = request.version,
+        sender = sender,
+        party = party,
+        assocType = request.associationType,
+        hash = hash,
+        feeAmount = request.fee,
+        timestamp = 0,
+        proofs = Proofs.empty
       )
     } yield tx
 }

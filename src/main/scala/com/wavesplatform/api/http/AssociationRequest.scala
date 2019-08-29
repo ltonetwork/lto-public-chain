@@ -15,7 +15,7 @@ case class AssociationRequest(version: Byte,
                               sender: String,
                               party: String,
                               associationType: Int,
-                              hash: Option[String],
+                              hash: String,
                               fee: Long,
                               timestamp: Option[Long] = None)
 
@@ -29,7 +29,7 @@ case class SignedAssociationRequest(@ApiModelProperty(required = true)
                                     @ApiModelProperty(value = "Association type", required = true)
                                     associationType: Int,
                                     @ApiModelProperty(value = "Association data hash ", required = false)
-                                    hash: Option[String],
+                                    hash: String,
                                     @ApiModelProperty(required = true)
                                     fee: Long,
                                     @ApiModelProperty(required = true)
@@ -42,12 +42,8 @@ case class SignedAssociationRequest(@ApiModelProperty(required = true)
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _party      <- Address.fromString(party)
       _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
-      _hash <- hash.map(h => parseBase58(h, "Incorrect hash", AssociationTransaction.HashLength)) match {
-        case None           => Right(None)
-        case Some(Right(x)) => Right(Some(x))
-        case Some(Left(y))  => Left(y)
-      }
-      _proofs <- Proofs.create(_proofBytes)
-      t       <- AssociationTransaction.create(version, _sender, _party, associationType, _hash, fee, timestamp, _proofs)
+      _hash       <- if (hash == "") Right(None) else parseBase58(hash, "Incorrect hash", AssociationTransaction.HashLength).map(Some(_))
+      _proofs     <- Proofs.create(_proofBytes)
+      t           <- AssociationTransaction.create(version, _sender, _party, associationType, _hash, fee, timestamp, _proofs)
     } yield t
 }
