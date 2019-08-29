@@ -423,4 +423,16 @@ trait TransactionGenBase extends ScriptGen {
     AnchorTransaction.selfSigned(version, sender, anchors, 15000000, timestamp).explicitGet()
   }
 
+  val assocTransactionGen: Gen[AssociationTransaction] = for {
+    sender    <- accountGen
+    timestamp <- timestampGen
+    version   <- Gen.oneOf(AssociationTransaction.supportedVersions.toSeq)
+    party     <- accountGen
+    assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
+    fee       <- smallFeeGen
+    hashOpt   <- Gen.option(genBoundedBytes(AssociationTransaction.HashLength, AssociationTransaction.HashLength).map(ByteStr(_)))
+  } yield {
+    AssociationTransaction.selfSigned(version, sender, party, assocType, hashOpt, fee, timestamp).explicitGet()
+  }
+
 }

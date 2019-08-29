@@ -1,28 +1,36 @@
 package com.wavesplatform.transaction
 
-import com.google.common.primitives.{Bytes, Longs}
-import com.wavesplatform.account.{Address, PrivateKeyAccount, PublicKeyAccount}
+import com.google.common.primitives.{Bytes, Ints, Longs}
+import com.wavesplatform.account.{Address, AddressScheme, PrivateKeyAccount, PublicKeyAccount}
 import com.wavesplatform.crypto
 import com.wavesplatform.serialization.Deser
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.AssociationTransaction.Assoc
+import com.wavesplatform.transaction.ValidationError.GenericError
 import monix.eval.Coeval
 import play.api.libs.json._
 import scorex.crypto.signatures.Curve25519.KeyLength
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
-case class AssociationTransaction private (version: Byte, sender: PublicKeyAccount, assoc: Assoc, fee: Long, timestamp: Long, proofs: Proofs)
+case class AssociationTransaction private (version: Byte,
+                                           chainId: Byte,
+                                           sender: PublicKeyAccount,
+                                           assoc: Assoc,
+                                           fee: Long,
+                                           timestamp: Long,
+                                           proofs: Proofs)
     extends ProvenTransaction
     with VersionedTransaction
     with FastHashId {
 
-  override val builder: TransactionParser = AnchorTransaction
+  override val builder: TransactionParser = AssociationTransaction
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce {
     Bytes.concat(
-      Array(builder.typeId, version),
+      Array(builder.typeId, version, chainId),
       sender.publicKey,
       assoc.party.bytes.arr,
+      Ints.toByteArray(assoc.assocType),
       assoc.hash.map(a => (1: Byte) +: Deser.serializeArray(a.arr)).getOrElse(Array(0: Byte)),
       Longs.toByteArray(timestamp),
       Longs.toByteArray(fee)
@@ -50,23 +58,27 @@ object AssociationTransaction extends TransactionParserFor[AssociationTransactio
 
   val HashLength = 64
 
+  private def networkByte = AddressScheme.current.chainId
+
   override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
     Try {
-      val p0     = KeyLength
-      val sender = PublicKeyAccount(bytes.slice(0, p0))
-      ???
-//
-//      val txEi = for {
-//        r <- Try(Deser.parseArraysPos(bytes.drop(p0))).toEither.left.map(x => GenericError(x.toString))
-//        arrays    = r._1
-//        pos       = r._2
-//        timestamp = Longs.fromByteArray(bytes.drop(p0 + pos))
-//        feeAmount = Longs.fromByteArray(bytes.drop(p0 + pos + 8))
-//
-//        proofs <- Proofs.fromBytes(bytes.drop(p0 + pos + 16))
-//        tx     <- create(version, sender, arrays.map(ByteStr(_)).toList, feeAmount, timestamp, proofs)
-//      } yield tx
-//      txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
+      import com.wavesplatform.utils._
+
+      val chainId = bytes(0)
+      val p0      = KeyLength
+      val sender  = PublicKeyAccount(bytes.slice(1, p0 + 1))
+      val txEi = for {
+        party <- Address.fromBytes(bytes.slice(p0 + 1, p0 + 1 + Address.AddressLength))
+        partyEnd      = p0 + 1 + Address.AddressLength
+        assocType     = Ints.fromByteArray(bytes.slice(partyEnd, partyEnd + 4))
+        (hashOpt, s0) = Deser.parseOption(bytes, partyEnd + 4)(ByteStr(_))
+        timestamp     = Longs.fromByteArray(bytes.drop(s0))
+        feeAmount     = Longs.fromByteArray(bytes.drop(s0 + 8))
+        proofs <- Proofs.fromBytes(bytes.drop(s0 + 16))
+        _      <- Either.cond(chainId == networkByte, (), GenericError(s"Wrong chainId ${chainId.toInt}"))
+        tx     <- create(version, sender, party, assocType, hashOpt, feeAmount, timestamp, proofs)
+      } yield tx
+      txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
   def create(version: Byte,
@@ -84,7 +96,7 @@ object AssociationTransaction extends TransactionParserFor[AssociationTransactio
     } else if (feeAmount <= 0) {
       Left(ValidationError.InsufficientFee())
     } else {
-      Right(AssociationTransaction(version, sender, Assoc(party, assocType, hash), feeAmount, timestamp, proofs))
+      Right(AssociationTransaction(version, networkByte, sender, Assoc(party, assocType, hash), feeAmount, timestamp, proofs))
     }
   }
 

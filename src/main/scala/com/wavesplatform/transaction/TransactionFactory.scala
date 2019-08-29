@@ -318,11 +318,11 @@ object TransactionFactory extends BroadcastRequest {
                                    Proofs.MaxAnchorStringSize)
     })
   }
+  import com.wavesplatform.api.http._
 
   def anchor(request: AnchorRequest, wallet: Wallet, time: Time): Either[ValidationError, AnchorTransaction] =
-    anchor(request, wallet, request.sender, time)
+  anchor(request, wallet, request.sender, time)
 
-  import com.wavesplatform.api.http._
 
   def anchor(request: AnchorRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AnchorTransaction] =
     for {
