@@ -2,25 +2,25 @@ package com.wavesplatform.api.http
 
 import java.nio.charset.StandardCharsets
 
-import javax.ws.rs.Path
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Route
+import com.wavesplatform.account.{Address, PublicKeyAccount}
 import com.wavesplatform.consensus.GeneratingBalanceProvider
 import com.wavesplatform.crypto
+import com.wavesplatform.http.BroadcastRoute
 import com.wavesplatform.settings.{FunctionalitySettings, RestAPISettings}
 import com.wavesplatform.state.Blockchain
 import com.wavesplatform.state.diffs.CommonValidation
-import com.wavesplatform.utils.{Base58, Time}
-import com.wavesplatform.utx.UtxPool
-import io.netty.channel.group.ChannelGroup
-import io.swagger.annotations._
-import play.api.libs.json._
-import com.wavesplatform.account.{Address, PublicKeyAccount}
-import com.wavesplatform.http.BroadcastRoute
 import com.wavesplatform.transaction.ValidationError.GenericError
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
-import com.wavesplatform.transaction.{TransactionFactory, ValidationError}
+import com.wavesplatform.transaction.{AssociationTransaction, TransactionFactory, ValidationError}
+import com.wavesplatform.utils.{Base58, Time}
+import com.wavesplatform.utx.UtxPool
 import com.wavesplatform.wallet.Wallet
+import io.netty.channel.group.ChannelGroup
+import io.swagger.annotations._
+import javax.ws.rs.Path
+import play.api.libs.json._
 
 import scala.util.{Failure, Success, Try}
 
@@ -43,7 +43,8 @@ case class AddressApiRoute(settings: RestAPISettings,
   override lazy val route =
     pathPrefix("addresses") {
       validate ~ seed ~ balanceWithConfirmations ~ balanceDetails ~ balance ~ balanceWithConfirmations ~ verify ~ sign ~ deleteAddress ~ verifyText ~
-        signText ~ seq ~ publicKey ~ effectiveBalance ~ effectiveBalanceWithConfirmations ~ getData ~ getDataItem ~ postData ~ postAnchor ~ postAssociation ~ scriptInfo
+        signText ~ seq ~ publicKey ~ effectiveBalance ~ effectiveBalanceWithConfirmations ~ getData ~ getDataItem ~
+        postData ~ postAnchor ~ postAssociation ~ scriptInfo ~ associations
     } ~ root ~ create
 
   @Path("/scriptInfo/{address}")
@@ -60,6 +61,25 @@ case class AddressApiRoute(settings: RestAPISettings,
         .map(ToResponseMarshallable(_))
     )
   }
+
+  @Path("/associations/{address}")
+  @ApiOperation(value = "Details for account", notes = "Account's associations", httpMethod = "GET")
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
+    ))
+  def associations: Route = (path("associations" / Segment) & get) { address =>
+    complete(
+      Address
+        .fromString(address)
+        .right
+        .map(acc => {
+          ToResponseMarshallable(associationsJson(acc, blockchain.associations(acc)))
+        })
+        .getOrElse(InvalidAddress)
+    )
+  }
+
   @Path("/{address}")
   @ApiOperation(value = "Delete", notes = "Remove the account with address {address} from the wallet", httpMethod = "DELETE")
   @ApiImplicitParams(
@@ -373,6 +393,14 @@ case class AddressApiRoute(settings: RestAPISettings,
       .getOrElse(InvalidAddress)
   }
 
+  private def associationsJson(address: Address, a: Blockchain.Associations): AssociactionsInfo = {
+    def f(l: List[(Int, AssociationTransaction)]) = l.map {
+      case (height, as) => AssociationInfo(as.assoc.party.toString, as.assoc.hashStr, as.assoc.assocType, height, as.id().base58)
+    }
+
+    AssociactionsInfo(address.stringRepr, f(a.incoming), f(a.outgoing))
+
+  }
   private def balancesDetailsJson(account: Address): BalanceDetails = {
     val portfolio = blockchain.portfolio(account)
     BalanceDetails(
@@ -475,6 +503,12 @@ case class AddressApiRoute(settings: RestAPISettings,
 }
 
 object AddressApiRoute {
+
+  case class AssociationInfo(party: String, hash: String, associationType: Int, height: Int, transactionId: String)
+  case class AssociactionsInfo(address: String, outgoing: List[AssociationInfo], incoming: List[AssociationInfo])
+
+  implicit val associactionInfoFormat: Format[AssociationInfo]    = Json.format
+  implicit val associactionsInfoFormat: Format[AssociactionsInfo] = Json.format
 
   case class Signed(message: String, publicKey: String, signature: String)
 

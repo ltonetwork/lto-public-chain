@@ -38,11 +38,12 @@ case class AssociationTransaction private (version: Byte,
   }
 
   override val json: Coeval[JsObject] = Coeval.evalOnce {
+    val str = assoc.hash.map(_.base58).getOrElse("")
     jsonBase() ++ Json.obj(
       "version"         -> version,
       "party"           -> assoc.party.stringRepr,
       "associationType" -> assoc.assocType,
-      "hash"            -> assoc.hash
+      "hash"            -> str
     )
   }
 
@@ -51,7 +52,9 @@ case class AssociationTransaction private (version: Byte,
 
 object AssociationTransaction extends TransactionParserFor[AssociationTransaction] with TransactionParser.MultipleVersions {
 
-  case class Assoc(party: Address, assocType: Int, hash: Option[ByteStr])
+  case class Assoc(party: Address, assocType: Int, hash: Option[ByteStr]) {
+    lazy val hashStr = hash.map(_.base58).getOrElse("")
+  }
 
   override val typeId: Byte                 = 16
   override val supportedVersions: Set[Byte] = Set(1)

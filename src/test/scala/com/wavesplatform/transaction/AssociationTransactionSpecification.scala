@@ -47,7 +47,7 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
       req.associationType shouldEqual tx.assoc.assocType
       req.party shouldEqual tx.assoc.party.toString
       if (tx.assoc.hash.isDefined)
-        req.hash shouldEqual tx.assoc.hash.map(_.base58)
+        req.hash shouldEqual tx.assoc.hash.get.base58
     }
   }
 
@@ -65,7 +65,7 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
                        "version": 1,
                        "party" : "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "associationType" : 420,
-                       "hash" : null
+                       "hash" : ""
                        }
   """)
 

@@ -297,6 +297,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(kk, nextSeqNr)
     }
 
+
     for ((alias, addressId) <- aliases) {
       rw.put(Keys.addressIdOfAlias(alias), Some(addressId))
     }
@@ -593,4 +594,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       if balance > 0
     } yield db.get(Keys.idToAddress(addressId)) -> balance).toMap.seq
   }
+
+  override def associations(address: Address): Blockchain.Associations = ???
 }

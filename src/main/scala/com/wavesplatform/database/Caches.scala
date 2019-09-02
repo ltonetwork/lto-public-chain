@@ -8,8 +8,7 @@ import com.wavesplatform.state._
 import com.wavesplatform.account.{Address, Alias}
 import com.wavesplatform.block.Block
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.Transaction
-import com.wavesplatform.transaction.AssetId
+import com.wavesplatform.transaction.{AssetId, AssociationTransaction, Transaction}
 
 import scala.collection.JavaConverters._
 

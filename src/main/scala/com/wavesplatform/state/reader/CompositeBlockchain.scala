@@ -7,7 +7,7 @@ import com.wavesplatform.state._
 import com.wavesplatform.transaction.Transaction.Type
 import com.wavesplatform.transaction.lease.LeaseTransaction
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.{AssetId, Transaction}
+import com.wavesplatform.transaction.{AssetId, AssociationTransaction, Transaction}
 
 class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff]) extends Blockchain {
 
@@ -169,6 +169,23 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff]) extends
   override def append(diff: Diff, block: Block): Unit = inner.append(diff, block)
 
   override def rollbackTo(targetBlockId: ByteStr): Seq[Block] = inner.rollbackTo(targetBlockId)
+
+  override def associations(address: Address): Blockchain.Associations = {
+    val a0 = inner.associations(address)
+    val diffAssociations: Seq[(Int, AssociationTransaction)] = maybeDiff
+      .map(
+        d =>
+          d.transactions.values
+            .map(i => (i._1, i._2))
+            .filter(_._2.builder.typeId == AssociationTransaction.typeId)
+            .toList
+            .map(_.asInstanceOf[(Int, AssociationTransaction)]))
+      .getOrElse(List.empty)
+    val outgoing = diffAssociations.filter(_._2.sender.toAddress == address)
+    val incoming = diffAssociations.filter(_._2.assoc.party == address)
+
+    Blockchain.Associations(a0.incoming ++ incoming, a0.outgoing ++ outgoing)
+  }
 }
 
 object CompositeBlockchain {

@@ -514,6 +514,8 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
     case None =>
       blockchain.balance(address)
   }
+
+  override def associations(address: Address): Blockchain.Associations = ???
 }
 
 object BlockchainUpdaterImpl extends ScorexLogging {
