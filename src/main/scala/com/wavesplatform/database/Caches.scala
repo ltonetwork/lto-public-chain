@@ -98,7 +98,8 @@ trait Caches extends Blockchain {
                          scripts: Map[BigInt, Option[Script]],
                          data: Map[BigInt, AccountDataInfo],
                          aliases: Map[Alias, BigInt],
-                         sponsorship: Map[AssetId, Sponsorship]): Unit
+                         sponsorship: Map[AssetId, Sponsorship],
+                         assocs: List[(Int, AssociationTransaction)]): Unit
 
   override def append(diff: Diff, block: Block): Unit = {
     heightCache += 1
@@ -147,6 +148,10 @@ trait Caches extends Blockchain {
       newTransactions += id -> ((tx, addresses.map(addressId)))
     }
 
+    val newAssociations: List[(Int, AssociationTransaction)] = diff.transactions.values
+      .filter(_._2.builder.typeId == AssociationTransaction.typeId)
+      .map(x => (x._1,x._2.asInstanceOf[AssociationTransaction])).toList
+
     doAppend(
       block,
       newAddressIds,
@@ -161,7 +166,8 @@ trait Caches extends Blockchain {
       diff.scripts.map { case (address, s)        => addressId(address) -> s },
       diff.accountData.map { case (address, data) => addressId(address) -> data },
       diff.aliases.map { case (a, address)        => a                  -> addressId(address) },
-      diff.sponsorship
+      diff.sponsorship,
+      newAssociations
     )
 
     for ((address, id)           <- newAddressIds) addressIdCache.put(address, Some(id))

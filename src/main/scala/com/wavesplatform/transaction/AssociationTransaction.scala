@@ -98,6 +98,8 @@ object AssociationTransaction extends TransactionParserFor[AssociationTransactio
       Left(ValidationError.GenericError("Hash length must be " + HashLength + " bytes"))
     } else if (feeAmount <= 0) {
       Left(ValidationError.InsufficientFee())
+    } else if (sender.address == party.address) {
+      Left(GenericError("Can't associate with oneself"))
     } else {
       Right(AssociationTransaction(version, networkByte, sender, Assoc(party, assocType, hash), feeAmount, timestamp, proofs))
     }

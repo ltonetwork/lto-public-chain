@@ -182,7 +182,8 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   scripts: Map[BigInt, Option[Script]],
                                   data: Map[BigInt, AccountDataInfo],
                                   aliases: Map[Alias, BigInt],
-                                  sponsorship: Map[AssetId, Sponsorship]): Unit = readWrite { rw =>
+                                  sponsorship: Map[AssetId, Sponsorship],
+                                  assocs: List[(Int, AssociationTransaction)]): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
     rw.put(Keys.height, height)
@@ -293,10 +294,23 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     for ((addressId, txs) <- addressTransactions) {
       val kk        = Keys.addressTransactionSeqNr(addressId)
       val nextSeqNr = rw.get(kk) + 1
-      rw.put(Keys.addressTransactionIds(addressId, nextSeqNr), txs)
+      val t: Key[Seq[(Int, AssetId)]] = Keys.addressTransactionIds(addressId, nextSeqNr)
+      rw.put(t, txs)
       rw.put(kk, nextSeqNr)
     }
 
+
+    for ((height, tx) <- assocs) {
+      val sender        = tx.sender.toAddress
+//      val party         = tx.assoc.party
+      val id            = tx.id()
+
+      val curSeqNr: Key[Int] = Keys.outgoingAssociationTransactionSeqNr(sender.bytes)
+      val nextSeqNr = rw.get(curSeqNr) + 1
+      val t = Keys.outgoingAssociationTransactionId(sender.bytes, nextSeqNr)
+      rw.put(t, id)
+      rw.put(curSeqNr, nextSeqNr)
+    }
 
     for ((alias, addressId) <- aliases) {
       rw.put(Keys.addressIdOfAlias(alias), Some(addressId))
@@ -595,5 +609,13 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     } yield db.get(Keys.idToAddress(addressId)) -> balance).toMap.seq
   }
 
-  override def associations(address: Address): Blockchain.Associations = ???
+  override def associations(address: Address): Blockchain.Associations = readOnly{ db =>
+    val txs =
+      for {
+    seqNr <- 1 to db.get(Keys.outgoingAssociationTransactionSeqNr(address.bytes))
+    txId = db.get(Keys.outgoingAssociationTransactionId(address.bytes,seqNr))
+    tx <- transactionInfo(txId).toList
+    } yield tx
+    Blockchain.Associations(List.empty,txs.map(x => (x._1,x._2.asInstanceOf[AssociationTransaction])).toList)
+  }
 }
