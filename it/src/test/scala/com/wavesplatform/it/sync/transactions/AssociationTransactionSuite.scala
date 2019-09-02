@@ -8,9 +8,9 @@ import com.wavesplatform.state.EitherExt2
 import com.wavesplatform.transaction.AssociationTransaction
 import org.scalatest.CancelAfterFailure
 import play.api.libs.json._
-
+import com.wavesplatform.it.util._
 class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
-  val fee = 10^8
+  val fee = 1.waves
   test("post association") {
 
     val party = PrivateKeyAccount.fromSeed("party").explicitGet()
