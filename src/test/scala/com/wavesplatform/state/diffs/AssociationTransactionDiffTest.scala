@@ -29,7 +29,7 @@ class AssociationTransactionDiffTest extends PropSpec with PropertyChecks with M
     forAll(setup) {
       case (genesis, assoc) =>
         assertDiffAndState(Seq(block(Seq(genesis))), block(Seq(assoc))) {
-          case (d,b) => b.associations(genesis.recipient) shouldBe Blockchain.Associations(List.empty, List((2,assoc)))
+          case (d,b) => b.associations(genesis.recipient) shouldBe Blockchain.Associations(List((2,assoc)),List.empty)
         }
     }
   }

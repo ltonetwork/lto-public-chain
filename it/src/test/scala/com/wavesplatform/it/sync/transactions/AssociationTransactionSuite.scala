@@ -29,7 +29,8 @@ class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterF
     nodes.waitForHeightAriseAndTxPresent(transferId)
     val assocs = notMiner.getAssociations(notMiner.address)
     assocs.address shouldBe notMiner.address
-    val singleOutgiongAssociation = assocs.outgoing(0)
+    val singleOutgiongAssociation = assocs.outgoing.head
+    assocs.outgoing.size shouldBe 1
     singleOutgiongAssociation.associationType shouldBe 42
     singleOutgiongAssociation.hash shouldBe ""
     singleOutgiongAssociation.transactionId shouldBe transferId

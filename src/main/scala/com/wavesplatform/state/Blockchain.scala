@@ -76,5 +76,5 @@ trait Blockchain {
   def rollbackTo(targetBlockId: ByteStr): Seq[Block]
 }
 object Blockchain {
-  case class Associations(incoming: List[(Int, AssociationTransaction)], outgoing: List[(Int, AssociationTransaction)])
+  case class Associations(outgoing: List[(Int, AssociationTransaction)], incoming: List[(Int, AssociationTransaction)])
 }

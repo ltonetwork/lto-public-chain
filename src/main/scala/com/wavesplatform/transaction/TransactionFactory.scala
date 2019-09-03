@@ -361,14 +361,14 @@ object TransactionFactory extends BroadcastRequest {
       party  <- Address.fromString(request.party)
       hash   <- if (request.hash == "") Right(None) else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.HashLength).map(Some(_))
       tx <- AssociationTransaction.signed(
-        request.version,
-        sender,
-        party,
-        request.associationType,
-        hash,
-        request.fee,
-        request.timestamp.getOrElse(time.getTimestamp()),
-        signer
+        version = request.version,
+        sender = sender,
+        party = party,
+        assocType = request.associationType,
+        hash = hash,
+        feeAmount = request.fee,
+        timestamp = request.timestamp.getOrElse(time.getTimestamp()),
+        signer = signer
       )
     } yield tx
 

@@ -184,7 +184,7 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff]) extends
     val outgoing = diffAssociations.filter(_._2.sender.toAddress == address)
     val incoming = diffAssociations.filter(_._2.assoc.party == address)
 
-    Blockchain.Associations(a0.incoming ++ incoming, a0.outgoing ++ outgoing)
+    Blockchain.Associations(a0.outgoing ++ outgoing, a0.incoming ++ incoming)
   }
 }
 

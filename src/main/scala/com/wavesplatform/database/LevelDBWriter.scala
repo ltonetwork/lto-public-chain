@@ -616,6 +616,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     txId = db.get(Keys.outgoingAssociationTransactionId(address.bytes,seqNr))
     tx <- transactionInfo(txId).toList
     } yield tx
-    Blockchain.Associations(List.empty,txs.map(x => (x._1,x._2.asInstanceOf[AssociationTransaction])).toList)
+    Blockchain.Associations(txs.map(x => (x._1,x._2.asInstanceOf[AssociationTransaction])).toList,List.empty)
   }
 }
