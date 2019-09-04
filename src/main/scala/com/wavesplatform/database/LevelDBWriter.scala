@@ -302,14 +302,15 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
     for ((height, tx) <- assocs) {
       val sender        = tx.sender.toAddress
-//      val party         = tx.assoc.party
+      //      val party         = tx.assoc.party
       val id            = tx.id()
 
-      val curSeqNr: Key[Int] = Keys.outgoingAssociationTransactionSeqNr(sender.bytes)
-      val nextSeqNr = rw.get(curSeqNr) + 1
-      val t = Keys.outgoingAssociationTransactionId(sender.bytes, nextSeqNr)
-      rw.put(t, id)
-      rw.put(curSeqNr, nextSeqNr)
+      val curSeq: Key[Int] = Keys.outgoingAssociationsSeqNr(sender.bytes)
+      val last = rw.get(curSeq)
+      val nextSeqNr = last + 1
+      val t: Key[Array[Byte]] = Keys.outgoingAssociationTransactionId(sender.bytes, nextSeqNr)
+      rw.put(t.keyBytes, id.arr)
+      rw.put(curSeq, nextSeqNr)
     }
 
     for ((alias, addressId) <- aliases) {
@@ -612,10 +613,10 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
   override def associations(address: Address): Blockchain.Associations = readOnly{ db =>
     val txs =
       for {
-    seqNr <- 1 to db.get(Keys.outgoingAssociationTransactionSeqNr(address.bytes))
-    txId = db.get(Keys.outgoingAssociationTransactionId(address.bytes,seqNr))
-    tx <- transactionInfo(txId).toList
-    } yield tx
+        seqNr <- 1 to db.get(Keys.outgoingAssociationsSeqNr(address.bytes))
+        txId = db.get(Keys.outgoingAssociationTransactionId(address.bytes,seqNr))
+        tx <- transactionInfo(ByteStr(txId)).toList
+      } yield tx
     Blockchain.Associations(txs.map(x => (x._1,x._2.asInstanceOf[AssociationTransaction])).toList,List.empty)
   }
 }

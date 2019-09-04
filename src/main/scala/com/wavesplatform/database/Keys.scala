@@ -122,12 +122,8 @@ object Keys {
   def aliasIsDisabled(alias: Alias): Key[Boolean] =
     Key(bytes(AliasIsDisabledPrefix, alias.bytes.arr), Option(_).exists(_(0) == 1), if (_) Array[Byte](1) else Array[Byte](0))
 
-
-  def outgoingAssociationTransactionSeqNr(addressBytes: ByteStr): Key[Int] = bytesSeqNr(44, addressBytes.arr)
-  def outgoingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[ByteStr] =
-    Key(hBytes(45, seqNr, addressBytes.arr), ByteStr(_), _.arr)
-  //  def incomingAssociationTransactionSeqNr(addressBytes: ByteStr): Key[Int] = bytesSeqNr(45, addressBytes.arr)
-  //  def addressTransactionIds(addressBytes: BigInt, seqNr: Int): Key[Seq[(Int, ByteStr)]] =
-  //    Key(hBytes(42, seqNr, addressId.toByteArray), readTransactionIds, writeTransactionIds)
+  def outgoingAssociationsSeqNr(address: ByteStr): Key[Int] = bytesSeqNr(44, address.arr)
+  def outgoingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[Array[Byte]] =
+    Key(hBytes(45, seqNr, addressBytes.arr), identity, identity)
 
 }
