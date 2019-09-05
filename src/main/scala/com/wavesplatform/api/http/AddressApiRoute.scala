@@ -393,12 +393,12 @@ case class AddressApiRoute(settings: RestAPISettings,
       .getOrElse(InvalidAddress)
   }
 
-  private def associationsJson(address: Address, a: Blockchain.Associations): AssociactionsInfo = {
+  private def associationsJson(address: Address, a: Blockchain.Associations): AssociationsInfo = {
     def f(l: List[(Int, AssociationTransaction)]) = l.map {
       case (height, as) => AssociationInfo(as.assoc.party.toString, as.assoc.hashStr, as.assoc.assocType, height, as.id().base58)
     }
 
-    AssociactionsInfo(address.stringRepr, f(a.incoming), f(a.outgoing))
+    AssociationsInfo(address.stringRepr, f(a.outgoing), f(a.incoming))
 
   }
   private def balancesDetailsJson(account: Address): BalanceDetails = {
@@ -505,10 +505,10 @@ case class AddressApiRoute(settings: RestAPISettings,
 object AddressApiRoute {
 
   case class AssociationInfo(party: String, hash: String, associationType: Int, height: Int, transactionId: String)
-  case class AssociactionsInfo(address: String, outgoing: List[AssociationInfo], incoming: List[AssociationInfo])
+  case class AssociationsInfo(address: String, outgoing: List[AssociationInfo], incoming: List[AssociationInfo])
 
   implicit val associactionInfoFormat: Format[AssociationInfo]    = Json.format
-  implicit val associactionsInfoFormat: Format[AssociactionsInfo] = Json.format
+  implicit val associactionsInfoFormat: Format[AssociationsInfo] = Json.format
 
   case class Signed(message: String, publicKey: String, signature: String)
 

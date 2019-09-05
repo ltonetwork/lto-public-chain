@@ -228,7 +228,7 @@ object AsyncHttpApi extends Assertions {
 
     def getData(address: String, key: String): Future[DataEntry[_]] = get(s"/addresses/data/$address/$key").as[DataEntry[_]]
 
-    def getAssociations(address: String): Future[AssociactionsInfo] = get(s"/addresses/associations/$address").as[AssociactionsInfo]
+    def getAssociations(address: String): Future[AssociationsInfo] = get(s"/addresses/associations/$address").as[AssociationsInfo]
 
     def signedTransfer(transfer: SignedTransferV1Request): Future[Transaction] =
       postJson("/assets/broadcast/transfer", transfer).as[Transaction]

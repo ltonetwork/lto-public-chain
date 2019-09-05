@@ -144,8 +144,8 @@ object SyncHttpApi extends Assertions {
     def getData(sourceAddress: String, key: String): DataEntry[_] =
       Await.result(async(n).getData(sourceAddress, key), RequestAwaitTime)
 
-    import com.wavesplatform.api.http.AddressApiRoute.AssociactionsInfo
-    def getAssociations(address: String): AssociactionsInfo =
+    import com.wavesplatform.api.http.AddressApiRoute.AssociationsInfo
+    def getAssociations(address: String): AssociationsInfo =
       Await.result(async(n).getAssociations(address),RequestAwaitTime)
 
     def broadcastRequest[A: Writes](req: A): Transaction =
