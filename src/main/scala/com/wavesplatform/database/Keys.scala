@@ -126,4 +126,9 @@ object Keys {
   def outgoingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[Array[Byte]] =
     Key(hBytes(45, seqNr, addressBytes.arr), identity, identity)
 
+  def incomingAssociationsSeqNr(address: ByteStr): Key[Int] = bytesSeqNr(46, address.arr)
+  def incomingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[Array[Byte]] =
+    Key(hBytes(47, seqNr, addressBytes.arr), identity, identity)
+
+
 }

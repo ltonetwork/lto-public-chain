@@ -292,25 +292,29 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     }
 
     for ((addressId, txs) <- addressTransactions) {
-      val kk        = Keys.addressTransactionSeqNr(addressId)
-      val nextSeqNr = rw.get(kk) + 1
+      val kk                          = Keys.addressTransactionSeqNr(addressId)
+      val nextSeqNr                   = rw.get(kk) + 1
       val t: Key[Seq[(Int, AssetId)]] = Keys.addressTransactionIds(addressId, nextSeqNr)
       rw.put(t, txs)
       rw.put(kk, nextSeqNr)
     }
 
-
     for ((height, tx) <- assocs) {
-      val sender        = tx.sender.toAddress
-      //      val party         = tx.assoc.party
-      val id            = tx.id()
+      val sender = tx.sender.toAddress
+      val party  = tx.assoc.party
+      val id     = tx.id()
 
-      val curSeq: Key[Int] = Keys.outgoingAssociationsSeqNr(sender.bytes)
-      val last = rw.get(curSeq)
-      val nextSeqNr = last + 1
-      val t: Key[Array[Byte]] = Keys.outgoingAssociationTransactionId(sender.bytes, nextSeqNr)
-      rw.put(t.keyBytes, id.arr)
-      rw.put(curSeq, nextSeqNr)
+      def f(p: Address, seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]]) = {
+        val curSeq: Key[Int]    = seqNrKey(p.bytes)
+        val last                = rw.get(curSeq)
+        val nextSeqNr           = last + 1
+        val t: Key[Array[Byte]] = idKey(p.bytes, nextSeqNr)
+        rw.put(t.keyBytes, id.arr)
+        rw.put(curSeq, nextSeqNr)
+      }
+
+      f(sender, Keys.outgoingAssociationsSeqNr, Keys.outgoingAssociationTransactionId)
+      f(party, Keys.incomingAssociationsSeqNr, Keys.incomingAssociationTransactionId)
     }
 
     for ((alias, addressId) <- aliases) {
@@ -359,6 +363,12 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
         val assetInfoToInvalidate  = Seq.newBuilder[ByteStr]
         val ordersToInvalidate     = Seq.newBuilder[ByteStr]
         val scriptsToDiscard       = Seq.newBuilder[Address]
+
+        // association transcations are discarded naturally.
+        // association records are not discarded, but since
+        // we query assocs as
+        // tx <- transactionInfo(ByteStr(txId)).toList
+        // the output will be consistent
 
         val discardedBlock = readWrite { rw =>
           log.trace(s"Rolling back to ${currentHeight - 1}")
@@ -610,13 +620,17 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     } yield db.get(Keys.idToAddress(addressId)) -> balance).toMap.seq
   }
 
-  override def associations(address: Address): Blockchain.Associations = readOnly{ db =>
-    val txs =
-      for {
-        seqNr <- 1 to db.get(Keys.outgoingAssociationsSeqNr(address.bytes))
-        txId = db.get(Keys.outgoingAssociationTransactionId(address.bytes,seqNr))
-        tx <- transactionInfo(ByteStr(txId)).toList
-      } yield tx
-    Blockchain.Associations(txs.map(x => (x._1,x._2.asInstanceOf[AssociationTransaction])).toList,List.empty)
+  override def associations(address: Address): Blockchain.Associations = readOnly { db =>
+    def f(seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]]) =
+        (1 to db.get(seqNrKey(address.bytes))).map { seqNr =>
+          db.get(idKey(address.bytes, seqNr))
+        }.distinct
+        .flatMap(txId => transactionInfo(ByteStr(txId)))
+        .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
+        .toList
+
+    Blockchain.Associations(
+      outgoing = f(Keys.outgoingAssociationsSeqNr, Keys.outgoingAssociationTransactionId),
+      incoming = f(Keys.incomingAssociationsSeqNr, Keys.incomingAssociationTransactionId))
   }
 }
