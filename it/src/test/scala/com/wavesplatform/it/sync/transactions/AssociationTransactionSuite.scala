@@ -32,14 +32,18 @@ class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterF
     println(assocs)
 
     assocs.address shouldBe notMiner.address
-    val singleOutgiongAssociation = assocs.outgoing.head
+
     assocs.outgoing.size shouldBe 1
+    assocs.incoming.size shouldBe 0
+    val singleOutgiongAssociation = assocs.outgoing.head
     singleOutgiongAssociation.associationType shouldBe 42
     singleOutgiongAssociation.hash shouldBe ""
     singleOutgiongAssociation.transactionId shouldBe assocId
 
-    val singleIncomingAssociation = assocs.outgoing.head
-    assocs.incoming.size shouldBe 1
+    val assocs2 = notMiner.getAssociations(party.address)
+    assocs2.outgoing.size shouldBe 0
+    assocs2.incoming.size shouldBe 1
+    val singleIncomingAssociation = assocs2.incoming.head
     singleIncomingAssociation.associationType shouldBe 42
     singleIncomingAssociation.hash shouldBe ""
     singleIncomingAssociation.transactionId shouldBe assocId
