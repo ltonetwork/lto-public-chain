@@ -23,17 +23,18 @@ class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterF
       hash = None,
       feeAmount = fee,
       timestamp = System.currentTimeMillis()).explicitGet()
-    val transferId = sender
+    val assocId = sender
       .signedBroadcast(assocTx.json() + ("type" -> JsNumber(AssociationTransaction.typeId.toInt)))
       .id
-    nodes.waitForHeightAriseAndTxPresent(transferId)
+    nodes.waitForHeightAriseAndTxPresent(assocId)
     val assocs = notMiner.getAssociations(notMiner.address)
+    println(assocs)
     assocs.address shouldBe notMiner.address
     val singleOutgiongAssociation = assocs.outgoing.head
     assocs.outgoing.size shouldBe 1
     singleOutgiongAssociation.associationType shouldBe 42
     singleOutgiongAssociation.hash shouldBe ""
-    singleOutgiongAssociation.transactionId shouldBe transferId
+    singleOutgiongAssociation.transactionId shouldBe assocId
   }
 
 
