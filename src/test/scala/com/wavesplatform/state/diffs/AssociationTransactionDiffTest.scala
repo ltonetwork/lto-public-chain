@@ -23,7 +23,7 @@ class AssociationTransactionDiffTest extends PropSpec with PropertyChecks with M
       party <- accountGen
       feeOverhead           <- Gen.choose[Long](0, ENOUGH_AMT)
       version               <- Gen.oneOf(AssociationTransaction.supportedVersions.toSeq)
-      tx = AssociationTransaction.selfSigned(version, master, party,42, None, 10^8 + feeOverhead, ts + 10000).explicitGet()
+      tx = AssociationTransaction.selfSigned(version, master, party,42, None, AssociationTransaction.ActionType.Issue,10^8 + feeOverhead, ts + 10000).explicitGet()
     } yield (genesis, tx)
 
     forAll(setup) {

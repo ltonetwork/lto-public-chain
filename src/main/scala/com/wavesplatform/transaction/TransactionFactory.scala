@@ -360,12 +360,14 @@ object TransactionFactory extends BroadcastRequest {
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       party  <- Address.fromString(request.party)
       hash   <- if (request.hash == "") Right(None) else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.HashLength).map(Some(_))
+      action <- AssociationTransaction.ActionType.fromString(request.action)
       tx <- AssociationTransaction.signed(
         version = request.version,
         sender = sender,
         party = party,
         assocType = request.associationType,
         hash = hash,
+        action = action,
         feeAmount = request.fee,
         timestamp = request.timestamp.getOrElse(time.getTimestamp()),
         signer = signer
@@ -376,13 +378,14 @@ object TransactionFactory extends BroadcastRequest {
     for {
       party <- Address.fromString(request.party)
       hash  <- if (request.hash == "") Right(None) else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.HashLength).map(Some(_))
-
+      action <- AssociationTransaction.ActionType.fromString(request.action)
       tx <- AssociationTransaction.create(
         version = request.version,
         sender = sender,
         party = party,
         assocType = request.associationType,
         hash = hash,
+        action = action,
         feeAmount = request.fee,
         timestamp = 0,
         proofs = Proofs.empty

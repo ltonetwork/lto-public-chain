@@ -9,8 +9,10 @@ import com.wavesplatform.consensus.GeneratingBalanceProvider
 import com.wavesplatform.crypto
 import com.wavesplatform.http.BroadcastRoute
 import com.wavesplatform.settings.{FunctionalitySettings, RestAPISettings}
-import com.wavesplatform.state.Blockchain
 import com.wavesplatform.state.diffs.CommonValidation
+import com.wavesplatform.state.{Blockchain, ByteStr}
+import com.wavesplatform.transaction.AssociationTransaction.ActionType.{Issue, Revoke}
+import com.wavesplatform.transaction.AssociationTransaction.Assoc
 import com.wavesplatform.transaction.ValidationError.GenericError
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
 import com.wavesplatform.transaction.{AssociationTransaction, TransactionFactory, ValidationError}
@@ -394,8 +396,30 @@ case class AddressApiRoute(settings: RestAPISettings,
   }
 
   private def associationsJson(address: Address, a: Blockchain.Associations): AssociationsInfo = {
-    def f(l: List[(Int, AssociationTransaction)]) = l.map {
-      case (height, as) => AssociationInfo(as.assoc.party.toString, as.assoc.hashStr, as.assoc.assocType, height, as.id().base58)
+
+    def f(l: List[(Int, AssociationTransaction)]) = {
+      def revoking(ai: AssociationInfo, a: AssociationTransaction) = {
+        a.actionType == Revoke &&
+        ai.hash == a.assoc.hashStr &&
+        address.toString() == a.sender.toString() &&
+        ai.party == a.assoc.party.toString &&
+        ai.associationType == a.assoc.assocType
+      }
+      l.foldLeft(Map.empty[Assoc, (Int, ByteStr, Option[(Int, ByteStr)])]) {
+          case (acc, (height, as)) =>
+            (as.actionType, acc.get(as.assoc)) match {
+              case (Issue, None)                 => acc + (as.assoc -> (height, as.id(), None))
+              case (Issue, Some(_))              => acc
+              case (Revoke, None)                => acc
+              case (Revoke, Some((h, bs, None))) => acc + (as.assoc -> (h, bs, Some((height, as.id()))))
+            }
+        }
+        .toList
+        .sortBy(_._2._1)
+        .map {
+          case (assoc, (h, id, r)) =>
+            AssociationInfo(assoc.party.address, assoc.hashStr, assoc.assocType, h, id.toString, r.map(_._1), r.map(_._2.toString))
+        }
     }
 
     AssociationsInfo(address.stringRepr, f(a.outgoing), f(a.incoming))
@@ -504,10 +528,17 @@ case class AddressApiRoute(settings: RestAPISettings,
 
 object AddressApiRoute {
 
-  case class AssociationInfo(party: String, hash: String, associationType: Int, height: Int, transactionId: String)
+  case class AssociationInfo(party: String,
+                             hash: String,
+                             associationType: Int,
+                             issueHeight: Int,
+                             issueTransactionId: String,
+                             revokeHeight: Option[Int],
+                             revokeTransactionId: Option[String])
+
   case class AssociationsInfo(address: String, outgoing: List[AssociationInfo], incoming: List[AssociationInfo])
 
-  implicit val associactionInfoFormat: Format[AssociationInfo]    = Json.format
+  implicit val associactionInfoFormat: Format[AssociationInfo]   = Json.format
   implicit val associactionsInfoFormat: Format[AssociationsInfo] = Json.format
 
   case class Signed(message: String, publicKey: String, signature: String)
