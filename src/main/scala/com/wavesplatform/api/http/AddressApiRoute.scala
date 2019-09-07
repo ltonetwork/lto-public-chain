@@ -396,22 +396,13 @@ case class AddressApiRoute(settings: RestAPISettings,
   }
 
   private def associationsJson(address: Address, a: Blockchain.Associations): AssociationsInfo = {
-
     def f(l: List[(Int, AssociationTransaction)]) = {
-      def revoking(ai: AssociationInfo, a: AssociationTransaction) = {
-        a.actionType == Revoke &&
-        ai.hash == a.assoc.hashStr &&
-        address.toString() == a.sender.toString() &&
-        ai.party == a.assoc.party.toString &&
-        ai.associationType == a.assoc.assocType
-      }
       l.foldLeft(Map.empty[Assoc, (Int, ByteStr, Option[(Int, ByteStr)])]) {
           case (acc, (height, as)) =>
             (as.actionType, acc.get(as.assoc)) match {
               case (Issue, None)                 => acc + (as.assoc -> (height, as.id(), None))
-              case (Issue, Some(_))              => acc
-              case (Revoke, None)                => acc
               case (Revoke, Some((h, bs, None))) => acc + (as.assoc -> (h, bs, Some((height, as.id()))))
+              case _ => acc
             }
         }
         .toList
