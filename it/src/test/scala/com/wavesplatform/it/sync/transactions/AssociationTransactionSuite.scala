@@ -44,34 +44,31 @@ class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterF
   test("post and revoke association") {
     val assocId = postAssoc(AssociationTransaction.ActionType.Issue)
 
-    val assocs = notMiner.getAssociations(notMiner.address)
-    assocs.address shouldBe notMiner.address
-    assocs.outgoing.size shouldBe 1
-    assocs.incoming.size shouldBe 0
-    val singleOutgiongAssociation = assocs.outgoing.head
-    verifyAssoc(singleOutgiongAssociation)(party.address,"",42,assocId,None)
+    val alice = notMiner.address
+    val bob = party.address
 
-    val assocs2 = notMiner.getAssociations(party.address)
-    assocs2.outgoing.size shouldBe 0
-    assocs2.incoming.size shouldBe 1
-    val singleIncomingAssociation = assocs2.incoming.head
-    verifyAssoc(singleIncomingAssociation)(notMiner.address,"",42,assocId,None)
+    val aliceAssocs = notMiner.getAssociations(alice)
+    aliceAssocs.address shouldBe alice
+    aliceAssocs.outgoing.size shouldBe 1
+    aliceAssocs.incoming.size shouldBe 0
+    verifyAssoc(aliceAssocs.outgoing.head)(bob,"",42,assocId,None)
+
+    val bobAssocs = notMiner.getAssociations(bob)
+    bobAssocs.outgoing.size shouldBe 0
+    bobAssocs.incoming.size shouldBe 1
+    verifyAssoc(bobAssocs.incoming.head)(alice,"",42,assocId,None)
 
     val revokeId = postAssoc(AssociationTransaction.ActionType.Revoke)
 
+    val revokedAliceAssocs = notMiner.getAssociations(alice)
+    revokedAliceAssocs.outgoing.size shouldBe 1
+    revokedAliceAssocs.incoming.size shouldBe 0
+    verifyAssoc(revokedAliceAssocs.outgoing.head)(bob,"",42,assocId,Some(revokeId))
 
-    val revokedAssocs = notMiner.getAssociations(notMiner.address)
-    revokedAssocs.address shouldBe notMiner.address
-    revokedAssocs.outgoing.size shouldBe 1
-    revokedAssocs.incoming.size shouldBe 0
-    val singleOutgiongRevokedAssociation = assocs.outgoing.head
-    verifyAssoc(singleOutgiongRevokedAssociation)(party.address,"",42,assocId,Some(revokeId))
-
-    val revokedAssocs2 = notMiner.getAssociations(party.address)
-    revokedAssocs2.outgoing.size shouldBe 0
-    revokedAssocs2.incoming.size shouldBe 1
-    val singleIncomingRevokedAssociation = revokedAssocs2.incoming.head
-    verifyAssoc(singleIncomingRevokedAssociation)(notMiner.address,"",42,assocId,Some(revokeId))
+    val revokedBobAssocs = notMiner.getAssociations(bob)
+    revokedBobAssocs.outgoing.size shouldBe 0
+    revokedBobAssocs.incoming.size shouldBe 1
+    verifyAssoc(revokedBobAssocs.incoming.head)(alice,"",42,assocId,Some(revokeId))
   }
 
 }

@@ -299,7 +299,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(kk, nextSeqNr)
     }
 
-    for ((height, tx) <- assocs) {
+    for ((_, tx) <- assocs) {
       val sender = tx.sender.toAddress
       val party  = tx.assoc.party
       val id     = tx.id()
