@@ -359,7 +359,7 @@ object TransactionFactory extends BroadcastRequest {
       sender <- wallet.findPrivateKey(request.sender)
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       party  <- Address.fromString(request.party)
-      hash   <- if (request.hash == "") Right(None) else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.HashLength).map(Some(_))
+      hash   <- if (request.hash == "") Right(None) else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.HashLength * 2).map(Some(_))
       action <- AssociationTransaction.ActionType.fromString(request.action)
       tx <- AssociationTransaction.signed(
         version = request.version,
@@ -377,7 +377,7 @@ object TransactionFactory extends BroadcastRequest {
   def association(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, AssociationTransaction] =
     for {
       party <- Address.fromString(request.party)
-      hash  <- if (request.hash == "") Right(None) else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.HashLength).map(Some(_))
+      hash  <- if (request.hash == "") Right(None) else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.HashLength * 2).map(Some(_))
       action <- AssociationTransaction.ActionType.fromString(request.action)
       tx <- AssociationTransaction.create(
         version = request.version,

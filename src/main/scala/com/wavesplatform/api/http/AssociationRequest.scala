@@ -15,7 +15,7 @@ case class AssociationRequest(version: Byte,
                               sender: String,
                               party: String,
                               associationType: Int,
-                              hash: String,
+                              hash: String = "",
                               action:String,
                               fee: Long,
                               timestamp: Option[Long] = None)
@@ -30,7 +30,7 @@ case class SignedAssociationRequest(@ApiModelProperty(required = true)
                                     @ApiModelProperty(value = "Association type", required = true)
                                     associationType: Int,
                                     @ApiModelProperty(value = "Association data hash ", required = false)
-                                    hash: String,
+                                    hash: String = "",
                                     @ApiModelProperty(value = "Association type(issue/revoke) ", required = false)
                                     action:String,
                                     @ApiModelProperty(required = true)
@@ -45,7 +45,7 @@ case class SignedAssociationRequest(@ApiModelProperty(required = true)
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _party      <- Address.fromString(party)
       _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
-      _hash       <- if (hash == "") Right(None) else parseBase58(hash, "Incorrect hash", AssociationTransaction.HashLength).map(Some(_))
+      _hash       <- if (hash == "") Right(None) else parseBase58(hash, "Incorrect hash", AssociationTransaction.HashLength * 2).map(Some(_))
       _proofs     <- Proofs.create(_proofBytes)
       _action     <- AssociationTransaction.ActionType.fromString(action)
       t           <- AssociationTransaction.create(version, _sender, _party, associationType, _hash, _action, fee, timestamp, _proofs)
