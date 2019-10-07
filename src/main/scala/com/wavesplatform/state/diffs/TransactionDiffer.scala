@@ -31,7 +31,7 @@ object TransactionDiffer {
         case ltx: LeaseCancelTransaction  => LeaseTransactionsDiff.leaseCancel(blockchain, settings, currentBlockTimestamp, currentBlockHeight)(ltx)
         case dtx: DataTransaction         => DataTransactionDiff(blockchain, currentBlockHeight)(dtx)
         case sstx: SetScriptTransaction   => SetScriptTransactionDiff(currentBlockHeight)(sstx)
-        case at: AnchorTransaction        => AnchorTransactionDiff(currentBlockHeight)(at)
+        case at: AnchorTransaction        => AnchorTransactionDiff(blockchain, currentBlockHeight)(at)
         case as: AssociationTransaction   => AssociationTransactionDiff(currentBlockHeight)(as)
         case _                            => Left(UnsupportedTransactionType)
       }

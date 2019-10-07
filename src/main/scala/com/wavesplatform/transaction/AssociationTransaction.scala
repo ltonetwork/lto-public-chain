@@ -93,6 +93,7 @@ object AssociationTransaction extends TransactionParserFor[AssociationTransactio
   override val supportedVersions: Set[Byte] = Set(1)
 
   val HashLength = 64
+  val StringHashLength = com.wavesplatform.utils.base58Length(AssociationTransaction.HashLength)
 
   private def networkByte = AddressScheme.current.chainId
 
