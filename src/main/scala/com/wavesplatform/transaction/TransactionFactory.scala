@@ -344,7 +344,7 @@ object TransactionFactory extends BroadcastRequest {
       tx <- AnchorTransaction.create(
         request.version,
         sender,
-        anchors,
+        anchors.map(AnchorRequest.prependZeros),
         request.fee,
         0,
         Proofs.empty
@@ -366,7 +366,7 @@ object TransactionFactory extends BroadcastRequest {
         sender = sender,
         party = party,
         assocType = request.associationType,
-        hash = hash,
+        hash = hash.map(AnchorRequest.prependZeros),
         action = action,
         feeAmount = request.fee,
         timestamp = request.timestamp.getOrElse(time.getTimestamp()),
@@ -384,7 +384,7 @@ object TransactionFactory extends BroadcastRequest {
         sender = sender,
         party = party,
         assocType = request.associationType,
-        hash = hash,
+        hash = hash.map(AnchorRequest.prependZeros),
         action = action,
         feeAmount = request.fee,
         timestamp = 0,

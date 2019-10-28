@@ -48,6 +48,6 @@ case class SignedAssociationRequest(@ApiModelProperty(required = true)
       _hash       <- if (hash == "") Right(None) else parseBase58(hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
       _proofs     <- Proofs.create(_proofBytes)
       _action     <- AssociationTransaction.ActionType.fromString(action)
-      t           <- AssociationTransaction.create(version, _sender, _party, associationType, _hash, _action, fee, timestamp, _proofs)
+      t           <- AssociationTransaction.create(version, _sender, _party, associationType, AnchorRequest.prependZeros(_hash), _action, fee, timestamp, _proofs)
     } yield t
 }
