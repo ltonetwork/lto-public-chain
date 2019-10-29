@@ -622,15 +622,18 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
   override def associations(address: Address): Blockchain.Associations = readOnly { db =>
     def f(seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]]) =
-        (1 to db.get(seqNrKey(address.bytes))).map { seqNr =>
+      (1 to db.get(seqNrKey(address.bytes)))
+        .map { seqNr =>
           db.get(idKey(address.bytes, seqNr))
-        }.distinct
+        }
+        .distinct
         .flatMap(txId => transactionInfo(ByteStr(txId)))
         .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
         .toList
 
     Blockchain.Associations(
       outgoing = f(Keys.outgoingAssociationsSeqNr, Keys.outgoingAssociationTransactionId),
-      incoming = f(Keys.incomingAssociationsSeqNr, Keys.incomingAssociationTransactionId))
+      incoming = f(Keys.incomingAssociationsSeqNr, Keys.incomingAssociationTransactionId)
+    )
   }
 }

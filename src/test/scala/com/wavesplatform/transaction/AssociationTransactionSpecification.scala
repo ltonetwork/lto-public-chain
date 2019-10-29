@@ -55,7 +55,7 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
   }
 
   property(testName = "JSON format validation") {
-    val p = PrivateKeyAccount.fromSeed("xxx").explicitGet().toAddress
+    val p  = PrivateKeyAccount.fromSeed("xxx").explicitGet().toAddress
     val js = Json.parse(s"""{
                        "type": 16,
                        "id": "EztEhGMm34TKTj3zLWwFJ4HGyfhuUTwVPceqCzR1Qeuf",

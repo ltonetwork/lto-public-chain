@@ -22,11 +22,11 @@ object AnchorTransactionDiff {
   import com.wavesplatform.features.FeatureProvider._
   def apply(blockchain: Blockchain, height: Int)(tx: AnchorTransaction): Either[ValidationError, Diff] = {
     (if (blockchain.isFeatureActivated(BlockchainFeatures.AssociationTransaction, height))
-      for {
-        _ <- Either.cond(tx.anchors.size == 1, (), GenericError("AnchorTransaction should have exactly 1 anchor"))
-        _ <- Either.cond(tx.anchors.head.arr.length == AnchorTransaction.NewEntryLength, (), GenericError("Anchor should contain exactly 64 bytes"))
-      } yield ()
-    else Right(())).map(
+       for {
+         _ <- Either.cond(tx.anchors.size == 1, (), GenericError("AnchorTransaction should have exactly 1 anchor"))
+         _ <- Either.cond(tx.anchors.head.arr.length == AnchorTransaction.NewEntryLength, (), GenericError("Anchor should contain exactly 64 bytes"))
+       } yield ()
+     else Right(())).map(
       _ =>
         Diff(
           height,

@@ -58,32 +58,30 @@ object AssociationTransaction extends TransactionParserFor[AssociationTransactio
 
   sealed trait ActionType {
     override def toString: String = this match {
-      case Issue => "issue"
+      case Issue  => "issue"
       case Revoke => "revoke"
     }
 
-    lazy val bytes: Array[Byte] = if(this == Issue) Array(1:Byte) else Array(0:Byte)
+    lazy val bytes: Array[Byte] = if (this == Issue) Array(1: Byte) else Array(0: Byte)
   }
 
   object ActionType {
 
-    case object Issue extends ActionType
+    case object Issue  extends ActionType
     case object Revoke extends ActionType
 
-    def fromByte(b:Byte): Either[ValidationError, ActionType] = b match {
+    def fromByte(b: Byte): Either[ValidationError, ActionType] = b match {
       case 0 => Right(Revoke)
-      case 1  => Right(Issue)
+      case 1 => Right(Issue)
       case _ => Left(GenericError("Can't deserialize Action byte"))
     }
 
-    def fromString(s:String): Either[ValidationError, ActionType] = {
-      if(s==null || s == "" || s == "issue") Right(Issue)
-      else if (s =="revoke") Right(Revoke)
+    def fromString(s: String): Either[ValidationError, ActionType] = {
+      if (s == null || s == "" || s == "issue") Right(Issue)
+      else if (s == "revoke") Right(Revoke)
       else Left(GenericError(s"Can't parse Action from string '{$s}'"))
     }
   }
-
-
 
   case class Assoc(party: Address, assocType: Int, hash: Option[ByteStr]) {
     lazy val hashStr = hash.map(_.base58).getOrElse("")
@@ -92,7 +90,7 @@ object AssociationTransaction extends TransactionParserFor[AssociationTransactio
   override val typeId: Byte                 = 16
   override val supportedVersions: Set[Byte] = Set(1)
 
-  val HashLength = 64
+  val HashLength       = 64
   val StringHashLength = com.wavesplatform.utils.base58Length(AssociationTransaction.HashLength)
 
   private def networkByte = AddressScheme.current.chainId
@@ -109,13 +107,13 @@ object AssociationTransaction extends TransactionParserFor[AssociationTransactio
         partyEnd      = p0 + 1 + Address.AddressLength
         assocType     = Ints.fromByteArray(bytes.slice(partyEnd, partyEnd + 4))
         (hashOpt, s0) = Deser.parseOption(bytes, partyEnd + 4)(ByteStr(_))
-        s1 = s0 + 1
+        s1            = s0 + 1
         action <- ActionType.fromByte(bytes(s0))
-        timestamp     = Longs.fromByteArray(bytes.drop(s1))
-        feeAmount     = Longs.fromByteArray(bytes.drop(s1 + 8))
+        timestamp = Longs.fromByteArray(bytes.drop(s1))
+        feeAmount = Longs.fromByteArray(bytes.drop(s1 + 8))
         proofs <- Proofs.fromBytes(bytes.drop(s1 + 16))
         _      <- Either.cond(chainId == networkByte, (), GenericError(s"Wrong chainId ${chainId.toInt}"))
-        tx     <- create(version, sender, party, assocType, hashOpt,action, feeAmount, timestamp, proofs)
+        tx     <- create(version, sender, party, assocType, hashOpt, action, feeAmount, timestamp, proofs)
       } yield tx
       txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten

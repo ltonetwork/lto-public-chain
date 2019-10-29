@@ -20,16 +20,18 @@ class AssociationTransactionDiffTest extends PropSpec with PropertyChecks with M
   property("can find outgoing assoc") {
     val setup = for {
       (genesis, master, ts) <- baseSetup
-      party <- accountGen
+      party                 <- accountGen
       feeOverhead           <- Gen.choose[Long](0, ENOUGH_AMT)
       version               <- Gen.oneOf(AssociationTransaction.supportedVersions.toSeq)
-      tx = AssociationTransaction.selfSigned(version, master, party,42, None, AssociationTransaction.ActionType.Issue,10^8 + feeOverhead, ts + 10000).explicitGet()
+      tx = AssociationTransaction
+        .selfSigned(version, master, party, 42, None, AssociationTransaction.ActionType.Issue, 10 ^ 8 + feeOverhead, ts + 10000)
+        .explicitGet()
     } yield (genesis, tx)
 
     forAll(setup) {
       case (genesis, assoc) =>
         assertDiffAndState(Seq(block(Seq(genesis))), block(Seq(assoc))) {
-          case (d,b) => b.associations(genesis.recipient) shouldBe Blockchain.Associations(List((2,assoc)),List.empty)
+          case (d, b) => b.associations(genesis.recipient) shouldBe Blockchain.Associations(List((2, assoc)), List.empty)
         }
     }
   }

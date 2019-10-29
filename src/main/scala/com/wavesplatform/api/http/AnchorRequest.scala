@@ -12,8 +12,10 @@ object AnchorRequest {
   implicit val unsignedDataRequestReads = Json.reads[AnchorRequest]
   implicit val signedDataRequestReads   = Json.reads[SignedAnchorRequest]
 
-  def prependZeros(a: ByteStr) = if (a.arr.length >= AnchorTransaction.NewEntryLength) a else
-    ByteStr(Array.fill(AnchorTransaction.NewEntryLength - a.arr.length)(0:Byte) ++ a.arr)
+  def prependZeros(a: ByteStr) =
+    if (a.arr.length >= AnchorTransaction.NewEntryLength) a
+    else
+      ByteStr(Array.fill(AnchorTransaction.NewEntryLength - a.arr.length)(0: Byte) ++ a.arr)
 }
 
 case class AnchorRequest(version: Byte, sender: String, anchors: List[String], fee: Long, timestamp: Option[Long] = None)

@@ -523,9 +523,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
           .filter(_._2.builder.typeId == AssociationTransaction.typeId)
           .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
           .toList
-        Blockchain.Associations(
-          outgoing = a.filter(_._2.sender.toAddress == address),
-          incoming = a.filter(_._2.assoc.party == address))
+        Blockchain.Associations(outgoing = a.filter(_._2.sender.toAddress == address), incoming = a.filter(_._2.assoc.party == address))
       }
       .getOrElse(Blockchain.Associations(List.empty, List.empty))
     Blockchain.Associations(a0.outgoing ++ a1.outgoing, a0.incoming ++ a1.incoming)

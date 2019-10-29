@@ -429,7 +429,7 @@ trait TransactionGenBase extends ScriptGen {
     version   <- Gen.oneOf(AssociationTransaction.supportedVersions.toSeq)
     party     <- accountGen
     assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
-    action <- Gen.oneOf(AssociationTransaction.ActionType.Issue, AssociationTransaction.ActionType.Revoke)
+    action    <- Gen.oneOf(AssociationTransaction.ActionType.Issue, AssociationTransaction.ActionType.Revoke)
     fee       <- smallFeeGen
     hashOpt   <- Gen.option(genBoundedBytes(AssociationTransaction.HashLength, AssociationTransaction.HashLength).map(ByteStr(_)))
   } yield {

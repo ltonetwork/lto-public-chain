@@ -130,5 +130,4 @@ object Keys {
   def incomingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[Array[Byte]] =
     Key(hBytes(47, seqNr, addressBytes.arr), identity, identity)
 
-
 }

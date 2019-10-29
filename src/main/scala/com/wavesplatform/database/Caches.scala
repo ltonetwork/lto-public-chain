@@ -150,7 +150,8 @@ trait Caches extends Blockchain {
 
     val newAssociations: List[(Int, AssociationTransaction)] = diff.transactions.values
       .filter(_._2.builder.typeId == AssociationTransaction.typeId)
-      .map(x => (x._1,x._2.asInstanceOf[AssociationTransaction])).toList
+      .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
+      .toList
 
     doAppend(
       block,

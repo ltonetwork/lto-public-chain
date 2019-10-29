@@ -402,7 +402,7 @@ case class AddressApiRoute(settings: RestAPISettings,
             (as.actionType, acc.get(as.assoc)) match {
               case (Issue, None)                 => acc + (as.assoc -> (height, as.id(), None))
               case (Revoke, Some((h, bs, None))) => acc + (as.assoc -> (h, bs, Some((height, as.id()))))
-              case _ => acc
+              case _                             => acc
             }
         }
         .toList
