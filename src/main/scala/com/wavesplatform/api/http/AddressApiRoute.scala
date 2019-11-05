@@ -397,19 +397,28 @@ case class AddressApiRoute(settings: RestAPISettings,
 
   private def associationsJson(address: Address, a: Blockchain.Associations): AssociationsInfo = {
     def f(l: List[(Int, AssociationTransaction)], isOutgoing: Boolean) = {
-      l.foldLeft(Map.empty[Assoc, (Int, ByteStr, Option[(Int, ByteStr)])]) {
-          case (acc, (height, as)) =>
+      l.foldLeft(Map.empty[Assoc, (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
+          case (acc, (height, as: AssociationTransaction)) =>
+            val cp = if (address == as.sender.toAddress) as.assoc.party else as.sender.toAddress
             (as.actionType, acc.get(as.assoc)) match {
-              case (Issue, None)                 => acc + (as.assoc -> (height, as.id(), None))
-              case (Revoke, Some((h, bs, None))) => acc + (as.assoc -> (h, bs, Some((height, as.id()))))
-              case _                             => acc
+              case (Issue, None)                    => acc + (as.assoc -> (height, cp, as.id(), None))
+              case (Revoke, Some((h, _, bs, None))) => acc + (as.assoc -> (h, cp, bs, Some((height, as.id()))))
+              case _                                => acc
             }
         }
         .toList
         .sortBy(_._2._1)
         .map {
-          case (assoc, (h, id, r)) =>
-            AssociationInfo(if(isOutgoing) assoc.party.address else address.stringRepr, assoc.hashStr, assoc.assocType, h, id.toString, r.map(_._1), r.map(_._2.toString))
+          case (assoc, (h, cp, id, r)) =>
+            AssociationInfo(
+              party = cp.stringRepr,
+              hash = assoc.hashStr,
+              associationType = assoc.assocType,
+              issueHeight = h,
+              issueTransactionId = id.toString,
+              revokeHeight = r.map(_._1),
+              revokeTransactionId = r.map(_._2.toString)
+            )
         }
     }
 
