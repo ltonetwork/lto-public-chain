@@ -396,7 +396,7 @@ case class AddressApiRoute(settings: RestAPISettings,
   }
 
   private def associationsJson(address: Address, a: Blockchain.Associations): AssociationsInfo = {
-    def f(l: List[(Int, AssociationTransaction)]) = {
+    def f(l: List[(Int, AssociationTransaction)], isOutgoing: Boolean) = {
       l.foldLeft(Map.empty[Assoc, (Int, ByteStr, Option[(Int, ByteStr)])]) {
           case (acc, (height, as)) =>
             (as.actionType, acc.get(as.assoc)) match {
@@ -409,11 +409,11 @@ case class AddressApiRoute(settings: RestAPISettings,
         .sortBy(_._2._1)
         .map {
           case (assoc, (h, id, r)) =>
-            AssociationInfo(assoc.party.address, assoc.hashStr, assoc.assocType, h, id.toString, r.map(_._1), r.map(_._2.toString))
+            AssociationInfo(if(isOutgoing) assoc.party.address else address.stringRepr, assoc.hashStr, assoc.assocType, h, id.toString, r.map(_._1), r.map(_._2.toString))
         }
     }
 
-    AssociationsInfo(address.stringRepr, f(a.outgoing), f(a.incoming))
+    AssociationsInfo(address.stringRepr, f(a.outgoing, isOutgoing = true), f(a.incoming, isOutgoing = false))
 
   }
   private def balancesDetailsJson(account: Address): BalanceDetails = {
