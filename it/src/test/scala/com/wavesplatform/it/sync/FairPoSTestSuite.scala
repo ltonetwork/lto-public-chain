@@ -33,7 +33,7 @@ object FairPoSTestSuite {
   private val microblockActivationHeight = 0
   private val fairPoSActivationHeight    = 10
   private val config =
-  ConfigFactory.parseString(s"""
+    ConfigFactory.parseString(s"""
                                  |lto {
                                  |   blockchain.custom {
                                  |      functionality {
@@ -43,5 +43,5 @@ object FairPoSTestSuite {
                                  |   }
                                  |   miner.quorum = 1
                                  |}""".stripMargin)
-  val Configs: Seq[Config]               = Default.map(config.withFallback(_)).take(4)
+  val Configs: Seq[Config] = Default.map(config.withFallback(_)).take(4)
 }

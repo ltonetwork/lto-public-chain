@@ -13,7 +13,6 @@ import com.wavesplatform.settings._
 import com.wavesplatform.state.diffs._
 import com.wavesplatform.state.{ByteStr, EitherExt2, _}
 import com.wavesplatform.transaction.ValidationError.SenderIsBlacklisted
-import com.wavesplatform.transaction.assets.IssueTransactionV1
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.transaction.smart.script.v1.ScriptV1
@@ -35,7 +34,6 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
   private val calculatorSettings = FeesSettings(
     Seq(
       GenesisTransaction,
-      IssueTransactionV1,
       TransferTransactionV1,
       MassTransferTransaction,
       SetScriptTransaction
@@ -86,7 +84,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
     val transfers = recipients.map(r => ParsedTransfer(r.toAddress, amount))
     val txs = for {
       version <- Gen.oneOf(MassTransferTransaction.supportedVersions.toSeq)
-      fee     = extraFee + amount* extraFee/10
+      fee = extraFee + amount * extraFee / 10
     } yield MassTransferTransaction.selfSigned(version, sender, transfers, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet()
     txs.label("transferWithRecipient")
   }
@@ -262,13 +260,13 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
 
   private val notEnoughFeeTxWithScriptedAccount = for {
     (sender, _, utx, ts) <- withScriptedAccount
-    feeAmount           =100*1000*1000- 1
-    tx                   <- transactionGen(sender, ts + 1, feeAmount)
+    feeAmount = 100 * 1000 * 1000 - 1
+    tx <- transactionGen(sender, ts + 1, feeAmount)
   } yield (utx, tx)
 
   private val enoughFeeTxWithScriptedAccount = for {
     (sender, senderBalance, utx, ts) <- withScriptedAccount
-    feeAmount                        <- choose(100*1000*1000, 2* 100*1000*1000)
+    feeAmount                        <- choose(100 * 1000 * 1000, 2 * 100 * 1000 * 1000)
     tx                               <- transactionGen(sender, ts + 1, feeAmount)
   } yield (utx, tx)
 

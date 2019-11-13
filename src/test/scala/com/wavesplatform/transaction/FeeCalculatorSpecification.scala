@@ -2,16 +2,15 @@ package com.wavesplatform.transaction
 
 import com.typesafe.config.ConfigFactory
 import com.wavesplatform.TransactionGen
+import com.wavesplatform.account.Address
 import com.wavesplatform.settings.FeesSettings
 import com.wavesplatform.state.{ByteStr, _}
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Assertion, Matchers, PropSpec}
-import com.wavesplatform.account.{Address, PrivateKeyAccount}
-import com.wavesplatform.transaction.assets._
 import com.wavesplatform.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.transaction.transfer._
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.prop.PropertyChecks
+import org.scalatest.{Assertion, Matchers, PropSpec}
 
 class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen with MockFactory {
 
@@ -30,6 +29,9 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
       |    }
       |    data {
       |      LTO = 100000
+      |    }
+      |    association {
+      |      LTO = 100000000
       |    }
       |  }
       |}""".stripMargin
@@ -62,6 +64,13 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
     forAll(leaseGen) { tx: LeaseTransaction =>
       feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 400000)
+    }
+  }
+
+  property("Association transaction") {
+    val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
+    forAll(assocTransactionGen) { tx: AssociationTransaction =>
+      feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 100000000)
     }
   }
 

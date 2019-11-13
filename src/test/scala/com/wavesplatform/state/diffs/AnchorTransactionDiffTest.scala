@@ -23,7 +23,6 @@ class AnchorTransactionDiffTest extends PropSpec with PropertyChecks with Matche
   property("cannot overspend funds") {
     val setup = for {
       (genesis, master, ts) <- baseSetup
-      key                   <- validAliasStringGen
       value                 <- bytes64gen
       feeOverhead           <- Gen.choose[Long](1, ENOUGH_AMT)
       version               <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)

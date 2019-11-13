@@ -7,7 +7,6 @@ import org.scalatest.{Matchers, PropSpec}
 import org.scalatest.prop.PropertyChecks
 import com.wavesplatform.account.{Address, Alias}
 import com.wavesplatform.transaction.{ProvenTransaction, VersionedTransaction}
-import com.wavesplatform.transaction.assets.exchange.Order
 import play.api.libs.json.Json // For string escapes.
 
 class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {

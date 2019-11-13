@@ -16,21 +16,6 @@ import scala.concurrent.duration.DurationInt
 
 class LegacyFrameCodecSpec extends FreeSpec with Matchers with MockFactory with PropertyChecks with TransactionGen {
 
-  "should handle one message" in forAll(issueGen) { origTx =>
-    val codec = new LegacyFrameCodec(PeerDatabase.NoOp, 3.minutes)
-
-    val buff = Unpooled.buffer
-    write(buff, origTx, TransactionSpec)
-
-    val ch = new EmbeddedChannel(codec)
-    ch.writeInbound(buff)
-
-    val decodedBytes = ch.readInbound[RawBytes]()
-
-    decodedBytes.code shouldBe TransactionSpec.messageCode
-    decodedBytes.data shouldEqual origTx.bytes()
-  }
-
   "should handle multiple messages" in forAll(Gen.nonEmptyListOf(transferV1Gen)) { origTxs =>
     val codec = new LegacyFrameCodec(PeerDatabase.NoOp, 3.minutes)
 
@@ -52,7 +37,7 @@ class LegacyFrameCodecSpec extends FreeSpec with Matchers with MockFactory with 
   }
 
   "should reject an already received transaction" in {
-    val tx    = issueGen.sample.getOrElse(throw new RuntimeException("Can't generate a sample transaction"))
+    val tx    = transferV1Gen.sample.getOrElse(throw new RuntimeException("Can't generate a sample transaction"))
     val codec = new LegacyFrameCodec(PeerDatabase.NoOp, 3.minutes)
     val ch    = new EmbeddedChannel(codec)
 

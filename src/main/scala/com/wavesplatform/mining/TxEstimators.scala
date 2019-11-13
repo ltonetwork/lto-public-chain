@@ -1,9 +1,6 @@
 package com.wavesplatform.mining
 
 import com.wavesplatform.state.Blockchain
-import com.wavesplatform.transaction.assets.exchange.ExchangeTransaction
-import com.wavesplatform.transaction.assets.{BurnTransaction, ReissueTransaction, SponsorFeeTransaction}
-import com.wavesplatform.transaction.transfer.{MassTransferTransaction, TransferTransaction}
 import com.wavesplatform.transaction.{Authorized, Transaction}
 
 object TxEstimators {

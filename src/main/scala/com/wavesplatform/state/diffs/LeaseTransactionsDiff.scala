@@ -14,21 +14,20 @@ import scala.util.{Left, Right}
 object LeaseTransactionsDiff {
 
   def lease(blockchain: Blockchain, height: Int)(tx: LeaseTransaction): Either[ValidationError, Diff] = {
-    val sender = Address.fromPublicKey(tx.sender.publicKey)
-    blockchain.resolveAlias(tx.recipient).flatMap { recipient =>
-      if (recipient == sender)
-        Left(GenericError("Cannot lease to self"))
-      else {
-        val ap = blockchain.portfolio(tx.sender)
-        if (ap.balance - ap.lease.out < tx.amount) {
-          Left(GenericError(s"Cannot lease more than own: Balance:${ap.balance}, already leased: ${ap.lease.out}"))
-        } else {
-          val portfolioDiff: Map[Address, Portfolio] = Map(
-            sender    -> Portfolio(-tx.fee, LeaseBalance(0, tx.amount)),
-            recipient -> Portfolio(0, LeaseBalance(tx.amount, 0))
-          )
-          Right(Diff(height = height, tx = tx, portfolios = portfolioDiff, leaseState = Map(tx.id() -> true)))
-        }
+    val sender    = Address.fromPublicKey(tx.sender.publicKey)
+    val recipient = tx.recipient.asInstanceOf[Address]
+    if (recipient == sender)
+      Left(GenericError("Cannot lease to self"))
+    else {
+      val ap = blockchain.portfolio(tx.sender)
+      if (ap.balance - ap.lease.out < tx.amount) {
+        Left(GenericError(s"Cannot lease more than own: Balance:${ap.balance}, already leased: ${ap.lease.out}"))
+      } else {
+        val portfolioDiff: Map[Address, Portfolio] = Map(
+          sender    -> Portfolio(-tx.fee, LeaseBalance(0, tx.amount)),
+          recipient -> Portfolio(0, LeaseBalance(tx.amount, 0))
+        )
+        Right(Diff(height = height, tx = tx, portfolios = portfolioDiff, leaseState = Map(tx.id() -> true)))
       }
     }
   }
@@ -40,8 +39,8 @@ object LeaseTransactionsDiff {
       case Some(l) => Right(l)
     }
     for {
-      lease     <- leaseEi
-      recipient <- blockchain.resolveAlias(lease.recipient)
+      lease <- leaseEi
+      recipient     = lease.recipient.asInstanceOf[Address]
       isLeaseActive = lease.isActive
       _ <- if (!isLeaseActive && time > settings.allowMultipleLeaseCancelTransactionUntilTimestamp)
         Left(GenericError(s"Cannot cancel already cancelled lease"))

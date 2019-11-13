@@ -104,36 +104,6 @@ class TransactionsRouteSpec
       }
     }
 
-    "transfer with Asset fee" - {
-      "without sponsorship" in {
-        val assetId: ByteStr         = issueGen.sample.get.assetId()
-        val sender: PublicKeyAccount = accountGen.sample.get
-        val transferTx = Json.obj(
-          "type"            -> 4,
-          "version"         -> 2,
-          "amount"          -> 1000000,
-          "feeAssetId"      -> assetId.base58,
-          "senderPublicKey" -> Base58.encode(sender.publicKey),
-          "recipient"       -> accountGen.sample.get.toAddress
-        )
-
-        val featuresSettings = TestFunctionalitySettings.Enabled.copy(
-          preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures + (BlockchainFeatures.FeeSponsorship.id -> 100)
-        )
-        val blockchain = mock[Blockchain]
-        (blockchain.height _).expects().returning(1).anyNumberOfTimes()
-        (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
-        (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures)
-
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
-
-        Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
-          status shouldEqual StatusCodes.OK
-          (responseAs[JsObject] \ "feeAssetId").asOpt[String] shouldBe empty
-          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 100 * 1000 * 1000L
-        }
-      }
-    }
   }
 
   routePath("/address/{address}/limit/{limit}") - {

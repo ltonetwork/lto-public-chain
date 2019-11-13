@@ -4,9 +4,10 @@ import com.wavesplatform.state.reader.LeaseDetails
 import com.wavesplatform.account.{Address, Alias}
 import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.block.{Block, BlockHeader}
+import com.wavesplatform.state.reader.LeaseDetails
 import com.wavesplatform.transaction.lease.LeaseTransaction
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.{AssetId, Transaction, ValidationError}
+import com.wavesplatform.transaction.{AssociationTransaction, Transaction}
 
 trait Blockchain {
   def height: Int
@@ -43,7 +44,9 @@ trait Blockchain {
 
   def addressTransactions(address: Address, types: Set[Transaction.Type], count: Int, from: Int): Seq[(Int, Transaction)]
 
-  def containsTransaction(tx: Transaction): Boolean
+  def containsTransaction(id: ByteStr): Boolean
+  def forgetTransactions(pred: (ByteStr, Long) => Boolean): Map[ByteStr, Long]
+  def learnTransactions(values: Map[ByteStr, Long]): Unit
 
   def leaseDetails(leaseId: ByteStr): Option[LeaseDetails]
 
@@ -67,10 +70,16 @@ trait Blockchain {
   // the following methods are used exclusively by patches
   def allActiveLeases: Set[LeaseTransaction]
 
+  def associations(address: Address): Blockchain.Associations
+
   /** Builds a new portfolio map by applying a partial function to all portfolios on which the function is defined.
+    *
     * @note Portfolios passed to `pf` only contain Waves and Leasing balances to improve performance */
   def collectLposPortfolios[A](pf: PartialFunction[(Address, Portfolio), A]): Map[Address, A]
 
   def append(diff: Diff, carryFee: Long, block: Block): Unit
   def rollbackTo(targetBlockId: ByteStr): Either[String, Seq[Block]]
+}
+object Blockchain {
+  case class Associations(outgoing: List[(Int, AssociationTransaction)], incoming: List[(Int, AssociationTransaction)])
 }

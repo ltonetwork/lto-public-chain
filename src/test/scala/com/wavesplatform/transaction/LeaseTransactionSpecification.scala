@@ -96,17 +96,4 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
     js shouldEqual tx.json()
   }
 
-  property("forbid assetId in LeaseTransactionV2") {
-    val leaseV2Gen      = leaseGen.filter(_.version == 2)
-    val assetIdBytesGen = assetIdGen.filter(_.nonEmpty).map(_.get.arr)
-    forAll(leaseV2Gen, assetIdBytesGen) { (tx, assetId) =>
-      val bytes = tx.bytes()
-      // hack in an assetId
-      bytes(3) = 1: Byte
-      val bytesWithAssetId = bytes.take(4) ++ assetId ++ bytes.drop(4)
-      val parsed           = tx.builder.parseBytes(bytesWithAssetId)
-      parsed.isFailure shouldBe true
-      parsed.failed.get.getMessage.contains("Leasing assets is not supported yet") shouldBe true
-    }
-  }
 }

@@ -1,5 +1,6 @@
 package com.wavesplatform.state.patch
 
+import com.wavesplatform.account.Address
 import com.wavesplatform.state.{Diff, _}
 import com.wavesplatform.utils.ScorexLogging
 
@@ -12,7 +13,7 @@ object CancelInvalidLeaseIn extends ScorexLogging {
     log.info(s"Collected ${allActiveLeases.size} active leases")
 
     val leaseInBalances = allActiveLeases.toSeq
-      .map(lt => blockchain.resolveAlias(lt.recipient).explicitGet() -> lt.amount)
+      .map(lt => lt.recipient.asInstanceOf[Address] -> lt.amount)
       .groupBy(_._1)
       .mapValues(_.map(_._2).sum)
 

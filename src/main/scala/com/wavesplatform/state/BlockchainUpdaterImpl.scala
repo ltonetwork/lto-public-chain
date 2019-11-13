@@ -3,6 +3,9 @@ import cats.implicits._
 import com.wavesplatform.account.{Address, Alias}
 import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.block.{Block, BlockHeader, MicroBlock}
+import com.wavesplatform.account.Address
+import com.wavesplatform.block.Block.BlockId
+import com.wavesplatform.block.{Block, BlockHeader, MicroBlock}
 import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.features.FeatureProvider._
 import com.wavesplatform.metrics.{Instrumented, TxsInBlockchainStats}
@@ -350,14 +353,9 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
     ng.bestLiquidDiff.transactions.contains(id) || blockchain.containsTransaction(id)
   }
   override def forgetTransactions(pred: (AssetId, Long) => Boolean): Map[AssetId, Long] = blockchain.forgetTransactions(pred)
-  override def learnTransactions(values: Map[AssetId, Long]): Unit                      = blockchain.learnTransactions(values)
-  override def assetDescription(id: AssetId): Option[AssetDescription] = ngState.fold(blockchain.assetDescription(id)) { ng =>
-    val diff = ng.bestLiquidDiff
-    CompositeBlockchain.composite(blockchain, diff).assetDescription(id)
-  }
-  override def resolveAlias(alias: Alias): Either[ValidationError, Address] = ngState.fold(blockchain.resolveAlias(alias)) { ng =>
-    CompositeBlockchain.composite(blockchain, ng.bestLiquidDiff).resolveAlias(alias)
-  }
+
+  override def learnTransactions(values: Map[AssetId, Long]): Unit = blockchain.learnTransactions(values)
+
   override def leaseDetails(leaseId: AssetId): Option[LeaseDetails] = ngState match {
     case Some(ng) =>
       blockchain.leaseDetails(leaseId).map(ld => ld.copy(isActive = ng.bestLiquidDiff.leaseState.getOrElse(leaseId, ld.isActive))) orElse
@@ -450,6 +448,20 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
       blockchain.balance(address) + ng.bestLiquidDiff.portfolios.getOrElse(address, Portfolio.empty).balance
     case None =>
       blockchain.balance(address)
+  }
+
+  override def associations(address: Address): Blockchain.Associations = {
+    val a0 = blockchain.associations(address)
+    val a1 = ngState
+      .map { n =>
+        val a = n.bestLiquidDiff.transactions.values
+          .filter(_._2.builder.typeId == AssociationTransaction.typeId)
+          .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
+          .toList
+        Blockchain.Associations(outgoing = a.filter(_._2.sender.toAddress == address), incoming = a.filter(_._2.assoc.party == address))
+      }
+      .getOrElse(Blockchain.Associations(List.empty, List.empty))
+    Blockchain.Associations(a0.outgoing ++ a1.outgoing, a0.incoming ++ a1.incoming)
   }
 }
 object BlockchainUpdaterImpl extends ScorexLogging {

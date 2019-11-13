@@ -3,24 +3,23 @@ package com.wavesplatform.utx
 import java.util.concurrent.ConcurrentHashMap
 
 import cats._
+import com.wavesplatform.account.Address
+import com.wavesplatform.consensus.TransactionsOrdering
 import com.wavesplatform.metrics.Instrumented
 import com.wavesplatform.mining.MultiDimensionalMiningConstraint
 import com.wavesplatform.settings.{FunctionalitySettings, UtxSettings}
 import com.wavesplatform.state.diffs.TransactionDiffer
 import com.wavesplatform.state.reader.CompositeBlockchain.composite
 import com.wavesplatform.state.{Blockchain, ByteStr, Diff, Portfolio}
+import com.wavesplatform.transaction.ValidationError.{GenericError, SenderIsBlacklisted}
+import com.wavesplatform.transaction._
+import com.wavesplatform.transaction.transfer._
+import com.wavesplatform.utils.{ScorexLogging, Time}
 import kamon.Kamon
 import kamon.metric.instrument.{Time => KamonTime}
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.execution.schedulers.SchedulerService
-import com.wavesplatform.account.Address
-import com.wavesplatform.consensus.TransactionsOrdering
-import com.wavesplatform.utils.{ScorexLogging, Time}
-import com.wavesplatform.transaction.ValidationError.{GenericError, SenderIsBlacklisted}
-import com.wavesplatform.transaction._
-import com.wavesplatform.transaction.assets.ReissueTransaction
-import com.wavesplatform.transaction.transfer._
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
@@ -156,16 +155,6 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
     override def putIfNew(tx: Transaction): Either[ValidationError, (Boolean, Diff)] = outer.putIfNew(b, tx)
   }
 
-  private def canReissue(b: Blockchain, tx: Transaction) = tx match {
-    case r: ReissueTransaction if b.assetDescription(r.assetId).exists(!_.reissuable) => Left(GenericError(s"Asset is not reissuable"))
-    case _                                                                            => Right(())
-  }
-
-  private def checkAlias(b: Blockchain, tx: Transaction) = tx match {
-    case cat: CreateAliasTransaction if !blockchain.canCreateAlias(cat.alias) => Left(GenericError("Alias already claimed"))
-    case _                                                                    => Right(())
-  }
-
   private def putIfNew(b: Blockchain, tx: Transaction): Either[ValidationError, (Boolean, Diff)] = {
     putRequestStats.increment()
     measureSuccessful(
@@ -173,8 +162,6 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
         for {
           _    <- Either.cond(transactions.size < utxSettings.maxSize, (), GenericError("Transaction pool size limit is reached"))
           _    <- checkNotBlacklisted(tx)
-          _    <- checkAlias(b, tx)
-          _    <- canReissue(b, tx)
           _    <- feeCalculator.enoughFee(tx, blockchain, fs)
           diff <- TransactionDiffer(fs, blockchain.lastBlockTimestamp, time.correctedTime(), blockchain.height)(b, tx)
         } yield {
