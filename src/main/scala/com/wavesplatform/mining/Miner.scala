@@ -105,10 +105,10 @@ class MinerImpl(allChannels: ChannelGroup,
 
   private def ngEnabled: Boolean = blockchainUpdater.featureActivationHeight(BlockchainFeatures.NG.id).exists(blockchainUpdater.height > _ + 1)
 
-  private def generateOneBlockTask(account: PrivateKeyAccount, balance: Long)(
+  private def generateOneBlockTask(account: PrivateKeyAccount)(
       delay: FiniteDuration): Task[Either[String, (MiningConstraints, Block, MiningConstraint)]] = {
     Task {
-      forgeBlock(account, balance)
+      forgeBlock(account)
     }.delayExecution(delay + 1.second)
   }
 
@@ -132,7 +132,7 @@ class MinerImpl(allChannels: ChannelGroup,
       .leftMap(_.toString)
   }
 
-  private def forgeBlock(account: PrivateKeyAccount, balance: Long): Either[String, (MiningConstraints, Block, MiningConstraint)] = {
+  private def forgeBlock(account: PrivateKeyAccount): Either[String, (MiningConstraints, Block, MiningConstraint)] = {
     // should take last block right at the time of mining since microblocks might have been added
     val height              = blockchainUpdater.height
     val version             = if (height <= blockchainSettings.functionalitySettings.blockVersion3AfterHeight) PlainBlockVersion else NgBlockVersion
@@ -143,6 +143,8 @@ class MinerImpl(allChannels: ChannelGroup,
     val refBlockID          = referencedBlockInfo.blockId
     lazy val currentTime    = timeService.correctedTime()
     lazy val blockDelay     = currentTime - lastBlock.timestamp
+    lazy val balance =
+      GeneratingBalanceProvider.balance(blockchainUpdater, blockchainSettings.functionalitySettings, account.toAddress, refBlockID)
     measureSuccessful(
       blockBuildTimeStats,
       for {
@@ -273,7 +275,9 @@ class MinerImpl(allChannels: ChannelGroup,
                                       height: Int,
                                       block: Block,
                                       account: PublicKeyAccount): Either[String, (Long, Long)] = {
-    val balance = GeneratingBalanceProvider.balance(blockchainUpdater, fs, height, account.toAddress)
+    val referencedBlockInfo = blockchainUpdater.bestLastBlockInfo(System.currentTimeMillis() - minMicroBlockDurationMills).get
+    val refBlockID          = referencedBlockInfo.blockId
+    lazy val balance        = GeneratingBalanceProvider.balance(blockchainUpdater, blockchainSettings.functionalitySettings, account.toAddress, refBlockID)
 
     if (GeneratingBalanceProvider.isMiningAllowed(blockchainUpdater, height, balance)) {
       for {
@@ -306,7 +310,7 @@ class MinerImpl(allChannels: ChannelGroup,
       case Right((offset, balance)) =>
         log.debug(s"Next attempt for acc=$account in $offset")
         nextBlockGenerationTimes += account.toAddress -> (System.currentTimeMillis() + offset.toMillis)
-        generateOneBlockTask(account, balance)(offset).flatMap {
+        generateOneBlockTask(account)(offset).flatMap {
           case Right((estimators, block, totalConstraint)) =>
             BlockAppender(checkpoint, blockchainUpdater, timeService, utx, pos, settings, appenderScheduler)(block)
               .asyncBoundary(minerScheduler)

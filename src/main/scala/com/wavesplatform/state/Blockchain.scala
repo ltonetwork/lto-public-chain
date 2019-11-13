@@ -2,6 +2,7 @@ package com.wavesplatform.state
 
 import com.wavesplatform.state.reader.LeaseDetails
 import com.wavesplatform.account.{Address, Alias}
+import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.transaction.lease.LeaseTransaction
 import com.wavesplatform.transaction.smart.script.Script
@@ -16,6 +17,7 @@ trait Blockchain {
   def blockHeaderAndSize(blockId: ByteStr): Option[(BlockHeader, Int)]
 
   def lastBlock: Option[Block]
+  def carryFee: Long
   def blockBytes(height: Int): Option[Array[Byte]]
   def blockBytes(blockId: ByteStr): Option[Array[Byte]]
 
@@ -41,26 +43,22 @@ trait Blockchain {
 
   def addressTransactions(address: Address, types: Set[Transaction.Type], count: Int, from: Int): Seq[(Int, Transaction)]
 
-  def containsTransaction(id: ByteStr): Boolean
-  def forgetTransactions(pred: (ByteStr, Long) => Boolean): Map[ByteStr, Long]
-  def learnTransactions(values: Map[ByteStr, Long]): Unit
-
-  def assetDescription(id: ByteStr): Option[AssetDescription]
-
-  def resolveAlias(a: Alias): Either[ValidationError, Address]
+  def containsTransaction(tx: Transaction): Boolean
 
   def leaseDetails(leaseId: ByteStr): Option[LeaseDetails]
 
   def filledVolumeAndFee(orderId: ByteStr): VolumeAndFee
 
   /** Retrieves Waves balance snapshot in the [from, to] range (inclusive) */
-  def balanceSnapshots(address: Address, from: Int, to: Int): Seq[BalanceSnapshot]
+  def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot]
 
   def accountScript(address: Address): Option[Script]
   def hasScript(address: Address): Boolean
 
   def accountData(acc: Address): AccountDataInfo
   def accountData(acc: Address, key: String): Option[DataEntry[_]]
+
+  def leaseBalance(address: Address): LeaseBalance
 
   def balance(address: Address): Long
 
@@ -73,6 +71,6 @@ trait Blockchain {
     * @note Portfolios passed to `pf` only contain Waves and Leasing balances to improve performance */
   def collectLposPortfolios[A](pf: PartialFunction[(Address, Portfolio), A]): Map[Address, A]
 
-  def append(diff: Diff, block: Block): Unit
-  def rollbackTo(targetBlockId: ByteStr): Seq[Block]
+  def append(diff: Diff, carryFee: Long, block: Block): Unit
+  def rollbackTo(targetBlockId: ByteStr): Either[String, Seq[Block]]
 }
