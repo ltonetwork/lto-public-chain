@@ -2,6 +2,7 @@ package com.wavesplatform
 
 import com.wavesplatform.account.Address
 import com.wavesplatform.block.Block
+import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.transaction.ValidationError.GenericError
 import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.lease.{LeaseTransaction, LeaseTransactionV1}
@@ -53,15 +54,17 @@ package object state {
 
     def genesis: Block = blockchain.blockAt(1).get
 
-    def effectiveBalance(address: Address, atHeight: Int, confirmations: Int): Long = {
-      val bottomLimit = (atHeight - confirmations + 1).max(1).min(atHeight)
-      val balances    = blockchain.balanceSnapshots(address, bottomLimit, atHeight)
+    def effectiveBalance(address: Address, confirmations: Int, block: BlockId = blockchain.lastBlockId.getOrElse(ByteStr.empty)): Long = {
+      val blockHeight = blockchain.heightOf(block).getOrElse(blockchain.height)
+      val bottomLimit = (blockHeight - confirmations + 1).max(1).min(blockHeight)
+      val balances    = blockchain.balanceSnapshots(address, bottomLimit, block)
       if (balances.isEmpty) 0L else balances.view.map(_.effectiveBalance).min
     }
 
     def balance(address: Address, atHeight: Int, confirmations: Int): Long = {
       val bottomLimit = (atHeight - confirmations + 1).max(1).min(atHeight)
-      val balances    = blockchain.balanceSnapshots(address, bottomLimit, atHeight)
+      val block       = blockchain.blockAt(atHeight).getOrElse(throw new IllegalArgumentException(s"Invalid block height: $atHeight"))
+      val balances    = blockchain.balanceSnapshots(address, bottomLimit, block.uniqueId)
       if (balances.isEmpty) 0L else balances.view.map(_.regularBalance).min
     }
 
