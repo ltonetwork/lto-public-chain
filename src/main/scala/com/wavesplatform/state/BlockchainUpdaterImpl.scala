@@ -18,10 +18,10 @@ import com.wavesplatform.transaction.lease._
 import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.utils.{ScorexLogging, Time, UnsupportedFeature, forceStopApplication}
 import kamon.Kamon
-import monix.reactive.Observable
+import monix.reactive.{Observable, Observer}
 import monix.reactive.subjects.ConcurrentSubject
 
-class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, time: Time)
+class BlockchainUpdaterImpl(blockchain: Blockchain, portfolioChanged: Observer[Address], settings: WavesSettings, time: Time)
     extends BlockchainUpdater
     with NG
     with ScorexLogging
@@ -155,7 +155,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
             } else
               measureSuccessful(forgeBlockTimeStats, ng.totalDiffOf(block.reference)) match {
                 case None => Left(BlockAppendError(s"References incorrect or non-existing block", block))
-                case Some((referencedForgedBlock, referencedLiquidDiff, discarded)) =>
+                case Some((referencedForgedBlock, referencedLiquidDiff, carry, discarded)) =>
                   if (referencedForgedBlock.signaturesValid().isRight) {
                     if (discarded.nonEmpty) {
                       microBlockForkStats.increment()
@@ -185,7 +185,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
                     }
 
                     diff.map { hardenedDiff =>
-                      blockchain.append(referencedLiquidDiff, referencedForgedBlock)
+                      blockchain.append(referencedLiquidDiff, carry, referencedForgedBlock)
                       TxsInBlockchainStats.record(ng.transactions.size)
                       Some((hardenedDiff, discarded.flatMap(_.transactionData)))
                     }
@@ -197,10 +197,10 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
               }
         }).map {
           _ map {
-            case ((newBlockDiff, updatedTotalConstraint), discarded) =>
+            case ((newBlockDiff, carry, updatedTotalConstraint), discarded) =>
               val height = blockchain.height + 1
               restTotalConstraint = updatedTotalConstraint
-              ngState = Some(new NgState(block, newBlockDiff, featuresApprovedWithBlock(block)))
+              ngState = Some(new NgState(block, newBlockDiff, carry, featuresApprovedWithBlock(block)))
               lastBlockId.foreach(id => internalLastBlockInfo.onNext(LastBlockInfo(id, height, score, blockchainReady)))
               if ((block.timestamp > time
                     .getTimestamp() - settings.minerSettings.intervalAfterLastBlockThenGenerationIsAllowed.toMillis) || (height % 100 == 0)) {
@@ -243,14 +243,22 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
               r <- {
                 val constraints  = MiningConstraints(settings.minerSettings, blockchain, blockchain.height)
                 val mdConstraint = MultiDimensionalMiningConstraint(restTotalConstraint, constraints.micro)
-                BlockDiffer.fromMicroBlock(functionalitySettings, this, blockchain.lastBlockTimestamp, microBlock, ng.base.timestamp, mdConstraint)
+                BlockDiffer.fromMicroBlock(functionalitySettings,
+                                           this,
+                                           blockchain.lastBlockTimestamp,
+                                           microBlock,
+                                           ng.base.timestamp,
+                                           mdConstraint //,
+                                           // verify
+                )
               }
             } yield {
-              val (diff, updatedMdConstraint) = r
+              val (diff, carry, updatedMdConstraint) = r
               restTotalConstraint = updatedMdConstraint.constraints.head
-              ng.append(microBlock, diff, System.currentTimeMillis)
+              ng.append(microBlock, diff, carry, System.currentTimeMillis)
               log.info(s"$microBlock appended")
               internalLastBlockInfo.onNext(LastBlockInfo(microBlock.totalResBlockSig, height, score, ready = true))
+              diff.portfolios.keys.foreach(portfolioChanged.onNext)
             }
         }
     }
@@ -340,10 +348,12 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
 
   override def lastBlock: Option[Block] = ngState.map(_.bestLiquidBlock).orElse(blockchain.lastBlock)
 
+  override def carryFee: Long = ngState.map(_.carryFee).getOrElse(blockchain.carryFee)
+
   override def blockBytes(blockId: ByteStr): Option[Array[Byte]] =
     (for {
-      ng            <- ngState
-      (block, _, _) <- ng.totalDiffOf(blockId)
+      ng               <- ngState
+      (block, _, _, _) <- ng.totalDiffOf(blockId)
     } yield block.bytes()).orElse(blockchain.blockBytes(blockId))
 
   override def blockIdsAfter(parentSignature: ByteStr, howMany: Int): Option[Seq[ByteStr]] = {
@@ -506,7 +516,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
       blockchain.collectLposPortfolios(pf) ++ b.result()
     }
 
-  override def append(diff: Diff, block: Block): Unit = blockchain.append(diff, block)
+  override def append(diff: Diff, carry: Long, block: Block): Unit = blockchain.append(diff, carry, block)
 
   override def rollbackTo(targetBlockId: AssetId): Seq[Block] = blockchain.rollbackTo(targetBlockId)
 

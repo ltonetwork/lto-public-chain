@@ -14,6 +14,7 @@ import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.transaction.transfer._
 import com.wavesplatform.utils.ScorexLogging
+import monix.reactive.Observer
 import org.iq80.leveldb.{DB, ReadOptions}
 
 import scala.annotation.tailrec
@@ -81,7 +82,9 @@ object LevelDBWriter {
   }
 }
 
-class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize: Int = 100000) extends Caches with ScorexLogging {
+class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: FunctionalitySettings, val maxCacheSize: Int = 100000)
+    extends Caches
+    with ScorexLogging {
 
   import LevelDBWriter._
 

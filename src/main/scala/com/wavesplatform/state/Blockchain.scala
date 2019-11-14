@@ -9,6 +9,8 @@ import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.transaction.{AssociationTransaction, Transaction}
 
 trait Blockchain {
+
+  def carryFee: Long
   def height: Int
   def score: BigInt
   def scoreOf(blockId: ByteStr): Option[BigInt]
@@ -73,7 +75,7 @@ trait Blockchain {
     * @note Portfolios passed to `pf` only contain Waves and Leasing balances to improve performance */
   def collectLposPortfolios[A](pf: PartialFunction[(Address, Portfolio), A]): Map[Address, A]
 
-  def append(diff: Diff, block: Block): Unit
+  def append(diff: Diff, carryFee: Long, block: Block): Unit
   def rollbackTo(targetBlockId: ByteStr): Seq[Block]
 }
 object Blockchain {
