@@ -6,7 +6,7 @@ import com.wavesplatform.account.{Address, Alias}
 import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.settings.FunctionalitySettings
-import com.wavesplatform.state.{_}
+import com.wavesplatform.state.{AddressId, TransactionId, TxNum, _}
 import com.wavesplatform.state.reader.LeaseDetails
 import com.wavesplatform.transaction.Transaction.Type
 import com.wavesplatform.transaction._
@@ -193,7 +193,6 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
                                   leaseBalances: Map[BigInt, LeaseBalance],
                                   addressTransactions: Map[BigInt, List[ByteStr]],
                                   leaseStates: Map[ByteStr, Boolean],
-                                  transactions: Map[ByteStr, (Transaction, Set[BigInt])],
                                   reissuedAssets: Map[ByteStr, AssetInfo],
                                   filledQuantity: Map[ByteStr, VolumeAndFee],
                                   scripts: Map[BigInt, Option[Script]],
@@ -208,6 +207,14 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
     rw.put(Keys.heightOf(block.uniqueId), Some(height))
     rw.put(Keys.lastAddressId, Some(loadMaxAddressId() + newAddresses.size))
     rw.put(Keys.score(height), rw.get(Keys.score(height - 1)) + block.blockScore())
+
+    val transactions: Map[BigInt, (Transaction, Short)] =
+      block.transactionData.zipWithIndex.map { in =>
+        val (tx, idx) = in
+        val k         = (tx.id())
+        val v         = (tx, (idx.toShort))
+        k -> v
+      }.toMap
 
     for ((address, id) <- newAddresses) {
       rw.put(Keys.addressId(address), Some(id))
@@ -311,12 +318,13 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
     for ((addressId, txIds) <- addressTransactions) {
       val kk        = Keys.addressTransactionSeqNr(addressId)
       val nextSeqNr = rw.get(kk) + 1
-      val txTypeNumSeq = txIds.map { txId =>
+      val txTypeNumSeq: Seq[(Byte, Short)] = txIds.map { txId =>
         val (tx, num) = transactions(txId)
 
         (tx.builder.typeId, num)
       }
-      rw.put(Keys.addressTransactionHN(addressId, nextSeqNr), Some(height, txTypeNumSeq))
+      val someTuple: Option[(Int, Seq[(Byte, Short)])] = Some(height, txTypeNumSeq)
+      rw.put(Keys.addressTransactionHN(addressId, nextSeqNr), someTuple)
       rw.put(kk, nextSeqNr)
     }
 

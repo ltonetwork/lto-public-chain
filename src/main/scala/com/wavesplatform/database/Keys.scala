@@ -47,7 +47,7 @@ object Keys {
 
   val AddressTransactionHNPrefix: Short = 53
   def addressTransactionHN(addressId: BigInt, seqNr: Int): Key[Option[(Int, Seq[(Byte, Short)])]] =
-    Key.opt(
+    Key.opt2(
       "address-transaction-height-type-and-nums",
       hBytes(AddressTransactionHNPrefix, seqNr, addressId.toByteArray),
       readTransactionHNSeqAndType,
