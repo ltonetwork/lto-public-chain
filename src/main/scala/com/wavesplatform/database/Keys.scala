@@ -3,14 +3,57 @@ package com.wavesplatform.database
 import java.nio.ByteBuffer
 
 import com.google.common.base.Charsets.UTF_8
+import com.google.common.io.ByteStreams.{newDataInput, newDataOutput}
 import com.google.common.primitives.{Ints, Longs, Shorts}
 import com.wavesplatform.account.{Address, Alias}
 import com.wavesplatform.block.{Block, BlockHeader}
-import com.wavesplatform.state._
+import com.wavesplatform.state.{_}
 import com.wavesplatform.transaction.Transaction
 import com.wavesplatform.transaction.smart.script.{Script, ScriptReader}
 
 object Keys {
+  type Height = Int
+  type TxNum  = Short
+
+  def readTransactionHNSeqAndType(bs: Array[Byte]): (Height, Seq[(Byte, TxNum)]) = {
+    val ndi          = newDataInput(bs)
+    val height       = (ndi.readInt())
+    val numSeqLength = ndi.readInt()
+
+    (height, List.fill(numSeqLength) {
+      val tp  = ndi.readByte()
+      val num = (ndi.readShort())
+      (tp, num)
+    })
+  }
+
+  def writeTransactionHNSeqAndType(v: (Height, Seq[(Byte, TxNum)])): Array[Byte] = {
+    val (height, numSeq) = v
+    val numSeqLength     = numSeq.length
+
+    val outputLength = 4 + 4 + numSeqLength * (4 + 1)
+    val ndo          = newDataOutput(outputLength)
+
+    ndo.writeInt(height)
+    ndo.writeInt(numSeqLength)
+    numSeq.foreach {
+      case (tp, num) =>
+        ndo.writeByte(tp)
+        ndo.writeShort(num)
+    }
+
+    ndo.toByteArray
+  }
+
+  val AddressTransactionHNPrefix: Short = 53
+  def addressTransactionHN(addressId: BigInt, seqNr: Int): Key[Option[(Int, Seq[(Byte, Short)])]] =
+    Key.opt(
+      "address-transaction-height-type-and-nums",
+      hBytes(AddressTransactionHNPrefix, seqNr, addressId.toByteArray),
+      readTransactionHNSeqAndType,
+      writeTransactionHNSeqAndType
+    )
+
   private def h(prefix: Short, height: Int): Array[Byte] =
     ByteBuffer.allocate(6).putShort(prefix).putInt(height).array()
 

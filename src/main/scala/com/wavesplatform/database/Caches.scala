@@ -101,6 +101,7 @@ trait Caches extends Blockchain with ScorexLogging {
                          leaseBalances: Map[BigInt, LeaseBalance],
                          addressTransactions: Map[BigInt, List[ByteStr]],
                          leaseStates: Map[ByteStr, Boolean],
+                         transactions: Map[ByteStr, (Transaction, Set[BigInt])],
                          reissuedAssets: Map[ByteStr, AssetInfo],
                          filledQuantity: Map[ByteStr, VolumeAndFee],
                          scripts: Map[BigInt, Option[Script]],
@@ -173,6 +174,12 @@ trait Caches extends Blockchain with ScorexLogging {
           sorted.map { case (_, (_, tx)) => tx.id() }
         }
 
+    val newTransactions = Map.newBuilder[ByteStr, (Transaction, Set[BigInt])]
+    for ((id, (_, tx, addresses)) <- diff.transactions) {
+      transactionIds.put(id, tx.timestamp)
+      newTransactions += id -> ((tx, addresses.map(addressId)))
+    }
+
     val newAssociations: List[(Int, AssociationTransaction)] = diff.transactions.values
       .filter(_._2.builder.typeId == AssociationTransaction.typeId)
       .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
@@ -189,6 +196,7 @@ trait Caches extends Blockchain with ScorexLogging {
       leaseBalances.result(),
       addressTransactions,
       diff.leaseState,
+      newTransactions.result(),
       diff.issuedAssets,
       newFills,
       diff.scripts.map { case (address, s)        => addressId(address) -> s },

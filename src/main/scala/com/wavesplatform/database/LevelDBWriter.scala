@@ -6,7 +6,7 @@ import com.wavesplatform.account.{Address, Alias}
 import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.settings.FunctionalitySettings
-import com.wavesplatform.state._
+import com.wavesplatform.state.{_}
 import com.wavesplatform.state.reader.LeaseDetails
 import com.wavesplatform.transaction.Transaction.Type
 import com.wavesplatform.transaction._
@@ -86,6 +86,8 @@ object LevelDBWriter {
 class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: FunctionalitySettings, val maxCacheSize: Int = 100000)
     extends Caches
     with ScorexLogging {
+
+  override def carryFee: Long = ??? // TODO readOnly(_.get(Keys.carryFee(height)))
 
   import LevelDBWriter._
 
@@ -191,6 +193,7 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
                                   leaseBalances: Map[BigInt, LeaseBalance],
                                   addressTransactions: Map[BigInt, List[ByteStr]],
                                   leaseStates: Map[ByteStr, Boolean],
+                                  transactions: Map[ByteStr, (Transaction, Set[BigInt])],
                                   reissuedAssets: Map[ByteStr, AssetInfo],
                                   filledQuantity: Map[ByteStr, VolumeAndFee],
                                   scripts: Map[BigInt, Option[Script]],
@@ -305,11 +308,15 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
       }
     }
 
-    for ((addressId, txs) <- addressTransactions) {
-      val kk                          = Keys.addressTransactionSeqNr(addressId)
-      val nextSeqNr                   = rw.get(kk) + 1
-      val t: Key[Seq[(Int, AssetId)]] = Keys.addressTransactionIds(addressId, nextSeqNr)
-      rw.put(t, txs)
+    for ((addressId, txIds) <- addressTransactions) {
+      val kk        = Keys.addressTransactionSeqNr(addressId)
+      val nextSeqNr = rw.get(kk) + 1
+      val txTypeNumSeq = txIds.map { txId =>
+        val (tx, num) = transactions(txId)
+
+        (tx.builder.typeId, num)
+      }
+      rw.put(Keys.addressTransactionHN(addressId, nextSeqNr), Some(height, txTypeNumSeq))
       rw.put(kk, nextSeqNr)
     }
 
@@ -323,7 +330,7 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
         val last                = rw.get(curSeq)
         val nextSeqNr           = last + 1
         val t: Key[Array[Byte]] = idKey(p.bytes, nextSeqNr)
-        rw.put(t.keyBytes, id.arr)
+        rw.put(t, id.arr)
         rw.put(curSeq, nextSeqNr)
       }
 
@@ -368,6 +375,7 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
 
   }
 
+  // TODO migration
   override protected def doRollback(targetBlockId: ByteStr): Seq[Block] = {
     readOnly(_.get(Keys.heightOf(targetBlockId))).fold(Seq.empty[Block]) { targetHeight =>
       log.debug(s"Rolling back to block $targetBlockId at $targetHeight")
