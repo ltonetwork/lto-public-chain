@@ -45,8 +45,6 @@ trait Blockchain {
   def addressTransactions(address: Address, types: Set[Transaction.Type], count: Int, from: Int): Seq[(Int, Transaction)]
 
   def containsTransaction(id: ByteStr): Boolean
-  def forgetTransactions(pred: (ByteStr, Long) => Boolean): Map[ByteStr, Long]
-  def learnTransactions(values: Map[ByteStr, Long]): Unit
 
   def leaseDetails(leaseId: ByteStr): Option[LeaseDetails]
 

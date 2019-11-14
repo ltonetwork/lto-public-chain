@@ -1,8 +1,5 @@
 package com.wavesplatform.state
 import cats.implicits._
-import com.wavesplatform.account.{Address, Alias}
-import com.wavesplatform.block.Block.BlockId
-import com.wavesplatform.block.{Block, BlockHeader, MicroBlock}
 import com.wavesplatform.account.Address
 import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.block.{Block, BlockHeader, MicroBlock}
@@ -79,7 +76,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
       Set.empty
     }
   }
-  override def processBlock(block: Block, verify: Boolean = true): Either[ValidationError, Option[DiscardedTransactions]] = {
+  override def processBlock(block: Block): Either[ValidationError, Option[DiscardedTransactions]] = {
     val height                             = blockchain.height
     val notImplementedFeatures: Set[Short] = blockchain.activatedFeaturesAt(height).diff(BlockchainFeatures.implemented)
 
@@ -194,7 +191,10 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
     } else {
       val discardedNgBlock = ng.map(_.bestLiquidBlock).toSeq
       ngState = None
-      Right(blockchain.rollbackTo(blockId) ++ discardedNgBlock)
+      blockchain
+        .rollbackTo(blockId)
+        .map(_ ++ discardedNgBlock)
+        .leftMap(err => GenericError(err))
     }
   }
   override def processMicroBlock(microBlock: MicroBlock): Either[ValidationError, Unit] = {
@@ -220,9 +220,9 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
                 BlockDiffer.fromMicroBlock(functionalitySettings, this, blockchain.lastBlockTimestamp, microBlock, ng.base.timestamp, mdConstraint)
               }
             } yield {
-              val (diff, updatedMdConstraint) = r
+              val (diff, carry, updatedMdConstraint) = r
               restTotalConstraint = updatedMdConstraint.constraints.head
-              ng.append(microBlock, diff, System.currentTimeMillis)
+              ng.append(microBlock, diff, carry, System.currentTimeMillis)
               log.info(s"$microBlock appended")
               internalLastBlockInfo.onNext(LastBlockInfo(microBlock.totalResBlockSig, height, score, ready = true))
             }
@@ -293,8 +293,8 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
   override def lastBlock: Option[Block] = ngState.map(_.bestLiquidBlock).orElse(blockchain.lastBlock)
   override def blockBytes(blockId: ByteStr): Option[Array[Byte]] =
     (for {
-      ng            <- ngState
-      (block, _, _) <- ng.totalDiffOf(blockId)
+      ng               <- ngState
+      (block, _, _, _) <- ng.totalDiffOf(blockId)
     } yield block.bytes()).orElse(blockchain.blockBytes(blockId))
   override def blockIdsAfter(parentSignature: ByteStr, howMany: Int): Option[Seq[ByteStr]] = {
     ngState match {
@@ -352,9 +352,6 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
   override def containsTransaction(id: AssetId): Boolean = ngState.fold(blockchain.containsTransaction(id)) { ng =>
     ng.bestLiquidDiff.transactions.contains(id) || blockchain.containsTransaction(id)
   }
-  override def forgetTransactions(pred: (AssetId, Long) => Boolean): Map[AssetId, Long] = blockchain.forgetTransactions(pred)
-
-  override def learnTransactions(values: Map[AssetId, Long]): Unit = blockchain.learnTransactions(values)
 
   override def leaseDetails(leaseId: AssetId): Option[LeaseDetails] = ngState match {
     case Some(ng) =>
@@ -437,8 +434,8 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
       }
       blockchain.collectLposPortfolios(pf) ++ b.result()
     }
-  override def append(diff: Diff, block: Block): Unit         = blockchain.append(diff, block)
-  override def rollbackTo(targetBlockId: AssetId): Seq[Block] = blockchain.rollbackTo(targetBlockId)
+  override def append(diff: Diff, carry: Long, block: Block): Unit            = blockchain.append(diff, carry, block)
+  override def rollbackTo(targetBlockId: AssetId): Either[String, Seq[Block]] = blockchain.rollbackTo(targetBlockId)
   override def transactionHeight(id: AssetId): Option[Int] = ngState match {
     case Some(ng) => ng.bestLiquidDiff.transactions.get(id).map(_._1)
     case None     => blockchain.transactionHeight(id)

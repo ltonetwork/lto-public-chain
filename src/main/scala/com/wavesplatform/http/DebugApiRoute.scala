@@ -228,7 +228,6 @@ case class DebugApiRoute(ws: WavesSettings,
         AccountMiningInfo(
           a.stringRepr,
           ng.effectiveBalance(a,
-                              ng.height,
                               ws.blockchainSettings.functionalitySettings.generatingBalanceDepth(ng.height),
                               ng.microblockIds.lastOption.getOrElse(ByteStr.empty)),
           t

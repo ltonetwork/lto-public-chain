@@ -130,4 +130,7 @@ object Keys {
   def incomingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[Array[Byte]] =
     Key(hBytes(47, seqNr, addressBytes.arr), identity, identity)
 
+  val carryFeeHistory: Key[Seq[Int]]   = historyKey(100, "carry-fee-history".getBytes())
+  def carryFee(height: Int): Key[Long] = ??? // Key("carry-fee", h(101, height), Option(_).fold(0L)(Longs.fromByteArray), Longs.toByteArray)
+
 }

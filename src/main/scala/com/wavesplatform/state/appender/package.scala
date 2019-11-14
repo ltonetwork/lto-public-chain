@@ -89,7 +89,7 @@ package object appender extends ScorexLogging {
 
   private[appender] def appendBlock(blockchainUpdater: BlockchainUpdater with Blockchain, utxStorage: UtxPool, verify: Boolean)(
       block: Block): Either[ValidationError, Option[Int]] =
-    blockchainUpdater.processBlock(block, verify).map { maybeDiscardedTxs =>
+    blockchainUpdater.processBlock(block).map { maybeDiscardedTxs =>
       utxStorage.removeAll(block.transactionData)
       utxStorage.batched { ops =>
         maybeDiscardedTxs.toSeq.flatten.foreach(ops.putIfNew)
