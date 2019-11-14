@@ -3,6 +3,7 @@ package com.wavesplatform.database
 import cats.kernel.Monoid
 import com.google.common.cache.CacheBuilder
 import com.wavesplatform.account.{Address, Alias}
+import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
@@ -138,6 +139,24 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
     }
   }
 
+  protected override def loadBalance(req: (Address, Option[AssetId])): Long = readOnly { db =>
+    addressId(req._1).fold(0L) { addressId =>
+      req._2 match {
+        case Some(assetId) => db.fromHistory(Keys.assetBalanceHistory(addressId, assetId), Keys.assetBalance(addressId, assetId)).getOrElse(0L)
+        case None          => db.fromHistory(Keys.wavesBalanceHistory(addressId), Keys.wavesBalance(addressId)).getOrElse(0L)
+      }
+    }
+  }
+
+  private def loadLeaseBalance(db: ReadOnlyDB, addressId: BigInt): LeaseBalance = {
+    val lease = db.fromHistory(Keys.leaseBalanceHistory(addressId), Keys.leaseBalance(addressId)).getOrElse(LeaseBalance.empty)
+    lease
+  }
+
+  override protected def loadLeaseBalance(address: Address): LeaseBalance = readOnly { db =>
+    addressId(address).fold(LeaseBalance.empty)(loadLeaseBalance(db, _))
+  }
+
   override def balance(address: Address): Long = readOnly { db =>
     addressId(address).fold(0L) { addressId =>
       db.fromHistory(Keys.wavesBalanceHistory(addressId), Keys.wavesBalance(addressId)).getOrElse(0L)
@@ -173,13 +192,13 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
   }
 
   override protected def doAppend(block: Block,
+                                  carry: Long,
                                   newAddresses: Map[Address, BigInt],
                                   wavesBalances: Map[BigInt, Long],
                                   assetBalances: Map[BigInt, Map[ByteStr, Long]],
                                   leaseBalances: Map[BigInt, LeaseBalance],
+                                  addressTransactions: Map[AddressId, List[TransactionId]],
                                   leaseStates: Map[ByteStr, Boolean],
-                                  transactions: Map[ByteStr, (Transaction, Set[BigInt])],
-                                  addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
                                   reissuedAssets: Map[ByteStr, AssetInfo],
                                   filledQuantity: Map[ByteStr, VolumeAndFee],
                                   scripts: Map[BigInt, Option[Script]],
@@ -535,10 +554,11 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
     .recordStats()
     .build[(Int, BigInt), LeaseBalance]()
 
-  override def balanceSnapshots(address: Address, from: Int, to: Int): Seq[BalanceSnapshot] = readOnly { db =>
+  override def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot] = readOnly { db =>
     db.get(Keys.addressId(address)).fold(Seq(BalanceSnapshot(1, 0, 0, 0))) { addressId =>
-      val wbh = slice(db.get(Keys.wavesBalanceHistory(addressId)), from, to)
-      val lbh = slice(db.get(Keys.leaseBalanceHistory(addressId)), from, to)
+      val toHeigth = this.heightOf(to).getOrElse(this.height)
+      val wbh      = slice(db.get(Keys.wavesBalanceHistory(addressId)), from, toHeigth)
+      val lbh      = slice(db.get(Keys.leaseBalanceHistory(addressId)), from, toHeigth)
       for {
         (wh, lh) <- merge(wbh, lbh)
         wb = balanceAtHeightCache.get((wh, addressId), () => db.get(Keys.wavesBalance(addressId)(wh)))
