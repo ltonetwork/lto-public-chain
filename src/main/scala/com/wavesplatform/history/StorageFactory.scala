@@ -1,8 +1,7 @@
 package com.wavesplatform.history
 
 import com.wavesplatform.account.Address
-import com.wavesplatform.database.{Keys, LevelDBWriter, RW}
-import com.wavesplatform.history.StorageFactory.checkVersion
+import com.wavesplatform.database.{DBExt, Keys, LevelDBWriter}
 import com.wavesplatform.settings.WavesSettings
 import com.wavesplatform.state.{BlockchainUpdaterImpl, NG}
 import com.wavesplatform.transaction.BlockchainUpdater
@@ -24,8 +23,7 @@ object StorageFactory extends ScorexLogging {
     )
     new BlockchainUpdaterImpl(levelDBWriter, portfolioChanged, settings, time)
   }
-  private def checkVersion(db: DB) = {
-    val rw      = new RW(db)
+  private def checkVersion(db: DB): Unit = db.readWrite { rw =>
     val version = rw.get(Keys.version)
     val height  = rw.get(Keys.height)
     if (version != StorageVersion) {
@@ -40,6 +38,5 @@ object StorageFactory extends ScorexLogging {
         forceStopApplication(UnsupportedFeature)
       }
     }
-    rw.close()
   }
 }

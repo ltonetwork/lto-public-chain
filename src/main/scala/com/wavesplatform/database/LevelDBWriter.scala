@@ -89,17 +89,9 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
 
   import LevelDBWriter._
 
-  private def readOnly[A](f: ReadOnlyDB => A): A = {
-    val s = writableDB.getSnapshot
-    try f(new ReadOnlyDB(writableDB, new ReadOptions().snapshot(s)))
-    finally s.close()
-  }
+  private def readOnly[A](f: ReadOnlyDB => A): A = writableDB.readOnly(f)
 
-  private def readWrite[A](f: RW => A): A = {
-    val rw = new RW(writableDB)
-    try f(rw)
-    finally rw.close()
-  }
+  private def readWrite[A](f: RW => A): A = writableDB.readWrite(f)
 
   override protected def loadMaxAddressId(): BigInt = readOnly(db => db.get(Keys.lastAddressId).getOrElse(BigInt(0)))
 
@@ -197,7 +189,7 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
                                   wavesBalances: Map[BigInt, Long],
                                   assetBalances: Map[BigInt, Map[ByteStr, Long]],
                                   leaseBalances: Map[BigInt, LeaseBalance],
-                                  addressTransactions: Map[AddressId, List[TransactionId]],
+                                  addressTransactions: Map[BigInt, List[ByteStr]],
                                   leaseStates: Map[ByteStr, Boolean],
                                   reissuedAssets: Map[ByteStr, AssetInfo],
                                   filledQuantity: Map[ByteStr, VolumeAndFee],

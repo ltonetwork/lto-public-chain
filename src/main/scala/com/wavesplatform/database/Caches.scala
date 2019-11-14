@@ -14,8 +14,6 @@ import com.wavesplatform.utils.ScorexLogging
 import scala.collection.JavaConverters._
 
 trait Caches extends Blockchain with ScorexLogging {
-  type AddressId     = BigInt
-  type TransactionId = ByteStr
 
   import Caches._
 
@@ -101,7 +99,7 @@ trait Caches extends Blockchain with ScorexLogging {
                          wavesBalances: Map[BigInt, Long],
                          assetBalances: Map[BigInt, Map[ByteStr, Long]],
                          leaseBalances: Map[BigInt, LeaseBalance],
-                         addressTransactions: Map[AddressId, List[TransactionId]],
+                         addressTransactions: Map[BigInt, List[ByteStr]],
                          leaseStates: Map[ByteStr, Boolean],
                          reissuedAssets: Map[ByteStr, AssetInfo],
                          filledQuantity: Map[ByteStr, VolumeAndFee],
@@ -159,7 +157,7 @@ trait Caches extends Blockchain with ScorexLogging {
       (orderId, fillInfo) <- diff.orderFills
     } yield orderId -> volumeAndFeeCache.get(orderId).combine(fillInfo)
 
-    val addressTransactions: Map[AddressId, List[TransactionId]] =
+    val addressTransactions: Map[BigInt, List[ByteStr]] =
       diff.transactions.toList
         .flatMap {
           case (_, (h, tx, addrs)) =>
