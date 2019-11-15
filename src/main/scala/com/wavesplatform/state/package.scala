@@ -1,8 +1,8 @@
 package com.wavesplatform
 
-import com.wavesplatform.account.{Address, AddressOrAlias, Alias}
+import com.wavesplatform.account.Address
 import com.wavesplatform.block.Block
-import com.wavesplatform.transaction.ValidationError.{AliasDoesNotExist, GenericError}
+import com.wavesplatform.transaction.ValidationError.GenericError
 import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.lease.{LeaseTransaction, LeaseTransactionV1}
 
@@ -52,16 +52,6 @@ package object state {
     }
 
     def genesis: Block = blockchain.blockAt(1).get
-    def resolveAlias(aoa: AddressOrAlias): Either[ValidationError, Address] =
-      aoa match {
-        case a: Address => Right(a)
-        case a: Alias   => blockchain.resolveAlias(a)
-      }
-
-    def canCreateAlias(alias: Alias): Boolean = blockchain.resolveAlias(alias) match {
-      case Left(AliasDoesNotExist(_)) => true
-      case _                          => false
-    }
 
     def effectiveBalance(address: Address, atHeight: Int, confirmations: Int): Long = {
       val bottomLimit = (atHeight - confirmations + 1).max(1).min(atHeight)
@@ -74,11 +64,6 @@ package object state {
       val balances    = blockchain.balanceSnapshots(address, bottomLimit, atHeight)
       if (balances.isEmpty) 0L else balances.view.map(_.regularBalance).min
     }
-
-    def aliasesOfAddress(address: Address): Seq[Alias] =
-      blockchain
-        .addressTransactions(address, Set(CreateAliasTransactionV1.typeId), Int.MaxValue, 0)
-        .collect { case (_, a: CreateAliasTransaction) => a.alias }
 
     def activeLeases(address: Address): Seq[(Int, LeaseTransaction)] =
       blockchain

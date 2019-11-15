@@ -8,8 +8,7 @@ import com.wavesplatform.state._
 import com.wavesplatform.account.{Address, Alias}
 import com.wavesplatform.block.Block
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.Transaction
-import com.wavesplatform.transaction.AssetId
+import com.wavesplatform.transaction.{AssetId, AssociationTransaction, Transaction}
 
 import scala.collection.JavaConverters._
 
@@ -55,11 +54,6 @@ trait Caches extends Blockchain {
   protected def discardPortfolio(address: Address): Unit = portfolioCache.invalidate(address)
   override def portfolio(a: Address): Portfolio          = portfolioCache.get(a)
 
-  private val assetDescriptionCache: LoadingCache[AssetId, Option[AssetDescription]] = cache(maxCacheSize, loadAssetDescription)
-  protected def loadAssetDescription(assetId: AssetId): Option[AssetDescription]
-  protected def discardAssetDescription(assetId: AssetId): Unit             = assetDescriptionCache.invalidate(assetId)
-  override def assetDescription(assetId: AssetId): Option[AssetDescription] = assetDescriptionCache.get(assetId)
-
   private val volumeAndFeeCache: LoadingCache[ByteStr, VolumeAndFee] = cache(maxCacheSize, loadVolumeAndFee)
   protected def loadVolumeAndFee(orderId: ByteStr): VolumeAndFee
   protected def discardVolumeAndFee(orderId: ByteStr): Unit       = volumeAndFeeCache.invalidate(orderId)
@@ -104,7 +98,8 @@ trait Caches extends Blockchain {
                          scripts: Map[BigInt, Option[Script]],
                          data: Map[BigInt, AccountDataInfo],
                          aliases: Map[Alias, BigInt],
-                         sponsorship: Map[AssetId, Sponsorship]): Unit
+                         sponsorship: Map[AssetId, Sponsorship],
+                         assocs: List[(Int, AssociationTransaction)]): Unit
 
   override def append(diff: Diff, block: Block): Unit = {
     heightCache += 1
@@ -153,6 +148,11 @@ trait Caches extends Blockchain {
       newTransactions += id -> ((tx, addresses.map(addressId)))
     }
 
+    val newAssociations: List[(Int, AssociationTransaction)] = diff.transactions.values
+      .filter(_._2.builder.typeId == AssociationTransaction.typeId)
+      .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
+      .toList
+
     doAppend(
       block,
       newAddressIds,
@@ -167,13 +167,13 @@ trait Caches extends Blockchain {
       diff.scripts.map { case (address, s)        => addressId(address) -> s },
       diff.accountData.map { case (address, data) => addressId(address) -> data },
       diff.aliases.map { case (a, address)        => a                  -> addressId(address) },
-      diff.sponsorship
+      diff.sponsorship,
+      newAssociations
     )
 
     for ((address, id)           <- newAddressIds) addressIdCache.put(address, Some(id))
     for ((orderId, volumeAndFee) <- newFills) volumeAndFeeCache.put(orderId, volumeAndFee)
     for ((address, portfolio)    <- newPortfolios.result()) portfolioCache.put(address, portfolio)
-    for (id                      <- diff.issuedAssets.keySet ++ diff.sponsorship.keySet) assetDescriptionCache.invalidate(id)
     scriptCache.putAll(diff.scripts.asJava)
   }
 

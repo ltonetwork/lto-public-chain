@@ -15,21 +15,14 @@ object TransferTransactionDiff {
       tx: TransferTransaction): Either[ValidationError, Diff] = {
     val sender = Address.fromPublicKey(tx.sender.publicKey)
 
-    val isInvalidEi = for {
-      recipient <- blockchain.resolveAlias(tx.recipient)
-      portfolios = Map(sender -> Portfolio(-tx.amount, LeaseBalance.empty))
-        .combine(
-          Map(recipient -> Portfolio(tx.amount, LeaseBalance.empty))
-        )
-        .combine(
-          Map(sender -> Portfolio(-tx.fee, LeaseBalance.empty))
-        )
-    } yield portfolios
-
-    isInvalidEi match {
-      case Left(e) => Left(e)
-      case Right(portfolios) =>
-        Right(Diff(height, tx, portfolios))
-    }
+    val recipient = tx.recipient.asInstanceOf[Address]
+    val portfolios = Map(sender -> Portfolio(-tx.amount, LeaseBalance.empty))
+      .combine(
+        Map(recipient -> Portfolio(tx.amount, LeaseBalance.empty))
+      )
+      .combine(
+        Map(sender -> Portfolio(-tx.fee, LeaseBalance.empty))
+      )
+    Right(Diff(height, tx, portfolios))
   }
 }

@@ -121,4 +121,13 @@ object Keys {
   val AliasIsDisabledPrefix: Short = 43
   def aliasIsDisabled(alias: Alias): Key[Boolean] =
     Key(bytes(AliasIsDisabledPrefix, alias.bytes.arr), Option(_).exists(_(0) == 1), if (_) Array[Byte](1) else Array[Byte](0))
+
+  def outgoingAssociationsSeqNr(address: ByteStr): Key[Int] = bytesSeqNr(44, address.arr)
+  def outgoingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[Array[Byte]] =
+    Key(hBytes(45, seqNr, addressBytes.arr), identity, identity)
+
+  def incomingAssociationsSeqNr(address: ByteStr): Key[Int] = bytesSeqNr(46, address.arr)
+  def incomingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[Array[Byte]] =
+    Key(hBytes(47, seqNr, addressBytes.arr), identity, identity)
+
 }

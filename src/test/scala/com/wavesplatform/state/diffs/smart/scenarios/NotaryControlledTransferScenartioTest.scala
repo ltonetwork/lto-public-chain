@@ -1,28 +1,22 @@
 package com.wavesplatform.state.diffs.smart.scenarios
 
-import java.nio.charset.StandardCharsets
-
 import com.wavesplatform.lang.Global
 import com.wavesplatform.lang.v1.compiler.CompilerV1
 import com.wavesplatform.lang.v1.evaluator.EvaluatorV1
 import com.wavesplatform.lang.v1.parser.Parser
 import com.wavesplatform.state._
 import com.wavesplatform.state.diffs._
-import com.wavesplatform.state.diffs.smart._
+import com.wavesplatform.transaction.smart.script.v1.ScriptV1
+import com.wavesplatform.transaction.transfer._
+import com.wavesplatform.transaction.{DataTransaction, GenesisTransaction}
 import com.wavesplatform.utils._
 import com.wavesplatform.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
-import com.wavesplatform.account.AddressScheme
-import com.wavesplatform.transaction.assets.IssueTransactionV2
-import com.wavesplatform.transaction.smart.script.v1.ScriptV1
-import com.wavesplatform.transaction.transfer._
-import com.wavesplatform.transaction.{DataTransaction, GenesisTransaction}
 
 class NotaryControlledTransferScenartioTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
-  val preconditions: Gen[
-    (Seq[GenesisTransaction], IssueTransactionV2, DataTransaction, TransferTransactionV1, DataTransaction, DataTransaction, TransferTransactionV1)] =
+  val preconditions: Gen[(Seq[GenesisTransaction], DataTransaction, TransferTransactionV1, DataTransaction, DataTransaction, TransferTransactionV1)] =
     for {
       company  <- accountGen
       king     <- accountGen
@@ -64,24 +58,6 @@ class NotaryControlledTransferScenartioTest extends PropSpec with PropertyChecks
 
       typedScript = ScriptV1(CompilerV1(dummyCompilerContext, untypedScript).explicitGet()._1).explicitGet()
 
-      issueTransaction = IssueTransactionV2
-        .selfSigned(
-          2,
-          AddressScheme.current.chainId,
-          company,
-          "name".getBytes(StandardCharsets.UTF_8),
-          "description".getBytes(StandardCharsets.UTF_8),
-          100,
-          0,
-          false,
-          Some(typedScript),
-          1000000,
-          ts
-        )
-        .explicitGet()
-
-      assetId = issueTransaction.id()
-
       kingDataTransaction = DataTransaction
         .selfSigned(1, king, List(BinaryDataEntry("notary1PK", ByteStr(notary.publicKey))), 1000, ts + 1)
         .explicitGet()
@@ -103,7 +79,6 @@ class NotaryControlledTransferScenartioTest extends PropSpec with PropertyChecks
         .explicitGet()
     } yield
       (Seq(genesis1, genesis2, genesis3, genesis4, genesis5),
-       issueTransaction,
        kingDataTransaction,
        transferFromCompanyToA,
        notaryDataTransaction,

@@ -85,6 +85,10 @@ package object utils extends ScorexLogging {
       g(a)
       a
     }
+    def ptap: A = {
+      println(a)
+      a
+    }
   }
 
   lazy val dummyNetworkByte: Byte                           = AddressScheme.current.chainId

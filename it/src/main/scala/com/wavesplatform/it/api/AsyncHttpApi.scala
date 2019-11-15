@@ -4,8 +4,8 @@ import java.io.IOException
 import java.net.InetSocketAddress
 import java.util.concurrent.TimeoutException
 
+import com.wavesplatform.api.http.AddressApiRoute._
 import com.wavesplatform.api.http.PeersApiRoute.{ConnectReq, connectFormat}
-import com.wavesplatform.api.http.alias.CreateAliasV1Request
 import com.wavesplatform.api.http.assets._
 import com.wavesplatform.api.http.leasing.{LeaseCancelV1Request, LeaseV1Request, SignedLeaseCancelV1Request, SignedLeaseV1Request}
 import com.wavesplatform.api.http.{AddressApiRoute, DataRequest}
@@ -193,22 +193,7 @@ object AsyncHttpApi extends Assertions {
 
     def activeLeases(sourceAddress: String) = get(s"/leasing/active/$sourceAddress").as[Seq[Transaction]]
 
-    def issue(sourceAddress: String,
-              name: String,
-              description: String,
-              quantity: Long,
-              decimals: Byte,
-              reissuable: Boolean,
-              fee: Long): Future[Transaction] =
-      postJson("/assets/issue", IssueV1Request(sourceAddress, name, description, quantity, decimals, reissuable, fee)).as[Transaction]
-
     def scriptCompile(code: String) = post("/utils/script/compile", code).as[CompiledScript]
-
-    def reissue(sourceAddress: String, assetId: String, quantity: Long, reissuable: Boolean, fee: Long): Future[Transaction] =
-      postJson("/assets/reissue", ReissueV1Request(sourceAddress, assetId, quantity, reissuable, fee)).as[Transaction]
-
-    def burn(sourceAddress: String, assetId: String, quantity: Long, fee: Long): Future[Transaction] =
-      postJson("/assets/burn", BurnV1Request(sourceAddress, assetId, quantity, fee)).as[Transaction]
 
     def assetBalance(address: String, asset: String): Future[AssetBalance] =
       get(s"/assets/balance/$address/$asset").as[AssetBalance]
@@ -242,6 +227,8 @@ object AsyncHttpApi extends Assertions {
     def getData(address: String): Future[List[DataEntry[_]]] = get(s"/addresses/data/$address").as[List[DataEntry[_]]]
 
     def getData(address: String, key: String): Future[DataEntry[_]] = get(s"/addresses/data/$address/$key").as[DataEntry[_]]
+
+    def getAssociations(address: String): Future[AssociationsInfo] = get(s"/addresses/associations/$address").as[AssociationsInfo]
 
     def signedTransfer(transfer: SignedTransferV1Request): Future[Transaction] =
       postJson("/assets/broadcast/transfer", transfer).as[Transaction]
@@ -285,15 +272,6 @@ object AsyncHttpApi extends Assertions {
 
       aux.as[Seq[Transaction]]
     }
-
-    def createAlias(targetAddress: String, alias: String, fee: Long): Future[Transaction] =
-      postJson("/alias/create", CreateAliasV1Request(targetAddress, alias, fee)).as[Transaction]
-
-    def aliasByAddress(targetAddress: String): Future[Seq[String]] =
-      get(s"/alias/by-address/$targetAddress").as[Seq[String]]
-
-    def addressByAlias(targetAlias: String): Future[Address] =
-      get(s"/alias/by-alias/$targetAlias").as[Address]
 
     def rollback(to: Int, returnToUTX: Boolean = true): Future[Unit] =
       postJson("/debug/rollback", RollbackParams(to, returnToUTX)).map(_ => ())
@@ -377,15 +355,6 @@ object AsyncHttpApi extends Assertions {
 
     def getGeneratedBlocks(address: String, from: Long, to: Long): Future[Seq[Block]] =
       get(s"/blocks/address/$address/$from/$to").as[Seq[Block]]
-
-    def issueAsset(address: String,
-                   name: String,
-                   description: String,
-                   quantity: Long,
-                   decimals: Byte,
-                   fee: Long,
-                   reissuable: Boolean): Future[Transaction] =
-      postJson("/assets/issue", IssueV1Request(address, name, description, quantity, decimals, reissuable, fee)).as[Transaction]
 
     def retrying(r: Request,
                  interval: FiniteDuration = 1.second,

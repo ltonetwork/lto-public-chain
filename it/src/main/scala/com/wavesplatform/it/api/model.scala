@@ -1,10 +1,6 @@
 package com.wavesplatform.it.api
 
-import com.wavesplatform.state.ByteStr
-import com.wavesplatform.transaction.assets.exchange.AssetPair
 import play.api.libs.json._
-
-import scala.util.{Failure, Success}
 
 // USCE no longer contains references to non-serializable Request/Response objects
 // to work around https://github.com/scalatest/scalatest/issues/556
@@ -185,35 +181,6 @@ object MatcherStatusResponse {
 case class MessageMatcherResponse(message: String)
 object MessageMatcherResponse {
   implicit val messageMatcherResponseFormat: Format[MessageMatcherResponse] = Json.format
-}
-
-case class OrderbookHistory(id: String,
-                            `type`: String,
-                            amount: Long,
-                            price: Long,
-                            timestamp: Long,
-                            filled: Int,
-                            status: String,
-                            assetPair: AssetPair) {
-  def isActive: Boolean = status == "PartiallyFilled" || status == "Accepted"
-}
-object OrderbookHistory {
-  implicit val byteStrFormat: Format[ByteStr] = Format(
-    Reads {
-      case JsString(str) =>
-        ByteStr.decodeBase58(str) match {
-          case Success(x) => JsSuccess(x)
-          case Failure(e) => JsError(e.getMessage)
-        }
-
-      case _ => JsError("Can't read ByteStr")
-    },
-    Writes(x => JsString(x.base58))
-  )
-
-  implicit val assetPairFormat: Format[AssetPair] = Json.format[AssetPair]
-
-  implicit val orderbookHistory: Format[OrderbookHistory] = Json.format
 }
 
 case class PairResponse(amountAsset: String, priceAsset: String)
