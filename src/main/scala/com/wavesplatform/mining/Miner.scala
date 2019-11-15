@@ -273,7 +273,7 @@ class MinerImpl(allChannels: ChannelGroup,
                                       height: Int,
                                       block: Block,
                                       account: PublicKeyAccount): Either[String, (Long, Long)] = {
-    val balance = GeneratingBalanceProvider.balance(blockchainUpdater, fs, height, account.toAddress)
+    val balance = GeneratingBalanceProvider.balance(blockchainUpdater, fs, account.toAddress, ???) // TODO ???
 
     if (GeneratingBalanceProvider.isMiningAllowed(blockchainUpdater, height, balance)) {
       for {

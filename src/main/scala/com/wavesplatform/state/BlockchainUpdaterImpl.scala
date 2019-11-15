@@ -21,7 +21,7 @@ import kamon.Kamon
 import monix.reactive.{Observable, Observer}
 import monix.reactive.subjects.ConcurrentSubject
 
-class BlockchainUpdaterImpl(blockchain: Blockchain, portfolioChanged: Observer[Address], settings: WavesSettings, time: Time)
+class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, time: Time)
     extends BlockchainUpdater
     with NG
     with ScorexLogging
@@ -258,7 +258,6 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, portfolioChanged: Observer[A
               ng.append(microBlock, diff, carry, System.currentTimeMillis)
               log.info(s"$microBlock appended")
               internalLastBlockInfo.onNext(LastBlockInfo(microBlock.totalResBlockSig, height, score, ready = true))
-              diff.portfolios.keys.foreach(portfolioChanged.onNext)
             }
         }
     }

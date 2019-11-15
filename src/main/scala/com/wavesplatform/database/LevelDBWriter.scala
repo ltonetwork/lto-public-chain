@@ -82,9 +82,7 @@ object LevelDBWriter {
   }
 }
 
-class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: FunctionalitySettings, val maxCacheSize: Int = 100000)
-    extends Caches
-    with ScorexLogging {
+class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize: Int = 100000) extends Caches with ScorexLogging {
 
   import LevelDBWriter._
 
@@ -155,6 +153,8 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
     addressId(address).fold(Portfolio.empty)(loadPortfolio(db, _))
   }
 
+  override def carryFee: Long = readOnly(_.get(Keys.carryFee(height)))
+
   override protected def loadVolumeAndFee(orderId: ByteStr): VolumeAndFee = readOnly { db =>
     db.fromHistory(Keys.filledVolumeAndFeeHistory(orderId), Keys.filledVolumeAndFee(orderId)).getOrElse(VolumeAndFee.empty)
   }
@@ -172,7 +172,8 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
     c2.drop(1).map(kf(_).keyBytes)
   }
 
-  override protected def doAppend(block: Block,
+  override protected def doAppend(carry: Long,
+                                  block: Block,
                                   newAddresses: Map[Address, BigInt],
                                   wavesBalances: Map[BigInt, Long],
                                   assetBalances: Map[BigInt, Map[ByteStr, Long]],
@@ -352,7 +353,7 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
     }
 
     rw.put(Keys.transactionIdsAtHeight(height), transactions.keys.toSeq)
-
+    rw.put(Keys.carryFee(height), carry)
     expiredKeys.foreach(rw.delete)
 
   }
@@ -535,10 +536,11 @@ class LevelDBWriter(writableDB: DB, portfolioChanged: Observer[Address], fs: Fun
     .recordStats()
     .build[(Int, BigInt), LeaseBalance]()
 
-  override def balanceSnapshots(address: Address, from: Int, to: Int): Seq[BalanceSnapshot] = readOnly { db =>
+  override def balanceSnapshots(address: Address, from: Int, to: ByteStr): Seq[BalanceSnapshot] = readOnly { db =>
     db.get(Keys.addressId(address)).fold(Seq(BalanceSnapshot(1, 0, 0, 0))) { addressId =>
-      val wbh = slice(db.get(Keys.wavesBalanceHistory(addressId)), from, to)
-      val lbh = slice(db.get(Keys.leaseBalanceHistory(addressId)), from, to)
+      val toHeight = this.heightOf(to).getOrElse(this.height)
+      val wbh      = slice(db.get(Keys.wavesBalanceHistory(addressId)), from, toHeight)
+      val lbh      = slice(db.get(Keys.leaseBalanceHistory(addressId)), from, toHeight)
       for {
         (wh, lh) <- merge(wbh, lbh)
         wb = balanceAtHeightCache.get((wh, addressId), () => db.get(Keys.wavesBalance(addressId)(wh)))

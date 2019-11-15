@@ -13,16 +13,15 @@ import org.iq80.leveldb.DB
 object StorageFactory extends ScorexLogging {
   private val StorageVersion = 1
 
-  def apply(settings: WavesSettings, db: DB, time: Time, portfolioChanged: Observer[Address]): BlockchainUpdater with NG = {
+  def apply(settings: WavesSettings, db: DB, time: Time): BlockchainUpdater with NG = {
     checkVersion(db)
     import scala.concurrent.duration._
     val levelDBWriter = new LevelDBWriter(
       db,
-      portfolioChanged,
       settings.blockchainSettings.functionalitySettings,
       settings.maxCacheSize
     )
-    new BlockchainUpdaterImpl(levelDBWriter, portfolioChanged, settings, time)
+    new BlockchainUpdaterImpl(levelDBWriter, settings, time)
   }
   private def checkVersion(db: DB) = {
     val rw      = new RW(db)
