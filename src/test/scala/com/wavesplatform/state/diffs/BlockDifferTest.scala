@@ -139,11 +139,13 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
 
       zipWithPrev(preconditions).foreach {
         case (prev, b) =>
-          bc.append(differ(prev, b).explicitGet(), b)
+         // TODO ???
+         // bc.append(differ(prev, b).explicitGet(), b)
       }
 
       val totalDiff1 = differ(preconditions.lastOption, block).explicitGet()
-      bc.append(totalDiff1, block)
+      // TODO ???
+      // bc.append(totalDiff1, block)
       assertion(totalDiff1, bc)
     }
 
