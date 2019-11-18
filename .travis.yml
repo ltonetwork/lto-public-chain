@@ -2,10 +2,6 @@ language: scala
 # Use container-based infrastructure
 sudo: false
 
-branches:
-  only:
-  - master
-
 jdk:
 - oraclejdk11
 scala:
