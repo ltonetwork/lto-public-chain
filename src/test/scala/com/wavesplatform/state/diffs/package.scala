@@ -15,7 +15,7 @@ package object diffs extends WithState with Matchers {
   val ENOUGH_AMT: Long = Long.MaxValue / 3
 
   def assertDiffEi(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings = TFS.Enabled)(
-    assertion: Either[ValidationError, Diff] => Unit): Unit = withStateAndHistory(fs) { state =>
+      assertion: Either[ValidationError, Diff] => Unit): Unit = withStateAndHistory(fs) { state =>
     def differ(blockchain: Blockchain, b: Block) = BlockDiffer.fromBlock(fs, blockchain, None, b, MiningConstraint.Unlimited)
 
     preconditions.foreach { precondition =>
@@ -26,9 +26,8 @@ package object diffs extends WithState with Matchers {
     assertion(totalDiff1.map(_._1))
   }
 
-
   def assertDiffAndState(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings = TFS.Enabled)(
-    assertion: (Diff, Blockchain) => Unit): Unit = withStateAndHistory(fs) { state =>
+      assertion: (Diff, Blockchain) => Unit): Unit = withStateAndHistory(fs) { state =>
     def differ(blockchain: Blockchain, prevBlock: Option[Block], b: Block) =
       BlockDiffer.fromBlock(fs, blockchain, prevBlock, b, MiningConstraint.Unlimited)
 

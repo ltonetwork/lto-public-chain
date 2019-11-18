@@ -81,7 +81,7 @@ class FPPoSSelectorTest extends FreeSpec with Matchers with WithDB with Transact
         case Env(pos, blockchain, miners) =>
           val miner        = miners.head
           val height       = blockchain.height
-          val minerBalance = blockchain.effectiveBalance(miner.toAddress,0)
+          val minerBalance = blockchain.effectiveBalance(miner.toAddress, 0)
           val lastBlock    = blockchain.lastBlock.get
           val block        = forgeBlock(miner, blockchain, pos)(updateDelay = _ - 1)
 
