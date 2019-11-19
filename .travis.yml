@@ -3,7 +3,7 @@ language: scala
 sudo: false
 
 jdk:
-- oraclejdk8
+- oraclejdk9
 scala:
 - 2.12.7
 env:
