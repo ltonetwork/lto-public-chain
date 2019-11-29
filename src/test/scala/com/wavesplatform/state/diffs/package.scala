@@ -25,11 +25,14 @@ package object diffs extends WithState with Matchers {
     val totalDiff1 = differ(state, block)
     assertion(totalDiff1.map(_._1))
   }
+  def assertNgDiffState(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings = TFS.Enabled)(
+    assertion: (Diff, Blockchain) => Unit): Unit =
+    assertDiffAndState(preconditions, block, fs, withNg = true)(assertion)
 
-  def assertDiffAndState(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings = TFS.Enabled)(
-      assertion: (Diff, Blockchain) => Unit): Unit = withStateAndHistory(fs) { state =>
+  private def assertDiffAndState(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings, withNg: Boolean)(
+    assertion: (Diff, Blockchain) => Unit): Unit = withStateAndHistory(fs) { state =>
     def differ(blockchain: Blockchain, prevBlock: Option[Block], b: Block) =
-      BlockDiffer.fromBlock(fs, blockchain, prevBlock, b, MiningConstraint.Unlimited)
+      BlockDiffer.fromBlock(fs, blockchain, if (withNg) prevBlock else None, b, MiningConstraint.Unlimited)
 
     preconditions.foldLeft[Option[Block]](None) { (prevBlock, curBlock) =>
       val (diff, fees, _) = differ(state, prevBlock, curBlock).explicitGet()
@@ -44,6 +47,10 @@ package object diffs extends WithState with Matchers {
     state.append(diff, fees, block)
     assertion(diff, state)
   }
+
+  def assertDiffAndState(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings = TFS.Enabled)(
+    assertion: (Diff, Blockchain) => Unit): Unit =
+    assertDiffAndState(preconditions, block, fs, withNg = false)(assertion)
 
   def assertDiffAndState(fs: FunctionalitySettings)(test: (Seq[Transaction] => Either[ValidationError, Unit]) => Unit): Unit =
     withStateAndHistory(fs) { state =>

@@ -193,9 +193,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   sponsorship: Map[AssetId, Sponsorship],
                                   assocs: List[(Int, AssociationTransaction)]): Unit = readWrite { rw =>
 
-
-    println(leaseBalances)
-
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
     rw.put(Keys.height, height)
@@ -233,7 +230,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
     for ((addressId, leaseBalance) <- leaseBalances) {
       rw.put(Keys.leaseBalance(addressId)(height), leaseBalance)
-      println(s"Writing lease history: $addressId, $height, $leaseBalance")
       expiredKeys ++= updateHistory(rw, Keys.leaseBalanceHistory(addressId), threshold, Keys.leaseBalance(addressId))
     }
 
@@ -546,7 +542,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     .build[(Int, BigInt), LeaseBalance]()
 
   override def balanceSnapshots(address: Address, from: Int, to: ByteStr): Seq[BalanceSnapshot] = readOnly { db =>
-    val r = db.get(Keys.addressId(address)).fold(Seq(BalanceSnapshot(1, 0, 0, 0))) { addressId =>
+    db.get(Keys.addressId(address)).fold(Seq(BalanceSnapshot(1, 0, 0, 0))) { addressId =>
       val toHeight = this.heightOf(to).getOrElse(this.height)
       val ints = db.get(Keys.wavesBalanceHistory(addressId))
       val wbh      = slice(ints, from, toHeight)
@@ -557,8 +553,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
         lb = leaseBalanceAtHeightCache.get((lh, addressId), () => db.get(Keys.leaseBalance(addressId)(lh)))
       } yield BalanceSnapshot(wh.max(lh), wb, lb.in, lb.out)
     }
-    println(s"LevelDBWriter.balanceSnapshots : $r")
-    r
   }
 
   override def allActiveLeases: Set[LeaseTransaction] = readOnly { db =>
