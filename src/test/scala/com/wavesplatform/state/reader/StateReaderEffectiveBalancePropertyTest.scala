@@ -36,7 +36,7 @@ class StateReaderEffectiveBalancePropertyTest extends PropSpec with PropertyChec
 
   property("Negative generating balance case") {
     val fs  = Enabled.copy(preActivatedFeatures = Map(SmartAccounts.id -> 0))
-    val Fee = 100000
+    val Fee = 100000000
     val setup = for {
       master <- accountGen
       ts     <- positiveLongGen
