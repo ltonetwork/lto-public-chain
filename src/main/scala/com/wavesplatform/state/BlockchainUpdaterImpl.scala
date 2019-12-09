@@ -177,7 +177,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
                     val diff = BlockDiffer
                       .fromBlock(
                         functionalitySettings,
-                        CompositeBlockchain.composite(blockchain, referencedLiquidDiff),
+                        CompositeBlockchain.composite(blockchain, referencedLiquidDiff, carry),
                         Some(referencedForgedBlock),
                         block,
                         constraint

@@ -123,7 +123,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
       .foldLeft((initDiff, 0L, initConstraint).asRight[ValidationError]) {
         case (r @ Left(_), _) => r
         case (Right((currDiff, carryFee, currConstraint)), tx) =>
-          val updatedBlockchain = composite(blockchain, currDiff)
+          val updatedBlockchain = composite(blockchain, currDiff, 0)
           val updatedConstraint = updateConstraint(currConstraint, updatedBlockchain, tx)
           if (updatedConstraint.isOverfilled)
             Left(ValidationError.GenericError(s"Limit of txs was reached: $initConstraint -> $updatedConstraint"))
