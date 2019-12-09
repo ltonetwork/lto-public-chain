@@ -6,7 +6,7 @@ To build testnet, use
 sbt -Dnetwork=testnet packageAll
 ```
 
-For further information please refer the [waves plaform documentation](https://docs.wavesplatform.com).
+For further information please refer the [LTO Network plaform documentation](https://docs.ltonetwork.com).
 
 # Acknowledgement
 

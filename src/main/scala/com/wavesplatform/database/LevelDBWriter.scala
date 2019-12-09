@@ -158,7 +158,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     addressId(address).fold(Portfolio.empty)(loadPortfolio(db, _))
   }
 
-
   override protected def loadVolumeAndFee(orderId: ByteStr): VolumeAndFee = readOnly { db =>
     db.fromHistory(Keys.filledVolumeAndFeeHistory(orderId), Keys.filledVolumeAndFee(orderId)).getOrElse(VolumeAndFee.empty)
   }
@@ -192,7 +191,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   aliases: Map[Alias, BigInt],
                                   sponsorship: Map[AssetId, Sponsorship],
                                   assocs: List[(Int, AssociationTransaction)]): Unit = readWrite { rw =>
-
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
     rw.put(Keys.height, height)
@@ -544,7 +542,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
   override def balanceSnapshots(address: Address, from: Int, to: ByteStr): Seq[BalanceSnapshot] = readOnly { db =>
     db.get(Keys.addressId(address)).fold(Seq(BalanceSnapshot(1, 0, 0, 0))) { addressId =>
       val toHeight = this.heightOf(to).getOrElse(this.height)
-      val ints = db.get(Keys.wavesBalanceHistory(addressId))
+      val ints     = db.get(Keys.wavesBalanceHistory(addressId))
       val wbh      = slice(ints, from, toHeight)
       val lbh      = slice(db.get(Keys.leaseBalanceHistory(addressId)), from, toHeight)
       for {

@@ -1,6 +1,7 @@
 package com.wavesplatform.state
 
 import com.wavesplatform.account.Address
+import com.wavesplatform.account.Address
 import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.state.reader.LeaseDetails

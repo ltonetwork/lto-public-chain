@@ -3,6 +3,7 @@ package com.wavesplatform.state.reader
 import cats.implicits._
 import com.wavesplatform.account.Address
 import com.wavesplatform.block.Block.BlockId
+import com.wavesplatform.account.Address
 import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.Transaction.Type

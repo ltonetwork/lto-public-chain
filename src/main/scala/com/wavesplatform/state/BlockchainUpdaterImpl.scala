@@ -20,6 +20,10 @@ import com.wavesplatform.utils.{ScorexLogging, Time, UnsupportedFeature, forceSt
 import kamon.Kamon
 import monix.reactive.{Observable, Observer}
 import monix.reactive.subjects.ConcurrentSubject
+import com.wavesplatform.utils.{ScorexLogging, Time, UnsupportedFeature, forceStopApplication}
+import kamon.Kamon
+import monix.reactive.Observable
+import monix.reactive.subjects.ConcurrentSubject
 
 class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, time: Time)
     extends BlockchainUpdater

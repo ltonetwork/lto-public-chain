@@ -14,7 +14,6 @@ import com.wavesplatform.transaction.{GenesisTransaction, ValidationError}
 import org.scalatest.{FreeSpecLike, Matchers}
 import scorex.crypto.signatures.Curve25519._
 
-
 class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with WithState {
 
   private val TransactionFee = 10
