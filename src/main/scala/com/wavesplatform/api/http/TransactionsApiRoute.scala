@@ -7,6 +7,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import com.wavesplatform.account.{Address, PublicKeyAccount}
 import com.wavesplatform.api.http.DataRequest._
+import com.wavesplatform.api.http.IssueAssociationRequest._
 import com.wavesplatform.api.http.assets._
 import com.wavesplatform.api.http.leasing._
 import com.wavesplatform.features.BlockchainFeatures
@@ -241,8 +242,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             x match {
-              case AnchorTransaction        => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
-              case AssociationTransaction   => TransactionFactory.association(txJson.as[AssociationRequest], wallet, signerAddress, time)
+              case AnchorTransaction           => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
+              case IssueAssociationTransaction => TransactionFactory.issueAssociation(txJson.as[IssueAssociationRequest], wallet, signerAddress, time)
+              case RevokeAssociationTransaction =>
+                TransactionFactory.revokeAssociation(txJson.as[RevokeAssociationRequest], wallet, signerAddress, time)
               case TransferTransactionV1    => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], wallet, signerAddress, time)
               case TransferTransactionV2    => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], wallet, signerAddress, time)
               case MassTransferTransaction  => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], wallet, signerAddress, time)
@@ -273,17 +276,18 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
               case Some(x) =>
                 x match {
-                  case AnchorTransaction        => TransactionFactory.anchor(txJson.as[AnchorRequest], senderPk)
-                  case AssociationTransaction   => TransactionFactory.association(txJson.as[AssociationRequest], senderPk)
-                  case TransferTransactionV1    => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], senderPk)
-                  case TransferTransactionV2    => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], senderPk)
-                  case MassTransferTransaction  => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], senderPk)
-                  case LeaseTransactionV1       => TransactionFactory.leaseV1(txJson.as[LeaseV1Request], senderPk)
-                  case LeaseCancelTransactionV1 => TransactionFactory.leaseCancelV1(txJson.as[LeaseCancelV1Request], senderPk)
-                  case LeaseTransactionV2       => TransactionFactory.leaseV2(txJson.as[LeaseV2Request], senderPk)
-                  case LeaseCancelTransactionV2 => TransactionFactory.leaseCancelV2(txJson.as[LeaseCancelV2Request], senderPk)
-                  case DataTransaction          => TransactionFactory.data(txJson.as[DataRequest], senderPk)
-                  case SetScriptTransaction     => TransactionFactory.setScript(txJson.as[SetScriptRequest], senderPk)
+                  case AnchorTransaction            => TransactionFactory.anchor(txJson.as[AnchorRequest], senderPk)
+                  case IssueAssociationTransaction  => TransactionFactory.issueAssociation(txJson.as[IssueAssociationRequest], senderPk)
+                  case RevokeAssociationTransaction => TransactionFactory.revokeAssociation(txJson.as[RevokeAssociationRequest], senderPk)
+                  case TransferTransactionV1        => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], senderPk)
+                  case TransferTransactionV2        => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], senderPk)
+                  case MassTransferTransaction      => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], senderPk)
+                  case LeaseTransactionV1           => TransactionFactory.leaseV1(txJson.as[LeaseV1Request], senderPk)
+                  case LeaseCancelTransactionV1     => TransactionFactory.leaseCancelV1(txJson.as[LeaseCancelV1Request], senderPk)
+                  case LeaseTransactionV2           => TransactionFactory.leaseV2(txJson.as[LeaseV2Request], senderPk)
+                  case LeaseCancelTransactionV2     => TransactionFactory.leaseCancelV2(txJson.as[LeaseCancelV2Request], senderPk)
+                  case DataTransaction              => TransactionFactory.data(txJson.as[DataRequest], senderPk)
+                  case SetScriptTransaction         => TransactionFactory.setScript(txJson.as[SetScriptRequest], senderPk)
                 }
             }
           }
@@ -307,24 +311,25 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         val typeId  = (jsv \ "type").as[Byte]
         val version = (jsv \ "version").asOpt[Byte](versionReads).getOrElse(1.toByte)
 
-        implicit val broadcastAnchorRequestReadsFormat: Format[SignedAnchorRequest]     = Json.format
-        implicit val broadcastAssocRequestReadsFormat: Format[SignedAssociationRequest] = Json.format
+        implicit val broadcastAnchorRequestReadsFormat: Format[SignedAnchorRequest]           = Json.format
+        implicit val broadcastAssocRequestReadsFormat: Format[SignedRevokeAssociationRequest] = Json.format
 
         val r = TransactionParsers.by(typeId, version) match {
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             x match {
-              case AnchorTransaction        => jsv.as[SignedAnchorRequest].toTx
-              case AssociationTransaction   => jsv.as[SignedAssociationRequest].toTx
-              case TransferTransactionV1    => jsv.as[SignedTransferV1Request].toTx
-              case TransferTransactionV2    => jsv.as[SignedTransferV2Request].toTx
-              case MassTransferTransaction  => jsv.as[SignedMassTransferRequest].toTx
-              case LeaseTransactionV1       => jsv.as[SignedLeaseV1Request].toTx
-              case LeaseTransactionV2       => jsv.as[SignedLeaseV2Request].toTx
-              case LeaseCancelTransactionV1 => jsv.as[SignedLeaseCancelV1Request].toTx
-              case LeaseCancelTransactionV2 => jsv.as[SignedLeaseCancelV2Request].toTx
-              case DataTransaction          => jsv.as[SignedDataRequest].toTx
-              case SetScriptTransaction     => jsv.as[SignedSetScriptRequest].toTx
+              case AnchorTransaction            => jsv.as[SignedAnchorRequest].toTx
+              case IssueAssociationTransaction  => jsv.as[SignedIssueAssociationRequest].toTx
+              case RevokeAssociationTransaction => jsv.as[SignedRevokeAssociationRequest].toTx
+              case TransferTransactionV1        => jsv.as[SignedTransferV1Request].toTx
+              case TransferTransactionV2        => jsv.as[SignedTransferV2Request].toTx
+              case MassTransferTransaction      => jsv.as[SignedMassTransferRequest].toTx
+              case LeaseTransactionV1           => jsv.as[SignedLeaseV1Request].toTx
+              case LeaseTransactionV2           => jsv.as[SignedLeaseV2Request].toTx
+              case LeaseCancelTransactionV1     => jsv.as[SignedLeaseCancelV1Request].toTx
+              case LeaseCancelTransactionV2     => jsv.as[SignedLeaseCancelV2Request].toTx
+              case DataTransaction              => jsv.as[SignedDataRequest].toTx
+              case SetScriptTransaction         => jsv.as[SignedSetScriptRequest].toTx
             }
         }
         import com.wavesplatform.features.FeatureProvider._

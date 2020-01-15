@@ -4,7 +4,7 @@ import java.security.PrivateKey
 
 import com.wavesplatform.TransactionGen
 import com.wavesplatform.account.{Address, PrivateKeyAccount, PublicKeyAccount}
-import com.wavesplatform.api.http.SignedAssociationRequest
+import com.wavesplatform.api.http.SignedRevokeAssociationRequest
 import com.wavesplatform.state.{ByteStr, EitherExt2}
 import com.wavesplatform.utils.Base58
 import org.scalatest._
@@ -36,13 +36,13 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
   }
 
   property("JSON roundtrip") {
-    implicit val signedFormat: Format[SignedAssociationRequest] = Json.format[SignedAssociationRequest]
+    implicit val signedFormat: Format[SignedRevokeAssociationRequest] = Json.format[SignedRevokeAssociationRequest]
 
     forAll(assocTransactionGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
-      val req = json.as[SignedAssociationRequest]
+      val req = json.as[SignedRevokeAssociationRequest]
       req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
       req.timestamp shouldEqual tx.timestamp

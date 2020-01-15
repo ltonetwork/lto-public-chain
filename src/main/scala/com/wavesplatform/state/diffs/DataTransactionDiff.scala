@@ -3,7 +3,7 @@ package com.wavesplatform.state.diffs
 import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.ValidationError.GenericError
-import com.wavesplatform.transaction.{AnchorTransaction, AssociationTransaction, DataTransaction, ValidationError}
+import com.wavesplatform.transaction.{AnchorTransaction, AssociationTransaction, AssociationTransactionBase, DataTransaction, ValidationError}
 
 object DataTransactionDiff {
 
@@ -39,7 +39,7 @@ object AnchorTransactionDiff {
 
 object AssociationTransactionDiff {
 
-  def apply(height: Int)(tx: AssociationTransaction): Either[ValidationError, Diff] =
+  def apply(height: Int)(tx: AssociationTransactionBase): Either[ValidationError, Diff] =
     Right(
       Diff(
         height,

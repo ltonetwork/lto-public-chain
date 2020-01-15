@@ -32,7 +32,7 @@ object TransactionDiffer {
         case dtx: DataTransaction         => DataTransactionDiff(blockchain, currentBlockHeight)(dtx)
         case sstx: SetScriptTransaction   => SetScriptTransactionDiff(currentBlockHeight)(sstx)
         case at: AnchorTransaction        => AnchorTransactionDiff(blockchain, currentBlockHeight)(at)
-        case as: AssociationTransaction   => AssociationTransactionDiff(currentBlockHeight)(as)
+        case as: AssociationTransactionBase   => AssociationTransactionDiff(currentBlockHeight)(as)
         case _                            => Left(UnsupportedTransactionType)
       }
       positiveDiff <- BalanceDiffValidation(blockchain, currentBlockHeight, settings)(diff)

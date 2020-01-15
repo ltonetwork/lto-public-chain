@@ -97,7 +97,7 @@ object CommonValidation {
         } yield tx
       case _: SetScriptTransaction   => Right(tx)
       case _: AnchorTransaction      => Right(tx)
-      case _: AssociationTransaction => activationBarrier(BlockchainFeatures.AssociationTransaction)
+      case _: AssociationTransactionBase => activationBarrier(BlockchainFeatures.AssociationTransaction)
       case _: PaymentTransaction     => disabled
       case _                         => Left(GenericError("Unknown transaction must be explicitly activated"))
     }
@@ -140,7 +140,7 @@ object CommonValidation {
     case _: LeaseCancelTransaction   => Right(1000)
     case tx: MassTransferTransaction => Right(1000 + tx.transfers.size * 100)
     case tx: AnchorTransaction       => Right(100)
-    case tx: AssociationTransaction  => Right(1000)
+    case tx: AssociationTransactionBase  => Right(1000)
     case _                           => Left(UnsupportedTransactionType)
   }
 

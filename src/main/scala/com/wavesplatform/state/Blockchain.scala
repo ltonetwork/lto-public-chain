@@ -7,7 +7,7 @@ import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.state.reader.LeaseDetails
 import com.wavesplatform.transaction.lease.LeaseTransaction
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.{AssociationTransaction, Transaction}
+import com.wavesplatform.transaction.{AssociationTransaction, AssociationTransactionBase, Transaction}
 
 trait Blockchain {
 
@@ -80,5 +80,5 @@ trait Blockchain {
   def rollbackTo(targetBlockId: ByteStr): Seq[Block]
 }
 object Blockchain {
-  case class Associations(outgoing: List[(Int, AssociationTransaction)], incoming: List[(Int, AssociationTransaction)])
+  case class Associations(outgoing: List[(Int, AssociationTransactionBase)], incoming: List[(Int, AssociationTransactionBase)])
 }

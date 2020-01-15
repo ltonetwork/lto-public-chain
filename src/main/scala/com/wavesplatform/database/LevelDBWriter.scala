@@ -190,7 +190,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   data: Map[BigInt, AccountDataInfo],
                                   aliases: Map[Alias, BigInt],
                                   sponsorship: Map[AssetId, Sponsorship],
-                                  assocs: List[(Int, AssociationTransaction)]): Unit = readWrite { rw =>
+                                  assocs: List[(Int, AssociationTransactionBase)]): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
     rw.put(Keys.height, height)
@@ -637,7 +637,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
         }
         .distinct
         .flatMap(txId => transactionInfo(ByteStr(txId)))
-        .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
+        .map(x => (x._1, x._2.asInstanceOf[AssociationTransactionBase]))
         .toList
 
     Blockchain.Associations(

@@ -15,7 +15,7 @@ import com.wavesplatform.transaction.AssociationTransaction.ActionType.{Issue, R
 import com.wavesplatform.transaction.AssociationTransaction.Assoc
 import com.wavesplatform.transaction.ValidationError.GenericError
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
-import com.wavesplatform.transaction.{AssociationTransaction, TransactionFactory, ValidationError}
+import com.wavesplatform.transaction.{AssociationTransaction, AssociationTransactionBase, TransactionFactory, ValidationError}
 import com.wavesplatform.utils.{Base58, Time}
 import com.wavesplatform.utx.UtxPool
 import com.wavesplatform.wallet.Wallet
@@ -307,7 +307,7 @@ case class AddressApiRoute(settings: RestAPISettings,
 
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def postAssociation: Route =
-    processRequest("association", (req: AssociationRequest) => doBroadcast(TransactionFactory.association(req, wallet, time)))
+    processRequest("association", (req: IssueAssociationRequest) => doBroadcast(TransactionFactory.issueAssociation(req, wallet, time)))
 
   @Path("/data/{address}")
   @ApiOperation(value = "Complete Data", notes = "Read all data posted by an account", httpMethod = "GET")
@@ -396,9 +396,9 @@ case class AddressApiRoute(settings: RestAPISettings,
   }
 
   private def associationsJson(address: Address, a: Blockchain.Associations): AssociationsInfo = {
-    def f(l: List[(Int, AssociationTransaction)]) = {
+    def f(l: List[(Int, AssociationTransactionBase)]) = {
       l.foldLeft(Map.empty[Assoc, (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
-          case (acc, (height, as: AssociationTransaction)) =>
+          case (acc, (height, as: AssociationTransactionBase)) =>
             val cp = if (address == as.sender.toAddress) as.assoc.party else as.sender.toAddress
             (as.actionType, acc.get(as.assoc)) match {
               case (Issue, None)                    => acc + (as.assoc -> (height, cp, as.id(), None))

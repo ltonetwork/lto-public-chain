@@ -18,10 +18,6 @@ import com.wavesplatform.transaction.lease._
 import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.utils.{ScorexLogging, Time, UnsupportedFeature, forceStopApplication}
 import kamon.Kamon
-import monix.reactive.{Observable, Observer}
-import monix.reactive.subjects.ConcurrentSubject
-import com.wavesplatform.utils.{ScorexLogging, Time, UnsupportedFeature, forceStopApplication}
-import kamon.Kamon
 import monix.reactive.Observable
 import monix.reactive.subjects.ConcurrentSubject
 
@@ -540,8 +536,11 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
     val a1 = ngState
       .map { n =>
         val a = n.bestLiquidDiff.transactions.values
-          .filter(_._2.builder.typeId == AssociationTransaction.typeId)
-          .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
+          .filter(x => {
+            val tpid = x._2.builder.typeId
+            tpid == IssueAssociationTransaction.typeId || tpid == RevokeAssociationTransaction.typeId
+          })
+          .map(x => (x._1, x._2.asInstanceOf[AssociationTransactionBase]))
           .toList
         Blockchain.Associations(outgoing = a.filter(_._2.sender.toAddress == address), incoming = a.filter(_._2.assoc.party == address))
       }

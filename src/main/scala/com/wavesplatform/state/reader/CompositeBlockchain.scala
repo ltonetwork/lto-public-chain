@@ -9,7 +9,7 @@ import com.wavesplatform.state._
 import com.wavesplatform.transaction.Transaction.Type
 import com.wavesplatform.transaction.lease.LeaseTransaction
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.{AssetId, AssociationTransaction, Transaction}
+import com.wavesplatform.transaction.{AssetId, AssociationTransaction, AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction, Transaction}
 
 // TODO dangerous =0, double-check
 class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry : Long) extends Blockchain {
@@ -177,14 +177,17 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry :
 
   override def associations(address: Address): Blockchain.Associations = {
     val a0 = inner.associations(address)
-    val diffAssociations: Seq[(Int, AssociationTransaction)] = maybeDiff
+    val diffAssociations: Seq[(Int, AssociationTransactionBase)] = maybeDiff
       .map(
         d =>
           d.transactions.values
             .map(i => (i._1, i._2))
-            .filter(_._2.builder.typeId == AssociationTransaction.typeId)
+            .filter(x => {
+              val tpid = x._2.builder.typeId
+              tpid == IssueAssociationTransaction.typeId || tpid == RevokeAssociationTransaction.typeId
+            })
             .toList
-            .map(_.asInstanceOf[(Int, AssociationTransaction)]))
+            .map(_.asInstanceOf[(Int, AssociationTransactionBase)]))
       .getOrElse(List.empty)
     val outgoing = diffAssociations.filter(_._2.sender.toAddress == address)
     val incoming = diffAssociations.filter(_._2.assoc.party == address)
