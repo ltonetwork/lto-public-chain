@@ -39,9 +39,10 @@ abstract class AssociationTransactionBase(val version: Byte,
   override val json: Coeval[JsObject] = Coeval.evalOnce {
     val str = assoc.hash.map(_.base58).getOrElse("")
     jsonBase() ++ Json.obj(
-      "version" -> version,
-      "party"   -> assoc.party.stringRepr,
-      "hash"    -> str,
+      "version"         -> version,
+      "party"           -> assoc.party.stringRepr,
+      "associationType" -> assoc.assocType,
+      "hash"            -> str,
     )
   }
 

@@ -21,14 +21,15 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
 
     parsed.bytes() shouldEqual tx.bytes()
   }
+  val issueGen  = assocTransactionGen suchThat (_.isInstanceOf[IssueAssociationTransaction]) map (_.asInstanceOf[IssueAssociationTransaction])
+  val revokeGen = assocTransactionGen suchThat (_.isInstanceOf[RevokeAssociationTransaction]) map (_.asInstanceOf[RevokeAssociationTransaction])
 
   property("serialization roundtrip") {
-    forAll(assocTransactionGen suchThat (_.isInstanceOf[IssueAssociationTransaction]) map (_.asInstanceOf[IssueAssociationTransaction]))(
-      checkSerialization)
+    forAll(issueGen)(checkSerialization)
   }
 
   property("serialization from TypedTransaction") {
-    forAll(assocTransactionGen) { tx: AssociationTransactionBase =>
+    forAll(issueGen) { tx: AssociationTransactionBase =>
       val recovered = IssueAssociationTransaction.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
     }
@@ -37,7 +38,7 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
   property("JSON roundtrip") {
     implicit val signedFormat: Format[SignedRevokeAssociationRequest] = Json.format[SignedRevokeAssociationRequest]
 
-    forAll(assocTransactionGen) { tx =>
+    forAll(issueGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
@@ -56,7 +57,7 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
     val p  = PrivateKeyAccount.fromSeed("xxx").explicitGet().toAddress
     val js = Json.parse(s"""{
                        "type": 16,
-                       "id": "EztEhGMm34TKTj3zLWwFJ4HGyfhuUTwVPceqCzR1Qeuf",
+                       "id": "GCRa1NZP34rkvRKxkJkisbvxPZX9sKrVLLqLmi8LvKjx",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
@@ -85,7 +86,7 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
       )
       .explicitGet()
 
-    js shouldEqual tx.json()
+    tx.json() shouldEqual js
   }
 
 }
