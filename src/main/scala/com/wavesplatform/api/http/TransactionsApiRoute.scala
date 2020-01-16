@@ -7,7 +7,6 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import com.wavesplatform.account.{Address, PublicKeyAccount}
 import com.wavesplatform.api.http.DataRequest._
-import com.wavesplatform.api.http.IssueAssociationRequest._
 import com.wavesplatform.api.http.assets._
 import com.wavesplatform.api.http.leasing._
 import com.wavesplatform.features.BlockchainFeatures
@@ -319,7 +318,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case Some(x) =>
             x match {
               case AnchorTransaction            => jsv.as[SignedAnchorRequest].toTx
-              case IssueAssociationTransaction  => jsv.as[SignedIssueAssociationRequest].toTx
+              case IssueAssociationTransaction  => jsv.as[SignedIssueAssociationRequest](IssueAssociationRequest.signedDataRequestReads).toTx
               case RevokeAssociationTransaction => jsv.as[SignedRevokeAssociationRequest].toTx
               case TransferTransactionV1        => jsv.as[SignedTransferV1Request].toTx
               case TransferTransactionV2        => jsv.as[SignedTransferV2Request].toTx

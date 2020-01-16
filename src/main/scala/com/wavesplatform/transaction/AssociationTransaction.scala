@@ -58,7 +58,7 @@ case class IssueAssociationTransaction private (override val version: Byte,
                                                 override val proofs: Proofs)
     extends AssociationTransactionBase(version, chainId, sender, assoc, fee, timestamp, proofs) {
   override val actionType                 = ActionType.Issue
-  override def builder: TransactionParser = ???
+  override def builder: TransactionParser = IssueAssociationTransaction
 }
 case class RevokeAssociationTransaction private (override val version: Byte,
                                                  override val chainId: Byte,
@@ -69,7 +69,7 @@ case class RevokeAssociationTransaction private (override val version: Byte,
                                                  override val proofs: Proofs)
     extends AssociationTransactionBase(version, chainId, sender, assoc, fee, timestamp, proofs) {
   override val actionType                 = ActionType.Revoke
-  override def builder: TransactionParser = ???
+  override def builder: TransactionParser = RevokeAssociationTransaction
 }
 object AssociationTransaction {
   sealed trait ActionType
