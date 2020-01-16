@@ -221,6 +221,13 @@ object RevokeAssociationTransaction extends TransactionParserFor[RevokeAssociati
              proofs: Proofs): Either[ValidationError, RevokeAssociationTransaction] =
     AssociationTransaction
       .validate(version, sender, party, hash, feeAmount)
-      .map(_ =>
-        RevokeAssociationTransaction(version, AssociationTransaction.networkByte, sender, Assoc(party, assocType, hash), feeAmount, timestamp, proofs))
+      .map(
+        _ =>
+          RevokeAssociationTransaction(version,
+                                       AssociationTransaction.networkByte,
+                                       sender,
+                                       Assoc(party, assocType, hash),
+                                       feeAmount,
+                                       timestamp,
+                                       proofs))
 }

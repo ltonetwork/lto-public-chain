@@ -128,7 +128,6 @@ object SyncHttpApi extends Assertions {
     def transfer(sourceAddress: String, recipient: String, amount: Long, fee: Long): Transaction =
       Await.result(async(n).transfer(sourceAddress, recipient, amount, fee), RequestAwaitTime)
 
-
     def massTransfer(sourceAddress: String, transfers: List[Transfer], fee: Long, assetId: Option[String] = None): Transaction =
       Await.result(async(n).massTransfer(sourceAddress, transfers, fee, assetId), RequestAwaitTime)
 
@@ -146,7 +145,7 @@ object SyncHttpApi extends Assertions {
 
     import com.wavesplatform.api.http.AddressApiRoute.AssociationsInfo
     def getAssociations(address: String): AssociationsInfo =
-      Await.result(async(n).getAssociations(address),RequestAwaitTime)
+      Await.result(async(n).getAssociations(address), RequestAwaitTime)
 
     def broadcastRequest[A: Writes](req: A): Transaction =
       Await.result(async(n).broadcastRequest(req), RequestAwaitTime)

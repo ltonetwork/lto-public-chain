@@ -9,10 +9,17 @@ import com.wavesplatform.state._
 import com.wavesplatform.transaction.Transaction.Type
 import com.wavesplatform.transaction.lease.LeaseTransaction
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.{AssetId, AssociationTransaction, AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction, Transaction}
+import com.wavesplatform.transaction.{
+  AssetId,
+  AssociationTransaction,
+  AssociationTransactionBase,
+  IssueAssociationTransaction,
+  RevokeAssociationTransaction,
+  Transaction
+}
 
 // TODO dangerous =0, double-check
-class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry : Long) extends Blockchain {
+class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: Long) extends Blockchain {
 
   private def diff = maybeDiff.getOrElse(Diff.empty)
 
@@ -197,6 +204,6 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry :
 }
 
 object CompositeBlockchain {
-  def composite(inner: Blockchain, diff: => Option[Diff]): Blockchain = new CompositeBlockchain(inner, diff, 0L)
-  def composite(inner: Blockchain, diff: Diff, carryFee: Long): Blockchain            = new CompositeBlockchain(inner, Some(diff), carryFee)
+  def composite(inner: Blockchain, diff: => Option[Diff]): Blockchain      = new CompositeBlockchain(inner, diff, 0L)
+  def composite(inner: Blockchain, diff: Diff, carryFee: Long): Blockchain = new CompositeBlockchain(inner, Some(diff), carryFee)
 }

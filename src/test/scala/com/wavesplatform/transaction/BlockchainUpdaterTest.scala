@@ -199,8 +199,7 @@ class BlockchainUpdaterTest extends FreeSpec with Matchers with HistoryTest with
   }
 
   "block processing should fail if unimplemented feature was activated on blockchain " +
-    "when autoShutdownOnUnsupportedFeature = yes and exit with code 38" ignore withDomain(
-    WavesSettings) { domain =>
+    "when autoShutdownOnUnsupportedFeature = yes and exit with code 38" ignore withDomain(WavesSettings) { domain =>
     val b      = domain.blockchainUpdater
     val signal = new Semaphore(1)
     signal.acquire()

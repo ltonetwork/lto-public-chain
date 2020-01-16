@@ -23,7 +23,8 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
   }
 
   property("serialization roundtrip") {
-    forAll(assocTransactionGen suchThat(_.isInstanceOf[IssueAssociationTransaction]) map (_.asInstanceOf[IssueAssociationTransaction]))(checkSerialization)
+    forAll(assocTransactionGen suchThat (_.isInstanceOf[IssueAssociationTransaction]) map (_.asInstanceOf[IssueAssociationTransaction]))(
+      checkSerialization)
   }
 
   property("serialization from TypedTransaction") {

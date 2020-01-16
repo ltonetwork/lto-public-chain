@@ -95,11 +95,11 @@ object CommonValidation {
           _ <- activationBarrier(BlockchainFeatures.DataTransaction)
           _ <- deactivationBarrier(BlockchainFeatures.SmartAccounts)
         } yield tx
-      case _: SetScriptTransaction   => Right(tx)
-      case _: AnchorTransaction      => Right(tx)
+      case _: SetScriptTransaction       => Right(tx)
+      case _: AnchorTransaction          => Right(tx)
       case _: AssociationTransactionBase => activationBarrier(BlockchainFeatures.AssociationTransaction)
-      case _: PaymentTransaction     => disabled
-      case _                         => Left(GenericError("Unknown transaction must be explicitly activated"))
+      case _: PaymentTransaction         => disabled
+      case _                             => Left(GenericError("Unknown transaction must be explicitly activated"))
     }
   }
 
@@ -133,15 +133,15 @@ object CommonValidation {
   }
 
   private def newFeeInUnits(tx: Transaction): Either[ValidationError, Long] = tx match {
-    case _: GenesisTransaction       => Right(0)
-    case _: TransferTransaction      => Right(1000)
-    case _: LeaseTransaction         => Right(1000)
-    case _: SetScriptTransaction     => Right(1000)
-    case _: LeaseCancelTransaction   => Right(1000)
-    case tx: MassTransferTransaction => Right(1000 + tx.transfers.size * 100)
-    case tx: AnchorTransaction       => Right(100)
-    case tx: AssociationTransactionBase  => Right(1000)
-    case _                           => Left(UnsupportedTransactionType)
+    case _: GenesisTransaction          => Right(0)
+    case _: TransferTransaction         => Right(1000)
+    case _: LeaseTransaction            => Right(1000)
+    case _: SetScriptTransaction        => Right(1000)
+    case _: LeaseCancelTransaction      => Right(1000)
+    case tx: MassTransferTransaction    => Right(1000 + tx.transfers.size * 100)
+    case tx: AnchorTransaction          => Right(100)
+    case tx: AssociationTransactionBase => Right(1000)
+    case _                              => Left(UnsupportedTransactionType)
   }
 
   def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, (Option[AssetId], Long)] = {

@@ -21,21 +21,21 @@ case class RevokeAssociationRequest(version: Byte,
 
 @ApiModel(value = "Signed Data transaction")
 case class SignedRevokeAssociationRequest(@ApiModelProperty(required = true)
-                                    version: Byte,
+                                          version: Byte,
                                           @ApiModelProperty(value = "Base58 encoded sender public key", required = true)
-                                    senderPublicKey: String,
+                                          senderPublicKey: String,
                                           @ApiModelProperty(value = "Counterparty address", required = true)
-                                    party: String,
+                                          party: String,
                                           @ApiModelProperty(value = "Association type", required = true)
-                                    associationType: Int,
+                                          associationType: Int,
                                           @ApiModelProperty(value = "Association data hash ", required = false)
-                                    hash: String = "",
+                                          hash: String = "",
                                           @ApiModelProperty(required = true)
-                                    fee: Long,
+                                          fee: Long,
                                           @ApiModelProperty(required = true)
-                                    timestamp: Long,
+                                          timestamp: Long,
                                           @ApiModelProperty(required = true)
-                                    proofs: List[String])
+                                          proofs: List[String])
     extends BroadcastRequest {
   def toTx: Either[ValidationError, RevokeAssociationTransaction] =
     for {
@@ -45,12 +45,12 @@ case class SignedRevokeAssociationRequest(@ApiModelProperty(required = true)
       _hash       <- if (hash == "") Right(None) else parseBase58(hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
       _proofs     <- Proofs.create(_proofBytes)
       t <- RevokeAssociationTransaction.create(version,
-                                         _sender,
-                                         _party,
-                                         associationType,
-                                         _hash.map(AnchorRequest.prependZeros),
-                                         fee,
-                                         timestamp,
-                                         _proofs)
+                                               _sender,
+                                               _party,
+                                               associationType,
+                                               _hash.map(AnchorRequest.prependZeros),
+                                               fee,
+                                               timestamp,
+                                               _proofs)
     } yield t
 }

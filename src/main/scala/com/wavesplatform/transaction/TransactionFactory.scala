@@ -354,7 +354,10 @@ object TransactionFactory extends BroadcastRequest {
   def issueAssociation(request: IssueAssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, IssueAssociationTransaction] =
     issueAssociation(request, wallet, request.sender, time)
 
-  def issueAssociation(request: IssueAssociationRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, IssueAssociationTransaction] =
+  def issueAssociation(request: IssueAssociationRequest,
+                       wallet: Wallet,
+                       signerAddress: String,
+                       time: Time): Either[ValidationError, IssueAssociationTransaction] =
     for {
       sender <- wallet.findPrivateKey(request.sender)
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
@@ -390,14 +393,13 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-
-
-
-
   def revokeAssociation(request: RevokeAssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, RevokeAssociationTransaction] =
     revokeAssociation(request, wallet, request.sender, time)
 
-  def revokeAssociation(request: RevokeAssociationRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, RevokeAssociationTransaction] =
+  def revokeAssociation(request: RevokeAssociationRequest,
+                        wallet: Wallet,
+                        signerAddress: String,
+                        time: Time): Either[ValidationError, RevokeAssociationTransaction] =
     for {
       sender <- wallet.findPrivateKey(request.sender)
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
@@ -432,6 +434,5 @@ object TransactionFactory extends BroadcastRequest {
         proofs = Proofs.empty
       )
     } yield tx
-
 
 }

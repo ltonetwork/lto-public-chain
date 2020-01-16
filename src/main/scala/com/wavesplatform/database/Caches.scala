@@ -8,7 +8,14 @@ import com.wavesplatform.state._
 import com.wavesplatform.account.{Address, Alias}
 import com.wavesplatform.block.Block
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.{AssetId, AssociationTransaction, AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction, Transaction}
+import com.wavesplatform.transaction.{
+  AssetId,
+  AssociationTransaction,
+  AssociationTransactionBase,
+  IssueAssociationTransaction,
+  RevokeAssociationTransaction,
+  Transaction
+}
 
 import scala.collection.JavaConverters._
 
@@ -150,7 +157,7 @@ trait Caches extends Blockchain {
     }
 
     val newAssociations: List[(Int, AssociationTransactionBase)] = diff.transactions.values
-      .filter( x=>  {
+      .filter(x => {
         val tpid = x._2.builder.typeId
         tpid == IssueAssociationTransaction.typeId || tpid == RevokeAssociationTransaction.typeId
       })
