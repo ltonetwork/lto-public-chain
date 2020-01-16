@@ -30,7 +30,10 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
       |    data {
       |      LTO = 100000
       |    }
-      |    association {
+      |    issue-association {
+      |      LTO = 100000000
+      |    }
+      |    revoke-association {
       |      LTO = 100000000
       |    }
       |  }

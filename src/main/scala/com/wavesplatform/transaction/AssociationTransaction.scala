@@ -177,7 +177,7 @@ object IssueAssociationTransaction extends TransactionParserFor[IssueAssociation
 }
 
 object RevokeAssociationTransaction extends TransactionParserFor[RevokeAssociationTransaction] with TransactionParser.MultipleVersions {
-  override def typeId: Byte                 = 16
+  override def typeId: Byte                 = 17
   override def supportedVersions: Set[Byte] = Set(1: Byte)
   override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[RevokeAssociationTransaction] =
     AssociationTransaction.parseTail(version, bytes, RevokeAssociationTransaction.apply)
