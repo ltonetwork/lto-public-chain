@@ -9,10 +9,12 @@ import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.{Format, Json}
 
+import scala.util.Try
+
 class AssociationTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
-  private def checkSerialization(tx: IssueAssociationTransaction): Assertion = {
-    val parsed = IssueAssociationTransaction.parseBytes(tx.bytes()).get
+  private def checkSerialization(tx: AssociationTransactionBase, parser: Array[Byte] => Try[AssociationTransactionBase]): Assertion = {
+    val parsed = parser(tx.bytes()).get
 
     parsed.sender.address shouldEqual tx.sender.address
     parsed.timestamp shouldEqual tx.timestamp
@@ -25,7 +27,8 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
   val revokeGen = assocTransactionGen suchThat (_.isInstanceOf[RevokeAssociationTransaction]) map (_.asInstanceOf[RevokeAssociationTransaction])
 
   property("serialization roundtrip") {
-    forAll(issueGen)(checkSerialization)
+    forAll(issueGen)(tx => checkSerialization(tx, IssueAssociationTransaction.parseBytes))
+    forAll(revokeGen)(tx => checkSerialization(tx, RevokeAssociationTransaction.parseBytes))
   }
 
   property("serialization from TypedTransaction") {
@@ -33,12 +36,17 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
       val recovered = IssueAssociationTransaction.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
     }
+
+    forAll(revokeGen) { tx: AssociationTransactionBase =>
+      val recovered = RevokeAssociationTransaction.parseBytes(tx.bytes()).get
+      recovered.bytes() shouldEqual tx.bytes()
+    }
   }
 
   property("JSON roundtrip") {
     implicit val signedFormat: Format[SignedRevokeAssociationRequest] = Json.format[SignedRevokeAssociationRequest]
 
-    forAll(issueGen) { tx =>
+    forAll(assocTransactionGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 

@@ -74,9 +74,9 @@ object EnvironmentFunctionsBenchmark {
   val SeedBytesLength   = 128
 
   private val defaultEnvironment: Environment = new Environment {
-    override def height: Int                                                                                     = 1
-    override def networkByte: Byte                                                                               = NetworkByte
-    override def transaction: Tx                                                                                 = ???
+    override def height: Int       = 1
+    override def networkByte: Byte = NetworkByte
+    override def transaction: Tx   = ???
   }
 
   def randomBytes(length: Int): Array[Byte] = {

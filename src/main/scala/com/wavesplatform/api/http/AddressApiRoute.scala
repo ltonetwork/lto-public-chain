@@ -46,7 +46,7 @@ case class AddressApiRoute(settings: RestAPISettings,
     pathPrefix("addresses") {
       validate ~ seed ~ balanceWithConfirmations ~ balanceDetails ~ balance ~ balanceWithConfirmations ~ verify ~ sign ~ deleteAddress ~ verifyText ~
         signText ~ seq ~ publicKey ~ effectiveBalance ~ effectiveBalanceWithConfirmations ~ getData ~ getDataItem ~
-        postData ~ postAnchor ~ postAssociation ~ scriptInfo ~ associations
+        postData ~ postAnchor ~ issueAssociation ~ revokeAssociation ~ scriptInfo ~ associations
     } ~ root ~ create
 
   @Path("/scriptInfo/{address}")
@@ -306,9 +306,12 @@ case class AddressApiRoute(settings: RestAPISettings,
   def postAnchor: Route = processRequest("anchor", (req: AnchorRequest) => doBroadcast(TransactionFactory.anchor(req, wallet, time)))
 
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
-  def postAssociation: Route =
-    processRequest("association", (req: IssueAssociationRequest) => doBroadcast(TransactionFactory.issueAssociation(req, wallet, time)))
+  def issueAssociation: Route =
+    processRequest("issueAssociation", (req: IssueAssociationRequest) => doBroadcast(TransactionFactory.issueAssociation(req, wallet, time)))
 
+  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
+  def revokeAssociation: Route =
+    processRequest("revokeAssociation", (req: RevokeAssociationRequest) => doBroadcast(TransactionFactory.revokeAssociation(req, wallet, time)))
   @Path("/data/{address}")
   @ApiOperation(value = "Complete Data", notes = "Read all data posted by an account", httpMethod = "GET")
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")))

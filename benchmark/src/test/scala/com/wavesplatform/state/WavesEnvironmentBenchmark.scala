@@ -4,20 +4,18 @@ import java.io.File
 import java.util.concurrent.{ThreadLocalRandom, TimeUnit}
 
 import com.typesafe.config.ConfigFactory
+import com.wavesplatform.account.{AddressOrAlias, AddressScheme, Alias}
 import com.wavesplatform.database.LevelDBWriter
 import com.wavesplatform.db.LevelDBFactory
-import com.wavesplatform.lang.v1.traits.{Environment, Recipient}
+import com.wavesplatform.lang.v1.traits.Environment
 import com.wavesplatform.settings.{WavesSettings, loadConfig}
-import com.wavesplatform.state.WavesEnvironmentBenchmark._
 import com.wavesplatform.state.bench.DataTestData
+import com.wavesplatform.transaction.smart.WavesEnvironment
+import com.wavesplatform.utils.Base58
 import monix.eval.Coeval
 import org.iq80.leveldb.{DB, Options}
 import org.openjdk.jmh.annotations._
-import org.openjdk.jmh.infra.Blackhole
-import scodec.bits.{BitVector, ByteVector}
-import com.wavesplatform.account.{AddressOrAlias, AddressScheme, Alias}
-import com.wavesplatform.transaction.smart.WavesEnvironment
-import com.wavesplatform.utils.Base58
+import scodec.bits.BitVector
 
 import scala.io.Codec
 
@@ -37,6 +35,7 @@ import scala.io.Codec
 @Measurement(iterations = 10)
 class WavesEnvironmentBenchmark {
 
+  /*
   @Benchmark
   def resolveAddress_test(st: ResolveAddressSt, bh: Blackhole): Unit = {
     bh.consume(st.environment.resolveAlias(st.aliases.random))
@@ -67,7 +66,7 @@ class WavesEnvironmentBenchmark {
     val x = st.data.random
     bh.consume(st.environment.data(LangAddress(x.addr), x.key, x.dataType))
   }
-
+ */
 }
 
 object WavesEnvironmentBenchmark {
