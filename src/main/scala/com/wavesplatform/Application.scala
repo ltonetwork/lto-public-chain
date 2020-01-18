@@ -227,6 +227,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
                         allChannels,
                         time,
                         settings.blockchainSettings.functionalitySettings),
+        AssociationsApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, allChannels, time),
         DebugApiRoute(
           settings,
           wallet,
@@ -257,6 +258,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
         typeOf[UtilsApiRoute],
         typeOf[PeersApiRoute],
         typeOf[AddressApiRoute],
+        typeOf[AssociationsApiRoute],
         typeOf[AssetsBroadcastApiRoute],
         typeOf[DebugApiRoute],
         typeOf[ActivationApiRoute]

@@ -5,6 +5,7 @@ import java.net.InetSocketAddress
 import java.util.concurrent.TimeoutException
 
 import com.wavesplatform.api.http.AddressApiRoute._
+import com.wavesplatform.api.http.AssociationsApiRoute.AssociationsInfo
 import com.wavesplatform.api.http.PeersApiRoute.{ConnectReq, connectFormat}
 import com.wavesplatform.api.http.assets._
 import com.wavesplatform.api.http.leasing.{LeaseCancelV1Request, LeaseV1Request, SignedLeaseCancelV1Request, SignedLeaseV1Request}
@@ -228,7 +229,7 @@ object AsyncHttpApi extends Assertions {
 
     def getData(address: String, key: String): Future[DataEntry[_]] = get(s"/addresses/data/$address/$key").as[DataEntry[_]]
 
-    def getAssociations(address: String): Future[AssociationsInfo] = get(s"/addresses/associations/$address").as[AssociationsInfo]
+    def getAssociations(address: String): Future[AssociationsInfo] = get(s"/associations/info/$address").as[AssociationsInfo]
 
     def signedTransfer(transfer: SignedTransferV1Request): Future[Transaction] =
       postJson("/assets/broadcast/transfer", transfer).as[Transaction]
