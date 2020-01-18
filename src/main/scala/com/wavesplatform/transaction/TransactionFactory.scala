@@ -6,7 +6,6 @@ import com.wavesplatform.api.http.leasing.{LeaseCancelV1Request, LeaseCancelV2Re
 import com.wavesplatform.api.http.{BroadcastRequest, DataRequest}
 import com.wavesplatform.crypto.SignatureLength
 import com.wavesplatform.state.ByteStr
-import com.wavesplatform.transaction.AssociationTransaction.CreateCtor
 import com.wavesplatform.transaction.ValidationError.Validation
 import com.wavesplatform.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.wavesplatform.transaction.smart.SetScriptTransaction
@@ -374,7 +373,7 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  private def association[T](createCtor: CreateCtor[T])(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, T] =
+  private def association[T](createCtor: AssociationTransaction.CreateCtor[T])(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, T] =
     for {
       party <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
@@ -415,4 +414,60 @@ object TransactionFactory extends BroadcastRequest {
   def revokeAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, RevokeAssociationTransaction] =
     revokeAssociation(request, wallet, request.sender, time)
 
+
+  private def sponsorship[T](signedCtor: SponsorshipTransactionBase.SignedCtor[T])(request: SponsorshipRequest,
+                                                                                   wallet: Wallet,
+                                                                                   signerAddress: String,
+                                                                                   time: Time): Either[ValidationError, T] =
+    for {
+      sender <- wallet.findPrivateKey(request.sender)
+      signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
+      recipient  <- Address.fromString(request.recipient)
+      tx <- signedCtor(
+        request.version,
+        sender,
+        recipient,
+        request.fee,
+        request.timestamp.getOrElse(time.getTimestamp()),
+        signer
+      )
+    } yield tx
+
+  private def sponsorship[T](createCtor: SponsorshipTransactionBase.CreateCtor[T])(request: SponsorshipRequest, sender: PublicKeyAccount): Either[ValidationError, T] =
+    for {
+      recipient <- Address.fromString(request.recipient)
+      tx <- createCtor(
+        request.version,
+        sender,
+        recipient,
+        request.fee,
+        0,
+        Proofs.empty
+      )
+    } yield tx
+
+  def sponsorship(request: SponsorshipRequest,
+                  wallet: Wallet,
+                  signerAddress: String,
+                  time: Time): Either[ValidationError, SponsorshipTransaction] =
+    sponsorship(SponsorshipTransaction.signed _)(request, wallet, request.sender, time)
+
+  def sponsorship(request: SponsorshipRequest, sender: PublicKeyAccount): Either[ValidationError, SponsorshipTransaction] =
+    sponsorship(SponsorshipTransaction.create _)(request, sender)
+
+  def sponsorship(request: SponsorshipRequest, wallet: Wallet, time: Time): Either[ValidationError, SponsorshipTransaction] =
+    sponsorship(request, wallet, request.sender, time)
+
+  def cancelSponsorship(request: SponsorshipRequest,
+                        wallet: Wallet,
+                        signerAddress: String,
+                        time: Time): Either[ValidationError, SponsorshipCancelTransaction] =
+    sponsorship(SponsorshipCancelTransaction.signed _)(request, wallet, request.sender, time)
+
+  def cancelSponsorship(request: SponsorshipRequest, sender: PublicKeyAccount): Either[ValidationError, SponsorshipCancelTransaction] =
+    sponsorship(SponsorshipCancelTransaction.create _)(request, sender)
+
+  def cancelSponsorship(request: SponsorshipRequest, wallet: Wallet, time: Time): Either[ValidationError, SponsorshipCancelTransaction] =
+    cancelSponsorship(request, wallet, request.sender, time)
+  
 }
