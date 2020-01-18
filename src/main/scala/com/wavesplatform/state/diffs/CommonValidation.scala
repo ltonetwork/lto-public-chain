@@ -98,6 +98,7 @@ object CommonValidation {
       case _: SetScriptTransaction       => Right(tx)
       case _: AnchorTransaction          => Right(tx)
       case _: AssociationTransactionBase => activationBarrier(BlockchainFeatures.AssociationTransaction)
+      case _: SponsorshipTransactionBase => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
       case _: PaymentTransaction         => disabled
       case _                             => Left(GenericError("Unknown transaction must be explicitly activated"))
     }

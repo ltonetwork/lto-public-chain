@@ -14,6 +14,7 @@ object BlockchainFeatures {
   val FairPoS                         = BlockchainFeature(8, "Fair PoS")
   val SmartAssets                     = BlockchainFeature(9, "Smart Assets")
   val AssociationTransaction          = BlockchainFeature(10, "Association Transaction")
+  val SponsorshipTransaction          = BlockchainFeature(11, "Sponsorship Transaction")
 
   private val dict = Seq(
     SmallerMinimalGeneratingBalance,
@@ -22,7 +23,8 @@ object BlockchainFeatures {
     DataTransaction,
     FairPoS,
     SmartAccounts,
-    AssociationTransaction
+    AssociationTransaction,
+    SponsorshipTransaction
   ).map(f => f.id -> f).toMap
 
   val implemented: Set[Short] = dict.keySet
