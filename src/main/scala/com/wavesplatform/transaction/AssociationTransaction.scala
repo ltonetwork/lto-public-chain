@@ -5,28 +5,25 @@ import com.wavesplatform.account.{Address, AddressScheme, PrivateKeyAccount, Pub
 import com.wavesplatform.crypto
 import com.wavesplatform.serialization.Deser
 import com.wavesplatform.state._
-import com.wavesplatform.transaction.AssociationTransaction.ActionType.{Issue, Revoke}
-import com.wavesplatform.transaction.AssociationTransaction.Assoc
+import com.wavesplatform.transaction.AssociationTransaction.{ActionType, Assoc}
 import com.wavesplatform.transaction.ValidationError.GenericError
 import monix.eval.Coeval
 import play.api.libs.json._
 import scorex.crypto.signatures.Curve25519.KeyLength
 
 import scala.util.{Failure, Success, Try}
-
-case class AssociationTransaction private (version: Byte,
-                                           chainId: Byte,
-                                           sender: PublicKeyAccount,
-                                           assoc: Assoc,
-                                           actionType: AssociationTransaction.ActionType,
-                                           fee: Long,
-                                           timestamp: Long,
-                                           proofs: Proofs)
+abstract class AssociationTransactionBase(val version: Byte,
+                                          val chainId: Byte,
+                                          val sender: PublicKeyAccount,
+                                          val assoc: Assoc,
+                                          val fee: Long,
+                                          val timestamp: Long,
+                                          val proofs: Proofs)
     extends ProvenTransaction
     with VersionedTransaction
     with FastHashId {
 
-  override val builder: TransactionParser = AssociationTransaction
+  def actionType: AssociationTransaction.ActionType
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce {
     Bytes.concat(
       Array(builder.typeId, version, chainId),
@@ -34,7 +31,6 @@ case class AssociationTransaction private (version: Byte,
       assoc.party.bytes.arr,
       Ints.toByteArray(assoc.assocType),
       assoc.hash.map(a => (1: Byte) +: Deser.serializeArray(a.arr)).getOrElse(Array(0: Byte)),
-      actionType.bytes,
       Longs.toByteArray(timestamp),
       Longs.toByteArray(fee)
     )
@@ -47,57 +43,59 @@ case class AssociationTransaction private (version: Byte,
       "party"           -> assoc.party.stringRepr,
       "associationType" -> assoc.assocType,
       "hash"            -> str,
-      "action"          -> actionType.toString()
     )
   }
 
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(0: Byte), bodyBytes(), proofs.bytes()))
+
 }
 
-object AssociationTransaction extends TransactionParserFor[AssociationTransaction] with TransactionParser.MultipleVersions {
+case class IssueAssociationTransaction private (override val version: Byte,
+                                                override val chainId: Byte,
+                                                override val sender: PublicKeyAccount,
+                                                override val assoc: Assoc,
+                                                override val fee: Long,
+                                                override val timestamp: Long,
+                                                override val proofs: Proofs)
+    extends AssociationTransactionBase(version, chainId, sender, assoc, fee, timestamp, proofs) {
+  override val actionType                 = ActionType.Issue
+  override def builder: TransactionParser = IssueAssociationTransaction
+}
+case class RevokeAssociationTransaction private (override val version: Byte,
+                                                 override val chainId: Byte,
+                                                 override val sender: PublicKeyAccount,
+                                                 override val assoc: Assoc,
+                                                 override val fee: Long,
+                                                 override val timestamp: Long,
+                                                 override val proofs: Proofs)
+    extends AssociationTransactionBase(version, chainId, sender, assoc, fee, timestamp, proofs) {
+  override val actionType                 = ActionType.Revoke
+  override def builder: TransactionParser = RevokeAssociationTransaction
+}
+object AssociationTransaction {
 
-  sealed trait ActionType {
-    override def toString: String = this match {
-      case Issue  => "issue"
-      case Revoke => "revoke"
-    }
+  type SignedCtor[T] = (Byte, PublicKeyAccount, Address, Int, Option[ByteStr], Long, Long, PrivateKeyAccount) => Either[ValidationError, T]
+  type CreateCtor[T] = (Byte, PublicKeyAccount, Address, Int, Option[ByteStr], Long, Long, Proofs) => Either[ValidationError, T]
 
-    lazy val bytes: Array[Byte] = if (this == Issue) Array(1: Byte) else Array(0: Byte)
-  }
-
+  sealed trait ActionType
   object ActionType {
 
     case object Issue  extends ActionType
     case object Revoke extends ActionType
-
-    def fromByte(b: Byte): Either[ValidationError, ActionType] = b match {
-      case 0 => Right(Revoke)
-      case 1 => Right(Issue)
-      case _ => Left(GenericError("Can't deserialize Action byte"))
-    }
-
-    def fromString(s: String): Either[ValidationError, ActionType] = {
-      if (s == null || s == "" || s == "issue") Right(Issue)
-      else if (s == "revoke") Right(Revoke)
-      else Left(GenericError(s"Can't parse Action from string '{$s}'"))
-    }
   }
 
   case class Assoc(party: Address, assocType: Int, hash: Option[ByteStr]) {
     lazy val hashStr = hash.map(_.base58).getOrElse("")
   }
 
-  override val typeId: Byte                 = 16
-  override val supportedVersions: Set[Byte] = Set(1)
+  val supportedVersions: Set[Byte] = Set(1)
+  val HashLength                   = 64
+  val StringHashLength             = com.wavesplatform.utils.base58Length(AssociationTransaction.HashLength)
 
-  val HashLength       = 64
-  val StringHashLength = com.wavesplatform.utils.base58Length(AssociationTransaction.HashLength)
+  def networkByte = AddressScheme.current.chainId
 
-  private def networkByte = AddressScheme.current.chainId
-
-  override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+  def parseTail[T](version: Byte, bytes: Array[Byte], create: (Byte, Byte, PublicKeyAccount, Assoc, Long, Long, Proofs) => T): Try[T] =
     Try {
-      import com.wavesplatform.utils._
 
       val chainId = bytes(0)
       val p0      = KeyLength
@@ -107,26 +105,18 @@ object AssociationTransaction extends TransactionParserFor[AssociationTransactio
         partyEnd      = p0 + 1 + Address.AddressLength
         assocType     = Ints.fromByteArray(bytes.slice(partyEnd, partyEnd + 4))
         (hashOpt, s0) = Deser.parseOption(bytes, partyEnd + 4)(ByteStr(_))
-        s1            = s0 + 1
-        action <- ActionType.fromByte(bytes(s0))
-        timestamp = Longs.fromByteArray(bytes.drop(s1))
-        feeAmount = Longs.fromByteArray(bytes.drop(s1 + 8))
+        s1            = s0
+        timestamp     = Longs.fromByteArray(bytes.drop(s1))
+        feeAmount     = Longs.fromByteArray(bytes.drop(s1 + 8))
         proofs <- Proofs.fromBytes(bytes.drop(s1 + 16))
         _      <- Either.cond(chainId == networkByte, (), GenericError(s"Wrong chainId ${chainId.toInt}"))
-        tx     <- create(version, sender, party, assocType, hashOpt, action, feeAmount, timestamp, proofs)
+        _      <- validate(version, sender, party, hashOpt, feeAmount)
+        tx = create(version, chainId, sender, Assoc(party, assocType, hashOpt), feeAmount, timestamp, proofs)
       } yield tx
       txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
-  def create(version: Byte,
-             sender: PublicKeyAccount,
-             party: Address,
-             assocType: Int,
-             hash: Option[ByteStr],
-             action: ActionType,
-             feeAmount: Long,
-             timestamp: Long,
-             proofs: Proofs): Either[ValidationError, TransactionT] = {
+  def validate(version: Byte, sender: PublicKeyAccount, party: Address, hash: Option[ByteStr], feeAmount: Long): Either[ValidationError, Unit] = {
     if (!supportedVersions.contains(version)) {
       Left(ValidationError.UnsupportedVersion(version))
     } else if (hash.exists(_.arr.size != HashLength)) {
@@ -136,21 +126,34 @@ object AssociationTransaction extends TransactionParserFor[AssociationTransactio
     } else if (sender.address == party.address) {
       Left(GenericError("Can't associate with oneself"))
     } else {
-      Right(AssociationTransaction(version, networkByte, sender, Assoc(party, assocType, hash), action, feeAmount, timestamp, proofs))
+      Right(())
     }
   }
+}
+
+object IssueAssociationTransaction extends TransactionParserFor[IssueAssociationTransaction] with TransactionParser.MultipleVersions {
+  override def typeId: Byte                 = 16
+  override def supportedVersions: Set[Byte] = Set(1: Byte)
+  override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[IssueAssociationTransaction] =
+    AssociationTransaction.parseTail(version, bytes, IssueAssociationTransaction.apply)
 
   def signed(version: Byte,
              sender: PublicKeyAccount,
              party: Address,
              assocType: Int,
              hash: Option[ByteStr],
-             action: ActionType,
              feeAmount: Long,
              timestamp: Long,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    create(version, sender, party, assocType, hash, action, feeAmount, timestamp, Proofs.empty).right.map { unsigned =>
-      unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes())))).explicitGet())
+    AssociationTransaction.validate(version, sender, party, hash, feeAmount).map { _ =>
+      val uns = IssueAssociationTransaction(version,
+                                            AssociationTransaction.networkByte,
+                                            sender,
+                                            Assoc(party, assocType, hash),
+                                            feeAmount,
+                                            timestamp,
+                                            Proofs.empty)
+      uns.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, uns.bodyBytes())))).explicitGet())
     }
   }
 
@@ -159,9 +162,77 @@ object AssociationTransaction extends TransactionParserFor[AssociationTransactio
                  party: Address,
                  assocType: Int,
                  hash: Option[ByteStr],
-                 action: ActionType,
                  feeAmount: Long,
                  timestamp: Long): Either[ValidationError, TransactionT] = {
-    signed(version, sender, party, assocType, hash, action, feeAmount, timestamp, sender)
+    signed(version, sender, party, assocType, hash, feeAmount, timestamp, sender)
   }
+
+  def create(version: Byte,
+             sender: PublicKeyAccount,
+             party: Address,
+             assocType: Int,
+             hash: Option[ByteStr],
+             feeAmount: Long,
+             timestamp: Long,
+             proofs: Proofs): Either[ValidationError, IssueAssociationTransaction] =
+    AssociationTransaction
+      .validate(version, sender, party, hash, feeAmount)
+      .map(_ =>
+        IssueAssociationTransaction(version, AssociationTransaction.networkByte, sender, Assoc(party, assocType, hash), feeAmount, timestamp, proofs))
+}
+
+object RevokeAssociationTransaction extends TransactionParserFor[RevokeAssociationTransaction] with TransactionParser.MultipleVersions {
+  override def typeId: Byte                 = 17
+  override def supportedVersions: Set[Byte] = Set(1: Byte)
+  override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[RevokeAssociationTransaction] =
+    AssociationTransaction.parseTail(version, bytes, RevokeAssociationTransaction.apply)
+
+  def signed(version: Byte,
+             sender: PublicKeyAccount,
+             party: Address,
+             assocType: Int,
+             hash: Option[ByteStr],
+             feeAmount: Long,
+             timestamp: Long,
+             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
+    AssociationTransaction.validate(version, sender, party, hash, feeAmount).map { _ =>
+      val uns = RevokeAssociationTransaction(version,
+                                             AssociationTransaction.networkByte,
+                                             sender,
+                                             Assoc(party, assocType, hash),
+                                             feeAmount,
+                                             timestamp,
+                                             Proofs.empty)
+      uns.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, uns.bodyBytes())))).explicitGet())
+    }
+  }
+
+  def selfSigned(version: Byte,
+                 sender: PrivateKeyAccount,
+                 party: Address,
+                 assocType: Int,
+                 hash: Option[ByteStr],
+                 feeAmount: Long,
+                 timestamp: Long): Either[ValidationError, TransactionT] = {
+    signed(version, sender, party, assocType, hash, feeAmount, timestamp, sender)
+  }
+  def create(version: Byte,
+             sender: PublicKeyAccount,
+             party: Address,
+             assocType: Int,
+             hash: Option[ByteStr],
+             feeAmount: Long,
+             timestamp: Long,
+             proofs: Proofs): Either[ValidationError, RevokeAssociationTransaction] =
+    AssociationTransaction
+      .validate(version, sender, party, hash, feeAmount)
+      .map(
+        _ =>
+          RevokeAssociationTransaction(version,
+                                       AssociationTransaction.networkByte,
+                                       sender,
+                                       Assoc(party, assocType, hash),
+                                       feeAmount,
+                                       timestamp,
+                                       proofs))
 }

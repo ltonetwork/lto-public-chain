@@ -15,7 +15,7 @@ import com.wavesplatform.transaction.AssociationTransaction.ActionType.{Issue, R
 import com.wavesplatform.transaction.AssociationTransaction.Assoc
 import com.wavesplatform.transaction.ValidationError.GenericError
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
-import com.wavesplatform.transaction.{AssociationTransaction, TransactionFactory, ValidationError}
+import com.wavesplatform.transaction.{AssociationTransaction, AssociationTransactionBase, TransactionFactory, ValidationError}
 import com.wavesplatform.utils.{Base58, Time}
 import com.wavesplatform.utx.UtxPool
 import com.wavesplatform.wallet.Wallet
@@ -46,7 +46,7 @@ case class AddressApiRoute(settings: RestAPISettings,
     pathPrefix("addresses") {
       validate ~ seed ~ balanceWithConfirmations ~ balanceDetails ~ balance ~ balanceWithConfirmations ~ verify ~ sign ~ deleteAddress ~ verifyText ~
         signText ~ seq ~ publicKey ~ effectiveBalance ~ effectiveBalanceWithConfirmations ~ getData ~ getDataItem ~
-        postData ~ postAnchor ~ postAssociation ~ scriptInfo ~ associations
+        postData ~ postAnchor ~ issueAssociation ~ revokeAssociation ~ scriptInfo ~ associations
     } ~ root ~ create
 
   @Path("/scriptInfo/{address}")
@@ -306,9 +306,12 @@ case class AddressApiRoute(settings: RestAPISettings,
   def postAnchor: Route = processRequest("anchor", (req: AnchorRequest) => doBroadcast(TransactionFactory.anchor(req, wallet, time)))
 
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
-  def postAssociation: Route =
-    processRequest("association", (req: AssociationRequest) => doBroadcast(TransactionFactory.association(req, wallet, time)))
+  def issueAssociation: Route =
+    processRequest("issueAssociation", (req: AssociationRequest) => doBroadcast(TransactionFactory.issueAssociation(req, wallet, time)))
 
+  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
+  def revokeAssociation: Route =
+    processRequest("revokeAssociation", (req: AssociationRequest) => doBroadcast(TransactionFactory.revokeAssociation(req, wallet, time)))
   @Path("/data/{address}")
   @ApiOperation(value = "Complete Data", notes = "Read all data posted by an account", httpMethod = "GET")
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")))
@@ -396,9 +399,9 @@ case class AddressApiRoute(settings: RestAPISettings,
   }
 
   private def associationsJson(address: Address, a: Blockchain.Associations): AssociationsInfo = {
-    def f(l: List[(Int, AssociationTransaction)]) = {
+    def f(l: List[(Int, AssociationTransactionBase)]) = {
       l.foldLeft(Map.empty[Assoc, (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
-          case (acc, (height, as: AssociationTransaction)) =>
+          case (acc, (height, as: AssociationTransactionBase)) =>
             val cp = if (address == as.sender.toAddress) as.assoc.party else as.sender.toAddress
             (as.actionType, acc.get(as.assoc)) match {
               case (Issue, None)                    => acc + (as.assoc -> (height, cp, as.id(), None))
@@ -430,7 +433,7 @@ case class AddressApiRoute(settings: RestAPISettings,
     BalanceDetails(
       account.address,
       portfolio.balance,
-      GeneratingBalanceProvider.balance(blockchain, functionalitySettings, blockchain.height, account),
+      GeneratingBalanceProvider.balance(blockchain, functionalitySettings, account),
       portfolio.balance - portfolio.lease.out,
       portfolio.effectiveBalance
     )
@@ -453,7 +456,7 @@ case class AddressApiRoute(settings: RestAPISettings,
     Address
       .fromString(address)
       .right
-      .map(acc => ToResponseMarshallable(Balance(acc.address, confirmations, blockchain.effectiveBalance(acc, blockchain.height, confirmations))))
+      .map(acc => ToResponseMarshallable(Balance(acc.address, confirmations, blockchain.effectiveBalance(acc, confirmations))))
       .getOrElse(InvalidAddress)
   }
 

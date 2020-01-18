@@ -2,14 +2,24 @@ package com.wavesplatform.state.reader
 
 import cats.implicits._
 import com.wavesplatform.account.Address
+import com.wavesplatform.block.Block.BlockId
+import com.wavesplatform.account.Address
 import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.Transaction.Type
 import com.wavesplatform.transaction.lease.LeaseTransaction
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.{AssetId, AssociationTransaction, Transaction}
+import com.wavesplatform.transaction.{
+  AssetId,
+  AssociationTransaction,
+  AssociationTransactionBase,
+  IssueAssociationTransaction,
+  RevokeAssociationTransaction,
+  Transaction
+}
 
-class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff]) extends Blockchain {
+// TODO dangerous =0, double-check
+class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: Long) extends Blockchain {
 
   private def diff = maybeDiff.getOrElse(Diff.empty)
 
@@ -85,8 +95,8 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff]) extends
   override def filledVolumeAndFee(orderId: ByteStr): VolumeAndFee =
     diff.orderFills.get(orderId).orEmpty.combine(inner.filledVolumeAndFee(orderId))
 
-  override def balanceSnapshots(address: Address, from: Int, to: Int): Seq[BalanceSnapshot] = {
-    if (to <= inner.height || maybeDiff.isEmpty) {
+  override def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot] = {
+    if (inner.heightOf(to).isDefined || maybeDiff.isEmpty) {
       inner.balanceSnapshots(address, from, to)
     } else {
       val bs = BalanceSnapshot(height, portfolio(address))
@@ -145,6 +155,8 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff]) extends
 
   override def lastBlock: Option[Block] = inner.lastBlock
 
+  override def carryFee: Long = carry
+
   override def blockBytes(height: Int): Option[Array[Type]] = inner.blockBytes(height)
 
   override def blockBytes(blockId: ByteStr): Option[Array[Type]] = inner.blockBytes(blockId)
@@ -166,20 +178,23 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff]) extends
 
   override def featureVotes(height: Int): Map[Short, Int] = inner.featureVotes(height)
 
-  override def append(diff: Diff, block: Block): Unit = inner.append(diff, block)
+  override def append(diff: Diff, carryFee: Long, block: Block): Unit = inner.append(diff, carryFee, block)
 
   override def rollbackTo(targetBlockId: ByteStr): Seq[Block] = inner.rollbackTo(targetBlockId)
 
   override def associations(address: Address): Blockchain.Associations = {
     val a0 = inner.associations(address)
-    val diffAssociations: Seq[(Int, AssociationTransaction)] = maybeDiff
+    val diffAssociations: Seq[(Int, AssociationTransactionBase)] = maybeDiff
       .map(
         d =>
           d.transactions.values
             .map(i => (i._1, i._2))
-            .filter(_._2.builder.typeId == AssociationTransaction.typeId)
+            .filter(x => {
+              val tpid = x._2.builder.typeId
+              tpid == IssueAssociationTransaction.typeId || tpid == RevokeAssociationTransaction.typeId
+            })
             .toList
-            .map(_.asInstanceOf[(Int, AssociationTransaction)]))
+            .map(_.asInstanceOf[(Int, AssociationTransactionBase)]))
       .getOrElse(List.empty)
     val outgoing = diffAssociations.filter(_._2.sender.toAddress == address)
     val incoming = diffAssociations.filter(_._2.assoc.party == address)
@@ -189,6 +204,6 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff]) extends
 }
 
 object CompositeBlockchain {
-  def composite(inner: Blockchain, diff: => Option[Diff]): Blockchain = new CompositeBlockchain(inner, diff)
-  def composite(inner: Blockchain, diff: Diff): Blockchain            = new CompositeBlockchain(inner, Some(diff))
+  def composite(inner: Blockchain, diff: => Option[Diff]): Blockchain      = new CompositeBlockchain(inner, diff, 0L)
+  def composite(inner: Blockchain, diff: Diff, carryFee: Long): Blockchain = new CompositeBlockchain(inner, Some(diff), carryFee)
 }

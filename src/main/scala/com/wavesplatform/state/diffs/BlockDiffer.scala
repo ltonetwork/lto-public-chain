@@ -23,38 +23,41 @@ object BlockDiffer extends ScorexLogging with Instrumented {
                                                 blockchain: Blockchain,
                                                 maybePrevBlock: Option[Block],
                                                 block: Block,
-                                                constraint: Constraint): Either[ValidationError, (Diff, Constraint)] = {
-    val blockSigner = block.signerData.generator.toAddress
+                                                constraint: Constraint,
+                                                verify: Boolean = true): Either[ValidationError, (Diff, Long, Constraint)] = {
     val stateHeight = blockchain.height
 
     // height switch is next after activation
-    val ng4060switchHeight = blockchain.featureActivationHeight(BlockchainFeatures.NG.id).getOrElse(Int.MaxValue)
+    val ngHeight          = blockchain.featureActivationHeight(BlockchainFeatures.NG.id).getOrElse(Int.MaxValue)
+    val sponsorshipHeight = Sponsorship.sponsoredFeesSwitchHeight(blockchain, settings)
 
-    lazy val prevBlockFeeDistr: Option[Diff] =
-      if (stateHeight > ng4060switchHeight)
-        maybePrevBlock.map(prevBlock => Diff.empty.copy(portfolios = Map(blockSigner -> prevBlock.prevBlockFeePart())))
+    lazy val prevBlockFeeDistr: Option[Portfolio] =
+      if (stateHeight >= sponsorshipHeight)
+        Some(Portfolio.empty.copy(balance = blockchain.carryFee))
+      else if (stateHeight > ngHeight)
+        maybePrevBlock.map(_.prevBlockFeePart())
       else None
 
-    lazy val currentBlockFeeDistr =
-      if (stateHeight < ng4060switchHeight)
-        Some(Diff.empty.copy(portfolios = Map(blockSigner -> block.feesPortfolio())))
+    lazy val currentBlockFeeDistr: Option[Portfolio] =
+      if (stateHeight < ngHeight)
+        Some(block.feesPortfolio())
       else
         None
 
-    val prevBlockTimestamp = maybePrevBlock.map(_.timestamp)
     for {
       _ <- block.signaturesValid()
       r <- apply(
         settings,
         blockchain,
         constraint,
-        prevBlockTimestamp,
+        maybePrevBlock.map(_.timestamp),
         block.signerData.generator,
         prevBlockFeeDistr,
         currentBlockFeeDistr,
         block.timestamp,
         block.transactionData,
-        1
+        stateHeight + 1 //,
+        // verify
       )
     } yield r
   }
@@ -64,7 +67,10 @@ object BlockDiffer extends ScorexLogging with Instrumented {
                                                      prevBlockTimestamp: Option[Long],
                                                      micro: MicroBlock,
                                                      timestamp: Long,
-                                                     constraint: Constraint): Either[ValidationError, (Diff, Constraint)] = {
+                                                     constraint: Constraint
+                                                     //,
+                                                     // verify: Boolean = true
+  ): Either[ValidationError, (Diff, Long, Constraint)] = {
     for {
       // microblocks are processed within block which is next after 40-only-block which goes on top of activated height
       _ <- Either.cond(blockchain.activatedFeatures.contains(BlockchainFeatures.NG.id), (), ActivationError(s"MicroBlocks are not yet activated"))
@@ -79,7 +85,8 @@ object BlockDiffer extends ScorexLogging with Instrumented {
         None,
         timestamp,
         micro.transactionData,
-        0
+        blockchain.height // ,
+        // verify
       )
     } yield r
   }
@@ -89,67 +96,46 @@ object BlockDiffer extends ScorexLogging with Instrumented {
                                                     initConstraint: Constraint,
                                                     prevBlockTimestamp: Option[Long],
                                                     blockGenerator: Address,
-                                                    prevBlockFeeDistr: Option[Diff],
-                                                    currentBlockFeeDistr: Option[Diff],
+                                                    prevBlockFeeDistr: Option[Portfolio],
+                                                    currentBlockFeeDistr: Option[Portfolio],
                                                     timestamp: Long,
                                                     txs: Seq[Transaction],
-                                                    heightDiff: Int): Either[ValidationError, (Diff, Constraint)] = {
+                                                    currentBlockHeight: Int // ,
+                                                    // verify: Boolean
+  ): Either[ValidationError, (Diff, Long, Constraint)] = {
     def updateConstraint(constraint: Constraint, blockchain: Blockchain, tx: Transaction): Constraint =
       constraint.put(blockchain, tx).asInstanceOf[Constraint]
 
-    val currentBlockHeight = blockchain.height + heightDiff
-    val txDiffer           = TransactionDiffer(settings, prevBlockTimestamp, timestamp, currentBlockHeight) _
+    val txDiffer = TransactionDiffer(settings, prevBlockTimestamp, timestamp, currentBlockHeight) _
+    val initDiff = Diff.empty.copy(portfolios = Map(blockGenerator -> currentBlockFeeDistr.orElse(prevBlockFeeDistr).orEmpty))
+    val hasNg    = currentBlockFeeDistr.isEmpty
 
-    val txsDiffEi = currentBlockFeeDistr match {
-      case Some(feedistr) =>
-        val initDiff = Monoid.combine(prevBlockFeeDistr.orEmpty, feedistr)
-        txs.foldLeft((initDiff, initConstraint).asRight[ValidationError]) {
-          case (r @ Left(_), _) => r
-          case (Right((currDiff, currConstraint)), tx) =>
-            val updatedBlockchain = composite(blockchain, currDiff)
-            val updatedConstraint = updateConstraint(currConstraint, updatedBlockchain, tx)
-            if (updatedConstraint.isOverfilled) Left(ValidationError.GenericError(s"Limit of txs was reached: $initConstraint -> $updatedConstraint"))
-            else
-              txDiffer(updatedBlockchain, tx).map { newDiff =>
-                (currDiff.combine(newDiff), updatedConstraint)
-              }
-        }
-      case None =>
-        txs.foldLeft((prevBlockFeeDistr.orEmpty, initConstraint).asRight[ValidationError]) {
-          case (r @ Left(_), _) => r
-          case (Right((currDiff, currConstraint)), tx) =>
-            val updatedBlockchain = composite(blockchain, currDiff)
-            val updatedConstraint = updateConstraint(currConstraint, updatedBlockchain, tx)
-            if (updatedConstraint.isOverfilled) Left(ValidationError.GenericError(s"Limit of txs was reached: $initConstraint -> $updatedConstraint"))
-            else
-              txDiffer(updatedBlockchain, tx).map { newDiff =>
-                val updatedPortfolios = newDiff.portfolios.combine(
-                  Map(blockGenerator -> tx.feeDiff()).mapValues(_.multiply(Block.CurrentBlockFeePart))
-                )
-
-                (currDiff.combine(newDiff.copy(portfolios = updatedPortfolios)), updatedConstraint)
-              }
-        }
+    def calcNextBlockFee(blockchain: Blockchain, portfolio: Portfolio): (Portfolio, Long) = {
+      val ngPf = if (hasNg) {
+        val curPf  = portfolio.multiply(Block.CurrentBlockFeePart)
+        val nextPf = portfolio.minus(curPf)
+        (curPf, nextPf.balance)
+      } else (portfolio, 0L)
+      ngPf.copy(_2 = 0L)
     }
 
-    txsDiffEi.map {
-      case (d, constraint) =>
-        val diffWithCancelledLeases =
-          if (currentBlockHeight == settings.resetEffectiveBalancesAtHeight)
-            Monoid.combine(d, CancelAllLeases(composite(blockchain, d)))
-          else d
-
-        val diffWithLeasePatches =
-          if (currentBlockHeight == settings.blockVersion3AfterHeight)
-            Monoid.combine(diffWithCancelledLeases, CancelLeaseOverflow(composite(blockchain, diffWithCancelledLeases)))
-          else diffWithCancelledLeases
-
-        val diffWithCancelledLeaseIns =
-          if (blockchain.featureActivationHeight(BlockchainFeatures.DataTransaction.id).contains(currentBlockHeight))
-            Monoid.combine(diffWithLeasePatches, CancelInvalidLeaseIn(composite(blockchain, diffWithLeasePatches)))
-          else diffWithLeasePatches
-
-        (diffWithCancelledLeaseIns, constraint)
-    }
+    txs
+      .foldLeft((initDiff, 0L, initConstraint).asRight[ValidationError]) {
+        case (r @ Left(_), _) => r
+        case (Right((currDiff, carryFee, currConstraint)), tx) =>
+          val updatedBlockchain = composite(blockchain, currDiff, 0)
+          val updatedConstraint = updateConstraint(currConstraint, updatedBlockchain, tx)
+          if (updatedConstraint.isOverfilled)
+            Left(ValidationError.GenericError(s"Limit of txs was reached: $initConstraint -> $updatedConstraint"))
+          else
+            txDiffer(updatedBlockchain, tx).map { newDiff =>
+              val updatedDiff = currDiff.combine(newDiff)
+              if (hasNg) {
+                val (curBlockFees, nextBlockFee) = calcNextBlockFee(updatedBlockchain, tx.feeDiff())
+                val diff                         = updatedDiff.combine(Diff.empty.copy(portfolios = Map(blockGenerator -> curBlockFees)))
+                (diff, carryFee + nextBlockFee, updatedConstraint)
+              } else (updatedDiff, 0L, updatedConstraint)
+            }
+      }
   }
 }

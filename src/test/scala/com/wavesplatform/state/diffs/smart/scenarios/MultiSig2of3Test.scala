@@ -49,7 +49,7 @@ class MultiSig2of3Test extends PropSpec with PropertyChecks with Matchers with T
     recepient <- accountGen
     ts        <- positiveIntGen
     genesis = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    setSctipt <- selfSignedSetScriptTransactionGenP(master, ScriptV1(multisigTypedExpr(s0, s1, s2)).explicitGet())
+    setSctipt <- selfSignedSetScriptTransactionGenP(master, ScriptV1(multisigTypedExpr(s0, s1, s2)).explicitGet(), ts + 1)
     amount    <- positiveLongGen
     fee       <- smallFeeGen
     timestamp <- timestampGen

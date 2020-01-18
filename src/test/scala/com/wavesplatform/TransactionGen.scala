@@ -107,12 +107,11 @@ trait TransactionGenBase extends ScriptGen {
     script                    <- Gen.option(scriptGen)
   } yield SetScriptTransaction.create(version, sender, script, fee, timestamp, proofs).explicitGet()
 
-  def selfSignedSetScriptTransactionGenP(sender: PrivateKeyAccount, s: Script): Gen[SetScriptTransaction] =
+  def selfSignedSetScriptTransactionGenP(sender: PrivateKeyAccount, s: Script, ts: Long): Gen[SetScriptTransaction] =
     for {
-      version   <- Gen.oneOf(SetScriptTransaction.supportedVersions.toSeq)
-      fee       <- smallFeeGen
-      timestamp <- timestampGen
-    } yield SetScriptTransaction.selfSigned(version, sender, Some(s), fee, timestamp).explicitGet()
+      version <- Gen.oneOf(SetScriptTransaction.supportedVersions.toSeq)
+      fee     <- smallFeeGen
+    } yield SetScriptTransaction.selfSigned(version, sender, Some(s), fee, ts).explicitGet()
 
   val paymentGen: Gen[PaymentTransaction] = for {
     sender: PrivateKeyAccount    <- accountGen
@@ -162,12 +161,13 @@ trait TransactionGenBase extends ScriptGen {
 
   def leaseAndCancelGeneratorP(leaseSender: PrivateKeyAccount,
                                recipient: AddressOrAlias,
-                               unleaseSender: PrivateKeyAccount): Gen[(LeaseTransaction, LeaseCancelTransaction)] =
+                               unleaseSender: PrivateKeyAccount,
+                               timestamp: Long): Gen[(LeaseTransaction, LeaseCancelTransaction)] =
     for {
-      (_, amount, fee, timestamp, _) <- leaseParamGen
-      lease                          <- createLease(leaseSender, amount, fee, timestamp, recipient)
-      fee2                           <- smallFeeGen
-      unlease                        <- createLeaseCancel(unleaseSender, lease.id(), fee2, timestamp + 1)
+      (_, amount, fee, _, _) <- leaseParamGen
+      lease                  <- createLease(leaseSender, amount, fee, timestamp, recipient)
+      fee2                   <- smallFeeGen
+      unlease                <- createLeaseCancel(unleaseSender, lease.id(), fee2, timestamp + 1)
     } yield (lease, unlease)
 
   val twoLeasesGen: Gen[(LeaseTransaction, LeaseTransaction)] = for {
@@ -405,7 +405,7 @@ trait TransactionGenBase extends ScriptGen {
       recipient <- accountGen
       ts        <- positiveIntGen
       genesis = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-      setScript <- selfSignedSetScriptTransactionGenP(master, ScriptV1(typed).explicitGet())
+      setScript <- selfSignedSetScriptTransactionGenP(master, ScriptV1(typed).explicitGet(), ts + 1)
       transfer  <- transferGeneratorPV2(ts, master, recipient.toAddress, ENOUGH_AMT / 2)
       fee       <- smallFeeGen
       lease = LeaseTransactionV2.selfSigned(LeaseTransactionV2.supportedVersions.head, master, ENOUGH_AMT / 2, fee, ts, recipient).explicitGet()
@@ -423,7 +423,7 @@ trait TransactionGenBase extends ScriptGen {
     AnchorTransaction.selfSigned(version, sender, anchors, 15000000, timestamp).explicitGet()
   }
 
-  val assocTransactionGen: Gen[AssociationTransaction] = for {
+  val assocTransactionGen: Gen[AssociationTransactionBase] = for {
     sender    <- accountGen
     timestamp <- timestampGen
     version   <- Gen.oneOf(AssociationTransaction.supportedVersions.toSeq)
@@ -433,7 +433,12 @@ trait TransactionGenBase extends ScriptGen {
     fee       <- smallFeeGen
     hashOpt   <- Gen.option(genBoundedBytes(AssociationTransaction.HashLength, AssociationTransaction.HashLength).map(ByteStr(_)))
   } yield {
-    AssociationTransaction.selfSigned(version, sender, party, assocType, hashOpt, action, fee, timestamp).explicitGet()
+    action match {
+      case AssociationTransaction.ActionType.Issue =>
+        IssueAssociationTransaction.selfSigned(version, sender, party, assocType, hashOpt, fee, timestamp).explicitGet()
+      case AssociationTransaction.ActionType.Revoke =>
+        RevokeAssociationTransaction.selfSigned(version, sender, party, assocType, hashOpt, fee, timestamp).explicitGet()
+    }
   }
 
 }

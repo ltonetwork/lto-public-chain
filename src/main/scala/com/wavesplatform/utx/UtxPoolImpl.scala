@@ -125,7 +125,7 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
       .iterator
       .scanLeft((Seq.empty[ByteStr], Seq.empty[Transaction], Monoid[Diff].empty, rest, false)) {
         case ((invalid, valid, diff, currRest, isEmpty), tx) =>
-          val updatedBlockchain = composite(b, diff)
+          val updatedBlockchain = composite(b, diff, 0)
           val updatedRest       = currRest.put(updatedBlockchain, tx)
           if (updatedRest.isOverfilled) {
             (invalid, valid, diff, currRest, isEmpty)

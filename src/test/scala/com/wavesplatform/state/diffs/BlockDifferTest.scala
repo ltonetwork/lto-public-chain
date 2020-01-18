@@ -110,14 +110,11 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
     }
   }
 
-  //TODO: Use functionality settings and activate NG in preactivated features
-
   private def assertDiff(blocks: Seq[Block], ngAtHeight: Int)(assertion: (Diff, Blockchain) => Unit): Unit = {
     val fs = FunctionalitySettings(
       featureCheckBlocksPeriod = ngAtHeight / 2,
       blocksForFeatureActivation = 1,
       allowTemporaryNegativeUntil = 0L,
-      requireSortedTransactionsAfter = 0L,
       generationBalanceDepthFrom50To1000AfterHeight = 0,
       minimalGeneratingBalanceAfter = 0L,
       allowTransactionsFromFutureUntil = Long.MaxValue,
@@ -127,25 +124,11 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
       resetEffectiveBalancesAtHeight = 0,
       blockVersion3AfterHeight = 0,
       preActivatedFeatures = Map[Short, Int]((2, ngAtHeight)),
-      doubleFeaturesPeriodsAfterHeight = Int.MaxValue
+      doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
+      requireSortedTransactionsAfter = 0
     )
-    assertDiffEiWithPrev(blocks.init, blocks.last, fs)(assertion)
+    assertNgDiffState(blocks.init, blocks.last, fs)(assertion)
   }
-
-  private def assertDiffEiWithPrev(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings)(assertion: (Diff, Blockchain) => Unit): Unit =
-    withStateAndHistory(fs) { bc =>
-      def differ(prev: Option[Block], b: Block): Either[ValidationError, Diff] =
-        BlockDiffer.fromBlock(fs, bc, prev, b, MiningConstraint.Unlimited).map(_._1)
-
-      zipWithPrev(preconditions).foreach {
-        case (prev, b) =>
-          bc.append(differ(prev, b).explicitGet(), b)
-      }
-
-      val totalDiff1 = differ(preconditions.lastOption, block).explicitGet()
-      bc.append(totalDiff1, block)
-      assertion(totalDiff1, bc)
-    }
 
   private def getTwoMinersBlockChain(from: PrivateKeyAccount, to: PrivateKeyAccount, numPayments: Int): Seq[Block] = {
     val ts                   = System.currentTimeMillis() - 100000

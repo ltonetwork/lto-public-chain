@@ -32,7 +32,8 @@ object TransactionParsers {
     SetScriptTransaction,
     LeaseTransactionV2,
     LeaseCancelTransactionV2,
-    AssociationTransaction
+    IssueAssociationTransaction,
+    RevokeAssociationTransaction
   ).flatMap { x =>
     x.supportedVersions.map { version =>
       ((x.typeId, version), x)

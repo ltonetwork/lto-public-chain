@@ -155,7 +155,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
             } else
               measureSuccessful(forgeBlockTimeStats, ng.totalDiffOf(block.reference)) match {
                 case None => Left(BlockAppendError(s"References incorrect or non-existing block", block))
-                case Some((referencedForgedBlock, referencedLiquidDiff, discarded)) =>
+                case Some((referencedForgedBlock, referencedLiquidDiff, carry, discarded)) =>
                   if (referencedForgedBlock.signaturesValid().isRight) {
                     if (discarded.nonEmpty) {
                       microBlockForkStats.increment()
@@ -173,7 +173,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
                     val diff = BlockDiffer
                       .fromBlock(
                         functionalitySettings,
-                        CompositeBlockchain.composite(blockchain, referencedLiquidDiff),
+                        CompositeBlockchain.composite(blockchain, referencedLiquidDiff, carry),
                         Some(referencedForgedBlock),
                         block,
                         constraint
@@ -185,7 +185,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
                     }
 
                     diff.map { hardenedDiff =>
-                      blockchain.append(referencedLiquidDiff, referencedForgedBlock)
+                      blockchain.append(referencedLiquidDiff, carry, referencedForgedBlock)
                       TxsInBlockchainStats.record(ng.transactions.size)
                       Some((hardenedDiff, discarded.flatMap(_.transactionData)))
                     }
@@ -197,10 +197,10 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
               }
         }).map {
           _ map {
-            case ((newBlockDiff, updatedTotalConstraint), discarded) =>
+            case ((newBlockDiff, carry, updatedTotalConstraint), discarded) =>
               val height = blockchain.height + 1
               restTotalConstraint = updatedTotalConstraint
-              ngState = Some(new NgState(block, newBlockDiff, featuresApprovedWithBlock(block)))
+              ngState = Some(new NgState(block, newBlockDiff, carry, featuresApprovedWithBlock(block)))
               lastBlockId.foreach(id => internalLastBlockInfo.onNext(LastBlockInfo(id, height, score, blockchainReady)))
               if ((block.timestamp > time
                     .getTimestamp() - settings.minerSettings.intervalAfterLastBlockThenGenerationIsAllowed.toMillis) || (height % 100 == 0)) {
@@ -243,12 +243,19 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
               r <- {
                 val constraints  = MiningConstraints(settings.minerSettings, blockchain, blockchain.height)
                 val mdConstraint = MultiDimensionalMiningConstraint(restTotalConstraint, constraints.micro)
-                BlockDiffer.fromMicroBlock(functionalitySettings, this, blockchain.lastBlockTimestamp, microBlock, ng.base.timestamp, mdConstraint)
+                BlockDiffer.fromMicroBlock(functionalitySettings,
+                                           this,
+                                           blockchain.lastBlockTimestamp,
+                                           microBlock,
+                                           ng.base.timestamp,
+                                           mdConstraint //,
+                                           // verify
+                )
               }
             } yield {
-              val (diff, updatedMdConstraint) = r
+              val (diff, carry, updatedMdConstraint) = r
               restTotalConstraint = updatedMdConstraint.constraints.head
-              ng.append(microBlock, diff, System.currentTimeMillis)
+              ng.append(microBlock, diff, carry, System.currentTimeMillis)
               log.info(s"$microBlock appended")
               internalLastBlockInfo.onNext(LastBlockInfo(microBlock.totalResBlockSig, height, score, ready = true))
             }
@@ -340,10 +347,12 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
 
   override def lastBlock: Option[Block] = ngState.map(_.bestLiquidBlock).orElse(blockchain.lastBlock)
 
+  override def carryFee: Long = ngState.map(_.carryFee).getOrElse(blockchain.carryFee)
+
   override def blockBytes(blockId: ByteStr): Option[Array[Byte]] =
     (for {
-      ng            <- ngState
-      (block, _, _) <- ng.totalDiffOf(blockId)
+      ng               <- ngState
+      (block, _, _, _) <- ng.totalDiffOf(blockId)
     } yield block.bytes()).orElse(blockchain.blockBytes(blockId))
 
   override def blockIdsAfter(parentSignature: ByteStr, howMany: Int): Option[Seq[ByteStr]] = {
@@ -374,6 +383,11 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
 
   override def portfolio(a: Address): Portfolio = {
     val p = ngState.fold(Portfolio.empty)(_.bestLiquidDiff.portfolios.getOrElse(a, Portfolio.empty))
+    blockchain.portfolio(a).combine(p)
+  }
+
+  private[this] def portfolioAt(a: Address, mb: ByteStr): Portfolio = {
+    val p = ngState.fold(Portfolio.empty)(_.diffFor(mb)._1.portfolios.getOrElse(a, Portfolio.empty))
     blockchain.portfolio(a).combine(p)
   }
 
@@ -426,13 +440,15 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
       _.bestLiquidDiff.orderFills.get(orderId).orEmpty.combine(blockchain.filledVolumeAndFee(orderId)))
 
   /** Retrieves Waves balance snapshot in the [from, to] range (inclusive) */
-  override def balanceSnapshots(address: Address, from: Int, to: Int): Seq[BalanceSnapshot] =
-    if (to <= blockchain.height || ngState.isEmpty) {
+  override def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot] = {
+    val blockchainBlock = blockchain.heightOf(to)
+    if (blockchainBlock.nonEmpty || ngState.isEmpty) {
       blockchain.balanceSnapshots(address, from, to)
     } else {
-      val bs = BalanceSnapshot(height, portfolio(address))
+      val bs = BalanceSnapshot(height, portfolioAt(address, to))
       if (blockchain.height > 0 && from < this.height) bs +: blockchain.balanceSnapshots(address, from, to) else Seq(bs)
     }
+  }
 
   override def accountScript(address: Address): Option[Script] = ngState.fold(blockchain.accountScript(address)) { ng =>
     ng.bestLiquidDiff.scripts.get(address) match {
@@ -499,7 +515,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
       blockchain.collectLposPortfolios(pf) ++ b.result()
     }
 
-  override def append(diff: Diff, block: Block): Unit = blockchain.append(diff, block)
+  override def append(diff: Diff, carry: Long, block: Block): Unit = blockchain.append(diff, carry, block)
 
   override def rollbackTo(targetBlockId: AssetId): Seq[Block] = blockchain.rollbackTo(targetBlockId)
 
@@ -520,8 +536,11 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
     val a1 = ngState
       .map { n =>
         val a = n.bestLiquidDiff.transactions.values
-          .filter(_._2.builder.typeId == AssociationTransaction.typeId)
-          .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
+          .filter(x => {
+            val tpid = x._2.builder.typeId
+            tpid == IssueAssociationTransaction.typeId || tpid == RevokeAssociationTransaction.typeId
+          })
+          .map(x => (x._1, x._2.asInstanceOf[AssociationTransactionBase]))
           .toList
         Blockchain.Associations(outgoing = a.filter(_._2.sender.toAddress == address), incoming = a.filter(_._2.assoc.party == address))
       }

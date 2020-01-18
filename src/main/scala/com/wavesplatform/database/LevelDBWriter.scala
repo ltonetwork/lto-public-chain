@@ -34,31 +34,35 @@ object LevelDBWriter {
     c1 :+ c2.headOption.getOrElse(1)
   }
 
-  /** {{{([15, 12, 3], [12, 5]) => [(15, 12), (12, 12), (3, 12), (3, 5)]}}}
-    *
-    * @param wbh WAVES balance history
-    * @param lbh Lease balance history
+  /**
+    * @todo move this method to `object LevelDBWriter` once SmartAccountTrading is activated
     */
   private[database] def merge(wbh: Seq[Int], lbh: Seq[Int]): Seq[(Int, Int)] = {
+
+    /**
+      * Fixed implementation where
+      * {{{([15, 12, 3], [12, 5]) => [(15, 12), (12, 12), (3, 5)]}}}
+      */
     @tailrec
-    def recMerge(wh: Int, wt: Seq[Int], lh: Int, lt: Seq[Int], buf: ArrayBuffer[(Int, Int)]): ArrayBuffer[(Int, Int)] = {
+    def recMergeFixed(wh: Int, wt: Seq[Int], lh: Int, lt: Seq[Int], buf: ArrayBuffer[(Int, Int)]): ArrayBuffer[(Int, Int)] = {
       buf += wh -> lh
       if (wt.isEmpty && lt.isEmpty) {
         buf
       } else if (wt.isEmpty) {
-        recMerge(wh, wt, lt.head, lt.tail, buf)
+        recMergeFixed(wh, wt, lt.head, lt.tail, buf)
       } else if (lt.isEmpty) {
-        recMerge(wt.head, wt.tail, lh, lt, buf)
+        recMergeFixed(wt.head, wt.tail, lh, lt, buf)
       } else {
-        if (wh >= lh) {
-          recMerge(wt.head, wt.tail, lh, lt, buf)
+        if (wh == lh) {
+          recMergeFixed(wt.head, wt.tail, lt.head, lt.tail, buf)
+        } else if (wh > lh) {
+          recMergeFixed(wt.head, wt.tail, lh, lt, buf)
         } else {
-          recMerge(wh, wt, lt.head, lt.tail, buf)
+          recMergeFixed(wh, wt, lt.head, lt.tail, buf)
         }
       }
     }
-
-    recMerge(wbh.head, wbh.tail, lbh.head, lbh.tail, ArrayBuffer.empty)
+    recMergeFixed(wbh.head, wbh.tail, lbh.head, lbh.tail, ArrayBuffer.empty)
   }
 
   implicit class ReadOnlyDBExt(val db: ReadOnlyDB) extends AnyVal {
@@ -119,6 +123,8 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     }
   }
 
+  override def carryFee: Long = readOnly(_.get(Keys.carryFee(height)))
+
   override def accountData(address: Address): AccountDataInfo = readOnly { db =>
     AccountDataInfo((for {
       addressId <- addressId(address).toSeq
@@ -169,7 +175,8 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     c2.drop(1).map(kf(_).keyBytes)
   }
 
-  override protected def doAppend(block: Block,
+  override protected def doAppend(carry: Long,
+                                  block: Block,
                                   newAddresses: Map[Address, BigInt],
                                   wavesBalances: Map[BigInt, Long],
                                   assetBalances: Map[BigInt, Map[ByteStr, Long]],
@@ -183,7 +190,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   data: Map[BigInt, AccountDataInfo],
                                   aliases: Map[Alias, BigInt],
                                   sponsorship: Map[AssetId, Sponsorship],
-                                  assocs: List[(Int, AssociationTransaction)]): Unit = readWrite { rw =>
+                                  assocs: List[(Int, AssociationTransactionBase)]): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
     rw.put(Keys.height, height)
@@ -211,7 +218,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       addressId
     }
 
-    val changedAddresses = (addressTransactions.keys ++ updatedBalanceAddresses)
+    val changedAddresses = addressTransactions.keys ++ updatedBalanceAddresses
 
     if (newAddressesForWaves.nonEmpty) {
       val newSeqNr = rw.get(Keys.addressesForWavesSeqNr) + 1
@@ -349,7 +356,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     }
 
     rw.put(Keys.transactionIdsAtHeight(height), transactions.keys.toSeq)
-
+    rw.put(Keys.carryFee(height), carry)
     expiredKeys.foreach(rw.delete)
 
   }
@@ -532,10 +539,12 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     .recordStats()
     .build[(Int, BigInt), LeaseBalance]()
 
-  override def balanceSnapshots(address: Address, from: Int, to: Int): Seq[BalanceSnapshot] = readOnly { db =>
+  override def balanceSnapshots(address: Address, from: Int, to: ByteStr): Seq[BalanceSnapshot] = readOnly { db =>
     db.get(Keys.addressId(address)).fold(Seq(BalanceSnapshot(1, 0, 0, 0))) { addressId =>
-      val wbh = slice(db.get(Keys.wavesBalanceHistory(addressId)), from, to)
-      val lbh = slice(db.get(Keys.leaseBalanceHistory(addressId)), from, to)
+      val toHeight = this.heightOf(to).getOrElse(this.height)
+      val ints     = db.get(Keys.wavesBalanceHistory(addressId))
+      val wbh      = slice(ints, from, toHeight)
+      val lbh      = slice(db.get(Keys.leaseBalanceHistory(addressId)), from, toHeight)
       for {
         (wh, lh) <- merge(wbh, lbh)
         wb = balanceAtHeightCache.get((wh, addressId), () => db.get(Keys.wavesBalance(addressId)(wh)))
@@ -628,7 +637,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
         }
         .distinct
         .flatMap(txId => transactionInfo(ByteStr(txId)))
-        .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
+        .map(x => (x._1, x._2.asInstanceOf[AssociationTransactionBase]))
         .toList
 
     Blockchain.Associations(

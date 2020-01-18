@@ -1,13 +1,17 @@
 package com.wavesplatform.state
 
 import com.wavesplatform.account.Address
+import com.wavesplatform.account.Address
+import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.state.reader.LeaseDetails
 import com.wavesplatform.transaction.lease.LeaseTransaction
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.{AssociationTransaction, Transaction}
+import com.wavesplatform.transaction.{AssociationTransaction, AssociationTransactionBase, Transaction}
 
 trait Blockchain {
+
+  def carryFee: Long
   def height: Int
   def score: BigInt
   def scoreOf(blockId: ByteStr): Option[BigInt]
@@ -50,7 +54,7 @@ trait Blockchain {
   def filledVolumeAndFee(orderId: ByteStr): VolumeAndFee
 
   /** Retrieves Waves balance snapshot in the [from, to] range (inclusive) */
-  def balanceSnapshots(address: Address, from: Int, to: Int): Seq[BalanceSnapshot]
+  def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot]
 
   def accountScript(address: Address): Option[Script]
   def hasScript(address: Address): Boolean
@@ -72,9 +76,9 @@ trait Blockchain {
     * @note Portfolios passed to `pf` only contain Waves and Leasing balances to improve performance */
   def collectLposPortfolios[A](pf: PartialFunction[(Address, Portfolio), A]): Map[Address, A]
 
-  def append(diff: Diff, block: Block): Unit
+  def append(diff: Diff, carryFee: Long, block: Block): Unit
   def rollbackTo(targetBlockId: ByteStr): Seq[Block]
 }
 object Blockchain {
-  case class Associations(outgoing: List[(Int, AssociationTransaction)], incoming: List[(Int, AssociationTransaction)])
+  case class Associations(outgoing: List[(Int, AssociationTransactionBase)], incoming: List[(Int, AssociationTransactionBase)])
 }

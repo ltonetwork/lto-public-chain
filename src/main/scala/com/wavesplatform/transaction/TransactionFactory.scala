@@ -3,9 +3,10 @@ package com.wavesplatform.transaction
 import com.wavesplatform.account._
 import com.wavesplatform.api.http.assets._
 import com.wavesplatform.api.http.leasing.{LeaseCancelV1Request, LeaseCancelV2Request, LeaseV1Request, LeaseV2Request}
-import com.wavesplatform.api.http.{AnchorRequest, BroadcastRequest, DataRequest}
+import com.wavesplatform.api.http.{BroadcastRequest, DataRequest}
 import com.wavesplatform.crypto.SignatureLength
 import com.wavesplatform.state.ByteStr
+import com.wavesplatform.transaction.AssociationTransaction.CreateCtor
 import com.wavesplatform.transaction.ValidationError.Validation
 import com.wavesplatform.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.wavesplatform.transaction.smart.SetScriptTransaction
@@ -351,46 +352,67 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def association(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, AssociationTransaction] =
-    association(request, wallet, request.sender, time)
-
-  def association(request: AssociationRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AssociationTransaction] =
+  private def association[T](signedCtor: AssociationTransaction.SignedCtor[T])(request: AssociationRequest,
+                                                                               wallet: Wallet,
+                                                                               signerAddress: String,
+                                                                               time: Time): Either[ValidationError, T] =
     for {
       sender <- wallet.findPrivateKey(request.sender)
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       party  <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
       else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
-      action <- AssociationTransaction.ActionType.fromString(request.action)
-      tx <- AssociationTransaction.signed(
-        version = request.version,
-        sender = sender,
-        party = party,
-        assocType = request.associationType,
-        hash = hash.map(AnchorRequest.prependZeros),
-        action = action,
-        feeAmount = request.fee,
-        timestamp = request.timestamp.getOrElse(time.getTimestamp()),
-        signer = signer
+      tx <- signedCtor(
+        request.version,
+        sender,
+        party,
+        request.associationType,
+        hash.map(AnchorRequest.prependZeros),
+        request.fee,
+        request.timestamp.getOrElse(time.getTimestamp()),
+        signer
       )
     } yield tx
 
-  def association(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, AssociationTransaction] =
+  private def association[T](createCtor: CreateCtor[T])(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, T] =
     for {
       party <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
       else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
-      action <- AssociationTransaction.ActionType.fromString(request.action)
-      tx <- AssociationTransaction.create(
-        version = request.version,
-        sender = sender,
-        party = party,
-        assocType = request.associationType,
-        hash = hash.map(AnchorRequest.prependZeros),
-        action = action,
-        feeAmount = request.fee,
-        timestamp = 0,
-        proofs = Proofs.empty
+      tx <- createCtor(
+        request.version,
+        sender,
+        party,
+        request.associationType,
+        hash.map(AnchorRequest.prependZeros),
+        request.fee,
+        0,
+        Proofs.empty
       )
     } yield tx
+
+  def issueAssociation(request: AssociationRequest,
+                       wallet: Wallet,
+                       signerAddress: String,
+                       time: Time): Either[ValidationError, IssueAssociationTransaction] =
+    association(IssueAssociationTransaction.signed _)(request, wallet, request.sender, time)
+
+  def issueAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
+    association(IssueAssociationTransaction.create _)(request, sender)
+
+  def issueAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, IssueAssociationTransaction] =
+    issueAssociation(request, wallet, request.sender, time)
+
+  def revokeAssociation(request: AssociationRequest,
+                        wallet: Wallet,
+                        signerAddress: String,
+                        time: Time): Either[ValidationError, RevokeAssociationTransaction] =
+    association(RevokeAssociationTransaction.signed _)(request, wallet, request.sender, time)
+
+  def revokeAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
+    association(RevokeAssociationTransaction.create _)(request, sender)
+
+  def revokeAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, RevokeAssociationTransaction] =
+    revokeAssociation(request, wallet, request.sender, time)
+
 }

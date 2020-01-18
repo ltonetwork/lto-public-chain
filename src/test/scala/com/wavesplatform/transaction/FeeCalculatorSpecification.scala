@@ -30,7 +30,10 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
       |    data {
       |      LTO = 100000
       |    }
-      |    association {
+      |    issue-association {
+      |      LTO = 100000000
+      |    }
+      |    revoke-association {
       |      LTO = 100000000
       |    }
       |  }
@@ -69,7 +72,7 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
 
   property("Association transaction") {
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(assocTransactionGen) { tx: AssociationTransaction =>
+    forAll(assocTransactionGen) { tx: AssociationTransactionBase =>
       feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 100000000)
     }
   }

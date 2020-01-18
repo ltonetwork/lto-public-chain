@@ -226,9 +226,11 @@ case class DebugApiRoute(ws: WavesSettings,
     complete(miner.collectNextBlockGenerationTimes.map {
       case (a, t) =>
         AccountMiningInfo(
-          a.stringRepr,
-          ng.effectiveBalance(a, ng.height, ws.blockchainSettings.functionalitySettings.generatingBalanceDepth(ng.height)),
-          t
+          address = a.stringRepr,
+          miningBalance = ng.effectiveBalance(a,
+                                              ws.blockchainSettings.functionalitySettings.generatingBalanceDepth(ng.height),
+                                              ng.microblockIds.lastOption.getOrElse(ByteStr.empty)),
+          timestamp = t
         )
     })
   }

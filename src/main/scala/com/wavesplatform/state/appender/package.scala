@@ -12,6 +12,7 @@ import com.wavesplatform.block.Block
 import com.wavesplatform.transaction.ValidationError.{BlockAppendError, BlockFromFuture, GenericError}
 import com.wavesplatform.transaction._
 import cats.implicits._
+import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.utils.{ScorexLogging, Time}
 
 import scala.util.{Left, Right}
@@ -65,8 +66,8 @@ package object appender extends ScorexLogging {
         (),
         BlockAppendError(s"Account(${block.sender.toAddress}) is scripted are therefore not allowed to forge blocks", block)
       )
-      _ <- blockConsensusValidation(blockchainUpdater, settings, pos, time.correctedTime(), block) { height =>
-        val balance = GeneratingBalanceProvider.balance(blockchainUpdater, settings.blockchainSettings.functionalitySettings, height, block.sender)
+      _ <- blockConsensusValidation(blockchainUpdater, settings, pos, time.correctedTime(), block) { (height, parent) =>
+        val balance = GeneratingBalanceProvider.balance(blockchainUpdater, settings.blockchainSettings.functionalitySettings, block.sender, parent)
         Either.cond(
           GeneratingBalanceProvider.isEffectiveBalanceValid(blockchainUpdater,
                                                             settings.blockchainSettings.functionalitySettings,
@@ -88,7 +89,7 @@ package object appender extends ScorexLogging {
     }
 
   private def blockConsensusValidation(blockchain: Blockchain, settings: WavesSettings, pos: PoSSelector, currentTs: Long, block: Block)(
-      genBalance: Int => Either[String, Long]): Either[ValidationError, Unit] = {
+      genBalance: (Int, BlockId) => Either[String, Long]): Either[ValidationError, Unit] = {
 
     val blockTime = block.timestamp
 
@@ -96,7 +97,7 @@ package object appender extends ScorexLogging {
       height <- blockchain.heightOf(block.reference).toRight(GenericError(s"height: history does not contain parent ${block.reference}"))
       parent <- blockchain.parent(block).toRight(GenericError(s"parent: history does not contain parent ${block.reference}"))
       grandParent = blockchain.parent(parent, 2)
-      effectiveBalance <- genBalance(height).left.map(GenericError(_))
+      effectiveBalance <- genBalance(height, block.reference).left.map(GenericError(_))
       _                <- validateBlockVersion(height, block, settings.blockchainSettings.functionalitySettings)
       _                <- Either.cond(blockTime - currentTs < MaxTimeDrift, (), BlockFromFuture(blockTime))
       _                <- validateTransactionSorting(height, block, settings.blockchainSettings.functionalitySettings)

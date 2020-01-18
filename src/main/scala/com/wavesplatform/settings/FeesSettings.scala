@@ -24,7 +24,8 @@ object FeesSettings {
           val rawFees = config.as[Map[String, Long]](s"$configPath.${entry.getKey}")
           val fees    = rawFees.map { case (asset, fee) => FeeSettings(asset, fee) }(collection.breakOut)
           Some(txTypes(entry.getKey) -> fees)
-        } else throw new NoSuchElementException(entry.getKey)
+        } else
+          throw new NoSuchElementException(entry.getKey)
       }(collection.breakOut)
     FeesSettings(fees)
   }

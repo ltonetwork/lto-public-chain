@@ -2,7 +2,7 @@ package com.wavesplatform.api.http
 
 import cats.implicits._
 import com.wavesplatform.account.{Address, PublicKeyAccount}
-import com.wavesplatform.transaction.{AssociationTransaction, Proofs, ValidationError}
+import com.wavesplatform.transaction.{AssociationTransaction, IssueAssociationTransaction, Proofs, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
 import play.api.libs.json.Json
 
@@ -16,7 +16,6 @@ case class AssociationRequest(version: Byte,
                               party: String,
                               associationType: Int,
                               hash: String = "",
-                              action: String,
                               fee: Long,
                               timestamp: Option[Long] = None)
 
@@ -31,8 +30,6 @@ case class SignedAssociationRequest(@ApiModelProperty(required = true)
                                     associationType: Int,
                                     @ApiModelProperty(value = "Association data hash ", required = false)
                                     hash: String = "",
-                                    @ApiModelProperty(value = "Association type(issue/revoke) ", required = false)
-                                    action: String,
                                     @ApiModelProperty(required = true)
                                     fee: Long,
                                     @ApiModelProperty(required = true)
@@ -40,22 +37,13 @@ case class SignedAssociationRequest(@ApiModelProperty(required = true)
                                     @ApiModelProperty(required = true)
                                     proofs: List[String])
     extends BroadcastRequest {
-  def toTx: Either[ValidationError, AssociationTransaction] =
+  def toTx[T](ctor: AssociationTransaction.CreateCtor[T]): Either[ValidationError, T] =
     for {
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _party      <- Address.fromString(party)
       _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
       _hash       <- if (hash == "") Right(None) else parseBase58(hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
       _proofs     <- Proofs.create(_proofBytes)
-      _action     <- AssociationTransaction.ActionType.fromString(action)
-      t <- AssociationTransaction.create(version,
-                                         _sender,
-                                         _party,
-                                         associationType,
-                                         _hash.map(AnchorRequest.prependZeros),
-                                         _action,
-                                         fee,
-                                         timestamp,
-                                         _proofs)
+      t           <- ctor(version, _sender, _party, associationType, _hash.map(AnchorRequest.prependZeros), fee, timestamp, _proofs)
     } yield t
 }

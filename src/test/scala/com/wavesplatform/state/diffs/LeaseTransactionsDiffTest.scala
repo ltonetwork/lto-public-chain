@@ -28,7 +28,7 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
       recipient <- accountGen suchThat (_ != master)
       ts        <- positiveIntGen
       genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-      (lease, unlease) <- leaseAndCancelGeneratorP(master, recipient, master)
+      (lease, unlease) <- leaseAndCancelGeneratorP(master, recipient, master, ts)
     } yield (genesis, lease, unlease)
 
     forAll(sunnyDayLeaseLeaseCancel) {
@@ -56,7 +56,7 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
     recpient <- accountGen suchThat (_ != master)
     ts       <- timestampGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    (lease, unlease) <- leaseAndCancelGeneratorP(master, recpient, master)
+    (lease, unlease) <- leaseAndCancelGeneratorP(master, recpient, master, ts)
     fee2             <- smallFeeGen
     unlease2         <- createLeaseCancel(master, lease.id(), fee2, ts + 1)
     // ensure recipient has enough effective balance
@@ -90,8 +90,8 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
       forward   <- accountGen suchThat (!Set(master, recipient).contains(_))
       ts        <- positiveIntGen
       genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-      (lease, _)        <- leaseAndCancelGeneratorP(master, recipient, master)
-      (leaseForward, _) <- leaseAndCancelGeneratorP(recipient, forward, recipient)
+      (lease, _)        <- leaseAndCancelGeneratorP(master, recipient, master, ts)
+      (leaseForward, _) <- leaseAndCancelGeneratorP(recipient, forward, recipient, ts)
     } yield (genesis, lease, leaseForward)
 
     forAll(setup) {
@@ -112,7 +112,7 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
       ts <- timestampGen
       genesis: GenesisTransaction  = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
       genesis2: GenesisTransaction = GenesisTransaction.create(unleaser, ENOUGH_AMT, ts).explicitGet()
-      (lease, _)              <- leaseAndCancelGeneratorP(master, recipient, master)
+      (lease, _)              <- leaseAndCancelGeneratorP(master, recipient, master, ts)
       fee2                    <- smallFeeGen
       unleaseOtherOrRecipient <- createLeaseCancel(unleaser, lease.id(), fee2, ts + 1)
     } yield (genesis, genesis2, lease, unleaseOtherOrRecipient)
