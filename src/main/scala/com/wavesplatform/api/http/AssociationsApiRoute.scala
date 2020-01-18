@@ -93,15 +93,57 @@ case class AssociationsApiRoute(settings: RestAPISettings,
 
   }
 
-  @Path("/issueAssociation")
+  @Path("/issue")
+  @ApiOperation(value = "Creates an association between accounts", httpMethod = "POST", produces = "application/json", consumes = "application/json")
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(
+        name = "body",
+        value = "Json with data",
+        required = true,
+        paramType = "body",
+        dataType = "com.wavesplatform.api.http.AssociationRequest",
+        defaultValue =
+          """
+            |   {
+            |       "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+            |       "fee": 100000,
+            |       "version": 1,
+            |       "party" : "3MSDfsdfsdfsdfsdfsdfsdsdfsdfsdfsdf",
+            |       "associationType" : 420,
+            |       "hash" : ""
+            |   }
+            |""".stripMargin)
+    ))
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def issueAssociation: Route =
-    processRequest("issueAssociation", (req: AssociationRequest) => doBroadcast(TransactionFactory.issueAssociation(req, wallet, time)))
+    processRequest("issue", (req: AssociationRequest) => doBroadcast(TransactionFactory.issueAssociation(req, wallet, time)))
 
-  @Path("/revokeAssociation")
+  @Path("/revoke")
+  @ApiOperation(value = "Revokes an association between accounts", httpMethod = "POST", produces = "application/json", consumes = "application/json")
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(
+        name = "body",
+        value = "Json with data",
+        required = true,
+        paramType = "body",
+        dataType = "com.wavesplatform.api.http.AssociationRequest",
+        defaultValue =
+          """
+            |   {
+            |       "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+            |       "fee": 100000,
+            |       "version": 1,
+            |       "party" : "3MSDfsdfsdfsdfsdfsdfsdsdfsdfsdfsdf",
+            |       "associationType" : 420,
+            |       "hash" : ""
+            |   }
+            |""".stripMargin)
+    ))
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def revokeAssociation: Route =
-    processRequest("revokeAssociation", (req: AssociationRequest) => doBroadcast(TransactionFactory.revokeAssociation(req, wallet, time)))
+    processRequest("revoke", (req: AssociationRequest) => doBroadcast(TransactionFactory.revokeAssociation(req, wallet, time)))
 
 }
 
