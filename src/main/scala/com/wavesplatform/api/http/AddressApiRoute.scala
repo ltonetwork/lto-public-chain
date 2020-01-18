@@ -307,11 +307,11 @@ case class AddressApiRoute(settings: RestAPISettings,
 
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def issueAssociation: Route =
-    processRequest("issueAssociation", (req: IssueAssociationRequest) => doBroadcast(TransactionFactory.issueAssociation(req, wallet, time)))
+    processRequest("issueAssociation", (req: AssociationRequest) => doBroadcast(TransactionFactory.issueAssociation(req, wallet, time)))
 
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def revokeAssociation: Route =
-    processRequest("revokeAssociation", (req: RevokeAssociationRequest) => doBroadcast(TransactionFactory.revokeAssociation(req, wallet, time)))
+    processRequest("revokeAssociation", (req: AssociationRequest) => doBroadcast(TransactionFactory.revokeAssociation(req, wallet, time)))
   @Path("/data/{address}")
   @ApiOperation(value = "Complete Data", notes = "Read all data posted by an account", httpMethod = "GET")
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")))

@@ -73,6 +73,10 @@ case class RevokeAssociationTransaction private (override val version: Byte,
   override def builder: TransactionParser = RevokeAssociationTransaction
 }
 object AssociationTransaction {
+
+  type SignedCtor[T] = (Byte, PublicKeyAccount, Address, Int, Option[ByteStr], Long, Long, PrivateKeyAccount) => Either[ValidationError, T]
+  type CreateCtor[T] = (Byte, PublicKeyAccount, Address, Int, Option[ByteStr], Long, Long, Proofs) => Either[ValidationError, T]
+
   sealed trait ActionType
   object ActionType {
 

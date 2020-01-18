@@ -3,9 +3,10 @@ package com.wavesplatform.transaction
 import com.wavesplatform.account._
 import com.wavesplatform.api.http.assets._
 import com.wavesplatform.api.http.leasing.{LeaseCancelV1Request, LeaseCancelV2Request, LeaseV1Request, LeaseV2Request}
-import com.wavesplatform.api.http.{AnchorRequest, BroadcastRequest, DataRequest}
+import com.wavesplatform.api.http.{BroadcastRequest, DataRequest}
 import com.wavesplatform.crypto.SignatureLength
 import com.wavesplatform.state.ByteStr
+import com.wavesplatform.transaction.AssociationTransaction.CreateCtor
 import com.wavesplatform.transaction.ValidationError.Validation
 import com.wavesplatform.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.wavesplatform.transaction.smart.SetScriptTransaction
@@ -351,88 +352,67 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def issueAssociation(request: IssueAssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, IssueAssociationTransaction] =
-    issueAssociation(request, wallet, request.sender, time)
+  private def association[T](signedCtor: AssociationTransaction.SignedCtor[T])(request: AssociationRequest,
+                                                                               wallet: Wallet,
+                                                                               signerAddress: String,
+                                                                               time: Time): Either[ValidationError, T] =
+    for {
+      sender <- wallet.findPrivateKey(request.sender)
+      signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
+      party  <- Address.fromString(request.party)
+      hash <- if (request.hash == "") Right(None)
+      else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
+      tx <- signedCtor(
+        request.version,
+        sender,
+        party,
+        request.associationType,
+        hash.map(AnchorRequest.prependZeros),
+        request.fee,
+        request.timestamp.getOrElse(time.getTimestamp()),
+        signer
+      )
+    } yield tx
 
-  def issueAssociation(request: IssueAssociationRequest,
+  private def association[T](createCtor: CreateCtor[T])(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, T] =
+    for {
+      party <- Address.fromString(request.party)
+      hash <- if (request.hash == "") Right(None)
+      else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
+      tx <- createCtor(
+        request.version,
+        sender,
+        party,
+        request.associationType,
+        hash.map(AnchorRequest.prependZeros),
+        request.fee,
+        0,
+        Proofs.empty
+      )
+    } yield tx
+
+  def issueAssociation(request: AssociationRequest,
                        wallet: Wallet,
                        signerAddress: String,
                        time: Time): Either[ValidationError, IssueAssociationTransaction] =
-    for {
-      sender <- wallet.findPrivateKey(request.sender)
-      signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      party  <- Address.fromString(request.party)
-      hash <- if (request.hash == "") Right(None)
-      else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
-      tx <- IssueAssociationTransaction.signed(
-        version = request.version,
-        sender = sender,
-        party = party,
-        assocType = request.associationType,
-        hash = hash.map(AnchorRequest.prependZeros),
-        feeAmount = request.fee,
-        timestamp = request.timestamp.getOrElse(time.getTimestamp()),
-        signer = signer
-      )
-    } yield tx
+    association(IssueAssociationTransaction.signed _)(request, wallet, request.sender, time)
 
-  def issueAssociation(request: IssueAssociationRequest, sender: PublicKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
-    for {
-      party <- Address.fromString(request.party)
-      hash <- if (request.hash == "") Right(None)
-      else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
-      tx <- IssueAssociationTransaction.create(
-        version = request.version,
-        sender = sender,
-        party = party,
-        assocType = request.associationType,
-        hash = hash.map(AnchorRequest.prependZeros),
-        feeAmount = request.fee,
-        timestamp = 0,
-        proofs = Proofs.empty
-      )
-    } yield tx
+  def issueAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
+    association(IssueAssociationTransaction.create _)(request, sender)
 
-  def revokeAssociation(request: RevokeAssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, RevokeAssociationTransaction] =
-    revokeAssociation(request, wallet, request.sender, time)
+  def issueAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, IssueAssociationTransaction] =
+    issueAssociation(request, wallet, request.sender, time)
 
-  def revokeAssociation(request: RevokeAssociationRequest,
+  def revokeAssociation(request: AssociationRequest,
                         wallet: Wallet,
                         signerAddress: String,
                         time: Time): Either[ValidationError, RevokeAssociationTransaction] =
-    for {
-      sender <- wallet.findPrivateKey(request.sender)
-      signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      party  <- Address.fromString(request.party)
-      hash <- if (request.hash == "") Right(None)
-      else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
-      tx <- RevokeAssociationTransaction.signed(
-        version = request.version,
-        sender = sender,
-        party = party,
-        assocType = request.associationType,
-        hash = hash.map(AnchorRequest.prependZeros),
-        feeAmount = request.fee,
-        timestamp = request.timestamp.getOrElse(time.getTimestamp()),
-        signer = signer
-      )
-    } yield tx
+    association(RevokeAssociationTransaction.signed _)(request, wallet, request.sender, time)
 
-  def revokeAssociation(request: RevokeAssociationRequest, sender: PublicKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
-    for {
-      party <- Address.fromString(request.party)
-      hash <- if (request.hash == "") Right(None)
-      else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
-      tx <- RevokeAssociationTransaction.create(
-        version = request.version,
-        sender = sender,
-        party = party,
-        assocType = request.associationType,
-        hash = hash.map(AnchorRequest.prependZeros),
-        feeAmount = request.fee,
-        timestamp = 0,
-        proofs = Proofs.empty
-      )
-    } yield tx
+  def revokeAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
+    association(RevokeAssociationTransaction.create _)(request, sender)
+
+  def revokeAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, RevokeAssociationTransaction] =
+    revokeAssociation(request, wallet, request.sender, time)
 
 }
