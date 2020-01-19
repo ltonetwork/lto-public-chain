@@ -8,6 +8,7 @@ import com.wavesplatform.state.{ByteStr, _}
 import com.wavesplatform.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.transaction.transfer._
+import org.scalacheck.Gen
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Assertion, Matchers, PropSpec}
@@ -35,6 +36,13 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
       |    }
       |    revoke-association {
       |      LTO = 100000000
+      |    }
+      |
+      |    sponsorship {
+      |      LTO = 600000000
+      |    }
+      |    sponsorship-cancel {
+      |      LTO = 600000000
       |    }
       |  }
       |}""".stripMargin
@@ -74,6 +82,13 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
     forAll(assocTransactionGen) { tx: AssociationTransactionBase =>
       feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 100000000)
+    }
+  }
+
+  property("Sposnorship transaction") {
+    val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
+    forAll(Gen.oneOf(sponsorshipGen, sponsorshipCancelGen)) { tx: SponsorshipTransactionBase =>
+      feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 600000000)
     }
   }
 

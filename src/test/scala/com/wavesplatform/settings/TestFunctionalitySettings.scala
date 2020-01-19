@@ -18,7 +18,6 @@ object TestFunctionalitySettings {
     blockVersion3AfterHeight = 0,
     preActivatedFeatures = Map(
       BlockchainFeatures.SmartAccounts.id          -> 0,
-      BlockchainFeatures.SmartAssets.id            -> 0,
       BlockchainFeatures.FairPoS.id                -> 0,
       BlockchainFeatures.AssociationTransaction.id -> 0
     ),

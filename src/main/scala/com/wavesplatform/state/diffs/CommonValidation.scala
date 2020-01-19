@@ -140,8 +140,9 @@ object CommonValidation {
     case _: SetScriptTransaction        => Right(1000)
     case _: LeaseCancelTransaction      => Right(1000)
     case tx: MassTransferTransaction    => Right(1000 + tx.transfers.size * 100)
-    case tx: AnchorTransaction          => Right(100)
-    case tx: AssociationTransactionBase => Right(1000)
+    case _: AnchorTransaction          => Right(100)
+    case _: AssociationTransactionBase => Right(1000)
+    case _: SponsorshipTransactionBase => Right(5000)
     case _                              => Left(UnsupportedTransactionType)
   }
 
@@ -150,8 +151,8 @@ object CommonValidation {
     def oldFees() = {
       type FeeInfo = (Option[(AssetId, AssetDescription)], Long)
 
-      def feeAfterSponsorship(txAsset: Option[AssetId]): Either[ValidationError, FeeInfo] =
-        if (height < Sponsorship.sponsoredFeesSwitchHeight(blockchain, fs)) {
+      def feeAfterSponsorship(): Either[ValidationError, FeeInfo] =
+        if (height < Sponsorship.sponsoredFeesSwitchHeight()) {
           // This could be true for private blockchains
           oldFeeInUnits(blockchain, height, tx).map(x => (None, x * Sponsorship.FeeUnit))
         } else
@@ -172,7 +173,7 @@ object CommonValidation {
         } else inputFee
       }
 
-      feeAfterSponsorship(None)
+      feeAfterSponsorship()
         .flatMap(feeAfterSmartAccounts)
         .map {
           case (Some((assetId, assetInfo)), amountInWaves) => (Some(assetId), Sponsorship.fromWaves(amountInWaves, assetInfo.sponsorship))
@@ -189,7 +190,7 @@ object CommonValidation {
   def checkFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Unit] = {
     def oldFees() = {
       def restFeeAfterSponsorship(inputFee: Long): Either[ValidationError, (Option[AssetId], Long)] =
-        if (height < Sponsorship.sponsoredFeesSwitchHeight(blockchain, fs)) Right(None, inputFee)
+        if (height < Sponsorship.sponsoredFeesSwitchHeight()) Right(None, inputFee)
         else {
           val feeAmount = inputFee
           for {
