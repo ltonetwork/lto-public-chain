@@ -126,8 +126,6 @@ object SponsorshipTransaction extends TransactionParserFor[SponsorshipTransactio
   def selfSigned(version: Byte,
                  sender: PrivateKeyAccount,
                  recipient: Address,
-                 assocType: Int,
-                 hash: Option[ByteStr],
                  feeAmount: Long,
                  timestamp: Long): Either[ValidationError, TransactionT] = {
     signed(version, sender, recipient, feeAmount, timestamp, sender)
