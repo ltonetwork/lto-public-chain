@@ -50,7 +50,7 @@ case class AssociationsApiRoute(settings: RestAPISettings,
     Array(
       new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
     ))
-  def associations: Route = (path("associations" / Segment) & get) { address =>
+  def associations: Route = (path("status" / Segment) & get) { address =>
     complete(
       Address
         .fromString(address)
