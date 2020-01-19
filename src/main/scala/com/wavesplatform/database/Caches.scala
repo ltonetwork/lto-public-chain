@@ -4,18 +4,11 @@ import java.util
 
 import cats.syntax.monoid._
 import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
-import com.wavesplatform.state._
 import com.wavesplatform.account.{Address, Alias}
 import com.wavesplatform.block.Block
+import com.wavesplatform.state._
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.{
-  AssetId,
-  AssociationTransaction,
-  AssociationTransactionBase,
-  IssueAssociationTransaction,
-  RevokeAssociationTransaction,
-  Transaction
-}
+import com.wavesplatform.transaction._
 
 import scala.collection.JavaConverters._
 
@@ -106,7 +99,6 @@ trait Caches extends Blockchain {
                          scripts: Map[BigInt, Option[Script]],
                          data: Map[BigInt, AccountDataInfo],
                          aliases: Map[Alias, BigInt],
-                         sponsorship: Map[AssetId, Sponsorship],
                          assocs: List[(Int, AssociationTransactionBase)]): Unit
 
   override def append(diff: Diff, carryFee: Long, block: Block): Unit = {
@@ -179,7 +171,6 @@ trait Caches extends Blockchain {
       diff.scripts.map { case (address, s)        => addressId(address) -> s },
       diff.accountData.map { case (address, data) => addressId(address) -> data },
       diff.aliases.map { case (a, address)        => a                  -> addressId(address) },
-      diff.sponsorship,
       newAssociations
     )
 

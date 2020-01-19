@@ -1,11 +1,11 @@
 package com.wavesplatform.state.diffs
 
 import cats._
+import com.wavesplatform.account.Address
 import com.wavesplatform.features.FeatureProvider._
 import com.wavesplatform.features.{BlockchainFeature, BlockchainFeatures}
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
-import com.wavesplatform.account.Address
 import com.wavesplatform.transaction.ValidationError._
 import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.lease._
@@ -134,53 +134,38 @@ object CommonValidation {
   }
 
   private def newFeeInUnits(tx: Transaction): Either[ValidationError, Long] = tx match {
-    case _: GenesisTransaction          => Right(0)
-    case _: TransferTransaction         => Right(1000)
-    case _: LeaseTransaction            => Right(1000)
-    case _: SetScriptTransaction        => Right(1000)
-    case _: LeaseCancelTransaction      => Right(1000)
-    case tx: MassTransferTransaction    => Right(1000 + tx.transfers.size * 100)
+    case _: GenesisTransaction         => Right(0)
+    case _: TransferTransaction        => Right(1000)
+    case _: LeaseTransaction           => Right(1000)
+    case _: SetScriptTransaction       => Right(1000)
+    case _: LeaseCancelTransaction     => Right(1000)
+    case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
     case _: AnchorTransaction          => Right(100)
     case _: AssociationTransactionBase => Right(1000)
     case _: SponsorshipTransactionBase => Right(5000)
-    case _                              => Left(UnsupportedTransactionType)
+    case _                             => Left(UnsupportedTransactionType)
   }
 
-  def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, (Option[AssetId], Long)] = {
+  def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Long] = {
 
     def oldFees() = {
-      type FeeInfo = (Option[(AssetId, AssetDescription)], Long)
-
-      def feeAfterSponsorship(): Either[ValidationError, FeeInfo] =
-        if (height < Sponsorship.sponsoredFeesSwitchHeight()) {
-          // This could be true for private blockchains
-          oldFeeInUnits(blockchain, height, tx).map(x => (None, x * Sponsorship.FeeUnit))
-        } else
-          for {
-            feeInUnits <- oldFeeInUnits(blockchain, height, tx)
-            r          <- Right((None, feeInUnits * Sponsorship.FeeUnit))
-          } yield r
+      type FeeInfo = Long
 
       def hasSmartAccountScript: Boolean = tx match {
         case tx: Transaction with Authorized => blockchain.hasScript(tx.sender)
         case _                               => false
       }
 
-      def feeAfterSmartAccounts(inputFee: FeeInfo): Either[ValidationError, FeeInfo] = Right {
+      def feeAfterSmartAccounts(inputFee: FeeInfo): FeeInfo =
         if (hasSmartAccountScript) {
-          val (feeAssetInfo, feeAmount) = inputFee
-          (feeAssetInfo, feeAmount + ScriptExtraFee)
+          inputFee + ScriptExtraFee
         } else inputFee
-      }
 
-      feeAfterSponsorship()
-        .flatMap(feeAfterSmartAccounts)
-        .map {
-          case (Some((assetId, assetInfo)), amountInWaves) => (Some(assetId), Sponsorship.fromWaves(amountInWaves, assetInfo.sponsorship))
-          case (None, amountInWaves)                       => (None, amountInWaves)
-        }
+      oldFeeInUnits(blockchain, height, tx)
+        .map(_ * Sponsorship.FeeUnit)
+        .map(feeAfterSmartAccounts)
     }
-    def newFees() = newFeeInUnits(tx).map(fee => (None, fee * Sponsorship.FeeUnit))
+    def newFees() = newFeeInUnits(tx).map(_ * Sponsorship.FeeUnit)
 
     if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
       newFees()
@@ -189,38 +174,19 @@ object CommonValidation {
 
   def checkFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Unit] = {
     def oldFees() = {
-      def restFeeAfterSponsorship(inputFee: Long): Either[ValidationError, (Option[AssetId], Long)] =
-        if (height < Sponsorship.sponsoredFeesSwitchHeight()) Right(None, inputFee)
-        else {
-          val feeAmount = inputFee
-          for {
-            feeInUnits <- oldFeeInUnits(blockchain, height, tx)
-            feeAmount  <- Right(feeAmount)
-            minimumFee    = feeInUnits * Sponsorship.FeeUnit
-            restFeeAmount = feeAmount - minimumFee
-            _ <- Either.cond(
-              restFeeAmount >= 0,
-              (),
-              GenericError(s"Fee in LTO for ${tx.builder.classTag} does not exceed minimal value of $minimumFee LTOs: $feeAmount")
-            )
-          } yield (None, restFeeAmount)
-        }
-
-      def isSmartToken: Boolean = false
-
-      def restFeeAfterSmartTokens(inputFee: (Option[AssetId], Long)): Either[ValidationError, (Option[AssetId], Long)] =
-        if (isSmartToken) {
-          val (feeAssetId, feeAmount) = inputFee
-          for {
-            _ <- Either.cond(feeAssetId.isEmpty, (), GenericError("Transactions with smart tokens require LTO as fee"))
-            restFeeAmount = feeAmount - ScriptExtraFee
-            _ <- Either.cond(
-              restFeeAmount >= 0,
-              (),
-              InsufficientFee(s"This transaction with a smart token requires ${-restFeeAmount} additional fee")
-            )
-          } yield (feeAssetId, restFeeAmount)
-        } else Right(inputFee)
+      def restFee(inputFee: Long): Either[ValidationError, (Option[AssetId], Long)] = {
+        val feeAmount = inputFee
+        for {
+          feeInUnits <- oldFeeInUnits(blockchain, height, tx)
+          minimumFee    = feeInUnits * Sponsorship.FeeUnit
+          restFeeAmount = feeAmount - minimumFee
+          _ <- Either.cond(
+            restFeeAmount >= 0,
+            (),
+            GenericError(s"Fee in LTO for ${tx.builder.classTag} does not exceed minimal value of $minimumFee LTOs: $feeAmount")
+          )
+        } yield (None, restFeeAmount)
+      }
 
       def hasSmartAccountScript: Boolean = tx match {
         case tx: Transaction with Authorized => blockchain.hasScript(tx.sender)
@@ -241,8 +207,7 @@ object CommonValidation {
           } yield (feeAssetId, restFeeAmount)
         } else Right(inputFee)
 
-      restFeeAfterSponsorship(tx.fee)
-        .flatMap(restFeeAfterSmartTokens)
+      restFee(tx.fee)
         .flatMap(restFeeAfterSmartAccounts)
         .map(_ => ())
     }

@@ -196,17 +196,6 @@ package object database {
     b.array()
   }
 
-  def readSponsorship(data: Array[Byte]): SponsorshipValue = {
-    val ndi = newDataInput(data)
-    SponsorshipValue(ndi.readLong())
-  }
-
-  def writeSponsorship(ai: SponsorshipValue): Array[Byte] = {
-    val ndo = newDataOutput()
-    ndo.writeLong(ai.minFee)
-    ndo.toByteArray
-  }
-
   def readAssetInfo(data: Array[Byte]): AssetInfo = {
     val ndi = newDataInput(data)
     AssetInfo(ndi.readBoolean(), ndi.readBigInt(), ndi.readScriptOption())

@@ -29,12 +29,8 @@ object BlockDiffer extends ScorexLogging with Instrumented {
 
     // height switch is next after activation
     val ngHeight          = blockchain.featureActivationHeight(BlockchainFeatures.NG.id).getOrElse(Int.MaxValue)
-    val sponsorshipHeight = Sponsorship.sponsoredFeesSwitchHeight()
-
     lazy val prevBlockFeeDistr: Option[Portfolio] =
-      if (stateHeight >= sponsorshipHeight)
-        Some(Portfolio.empty.copy(balance = blockchain.carryFee))
-      else if (stateHeight > ngHeight)
+      if (stateHeight > ngHeight)
         maybePrevBlock.map(_.prevBlockFeePart())
       else None
 

@@ -189,7 +189,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   scripts: Map[BigInt, Option[Script]],
                                   data: Map[BigInt, AccountDataInfo],
                                   aliases: Map[Alias, BigInt],
-                                  sponsorship: Map[AssetId, Sponsorship],
                                   assocs: List[(Int, AssociationTransactionBase)]): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
@@ -350,11 +349,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       }
     }
 
-    for ((assetId, sp: SponsorshipValue) <- sponsorship) {
-      rw.put(Keys.sponsorship(assetId)(height), sp)
-      expiredKeys ++= updateHistory(rw, Keys.sponsorshipHistory(assetId), threshold, Keys.sponsorship(assetId))
-    }
-
     rw.put(Keys.transactionIdsAtHeight(height), transactions.keys.toSeq)
     rw.put(Keys.carryFee(height), carry)
     expiredKeys.foreach(rw.delete)
@@ -491,12 +485,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
   private def rollbackLeaseStatus(rw: RW, leaseId: ByteStr, currentHeight: Int): Unit = {
     rw.delete(Keys.leaseStatus(leaseId)(currentHeight))
     rw.filterHistory(Keys.leaseStatusHistory(leaseId), currentHeight)
-  }
-
-  private def rollbackSponsorship(rw: RW, assetId: ByteStr, currentHeight: Int): ByteStr = {
-    rw.delete(Keys.sponsorship(assetId)(currentHeight))
-    rw.filterHistory(Keys.sponsorshipHistory(assetId), currentHeight)
-    assetId
   }
 
   override def transactionInfo(id: ByteStr): Option[(Int, Transaction)] = readOnly(db => db.get(Keys.transactionInfo(id)))
