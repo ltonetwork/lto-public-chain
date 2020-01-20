@@ -122,6 +122,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       db.hasInHistory(Keys.addressScriptHistory(addressId), Keys.addressScript(addressId))
     }
   }
+  override def sponsoredBy(address: Address): Option[Address] = throw new NotImplementedError("LevelDB ???")
 
   override def carryFee: Long = readOnly(_.get(Keys.carryFee(height)))
 

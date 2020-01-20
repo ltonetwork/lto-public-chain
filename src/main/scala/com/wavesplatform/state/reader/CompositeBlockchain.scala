@@ -6,9 +6,9 @@ import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.Transaction.Type
+import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.lease.LeaseTransaction
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction._
 
 class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: Long) extends Blockchain {
 
@@ -189,6 +189,13 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
 
     Blockchain.Associations(a0.outgoing ++ outgoing, a0.incoming ++ incoming)
   }
+
+  override def sponsoredBy(address: Address): Option[Address] =
+    maybeDiff.flatMap(d =>
+      d.sponsoredBy.get(address) match {
+        case Some((sponsor, enabled)) => if (enabled) Some(sponsor) else None
+        case None                     => inner.sponsoredBy(address)
+    })
 }
 
 object CompositeBlockchain {

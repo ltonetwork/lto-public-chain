@@ -486,6 +486,13 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
     }
   }
 
+  override def sponsoredBy(address: Address): Option[Address] = ngState.fold(blockchain.sponsoredBy(address)) { ng =>
+    ng.bestLiquidDiff.sponsoredBy.get(address) match {
+      case Some((sponsor, active)) => if (active) Some(sponsor) else None
+      case None                    => blockchain.sponsoredBy(address)
+    }
+  }
+
   override def allActiveLeases: Set[LeaseTransaction] = ngState.fold(blockchain.allActiveLeases) { ng =>
     val (active, canceled) = ng.bestLiquidDiff.leaseState.partition(_._2)
     val fromDiff = active.keys
