@@ -51,8 +51,6 @@ trait Blockchain {
 
   def leaseDetails(leaseId: ByteStr): Option[LeaseDetails]
 
-  def filledVolumeAndFee(orderId: ByteStr): VolumeAndFee
-
   /** Retrieves Waves balance snapshot in the [from, to] range (inclusive) */
   def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot]
 

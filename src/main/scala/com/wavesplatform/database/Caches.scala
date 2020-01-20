@@ -54,11 +54,6 @@ trait Caches extends Blockchain {
   protected def discardPortfolio(address: Address): Unit = portfolioCache.invalidate(address)
   override def portfolio(a: Address): Portfolio          = portfolioCache.get(a)
 
-  private val volumeAndFeeCache: LoadingCache[ByteStr, VolumeAndFee] = cache(maxCacheSize, loadVolumeAndFee)
-  protected def loadVolumeAndFee(orderId: ByteStr): VolumeAndFee
-  protected def discardVolumeAndFee(orderId: ByteStr): Unit       = volumeAndFeeCache.invalidate(orderId)
-  override def filledVolumeAndFee(orderId: ByteStr): VolumeAndFee = volumeAndFeeCache.get(orderId)
-
   private val scriptCache: LoadingCache[Address, Option[Script]] = cache(maxCacheSize, loadScript)
   protected def loadScript(address: Address): Option[Script]
   protected def hasScriptBytes(address: Address): Boolean
@@ -89,16 +84,12 @@ trait Caches extends Blockchain {
                          block: Block,
                          addresses: Map[Address, BigInt],
                          wavesBalances: Map[BigInt, Long],
-                         assetBalances: Map[BigInt, Map[ByteStr, Long]],
                          leaseBalances: Map[BigInt, LeaseBalance],
                          leaseStates: Map[ByteStr, Boolean],
                          transactions: Map[ByteStr, (Transaction, Set[BigInt])],
                          addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
-                         reissuedAssets: Map[ByteStr, AssetInfo],
-                         filledQuantity: Map[ByteStr, VolumeAndFee],
                          scripts: Map[BigInt, Option[Script]],
                          data: Map[BigInt, AccountDataInfo],
-                         aliases: Map[Alias, BigInt],
                          assocs: List[(Int, AssociationTransactionBase)]): Unit
 
   override def append(diff: Diff, carryFee: Long, block: Block): Unit = {
@@ -138,10 +129,6 @@ trait Caches extends Blockchain {
       newPortfolios += address -> newPortfolio
     }
 
-    val newFills = for {
-      (orderId, fillInfo) <- diff.orderFills
-    } yield orderId -> volumeAndFeeCache.get(orderId).combine(fillInfo)
-
     val newTransactions = Map.newBuilder[ByteStr, (Transaction, Set[BigInt])]
     for ((id, (_, tx, addresses)) <- diff.transactions) {
       transactionIds.put(id, tx.timestamp)
@@ -161,21 +148,16 @@ trait Caches extends Blockchain {
       block,
       newAddressIds,
       wavesBalances.result(),
-      assetBalances.result(),
       leaseBalances.result(),
       diff.leaseState,
       newTransactions.result(),
       diff.accountTransactionIds.map({ case (addr, txs) => addressId(addr) -> txs }),
-      diff.issuedAssets,
-      newFills,
       diff.scripts.map { case (address, s)        => addressId(address) -> s },
       diff.accountData.map { case (address, data) => addressId(address) -> data },
-      diff.aliases.map { case (a, address)        => a                  -> addressId(address) },
       newAssociations
     )
 
     for ((address, id)           <- newAddressIds) addressIdCache.put(address, Some(id))
-    for ((orderId, volumeAndFee) <- newFills) volumeAndFeeCache.put(orderId, volumeAndFee)
     for ((address, portfolio)    <- newPortfolios.result()) portfolioCache.put(address, portfolio)
     scriptCache.putAll(diff.scripts.asJava)
   }

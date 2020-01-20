@@ -195,17 +195,4 @@ package object database {
 
     b.array()
   }
-
-  def readAssetInfo(data: Array[Byte]): AssetInfo = {
-    val ndi = newDataInput(data)
-    AssetInfo(ndi.readBoolean(), ndi.readBigInt(), ndi.readScriptOption())
-  }
-
-  def writeAssetInfo(ai: AssetInfo): Array[Byte] = {
-    val ndo = newDataOutput()
-    ndo.writeBoolean(ai.isReissuable)
-    ndo.writeBigInt(ai.volume)
-    ndo.writeScriptOption(ai.script)
-    ndo.toByteArray
-  }
 }

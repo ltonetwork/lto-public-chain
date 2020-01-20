@@ -435,10 +435,6 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
       blockchain.leaseDetails(leaseId)
   }
 
-  override def filledVolumeAndFee(orderId: AssetId): VolumeAndFee =
-    ngState.fold(blockchain.filledVolumeAndFee(orderId))(
-      _.bestLiquidDiff.orderFills.get(orderId).orEmpty.combine(blockchain.filledVolumeAndFee(orderId)))
-
   /** Retrieves Waves balance snapshot in the [from, to] range (inclusive) */
   override def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot] = {
     val blockchainBlock = blockchain.heightOf(to)

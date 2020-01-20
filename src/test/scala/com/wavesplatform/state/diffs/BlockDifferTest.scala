@@ -16,7 +16,7 @@ import scorex.crypto.signatures.Curve25519._
 
 class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with WithState {
 
-  private val TransactionFee = 10
+  private val TransactionFee = 100000000L
 
   def randomPrivateKeyAccount(): PrivateKeyAccount = {
     val seed = Array.ofDim[Byte](KeyLength)
@@ -50,12 +50,12 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
       "height < enableMicroblocksAfterHeight - a miner should receive 100% of the current block's fee" in {
         assertDiff(testChain.init, 1000) {
           case (_, s) =>
-            s.portfolio(signerA).balance shouldBe 40
+            s.portfolio(signerA).balance shouldBe 400000000
         }
 
         assertDiff(testChain, 1000) {
           case (_, s) =>
-            s.portfolio(signerB).balance shouldBe 50
+            s.portfolio(signerB).balance shouldBe 500000000
         }
       }
 
@@ -77,7 +77,7 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
       "height = enableMicroblocksAfterHeight - a miner should receive 40% of the current block's fee only" in {
         assertDiff(testChain, 9) {
           case (_, s) =>
-            s.portfolio(signerB).balance shouldBe 44
+            s.portfolio(signerB).balance shouldBe 440000000
         }
       }
 
@@ -99,12 +99,12 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
       "height > enableMicroblocksAfterHeight - a miner should receive 60% of previous block's fee and 40% of the current one" in {
         assertDiff(testChain.init, 4) {
           case (_, s) =>
-            s.portfolio(signerA).balance shouldBe 34
+            s.portfolio(signerA).balance shouldBe 340000000
         }
 
         assertDiff(testChain, 4) {
           case (_, s) =>
-            s.portfolio(signerB).balance shouldBe 50
+            s.portfolio(signerB).balance shouldBe 500000000
         }
       }
     }

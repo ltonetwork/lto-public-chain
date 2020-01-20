@@ -158,10 +158,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     addressId(address).fold(Portfolio.empty)(loadPortfolio(db, _))
   }
 
-  override protected def loadVolumeAndFee(orderId: ByteStr): VolumeAndFee = readOnly { db =>
-    db.fromHistory(Keys.filledVolumeAndFeeHistory(orderId), Keys.filledVolumeAndFee(orderId)).getOrElse(VolumeAndFee.empty)
-  }
-
   override protected def loadApprovedFeatures(): Map[Short, Int] = readOnly(_.get(Keys.approvedFeatures))
 
   override protected def loadActivatedFeatures(): Map[Short, Int] = readOnly(_.get(Keys.activatedFeatures)) ++ fs.preActivatedFeatures
@@ -179,16 +175,12 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   block: Block,
                                   newAddresses: Map[Address, BigInt],
                                   wavesBalances: Map[BigInt, Long],
-                                  assetBalances: Map[BigInt, Map[ByteStr, Long]],
                                   leaseBalances: Map[BigInt, LeaseBalance],
                                   leaseStates: Map[ByteStr, Boolean],
                                   transactions: Map[ByteStr, (Transaction, Set[BigInt])],
                                   addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
-                                  reissuedAssets: Map[ByteStr, AssetInfo],
-                                  filledQuantity: Map[ByteStr, VolumeAndFee],
                                   scripts: Map[BigInt, Option[Script]],
                                   data: Map[BigInt, AccountDataInfo],
-                                  aliases: Map[Alias, BigInt],
                                   assocs: List[(Int, AssociationTransactionBase)]): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
@@ -230,43 +222,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       expiredKeys ++= updateHistory(rw, Keys.leaseBalanceHistory(addressId), threshold, Keys.leaseBalance(addressId))
     }
 
-    val newAddressesForAsset = mutable.AnyRefMap.empty[ByteStr, Set[BigInt]]
-    for ((addressId, assets) <- assetBalances) {
-      val prevAssets = rw.get(Keys.assetList(addressId))
-      val newAssets  = assets.keySet.diff(prevAssets)
-      for (assetId <- newAssets) {
-        newAddressesForAsset += assetId -> (newAddressesForAsset.getOrElse(assetId, Set.empty) + addressId)
-      }
-      rw.put(Keys.assetList(addressId), prevAssets ++ assets.keySet)
-      for ((assetId, balance) <- assets) {
-        rw.put(Keys.assetBalance(addressId, assetId)(height), balance)
-        expiredKeys ++= updateHistory(rw, Keys.assetBalanceHistory(addressId, assetId), threshold, Keys.assetBalance(addressId, assetId))
-      }
-    }
-
-    for ((assetId, newAddressIds) <- newAddressesForAsset) {
-      val seqNrKey  = Keys.addressesForAssetSeqNr(assetId)
-      val nextSeqNr = rw.get(seqNrKey) + 1
-      val key       = Keys.addressesForAsset(assetId, nextSeqNr)
-
-      rw.put(seqNrKey, nextSeqNr)
-      rw.put(key, newAddressIds.toSeq)
-    }
-
     rw.put(Keys.changedAddresses(height), changedAddresses.toSeq)
-
-    for ((orderId, volumeAndFee) <- filledQuantity) {
-      rw.put(Keys.filledVolumeAndFee(orderId)(height), volumeAndFee)
-      expiredKeys ++= updateHistory(rw, Keys.filledVolumeAndFeeHistory(orderId), threshold, Keys.filledVolumeAndFee(orderId))
-    }
-
-    for ((assetId, assetInfo) <- reissuedAssets) {
-      val combinedAssetInfo = rw.fromHistory(Keys.assetInfoHistory(assetId), Keys.assetInfo(assetId)).fold(assetInfo) { p =>
-        Monoid.combine(p, assetInfo)
-      }
-      rw.put(Keys.assetInfo(assetId)(height), combinedAssetInfo)
-      expiredKeys ++= updateHistory(rw, Keys.assetInfoHistory(assetId), threshold, Keys.assetInfo(assetId))
-    }
 
     for ((leaseId, state) <- leaseStates) {
       rw.put(Keys.leaseStatus(leaseId)(height), state)
@@ -321,10 +277,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
       f(sender, Keys.outgoingAssociationsSeqNr, Keys.outgoingAssociationTransactionId)
       f(party, Keys.incomingAssociationsSeqNr, Keys.incomingAssociationTransactionId)
-    }
-
-    for ((alias, addressId) <- aliases) {
-      rw.put(Keys.addressIdOfAlias(alias), Some(addressId))
     }
 
     for ((id, (tx, _)) <- transactions) {
@@ -459,7 +411,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
         }
 
         portfoliosToInvalidate.result().foreach(discardPortfolio)
-        ordersToInvalidate.result().foreach(discardVolumeAndFee)
         scriptsToDiscard.result().foreach(discardScript)
         discardedBlock
       }
@@ -468,18 +419,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
       discardedBlocks.reverse
     }
-  }
-
-  private def rollbackAssetInfo(rw: RW, assetId: ByteStr, currentHeight: Int): ByteStr = {
-    rw.delete(Keys.assetInfo(assetId)(currentHeight))
-    rw.filterHistory(Keys.assetInfoHistory(assetId), currentHeight)
-    assetId
-  }
-
-  private def rollbackOrderFill(rw: RW, orderId: ByteStr, currentHeight: Int): ByteStr = {
-    rw.delete(Keys.filledVolumeAndFee(orderId)(currentHeight))
-    rw.filterHistory(Keys.filledVolumeAndFeeHistory(orderId), currentHeight)
-    orderId
   }
 
   private def rollbackLeaseStatus(rw: RW, leaseId: ByteStr, currentHeight: Int): Unit = {

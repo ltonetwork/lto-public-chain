@@ -3,22 +3,13 @@ package com.wavesplatform.state.reader
 import cats.implicits._
 import com.wavesplatform.account.Address
 import com.wavesplatform.block.Block.BlockId
-import com.wavesplatform.account.Address
 import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.Transaction.Type
 import com.wavesplatform.transaction.lease.LeaseTransaction
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.{
-  AssetId,
-  AssociationTransaction,
-  AssociationTransactionBase,
-  IssueAssociationTransaction,
-  RevokeAssociationTransaction,
-  Transaction
-}
+import com.wavesplatform.transaction._
 
-// TODO dangerous =0, double-check
 class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: Long) extends Blockchain {
 
   private def diff = maybeDiff.getOrElse(Diff.empty)
@@ -91,9 +82,6 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
 
   override def forgetTransactions(pred: (AssetId, Long) => Boolean) = inner.forgetTransactions(pred)
   override def learnTransactions(values: Map[AssetId, Long]): Unit  = inner.learnTransactions(values)
-
-  override def filledVolumeAndFee(orderId: ByteStr): VolumeAndFee =
-    diff.orderFills.get(orderId).orEmpty.combine(inner.filledVolumeAndFee(orderId))
 
   override def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot] = {
     if (inner.heightOf(to).isDefined || maybeDiff.isEmpty) {

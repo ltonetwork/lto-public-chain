@@ -60,8 +60,6 @@ object Keys {
   def assetBalance(addressId: BigInt, assetId: ByteStr)(height: Int): Key[Long] =
     Key(hBytes(9, height, addressId.toByteArray ++ assetId.arr), Option(_).fold(0L)(Longs.fromByteArray), Longs.toByteArray)
 
-  def assetInfoHistory(assetId: ByteStr): Key[Seq[Int]]        = historyKey(10, assetId.arr)
-  def assetInfo(assetId: ByteStr)(height: Int): Key[AssetInfo] = Key(hBytes(11, height, assetId.arr), readAssetInfo, writeAssetInfo)
 
   def leaseBalanceHistory(addressId: BigInt): Key[Seq[Int]] = historyKey(12, addressId.toByteArray)
   def leaseBalance(addressId: BigInt)(height: Int): Key[LeaseBalance] =
