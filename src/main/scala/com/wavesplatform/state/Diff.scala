@@ -2,9 +2,9 @@ package com.wavesplatform.state
 
 import cats.implicits._
 import cats.kernel.Monoid
-import com.wavesplatform.account.{Address, Alias, PublicKeyAccount}
+import com.wavesplatform.account.Address
+import com.wavesplatform.transaction.Transaction
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.{AssetId, Transaction}
 
 case class LeaseBalance(in: Long, out: Long)
 
@@ -48,6 +48,7 @@ object Sponsorship {
 
 case class Diff(transactions: Map[ByteStr, (Int, Transaction, Set[Address])],
                 portfolios: Map[Address, Portfolio],
+                sponsoredBy: Map[Address,(Address,Boolean)], // single sponsor, true/false as enable-disable
                 leaseState: Map[ByteStr, Boolean],
                 scripts: Map[Address, Option[Script]],
                 accountData: Map[Address, AccountDataInfo]) {
@@ -70,18 +71,20 @@ object Diff {
   def apply(height: Int,
             tx: Transaction,
             portfolios: Map[Address, Portfolio] = Map.empty,
+            sponsoredBy: Map[Address,(Address,Boolean)] = Map.empty,
             leaseState: Map[ByteStr, Boolean] = Map.empty,
             scripts: Map[Address, Option[Script]] = Map.empty,
             accountData: Map[Address, AccountDataInfo] = Map.empty): Diff =
     Diff(
       transactions = Map((tx.id(), (height, tx, portfolios.keys.toSet))),
       portfolios = portfolios,
+      sponsoredBy = sponsoredBy,
       leaseState = leaseState,
       scripts = scripts,
       accountData = accountData
     )
 
-  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
+  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
 
   implicit val diffMonoid = new Monoid[Diff] {
     override def empty: Diff = Diff.empty
@@ -90,6 +93,7 @@ object Diff {
       Diff(
         transactions = older.transactions ++ newer.transactions,
         portfolios = older.portfolios.combine(newer.portfolios),
+        sponsoredBy = older.sponsoredBy ++ newer.sponsoredBy,  // single sponsor overriding
         leaseState = older.leaseState ++ newer.leaseState,
         scripts = older.scripts ++ newer.scripts,
         accountData = older.accountData.combine(newer.accountData)

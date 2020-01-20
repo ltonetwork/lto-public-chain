@@ -33,8 +33,8 @@ object TransactionDiffer {
         case sstx: SetScriptTransaction         => SetScriptTransactionDiff(currentBlockHeight)(sstx)
         case at: AnchorTransaction              => AnchorTransactionDiff(blockchain, currentBlockHeight)(at)
         case as: AssociationTransactionBase     => AssociationTransactionDiff(currentBlockHeight)(as)
-        case stx: SponsorshipTransaction        => SponsorshipTransactionDiff.sponsor(currentBlockHeight)(stx)
-        case sctx: SponsorshipCancelTransaction => SponsorshipTransactionDiff.cancel(currentBlockHeight)(sctx)
+        case stx: SponsorshipTransaction        => SponsorshipTransactionDiff.sponsor(blockchain, currentBlockHeight)(stx)
+        case sctx: SponsorshipCancelTransaction => SponsorshipTransactionDiff.cancel(blockchain, currentBlockHeight)(sctx)
         case _                                  => Left(UnsupportedTransactionType)
       }
       positiveDiff <- BalanceDiffValidation(blockchain, currentBlockHeight, settings)(diff)
