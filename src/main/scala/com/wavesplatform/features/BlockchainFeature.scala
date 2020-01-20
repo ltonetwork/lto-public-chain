@@ -9,7 +9,6 @@ object BlockchainFeatures {
   val MassTransfer                    = BlockchainFeature(3, "Mass Transfer Transaction")
   val SmartAccounts                   = BlockchainFeature(4, "Smart Accounts")
   val DataTransaction                 = BlockchainFeature(5, "Data Transaction")
-  val FeeSponsorship                  = BlockchainFeature(7, "Fee Sponsorship")
   val FairPoS                         = BlockchainFeature(8, "Fair PoS")
   val AssociationTransaction          = BlockchainFeature(10, "Association Transaction")
   val SponsorshipTransaction          = BlockchainFeature(11, "Sponsorship Transaction")

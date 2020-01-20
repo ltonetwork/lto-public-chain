@@ -3,7 +3,7 @@ package com.wavesplatform.state.diffs
 import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.ValidationError.GenericError
-import com.wavesplatform.transaction.{AnchorTransaction, AssociationTransaction, AssociationTransactionBase, DataTransaction, ValidationError}
+import com.wavesplatform.transaction.{AnchorTransaction, AssociationTransaction, AssociationTransactionBase, DataTransaction, SponsorshipCancelTransaction, SponsorshipTransaction, SponsorshipTransactionBase, ValidationError}
 
 object DataTransactionDiff {
 
@@ -48,3 +48,4 @@ object AssociationTransactionDiff {
         accountData = Map.empty,
       ))
 }
+
