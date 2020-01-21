@@ -4,11 +4,11 @@ import java.util
 
 import cats.syntax.monoid._
 import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
-import com.wavesplatform.account.{Address, Alias}
+import com.wavesplatform.account.Address
 import com.wavesplatform.block.Block
 import com.wavesplatform.state._
-import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.transaction._
+import com.wavesplatform.transaction.smart.script.Script
 
 import scala.collection.JavaConverters._
 
@@ -90,7 +90,8 @@ trait Caches extends Blockchain {
                          addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
                          scripts: Map[BigInt, Option[Script]],
                          data: Map[BigInt, AccountDataInfo],
-                         assocs: List[(Int, AssociationTransactionBase)]): Unit
+                         assocs: List[(Int, AssociationTransactionBase)],
+                         sponsorship: Map[BigInt, Option[Address]]): Unit
 
   override def append(diff: Diff, carryFee: Long, block: Block): Unit = {
     heightCache += 1
@@ -98,7 +99,7 @@ trait Caches extends Blockchain {
     lastBlockCache = Some(block)
 
     val newAddresses = Set.newBuilder[Address]
-    newAddresses ++= diff.portfolios.keys.filter(addressIdCache.get(_).isEmpty)
+    newAddresses ++= (diff.portfolios.keys ++ diff.sponsoredBy.keys).toSet.filter(addressIdCache.get(_).isEmpty)
     for ((_, _, addresses) <- diff.transactions.values; address <- addresses if addressIdCache.get(address).isEmpty) {
       newAddresses += address
     }
@@ -112,7 +113,6 @@ trait Caches extends Blockchain {
     lastAddressId += newAddressIds.size
 
     val wavesBalances = Map.newBuilder[BigInt, Long]
-    val assetBalances = Map.newBuilder[BigInt, Map[ByteStr, Long]]
     val leaseBalances = Map.newBuilder[BigInt, LeaseBalance]
     val newPortfolios = Map.newBuilder[Address, Portfolio]
 
@@ -151,14 +151,15 @@ trait Caches extends Blockchain {
       leaseBalances.result(),
       diff.leaseState,
       newTransactions.result(),
-      diff.accountTransactionIds.map({ case (addr, txs) => addressId(addr) -> txs }),
-      diff.scripts.map { case (address, s)        => addressId(address) -> s },
-      diff.accountData.map { case (address, data) => addressId(address) -> data },
-      newAssociations
+      diff.accountTransactionIds.map({ case (addr, txs) => addressId(addr)    -> txs }),
+      diff.scripts.map { case (address, s)              => addressId(address) -> s },
+      diff.accountData.map { case (address, data)       => addressId(address) -> data },
+      newAssociations,
+      diff.sponsoredBy.map { case (sponsoree, (sponsor, isEnabled)) => (addressId(sponsoree) -> (if (isEnabled) Some(sponsor) else None)) }
     )
 
-    for ((address, id)           <- newAddressIds) addressIdCache.put(address, Some(id))
-    for ((address, portfolio)    <- newPortfolios.result()) portfolioCache.put(address, portfolio)
+    for ((address, id)        <- newAddressIds) addressIdCache.put(address, Some(id))
+    for ((address, portfolio) <- newPortfolios.result()) portfolioCache.put(address, portfolio)
     scriptCache.putAll(diff.scripts.asJava)
   }
 

@@ -3,7 +3,7 @@ package com.wavesplatform.state.diffs
 import com.wavesplatform.account.{Address, PrivateKeyAccount}
 import com.wavesplatform.lagonaki.mocks.TestBlock
 import com.wavesplatform.lagonaki.mocks.TestBlock.{create => block}
-import com.wavesplatform.state.{Blockchain, EitherExt2}
+import com.wavesplatform.state.EitherExt2
 import com.wavesplatform.transaction.transfer.TransferTransactionV2
 import com.wavesplatform.transaction.{GenesisTransaction, SponsorshipTransaction}
 import com.wavesplatform.{NoShrink, TransactionGen, WithDB}
@@ -21,11 +21,11 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
 
   property("sunny day") {
     val setup = for {
-      sponsor       <- accountGen
-      sender        <- accountGen
-      other         <- accountGen
-      ts            <- positiveLongGen
-      sposorTxFee   <- smallFeeGen
+      sponsor <- accountGen
+      sender  <- accountGen
+      other   <- accountGen
+      ts      <- positiveLongGen
+      sposorTxFee = 5 * 100000000L
       transferTxFee <- enoughFeeGen
       transferAmt   <- positiveLongGen
       g1 = GenesisTransaction.create(sponsor, ENOUGH_AMT, ts).explicitGet()
@@ -40,8 +40,8 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
       case (genesis, sponsorship, transfer) =>
         assertDiffAndState(Seq(block(genesis), block(Seq(sponsorship))), block(Seq(transfer))) {
           case (d, b) =>
-            d.portfolios(sponsorship.sender).balance shouldBe (-transfer.fee)
-            d.portfolios(transfer.sender).balance shouldBe (-transfer.amount)
+            d.portfolios(sponsorship.sender.toAddress).balance shouldBe (-transfer.fee)
+            d.portfolios(transfer.sender.toAddress).balance shouldBe (-transfer.amount)
             d.portfolios(transfer.recipient.asInstanceOf[Address]).balance shouldBe (transfer.amount)
             println(sponsorship.fee)
             println(transfer.fee)

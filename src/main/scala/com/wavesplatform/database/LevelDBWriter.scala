@@ -122,7 +122,11 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       db.hasInHistory(Keys.addressScriptHistory(addressId), Keys.addressScript(addressId))
     }
   }
-  override def sponsoredBy(address: Address): Option[Address] = throw new NotImplementedError("LevelDB ???")
+  override def sponsoredBy(address: Address): Option[Address] = readOnly { db =>
+    addressId(address).fold(Option.empty[Address]) { addressId =>
+      db.fromHistory(Keys.sponsorshipHistory(addressId), Keys.sponsorshipStatus(addressId)).flatten
+    }
+  }
 
   override def carryFee: Long = readOnly(_.get(Keys.carryFee(height)))
 
@@ -182,7 +186,8 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
                                   scripts: Map[BigInt, Option[Script]],
                                   data: Map[BigInt, AccountDataInfo],
-                                  assocs: List[(Int, AssociationTransactionBase)]): Unit = readWrite { rw =>
+                                  assocs: List[(Int, AssociationTransactionBase)],
+                                  sponsorship: Map[BigInt, Option[Address]]): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
     rw.put(Keys.height, height)
@@ -235,6 +240,11 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       script.foreach(s => rw.put(Keys.addressScript(addressId)(height), Some(s)))
     }
 
+    for ((addressId, maybeSponsor) <- sponsorship) {
+      expiredKeys ++= updateHistory(rw, Keys.sponsorshipHistory(addressId), threshold, Keys.sponsorshipStatus(addressId))
+      maybeSponsor.foreach(s => rw.put(Keys.sponsorshipStatus(addressId)(height), Some(s)))
+    }
+
     for ((addressId, addressData) <- data) {
       val newKeys = (
         for {
@@ -284,6 +294,10 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(Keys.transactionInfo(id), Some((height, tx)))
     }
 
+
+
+
+
     val activationWindowSize = fs.activationWindowSize(height)
     if (height % activationWindowSize == 0) {
       val minVotes = fs.blocksForFeatureActivation(height)
@@ -314,8 +328,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
       val discardedBlocks: Seq[Block] = for (currentHeight <- height until targetHeight by -1) yield {
         val portfoliosToInvalidate = Seq.newBuilder[Address]
-        val assetInfoToInvalidate  = Seq.newBuilder[ByteStr]
-        val ordersToInvalidate     = Seq.newBuilder[ByteStr]
         val scriptsToDiscard       = Seq.newBuilder[Address]
 
         // association transcations are discarded naturally.
@@ -330,11 +342,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
           for (addressId <- rw.get(Keys.changedAddresses(currentHeight))) {
             val address = rw.get(Keys.idToAddress(addressId))
-
-            for (assetId <- rw.get(Keys.assetList(addressId))) {
-              rw.delete(Keys.assetBalance(addressId, assetId)(currentHeight))
-              rw.filterHistory(Keys.assetBalanceHistory(addressId, assetId), currentHeight)
-            }
 
             rw.delete(Keys.wavesBalance(addressId)(currentHeight))
             rw.filterHistory(Keys.wavesBalanceHistory(addressId), currentHeight)
@@ -365,13 +372,15 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
             for ((_, tx) <- rw.get(ktxId)) {
               tx match {
                 case _: GenesisTransaction                                                       => // genesis transaction can not be rolled back
-                case _: PaymentTransaction | _: TransferTransaction | _: MassTransferTransaction =>
-                // balances already restored
+                case _: PaymentTransaction | _: TransferTransaction | _: MassTransferTransaction => // balances already restored
 
                 case tx: LeaseTransaction =>
                   rollbackLeaseStatus(rw, tx.id(), currentHeight)
                 case tx: LeaseCancelTransaction =>
                   rollbackLeaseStatus(rw, tx.leaseId, currentHeight)
+
+                case tx: SponsorshipTransactionBase =>
+                  rollbackSponsorshipStatus(rw,tx.recipient, currentHeight)
 
                 case tx: SetScriptTransaction =>
                   val address = tx.sender.toAddress
@@ -427,6 +436,12 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     rw.filterHistory(Keys.leaseStatusHistory(leaseId), currentHeight)
   }
 
+  private def rollbackSponsorshipStatus(rw: RW, of: Address, currentHeight: Int): Unit = {
+    addressId(of).foreach { sponsoree =>
+      rw.delete(Keys.sponsorshipStatus(sponsoree)(currentHeight))
+      rw.filterHistory(Keys.sponsorshipHistory(sponsoree), currentHeight)
+    }
+  }
   override def transactionInfo(id: ByteStr): Option[(Int, Transaction)] = readOnly(db => db.get(Keys.transactionInfo(id)))
 
   override def transactionHeight(id: ByteStr): Option[Int] = readOnly(db => db.get(Keys.transactionHeight(id)))

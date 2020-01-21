@@ -199,6 +199,5 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
 }
 
 object CompositeBlockchain {
-  def composite(inner: Blockchain, diff: => Option[Diff]): Blockchain      = new CompositeBlockchain(inner, diff, 0L)
   def composite(inner: Blockchain, diff: Diff, carryFee: Long): Blockchain = new CompositeBlockchain(inner, Some(diff), carryFee)
 }
