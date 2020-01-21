@@ -1,6 +1,7 @@
 package com.wavesplatform.state.diffs
 
 import cats.kernel.Monoid
+import com.wavesplatform.account.Address
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.ValidationError.UnsupportedTransactionType
@@ -41,10 +42,10 @@ object TransactionDiffer {
             case sctx: SponsorshipCancelTransaction => SponsorshipTransactionDiff.cancel(blockchain, currentBlockHeight)(sctx)
             case _                                  => Left(UnsupportedTransactionType)
           }).map { d: Diff =>
-            val sponsor = blockchain.sponsorOf(t.sender)
-            val feePayer = sponsor
-                .filter(a => blockchain.portfolio(a).spendableBalance >= t.fee)
-                .getOrElse(t.sender)
+            val feePayer: Address = blockchain
+              .sponsorOf(t.sender)
+              .filter(a => blockchain.portfolio(a).spendableBalance >= t.fee)
+              .getOrElse(t.sender.toAddress)
             Monoid.combine(d, Diff.empty.copy(portfolios = Map((feePayer -> Portfolio(-t.fee, LeaseBalance.empty)))))
 
           }
