@@ -12,7 +12,6 @@ object SponsorshipTransactionDiff {
         Right(
           Diff(height,
                tx,
-               portfolios = Map(tx.sender.toAddress      -> Portfolio(-tx.fee, LeaseBalance.empty)),
                sponsoredBy = Map((tx.recipient -> (tx.sender, true)))))
     }
   def cancel(blockchain: Blockchain, height: Int)(tx: SponsorshipCancelTransaction): Either[ValidationError, Diff] =
@@ -24,7 +23,6 @@ object SponsorshipTransactionDiff {
           Right(
             Diff(height,
                  tx,
-                 portfolios = Map(tx.sender.toAddress      -> Portfolio(-tx.fee, LeaseBalance.empty)),
                  sponsoredBy = Map((tx.recipient -> (tx.sender, false)))))
     }
 }

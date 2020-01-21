@@ -24,7 +24,7 @@ object LeaseTransactionsDiff {
         Left(GenericError(s"Cannot lease more than own: Balance:${ap.balance}, already leased: ${ap.lease.out}"))
       } else {
         val portfolioDiff: Map[Address, Portfolio] = Map(
-          sender    -> Portfolio(-tx.fee, LeaseBalance(0, tx.amount)),
+          sender    -> Portfolio(0, LeaseBalance(0, tx.amount)),
           recipient -> Portfolio(0, LeaseBalance(tx.amount, 0))
         )
         Right(Diff(height = height, tx = tx, portfolios = portfolioDiff, leaseState = Map(tx.id() -> true)))

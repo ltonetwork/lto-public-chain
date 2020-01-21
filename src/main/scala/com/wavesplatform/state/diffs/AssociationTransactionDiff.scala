@@ -10,7 +10,6 @@ object AssociationTransactionDiff {
       Diff(
         height,
         tx,
-        portfolios = Map(tx.sender.toAddress -> Portfolio(-tx.fee, LeaseBalance.empty)),
         accountData = Map.empty,
       ))
 }

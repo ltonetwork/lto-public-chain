@@ -77,6 +77,8 @@ package object state {
       blockchain
         .heightOf(id)
         .getOrElse(throw new IllegalStateException(s"Can't find a block: $id"))
+
+    def feePayer(sender: Address) = blockchain.sponsorOf(sender).getOrElse(sender)
   }
 
 }

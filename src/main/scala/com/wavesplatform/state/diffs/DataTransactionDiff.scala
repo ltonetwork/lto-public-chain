@@ -5,16 +5,11 @@ import com.wavesplatform.transaction.{DataTransaction, ValidationError}
 
 object DataTransactionDiff {
 
-  def apply(blockchain: Blockchain, height: Int)(tx: DataTransaction): Either[ValidationError, Diff] = {
-    val sender = tx.sender.toAddress
+  def apply(blockchain: Blockchain, height: Int)(tx: DataTransaction): Either[ValidationError, Diff] =
     Right(
       Diff(
         height,
         tx,
-        portfolios = Map(sender  -> Portfolio(-tx.fee, LeaseBalance.empty)),
-        accountData = Map(sender -> AccountDataInfo(tx.data.map(item => item.key -> item).toMap))
+        accountData = Map(tx.sender.toAddress -> AccountDataInfo(tx.data.map(item => item.key -> item).toMap))
       ))
-  }
 }
-
-

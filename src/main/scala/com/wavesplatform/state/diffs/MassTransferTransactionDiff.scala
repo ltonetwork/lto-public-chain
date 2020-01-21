@@ -20,8 +20,7 @@ object MassTransferTransactionDiff {
     val portfoliosEi: Seq[(Map[Address, Portfolio], Long)] = tx.transfers.map(parseTransfer)
 
     val sender   = Address.fromPublicKey(tx.sender.publicKey)
-    val foldInit = (Map(sender -> Portfolio(-tx.fee, LeaseBalance.empty)), 0L)
-    val (recipientPortfolios, totalAmount) = portfoliosEi.fold(foldInit) { (u, v) =>
+    val (recipientPortfolios, totalAmount) = portfoliosEi.fold((Map.empty[Address, Portfolio], 0L)) { (u, v) =>
       (u._1 combine v._1, u._2 + v._2)
     }
     val completePortfolio = recipientPortfolios.combine(Map(sender -> Portfolio(-totalAmount, LeaseBalance.empty)))
