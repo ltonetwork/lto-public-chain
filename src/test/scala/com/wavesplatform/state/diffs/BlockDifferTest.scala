@@ -120,7 +120,6 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
       allowTransactionsFromFutureUntil = Long.MaxValue,
       allowUnissuedAssetsUntil = 0L,
       allowInvalidReissueInSameBlockUntilTimestamp = 0L,
-      allowMultipleLeaseCancelTransactionUntilTimestamp = 0L,
       resetEffectiveBalancesAtHeight = 0,
       blockVersion3AfterHeight = 0,
       preActivatedFeatures = Map[Short, Int]((2, ngAtHeight)),

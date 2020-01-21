@@ -15,9 +15,8 @@ import com.wavesplatform.transaction.transfer._
 
 class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
 
-  private val allowMultipleLeaseCancelTransactionUntilTimestamp = Long.MaxValue / 2
   private val settings =
-    TestFunctionalitySettings.Enabled.copy(allowMultipleLeaseCancelTransactionUntilTimestamp = allowMultipleLeaseCancelTransactionUntilTimestamp)
+    TestFunctionalitySettings.Enabled
 
   def total(l: LeaseBalance): Long = l.in - l.out
 
@@ -64,7 +63,7 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
   } yield (genesis, payment, lease, unlease, unlease2)
 
   property("cannot cancel lease twice after allowMultipleLeaseCancelTransactionUntilTimestamp") {
-    forAll(cancelLeaseTwice, timestampGen retryUntil (_ > allowMultipleLeaseCancelTransactionUntilTimestamp)) {
+    forAll(cancelLeaseTwice, timestampGen) {
       case ((genesis, payment, lease, leaseCancel, leaseCancel2), blockTime) =>
         assertDiffEi(Seq(TestBlock.create(Seq(genesis, payment, lease, leaseCancel))), TestBlock.create(blockTime, Seq(leaseCancel2)), settings) {
           totalDiffEi =>
@@ -73,15 +72,6 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
     }
   }
 
-  property("can cancel lease twice before allowMultipleLeaseCancelTransactionUntilTimestamp") {
-    forAll(cancelLeaseTwice, timestampGen retryUntil (_ < allowMultipleLeaseCancelTransactionUntilTimestamp)) {
-      case ((genesis, payment, lease, leaseCancel, leaseCancel2), blockTime) =>
-        assertDiffEi(Seq(TestBlock.create(Seq(genesis, payment, lease, leaseCancel))), TestBlock.create(blockTime, Seq(leaseCancel2)), settings) {
-          totalDiffEi =>
-            totalDiffEi shouldBe 'right
-        }
-    }
-  }
 
   property("cannot lease more than actual balance(cannot lease forward)") {
     val setup: Gen[(GenesisTransaction, LeaseTransaction, LeaseTransaction)] = for {
@@ -119,34 +109,11 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
 
   property("cannot cancel lease of another sender after allowMultipleLeaseCancelTransactionUntilTimestamp") {
     forAll(Gen.oneOf(true, false).flatMap(cancelLeaseOfAnotherSender),
-           timestampGen retryUntil (_ > allowMultipleLeaseCancelTransactionUntilTimestamp)) {
+           timestampGen) {
       case ((genesis, genesis2, lease, unleaseOtherOrRecipient), blockTime) =>
         assertDiffEi(Seq(TestBlock.create(Seq(genesis, genesis2, lease))), TestBlock.create(blockTime, Seq(unleaseOtherOrRecipient)), settings) {
           totalDiffEi =>
             totalDiffEi should produce("LeaseTransaction was leased by other sender")
-        }
-    }
-  }
-
-  property("can cancel lease of another sender and acquire leasing power before allowMultipleLeaseCancelTransactionUntilTimestamp") {
-    forAll(cancelLeaseOfAnotherSender(unleaseByRecipient = false), timestampGen retryUntil (_ < allowMultipleLeaseCancelTransactionUntilTimestamp)) {
-      case ((genesis, genesis2, lease, unleaseOther), blockTime) =>
-        assertDiffAndState(Seq(TestBlock.create(Seq(genesis, genesis2, lease))), TestBlock.create(blockTime, Seq(unleaseOther)), settings) {
-          case (totalDiff, newState) =>
-            totalDiff.portfolios.get(lease.sender) shouldBe None
-            total(totalDiff.portfolios(lease.recipient.asInstanceOf[Address]).lease) shouldBe -lease.amount
-            total(totalDiff.portfolios(unleaseOther.sender).lease) shouldBe lease.amount
-        }
-    }
-  }
-
-  property("if recipient cancels lease, it doesn't change leasing component of mining power before allowMultipleLeaseCancelTransactionUntilTimestamp") {
-    forAll(cancelLeaseOfAnotherSender(unleaseByRecipient = true), timestampGen retryUntil (_ < allowMultipleLeaseCancelTransactionUntilTimestamp)) {
-      case ((genesis, genesis2, lease, unleaseRecipient), blockTime) =>
-        assertDiffAndState(Seq(TestBlock.create(Seq(genesis, genesis2, lease))), TestBlock.create(blockTime, Seq(unleaseRecipient)), settings) {
-          case (totalDiff, newState) =>
-            totalDiff.portfolios.get(lease.sender) shouldBe None
-            total(totalDiff.portfolios(unleaseRecipient.sender).lease) shouldBe 0
         }
     }
   }

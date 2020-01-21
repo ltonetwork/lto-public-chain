@@ -13,7 +13,6 @@ object TestFunctionalitySettings {
     allowTransactionsFromFutureUntil = Long.MaxValue,
     allowUnissuedAssetsUntil = 0L,
     allowInvalidReissueInSameBlockUntilTimestamp = 0L,
-    allowMultipleLeaseCancelTransactionUntilTimestamp = 0L,
     resetEffectiveBalancesAtHeight = 0,
     blockVersion3AfterHeight = 0,
     preActivatedFeatures = Map(
