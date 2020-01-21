@@ -69,7 +69,7 @@ trait Blockchain {
 
   def associations(address: Address): Blockchain.Associations
 
-  def sponsoredBy(address: Address) : Option[Address]
+  def sponsorOf(address: Address) : Option[Address]
 
   /** Builds a new portfolio map by applying a partial function to all portfolios on which the function is defined.
     *

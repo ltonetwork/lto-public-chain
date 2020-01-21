@@ -14,14 +14,14 @@ object TransferTransactionDiff {
   def apply(blockchain: Blockchain, s: FunctionalitySettings, blockTime: Long, height: Int)(
       tx: TransferTransaction): Either[ValidationError, Diff] = {
     val sender = Address.fromPublicKey(tx.sender.publicKey)
-
+    val sponsor = blockchain.sponsorOf(sender).getOrElse(sender)
     val recipient = tx.recipient.asInstanceOf[Address]
     val portfolios = Map(sender -> Portfolio(-tx.amount, LeaseBalance.empty))
       .combine(
         Map(recipient -> Portfolio(tx.amount, LeaseBalance.empty))
       )
       .combine(
-        Map(sender -> Portfolio(-tx.fee, LeaseBalance.empty))
+        Map(sponsor -> Portfolio(-tx.fee, LeaseBalance.empty))
       )
     Right(Diff(height, tx, portfolios))
   }

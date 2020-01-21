@@ -43,9 +43,7 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
             d.portfolios(sponsorship.sender.toAddress).balance shouldBe (-transfer.fee)
             d.portfolios(transfer.sender.toAddress).balance shouldBe (-transfer.amount)
             d.portfolios(transfer.recipient.asInstanceOf[Address]).balance shouldBe (transfer.amount)
-            println(sponsorship.fee)
-            println(transfer.fee)
-            d.portfolios(TestBlock.defaultSigner) shouldBe ???
+            d.portfolios(TestBlock.defaultSigner).balance shouldBe (transfer.fee)
         }
     }
   }
