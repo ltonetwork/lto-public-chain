@@ -24,8 +24,8 @@ package object history {
   val config   = ConfigFactory.load()
   val settings = WavesSettings.fromConfig(config)
 
-  val MicroblocksActivatedAt0BlockchainSettings: BlockchainSettings = DefaultBlockchainSettings.copy(
-    functionalitySettings = DefaultBlockchainSettings.functionalitySettings.copy(preActivatedFeatures = Map()))
+  val MicroblocksActivatedAt0BlockchainSettings: BlockchainSettings =
+    DefaultBlockchainSettings.copy(functionalitySettings = DefaultBlockchainSettings.functionalitySettings.copy(preActivatedFeatures = Map()))
 
   val MicroblocksActivatedAt0WavesSettings: WavesSettings = settings.copy(blockchainSettings = MicroblocksActivatedAt0BlockchainSettings)
 
@@ -100,11 +100,10 @@ package object history {
   }
 
   def chainBaseAndMicro(totalRefTo: ByteStr, base: Transaction, micros: Seq[Seq[Transaction]], timestamp: Long): (Block, Seq[MicroBlock]) =
-    chainBaseAndMicro(totalRefTo, Seq(base), micros, defaultSigner, 3,timestamp = timestamp)
-
+    chainBaseAndMicro(totalRefTo, Seq(base), micros, defaultSigner, 3, timestamp = timestamp)
 
   def chainBaseAndMicro(totalRefTo: ByteStr, base: Transaction, micros: Seq[Seq[Transaction]]): (Block, Seq[MicroBlock]) =
-    chainBaseAndMicro(totalRefTo, Seq(base), micros, defaultSigner, 3,timestamp = base.timestamp)
+    chainBaseAndMicro(totalRefTo, Seq(base), micros, defaultSigner, 3, timestamp = base.timestamp)
   def chainBaseAndMicro(totalRefTo: ByteStr,
                         base: Seq[Transaction],
                         micros: Seq[Seq[Transaction]],

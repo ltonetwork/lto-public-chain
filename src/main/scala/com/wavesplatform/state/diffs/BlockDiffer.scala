@@ -28,7 +28,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
     val stateHeight = blockchain.height
 
     // height switch is next after activation
-    val ngHeight          = 0
+    val ngHeight                                  = 0
     lazy val prevBlockFeeDistr: Option[Portfolio] = maybePrevBlock.map(_.prevBlockFeePart())
 
     lazy val currentBlockFeeDistr: Option[Portfolio] = None

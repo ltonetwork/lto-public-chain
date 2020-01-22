@@ -24,37 +24,36 @@ object CommonValidation {
   def disallowSendingGreaterThanBalance[T <: Transaction](blockchain: Blockchain,
                                                           settings: FunctionalitySettings,
                                                           blockTime: Long,
-                                                          tx: T): Either[ValidationError, T] =
-  {
-      def checkTransfer(sender: Address, amount: Long, feeAmount: Long) = {
-        val amountDiff = Portfolio(-amount, LeaseBalance.empty)
+                                                          tx: T): Either[ValidationError, T] = {
+    def checkTransfer(sender: Address, amount: Long, feeAmount: Long) = {
+      val amountDiff = Portfolio(-amount, LeaseBalance.empty)
 
-        val feeDiff = Portfolio(-feeAmount, LeaseBalance.empty)
+      val feeDiff = Portfolio(-feeAmount, LeaseBalance.empty)
 
-        val spendings       = Monoid.combine(amountDiff, feeDiff)
-        val oldWavesBalance = blockchain.portfolio(sender).balance
+      val spendings       = Monoid.combine(amountDiff, feeDiff)
+      val oldWavesBalance = blockchain.portfolio(sender).balance
 
-        val newWavesBalance = oldWavesBalance + spendings.balance
-        if (newWavesBalance < 0) {
-          Left(
-            GenericError(
-              "Attempt to transfer unavailable funds: Transaction application leads to " +
-                s"negative lto balance to (at least) temporary negative state, current balance equals $oldWavesBalance, " +
-                s"spends equals ${spendings.balance}, result is $newWavesBalance"))
-        } else Right(tx)
-      }
-
-      tx match {
-        case ptx: PaymentTransaction if blockchain.portfolio(ptx.sender).balance < (ptx.amount + ptx.fee) =>
-          Left(
-            GenericError(
-              "Attempt to pay unavailable funds: balance " +
-                s"${blockchain.portfolio(ptx.sender).balance} is less than ${ptx.amount + ptx.fee}"))
-        case ttx: TransferTransaction     => checkTransfer(ttx.sender, ttx.amount, ttx.fee)
-        case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.transfers.map(_.amount).sum, mtx.fee)
-        case _                            => Right(tx)
-      }
+      val newWavesBalance = oldWavesBalance + spendings.balance
+      if (newWavesBalance < 0) {
+        Left(
+          GenericError(
+            "Attempt to transfer unavailable funds: Transaction application leads to " +
+              s"negative lto balance to (at least) temporary negative state, current balance equals $oldWavesBalance, " +
+              s"spends equals ${spendings.balance}, result is $newWavesBalance"))
+      } else Right(tx)
     }
+
+    tx match {
+      case ptx: PaymentTransaction if blockchain.portfolio(ptx.sender).balance < (ptx.amount + ptx.fee) =>
+        Left(
+          GenericError(
+            "Attempt to pay unavailable funds: balance " +
+              s"${blockchain.portfolio(ptx.sender).balance} is less than ${ptx.amount + ptx.fee}"))
+      case ttx: TransferTransaction     => checkTransfer(ttx.sender, ttx.amount, ttx.fee)
+      case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.transfers.map(_.amount).sum, mtx.fee)
+      case _                            => Right(tx)
+    }
+  }
   def disallowDuplicateIds[T <: Transaction](blockchain: Blockchain,
                                              settings: FunctionalitySettings,
                                              height: Int,

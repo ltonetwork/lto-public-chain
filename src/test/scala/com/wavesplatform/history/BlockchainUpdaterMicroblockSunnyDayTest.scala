@@ -135,7 +135,8 @@ class BlockchainUpdaterMicroblockSunnyDayTest
         val (block1, microBlocks1) = chainBaseAndMicro(block0.uniqueId, masterToAlice, Seq(Seq(aliceToBob)))
         val otherSigner            = PrivateKeyAccount(Array.fill(KeyLength)(1))
         domain.blockchainUpdater.processBlock(block0).explicitGet()
-        val block2                 = customBuildBlockOfTxs(block0.uniqueId, Seq(masterToAlice, aliceToBob2), otherSigner, 1, masterToAlice.timestamp, DefaultBaseTarget / 2)
+        val block2 =
+          customBuildBlockOfTxs(block0.uniqueId, Seq(masterToAlice, aliceToBob2), otherSigner, 1, masterToAlice.timestamp, DefaultBaseTarget / 2)
         domain.blockchainUpdater.processBlock(block1).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks1(0)).explicitGet()
         domain.blockchainUpdater.processBlock(block2) shouldBe 'right

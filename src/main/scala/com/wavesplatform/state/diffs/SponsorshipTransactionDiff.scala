@@ -9,10 +9,7 @@ object SponsorshipTransactionDiff {
     blockchain.sponsorOf(tx.recipient) match {
       case Some(sponsor) => Left(GenericError(s"${tx.recipient} is already sponsored by $sponsor"))
       case None =>
-        Right(
-          Diff(height,
-               tx,
-               sponsoredBy = Map((tx.recipient -> (tx.sender, true)))))
+        Right(Diff(height, tx, sponsoredBy = Map((tx.recipient -> (tx.sender, true)))))
     }
   def cancel(blockchain: Blockchain, height: Int)(tx: SponsorshipCancelTransaction): Either[ValidationError, Diff] =
     blockchain.sponsorOf(tx.recipient) match {
@@ -20,9 +17,6 @@ object SponsorshipTransactionDiff {
       case Some(sponsor) =>
         if (tx.sender.toAddress != sponsor) Left(GenericError(s"${tx.recipient} is sponsored by $sponsor"))
         else
-          Right(
-            Diff(height,
-                 tx,
-                 sponsoredBy = Map((tx.recipient -> (tx.sender, false)))))
+          Right(Diff(height, tx, sponsoredBy = Map((tx.recipient -> (tx.sender, false)))))
     }
 }

@@ -14,9 +14,12 @@ object TransferTransactionDiff {
       tx: TransferTransaction): Either[ValidationError, Diff] = {
     val sender    = tx.sender.toAddress
     val recipient = tx.recipient.asInstanceOf[Address]
-    Right(Diff(height, tx, Map(sender -> Portfolio(-tx.amount, LeaseBalance.empty))
-      .combine(
-        Map(recipient -> Portfolio(tx.amount, LeaseBalance.empty))
-      )))
+    Right(
+      Diff(height,
+           tx,
+           Map(sender -> Portfolio(-tx.amount, LeaseBalance.empty))
+             .combine(
+               Map(recipient -> Portfolio(tx.amount, LeaseBalance.empty))
+             )))
   }
 }

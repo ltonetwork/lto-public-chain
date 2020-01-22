@@ -15,12 +15,11 @@ object MiningConstraints {
   private val MaxTxsSizeInBytes         = 1 * 1024 * 1024 // 1 megabyte
 
   def apply(minerSettings: MinerSettings, blockchain: Blockchain, height: Int): MiningConstraints = {
-    val activatedFeatures     = blockchain.activatedFeaturesAt(height)
-    val isNgEnabled           = true
-    val isScriptEnabled       = activatedFeatures.contains(BlockchainFeatures.SmartAccounts.id)
+    val activatedFeatures = blockchain.activatedFeaturesAt(height)
+    val isNgEnabled       = true
+    val isScriptEnabled   = activatedFeatures.contains(BlockchainFeatures.SmartAccounts.id)
 
     val total: MiningConstraint = OneDimensionalMiningConstraint(MaxTxsSizeInBytes, TxEstimators.sizeInBytes)
-
 
     new MiningConstraints(
       total =

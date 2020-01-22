@@ -72,7 +72,6 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
     }
   }
 
-
   property("cannot lease more than actual balance(cannot lease forward)") {
     val setup: Gen[(GenesisTransaction, LeaseTransaction, LeaseTransaction)] = for {
       master    <- accountGen
@@ -108,8 +107,7 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
     } yield (genesis, genesis2, lease, unleaseOtherOrRecipient)
 
   property("cannot cancel lease of another sender after allowMultipleLeaseCancelTransactionUntilTimestamp") {
-    forAll(Gen.oneOf(true, false).flatMap(cancelLeaseOfAnotherSender),
-           timestampGen) {
+    forAll(Gen.oneOf(true, false).flatMap(cancelLeaseOfAnotherSender), timestampGen) {
       case ((genesis, genesis2, lease, unleaseOtherOrRecipient), blockTime) =>
         assertDiffEi(Seq(TestBlock.create(Seq(genesis, genesis2, lease))), TestBlock.create(blockTime, Seq(unleaseOtherOrRecipient)), settings) {
           totalDiffEi =>
