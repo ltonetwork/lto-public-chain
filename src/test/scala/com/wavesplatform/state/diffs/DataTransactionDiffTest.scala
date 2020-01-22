@@ -13,7 +13,7 @@ import com.wavesplatform.transaction.{DataTransaction, GenesisTransaction}
 
 class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
 
-  val fs = TestFunctionalitySettings.Enabled.copy(preActivatedFeatures = Map(BlockchainFeatures.DataTransaction.id -> 0))
+  val fs = TestFunctionalitySettings.Enabled
 
   val baseSetup: Gen[(GenesisTransaction, PrivateKeyAccount, Long)] = for {
     master <- accountGen
@@ -111,20 +111,4 @@ class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers
     }
   }
 
-  property("validation fails prior to feature activation") {
-    val setup = for {
-      (genesis, master, ts) <- baseSetup
-      fee                   <- smallFeeGen
-      version               <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
-      dataTx = data(version, master, List(), fee, ts + 10000)
-    } yield (genesis, dataTx)
-    val settings = TestFunctionalitySettings.Enabled.copy(preActivatedFeatures = Map(BlockchainFeatures.DataTransaction.id -> 10))
-
-    forAll(setup) {
-      case (genesis, data) =>
-        assertDiffEi(Seq(block(Seq(genesis))), block(Seq(data)), settings) { blockDiffEi =>
-          blockDiffEi should produce("DataTransaction transaction has not been activated")
-        }
-    }
-  }
 }

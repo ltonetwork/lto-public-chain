@@ -28,17 +28,10 @@ object BlockDiffer extends ScorexLogging with Instrumented {
     val stateHeight = blockchain.height
 
     // height switch is next after activation
-    val ngHeight          = blockchain.featureActivationHeight(BlockchainFeatures.NG.id).getOrElse(Int.MaxValue)
-    lazy val prevBlockFeeDistr: Option[Portfolio] =
-      if (stateHeight > ngHeight)
-        maybePrevBlock.map(_.prevBlockFeePart())
-      else None
+    val ngHeight          = 0
+    lazy val prevBlockFeeDistr: Option[Portfolio] = maybePrevBlock.map(_.prevBlockFeePart())
 
-    lazy val currentBlockFeeDistr: Option[Portfolio] =
-      if (stateHeight < ngHeight)
-        Some(block.feesPortfolio())
-      else
-        None
+    lazy val currentBlockFeeDistr: Option[Portfolio] = None
 
     for {
       _ <- block.signaturesValid()
@@ -69,7 +62,6 @@ object BlockDiffer extends ScorexLogging with Instrumented {
   ): Either[ValidationError, (Diff, Long, Constraint)] = {
     for {
       // microblocks are processed within block which is next after 40-only-block which goes on top of activated height
-      _ <- Either.cond(blockchain.activatedFeatures.contains(BlockchainFeatures.NG.id), (), ActivationError(s"MicroBlocks are not yet activated"))
       _ <- micro.signaturesValid()
       r <- apply(
         settings,

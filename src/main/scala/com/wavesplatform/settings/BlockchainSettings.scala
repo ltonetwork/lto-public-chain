@@ -39,11 +39,7 @@ case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
 object FunctionalitySettings {
 
   val enabledFeatures = List(
-    BlockchainFeatures.SmallerMinimalGeneratingBalance,
-    BlockchainFeatures.NG,
-    BlockchainFeatures.MassTransfer,
-    BlockchainFeatures.DataTransaction,
-    BlockchainFeatures.FairPoS
+    BlockchainFeatures.DUMMY_FOR_TESTS_SmallerMinimalGeneratingBalance,
   ).map(_.id -> 0).toMap
 
   val MAINNET = apply(

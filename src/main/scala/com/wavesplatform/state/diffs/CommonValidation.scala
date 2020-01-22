@@ -88,10 +88,9 @@ object CommonValidation {
       case _: LeaseTransactionV2       => activationBarrier(BlockchainFeatures.SmartAccounts)
       case _: LeaseCancelTransactionV1 => Right(tx)
       case _: LeaseCancelTransactionV2 => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case _: MassTransferTransaction  => activationBarrier(BlockchainFeatures.MassTransfer)
+      case _: MassTransferTransaction  => Right(tx)
       case _: DataTransaction =>
         for {
-          _ <- activationBarrier(BlockchainFeatures.DataTransaction)
           _ <- deactivationBarrier(BlockchainFeatures.SmartAccounts)
         } yield tx
       case _: SetScriptTransaction       => Right(tx)

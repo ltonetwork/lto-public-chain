@@ -8,7 +8,6 @@ object TestFunctionalitySettings {
     blocksForFeatureActivation = 9000,
     preActivatedFeatures = Map(
       BlockchainFeatures.SmartAccounts.id          -> 0,
-      BlockchainFeatures.FairPoS.id                -> 0,
       BlockchainFeatures.AssociationTransaction.id -> 0,
       BlockchainFeatures.SponsorshipTransaction.id -> 0
     ),

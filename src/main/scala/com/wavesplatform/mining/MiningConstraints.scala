@@ -16,16 +16,11 @@ object MiningConstraints {
 
   def apply(minerSettings: MinerSettings, blockchain: Blockchain, height: Int): MiningConstraints = {
     val activatedFeatures     = blockchain.activatedFeaturesAt(height)
-    val isNgEnabled           = activatedFeatures.contains(BlockchainFeatures.NG.id)
-    val isMassTransferEnabled = activatedFeatures.contains(BlockchainFeatures.MassTransfer.id)
+    val isNgEnabled           = true
     val isScriptEnabled       = activatedFeatures.contains(BlockchainFeatures.SmartAccounts.id)
 
-    val total: MiningConstraint =
-      if (isMassTransferEnabled) OneDimensionalMiningConstraint(MaxTxsSizeInBytes, TxEstimators.sizeInBytes)
-      else {
-        val maxTxs = if (isNgEnabled) Block.MaxTransactionsPerBlockVer3 else ClassicAmountOfTxsInBlock
-        OneDimensionalMiningConstraint(maxTxs, TxEstimators.one)
-      }
+    val total: MiningConstraint = OneDimensionalMiningConstraint(MaxTxsSizeInBytes, TxEstimators.sizeInBytes)
+
 
     new MiningConstraints(
       total =
@@ -33,7 +28,7 @@ object MiningConstraints {
           MultiDimensionalMiningConstraint(NonEmptyList.of(OneDimensionalMiningConstraint(MaxScriptRunsInBlock, TxEstimators.scriptRunNumber), total))
         else total,
       keyBlock =
-        if (isMassTransferEnabled) OneDimensionalMiningConstraint(0, TxEstimators.one)
+        if (true) OneDimensionalMiningConstraint(0, TxEstimators.one)
         else {
           val maxTxsForKeyBlock = if (isNgEnabled) minerSettings.maxTransactionsInKeyBlock else ClassicAmountOfTxsInBlock
           OneDimensionalMiningConstraint(maxTxsForKeyBlock, TxEstimators.one)
