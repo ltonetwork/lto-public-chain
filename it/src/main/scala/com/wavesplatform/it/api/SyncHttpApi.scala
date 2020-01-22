@@ -143,7 +143,7 @@ object SyncHttpApi extends Assertions {
     def getData(sourceAddress: String, key: String): DataEntry[_] =
       Await.result(async(n).getData(sourceAddress, key), RequestAwaitTime)
 
-    import com.wavesplatform.api.http.AddressApiRoute.AssociationsInfo
+    import com.wavesplatform.api.http.AssociationsApiRoute.AssociationsInfo
     def getAssociations(address: String): AssociationsInfo =
       Await.result(async(n).getAssociations(address), RequestAwaitTime)
 

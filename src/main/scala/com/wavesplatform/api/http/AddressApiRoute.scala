@@ -9,13 +9,11 @@ import com.wavesplatform.consensus.GeneratingBalanceProvider
 import com.wavesplatform.crypto
 import com.wavesplatform.http.BroadcastRoute
 import com.wavesplatform.settings.{FunctionalitySettings, RestAPISettings}
+import com.wavesplatform.state.Blockchain
 import com.wavesplatform.state.diffs.CommonValidation
-import com.wavesplatform.state.{Blockchain, ByteStr}
-import com.wavesplatform.transaction.AssociationTransaction.ActionType.{Issue, Revoke}
-import com.wavesplatform.transaction.AssociationTransaction.Assoc
 import com.wavesplatform.transaction.ValidationError.GenericError
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
-import com.wavesplatform.transaction.{AssociationTransaction, AssociationTransactionBase, TransactionFactory, ValidationError}
+import com.wavesplatform.transaction.{TransactionFactory, ValidationError}
 import com.wavesplatform.utils.{Base58, Time}
 import com.wavesplatform.utx.UtxPool
 import com.wavesplatform.wallet.Wallet
@@ -46,7 +44,7 @@ case class AddressApiRoute(settings: RestAPISettings,
     pathPrefix("addresses") {
       validate ~ seed ~ balanceWithConfirmations ~ balanceDetails ~ balance ~ balanceWithConfirmations ~ verify ~ sign ~ deleteAddress ~ verifyText ~
         signText ~ seq ~ publicKey ~ effectiveBalance ~ effectiveBalanceWithConfirmations ~ getData ~ getDataItem ~
-        postData ~ postAnchor ~ issueAssociation ~ revokeAssociation ~ scriptInfo ~ associations
+        postData ~ postAnchor ~ scriptInfo
     } ~ root ~ create
 
   @Path("/scriptInfo/{address}")
@@ -61,24 +59,6 @@ case class AddressApiRoute(settings: RestAPISettings,
         .fromString(address)
         .flatMap(addressScriptInfoJson)
         .map(ToResponseMarshallable(_))
-    )
-  }
-
-  @Path("/associations/{address}")
-  @ApiOperation(value = "Details for account", notes = "Account's associations", httpMethod = "GET")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
-    ))
-  def associations: Route = (path("associations" / Segment) & get) { address =>
-    complete(
-      Address
-        .fromString(address)
-        .right
-        .map(acc => {
-          ToResponseMarshallable(associationsJson(acc, blockchain.associations(acc)))
-        })
-        .getOrElse(InvalidAddress)
     )
   }
 
@@ -305,13 +285,6 @@ case class AddressApiRoute(settings: RestAPISettings,
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def postAnchor: Route = processRequest("anchor", (req: AnchorRequest) => doBroadcast(TransactionFactory.anchor(req, wallet, time)))
 
-  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
-  def issueAssociation: Route =
-    processRequest("issueAssociation", (req: AssociationRequest) => doBroadcast(TransactionFactory.issueAssociation(req, wallet, time)))
-
-  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
-  def revokeAssociation: Route =
-    processRequest("revokeAssociation", (req: AssociationRequest) => doBroadcast(TransactionFactory.revokeAssociation(req, wallet, time)))
   @Path("/data/{address}")
   @ApiOperation(value = "Complete Data", notes = "Read all data posted by an account", httpMethod = "GET")
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")))
@@ -398,36 +371,6 @@ case class AddressApiRoute(settings: RestAPISettings,
       .getOrElse(InvalidAddress)
   }
 
-  private def associationsJson(address: Address, a: Blockchain.Associations): AssociationsInfo = {
-    def f(l: List[(Int, AssociationTransactionBase)]) = {
-      l.foldLeft(Map.empty[Assoc, (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
-          case (acc, (height, as: AssociationTransactionBase)) =>
-            val cp = if (address == as.sender.toAddress) as.assoc.party else as.sender.toAddress
-            (as.actionType, acc.get(as.assoc)) match {
-              case (Issue, None)                    => acc + (as.assoc -> (height, cp, as.id(), None))
-              case (Revoke, Some((h, _, bs, None))) => acc + (as.assoc -> (h, cp, bs, Some((height, as.id()))))
-              case _                                => acc
-            }
-        }
-        .toList
-        .sortBy(_._2._1)
-        .map {
-          case (assoc, (h, cp, id, r)) =>
-            AssociationInfo(
-              party = cp.stringRepr,
-              hash = assoc.hashStr,
-              associationType = assoc.assocType,
-              issueHeight = h,
-              issueTransactionId = id.toString,
-              revokeHeight = r.map(_._1),
-              revokeTransactionId = r.map(_._2.toString)
-            )
-        }
-    }
-
-    AssociationsInfo(address.stringRepr, f(a.outgoing), f(a.incoming))
-
-  }
   private def balancesDetailsJson(account: Address): BalanceDetails = {
     val portfolio = blockchain.portfolio(account)
     BalanceDetails(
@@ -530,19 +473,6 @@ case class AddressApiRoute(settings: RestAPISettings,
 }
 
 object AddressApiRoute {
-
-  case class AssociationInfo(party: String,
-                             hash: String,
-                             associationType: Int,
-                             issueHeight: Int,
-                             issueTransactionId: String,
-                             revokeHeight: Option[Int],
-                             revokeTransactionId: Option[String])
-
-  case class AssociationsInfo(address: String, outgoing: List[AssociationInfo], incoming: List[AssociationInfo])
-
-  implicit val associactionInfoFormat: Format[AssociationInfo]   = Json.format
-  implicit val associactionsInfoFormat: Format[AssociationsInfo] = Json.format
 
   case class Signed(message: String, publicKey: String, signature: String)
 
