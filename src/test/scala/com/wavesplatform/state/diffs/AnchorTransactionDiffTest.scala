@@ -8,7 +8,6 @@ import com.wavesplatform.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
-
 class AnchorTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
 
   val baseSetup: Gen[(GenesisTransaction, PrivateKeyAccount, Long)] = for {
