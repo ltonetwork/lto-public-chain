@@ -74,7 +74,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
 
     "forget rollbacked transaction for quering" in forAll(accountGen, accountGen, Gen.nonEmptyListOf(Gen.choose(1, 10))) {
       case (sender, recipient, txCount) =>
-        val settings = createSettings(BlockchainFeatures.MassTransfer -> 0)
+        val settings = createSettings()
         val wavesSettings = history.DefaultWavesSettings.copy(
           blockchainSettings = history.DefaultWavesSettings.blockchainSettings.copy(functionalitySettings = settings))
         withDomain(wavesSettings) { d =>

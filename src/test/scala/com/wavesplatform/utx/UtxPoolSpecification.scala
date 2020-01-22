@@ -50,7 +50,6 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
         'T',
         FunctionalitySettings.TESTNET.copy(
           preActivatedFeatures = Map(
-            BlockchainFeatures.MassTransfer.id  -> 0,
             BlockchainFeatures.SmartAccounts.id -> 0
           )),
         genesisSettings

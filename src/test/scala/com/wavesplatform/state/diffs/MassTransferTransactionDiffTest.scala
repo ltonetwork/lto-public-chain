@@ -14,7 +14,7 @@ import com.wavesplatform.transaction.transfer.MassTransferTransaction.ParsedTran
 
 class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
 
-  val fs = TestFunctionalitySettings.Enabled.copy(preActivatedFeatures = Map(BlockchainFeatures.MassTransfer.id -> 0))
+  val fs = TestFunctionalitySettings.Enabled
 
   val baseSetup: Gen[(GenesisTransaction, PrivateKeyAccount)] = for {
     master <- accountGen
@@ -74,18 +74,4 @@ class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with 
     }
   }
 
-  property("validation fails prior to feature activation") {
-    val setup = for {
-      (genesis, master) <- baseSetup
-      transfer          <- massTransferGeneratorP(master, List(), None)
-    } yield (genesis, transfer)
-    val settings = TestFunctionalitySettings.Enabled.copy(preActivatedFeatures = Map(BlockchainFeatures.MassTransfer.id -> 10))
-
-    forAll(setup) {
-      case (genesis, transfer) =>
-        assertDiffEi(Seq(block(Seq(genesis))), block(Seq(transfer)), settings) { blockDiffEi =>
-          blockDiffEi should produce("MassTransferTransaction transaction has not been activated yet")
-        }
-    }
-  }
 }
