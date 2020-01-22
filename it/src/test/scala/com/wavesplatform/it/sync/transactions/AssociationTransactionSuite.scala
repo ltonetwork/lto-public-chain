@@ -2,7 +2,7 @@ package com.wavesplatform.it.sync.transactions
 
 import com.wavesplatform.account.PrivateKeyAccount
 import com.wavesplatform.account.PublicKeyAccount._
-import com.wavesplatform.api.http.AddressApiRoute.AssociationInfo
+import com.wavesplatform.api.http.AssociationsApiRoute.AssociationInfo
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.state.EitherExt2
