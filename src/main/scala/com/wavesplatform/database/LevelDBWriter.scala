@@ -294,10 +294,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(Keys.transactionInfo(id), Some((height, tx)))
     }
 
-
-
-
-
     val activationWindowSize = fs.activationWindowSize(height)
     if (height % activationWindowSize == 0) {
       val minVotes = fs.blocksForFeatureActivation(height)

@@ -42,7 +42,7 @@ class CommonValidationTimeTest extends PropSpec with PropertyChecks with Matcher
         .explicitGet()
     } yield (prevBlockTs, blockTs, height, transfer1)) {
       case (prevBlockTs, blockTs, height, transfer1) =>
-        val functionalitySettings = TestFunctionalitySettings.Enabled.copy(allowTransactionsFromFutureUntil = blockTs - 1)
+        val functionalitySettings = TestFunctionalitySettings.Enabled
         withStateAndHistory(functionalitySettings) { blockchain: Blockchain =>
           TransactionDiffer(functionalitySettings, Some(prevBlockTs), blockTs, height)(blockchain, transfer1) should produce("far future")
         }

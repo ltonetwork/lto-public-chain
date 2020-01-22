@@ -7,10 +7,9 @@ import com.wavesplatform.account.PrivateKeyAccount
 import com.wavesplatform.block.Block
 import com.wavesplatform.db.WithState
 import com.wavesplatform.lagonaki.mocks.TestBlock
-import com.wavesplatform.mining.MiningConstraint
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state.{Blockchain, Diff, EitherExt2}
-import com.wavesplatform.transaction.{GenesisTransaction, ValidationError}
+import com.wavesplatform.transaction.GenesisTransaction
 import org.scalatest.{FreeSpecLike, Matchers}
 import scorex.crypto.signatures.Curve25519._
 
@@ -114,17 +113,8 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
     val fs = FunctionalitySettings(
       featureCheckBlocksPeriod = ngAtHeight / 2,
       blocksForFeatureActivation = 1,
-      allowTemporaryNegativeUntil = 0L,
-      generationBalanceDepthFrom50To1000AfterHeight = 0,
-      minimalGeneratingBalanceAfter = 0L,
-      allowTransactionsFromFutureUntil = Long.MaxValue,
-      allowUnissuedAssetsUntil = 0L,
-      allowInvalidReissueInSameBlockUntilTimestamp = 0L,
-      resetEffectiveBalancesAtHeight = 0,
-      blockVersion3AfterHeight = 0,
       preActivatedFeatures = Map[Short, Int]((2, ngAtHeight)),
       doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
-      requireSortedTransactionsAfter = 0
     )
     assertNgDiffState(blocks.init, blocks.last, fs)(assertion)
   }

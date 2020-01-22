@@ -19,7 +19,7 @@ object GeneratingBalanceProvider {
   }
 
   def isEffectiveBalanceValid(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, block: Block, effectiveBalance: Long): Boolean =
-    block.timestamp < fs.minimalGeneratingBalanceAfter || (block.timestamp >= fs.minimalGeneratingBalanceAfter && effectiveBalance >= MinimalEffectiveBalanceForGenerator1) ||
+    (effectiveBalance >= MinimalEffectiveBalanceForGenerator1) ||
       blockchain.activatedFeatures
         .get(BlockchainFeatures.SmallerMinimalGeneratingBalance.id)
         .exists(height >= _) && effectiveBalance >= MinimalEffectiveBalanceForGenerator2
@@ -28,7 +28,7 @@ object GeneratingBalanceProvider {
     val height =
       if (blockId == ByteStr.empty) blockchain.height
       else blockchain.heightOf(blockId).getOrElse(throw new IllegalArgumentException(s"Invalid block ref: $blockId"))
-    val depth = if (height >= fs.generationBalanceDepthFrom50To1000AfterHeight) SecondDepth else FirstDepth
+    val depth = SecondDepth
     blockchain.effectiveBalance(account, depth, blockId)
   }
 }

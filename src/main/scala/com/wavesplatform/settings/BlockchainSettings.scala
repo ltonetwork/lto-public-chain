@@ -11,19 +11,8 @@ import scala.concurrent.duration._
 
 case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
                                  blocksForFeatureActivation: Int,
-                                 allowTemporaryNegativeUntil: Long,
-                                 requireSortedTransactionsAfter: Long,
-                                 generationBalanceDepthFrom50To1000AfterHeight: Int,
-                                 minimalGeneratingBalanceAfter: Long,
-                                 allowTransactionsFromFutureUntil: Long,
-                                 allowUnissuedAssetsUntil: Long,
-                                 allowInvalidReissueInSameBlockUntilTimestamp: Long,
-                                 resetEffectiveBalancesAtHeight: Int,
-                                 blockVersion3AfterHeight: Int,
                                  preActivatedFeatures: Map[Short, Int],
                                  doubleFeaturesPeriodsAfterHeight: Int) {
-  val dontRequireSortedTransactionsAfter: Int    = blockVersion3AfterHeight
-  val allowLeasedBalanceTransferUntilHeight: Int = blockVersion3AfterHeight
 
   require(featureCheckBlocksPeriod > 0, "featureCheckBlocksPeriod must be greater than 0")
   require(
@@ -44,8 +33,7 @@ case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
   def blocksForFeatureActivation(height: Int): Int =
     blocksForFeatureActivation * (if (height <= doubleFeaturesPeriodsAfterHeight) 1 else 2)
 
-  def generatingBalanceDepth(height: Int): Int =
-    if (height >= generationBalanceDepthFrom50To1000AfterHeight) 1000 else 50
+  def generatingBalanceDepth(height: Int): Int = 1000
 }
 
 object FunctionalitySettings {
@@ -61,15 +49,6 @@ object FunctionalitySettings {
   val MAINNET = apply(
     featureCheckBlocksPeriod = 5000,
     blocksForFeatureActivation = 4000,
-    allowTemporaryNegativeUntil = 0,
-    requireSortedTransactionsAfter = Long.MaxValue,
-    generationBalanceDepthFrom50To1000AfterHeight = 0,
-    minimalGeneratingBalanceAfter = 0,
-    allowTransactionsFromFutureUntil = 0,
-    allowUnissuedAssetsUntil = 0,
-    allowInvalidReissueInSameBlockUntilTimestamp = 0,
-    resetEffectiveBalancesAtHeight = -1,
-    blockVersion3AfterHeight = 0,
     preActivatedFeatures = enabledFeatures,
     doubleFeaturesPeriodsAfterHeight = -1
   )
@@ -77,15 +56,6 @@ object FunctionalitySettings {
   val TESTNET = apply(
     featureCheckBlocksPeriod = 3000,
     blocksForFeatureActivation = 2000,
-    allowTemporaryNegativeUntil = 0,
-    requireSortedTransactionsAfter = Long.MaxValue,
-    generationBalanceDepthFrom50To1000AfterHeight = 0,
-    minimalGeneratingBalanceAfter = 0,
-    allowTransactionsFromFutureUntil = 0,
-    allowUnissuedAssetsUntil = 0,
-    allowInvalidReissueInSameBlockUntilTimestamp = 0,
-    resetEffectiveBalancesAtHeight = -1,
-    blockVersion3AfterHeight = 0,
     preActivatedFeatures = enabledFeatures,
     doubleFeaturesPeriodsAfterHeight = -1
   )

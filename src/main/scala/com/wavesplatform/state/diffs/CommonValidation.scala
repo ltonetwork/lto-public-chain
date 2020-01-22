@@ -25,7 +25,7 @@ object CommonValidation {
                                                           settings: FunctionalitySettings,
                                                           blockTime: Long,
                                                           tx: T): Either[ValidationError, T] =
-    if (blockTime >= settings.allowTemporaryNegativeUntil) {
+  {
       def checkTransfer(sender: Address, amount: Long, feeAmount: Long) = {
         val amountDiff = Portfolio(-amount, LeaseBalance.empty)
 
@@ -54,8 +54,7 @@ object CommonValidation {
         case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.transfers.map(_.amount).sum, mtx.fee)
         case _                            => Right(tx)
       }
-    } else Right(tx)
-
+    }
   def disallowDuplicateIds[T <: Transaction](blockchain: Blockchain,
                                              settings: FunctionalitySettings,
                                              height: Int,
@@ -105,8 +104,7 @@ object CommonValidation {
   }
 
   def disallowTxFromFuture[T <: Transaction](settings: FunctionalitySettings, time: Long, tx: T): Either[ValidationError, T] = {
-    val allowTransactionsFromFutureByTimestamp = tx.timestamp < settings.allowTransactionsFromFutureUntil
-    if (!allowTransactionsFromFutureByTimestamp && tx.timestamp - time > MaxTimeTransactionOverBlockDiff.toMillis)
+    if (tx.timestamp - time > MaxTimeTransactionOverBlockDiff.toMillis)
       Left(Mistiming(s"Transaction ts ${tx.timestamp} is from far future. BlockTime: $time"))
     else Right(tx)
   }
