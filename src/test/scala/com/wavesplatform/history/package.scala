@@ -8,6 +8,7 @@ import com.wavesplatform.lagonaki.mocks.TestBlock
 import com.wavesplatform.settings.{BlockchainSettings, TestFunctionalitySettings, WavesSettings}
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.Transaction
+import monix.eval.TaskCircuitBreaker.Timestamp
 import scorex.crypto.signatures.Curve25519._
 
 package object history {
@@ -34,7 +35,7 @@ package object history {
   val defaultSigner       = PrivateKeyAccount(Array.fill(KeyLength)(0))
   val generationSignature = ByteStr(Array.fill(Block.GeneratorSignatureLength)(0: Byte))
 
-  def buildBlockOfTxs(refTo: ByteStr, txs: Seq[Transaction]): Block = customBuildBlockOfTxs(refTo, txs, defaultSigner, 1, 0L)
+  def buildBlockOfTxs(refTo: ByteStr, txs: Seq[Transaction]): Block = customBuildBlockOfTxs(refTo, txs, defaultSigner, 1, txs.head.timestamp)
 
   def customBuildBlockOfTxs(refTo: ByteStr,
                             txs: Seq[Transaction],
@@ -98,9 +99,12 @@ package object history {
     chainBlocksR(randomSig, txs)
   }
 
-  def chainBaseAndMicro(totalRefTo: ByteStr, base: Transaction, micros: Seq[Seq[Transaction]]): (Block, Seq[MicroBlock]) =
-    chainBaseAndMicro(totalRefTo, Seq(base), micros, defaultSigner, 3, 0L)
+  def chainBaseAndMicro(totalRefTo: ByteStr, base: Transaction, micros: Seq[Seq[Transaction]], timestamp: Long): (Block, Seq[MicroBlock]) =
+    chainBaseAndMicro(totalRefTo, Seq(base), micros, defaultSigner, 3,timestamp = timestamp)
 
+
+  def chainBaseAndMicro(totalRefTo: ByteStr, base: Transaction, micros: Seq[Seq[Transaction]]): (Block, Seq[MicroBlock]) =
+    chainBaseAndMicro(totalRefTo, Seq(base), micros, defaultSigner, 3,timestamp = base.timestamp)
   def chainBaseAndMicro(totalRefTo: ByteStr,
                         base: Seq[Transaction],
                         micros: Seq[Seq[Transaction]],

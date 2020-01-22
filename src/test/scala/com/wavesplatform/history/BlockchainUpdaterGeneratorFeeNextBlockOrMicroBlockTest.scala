@@ -43,7 +43,7 @@ class BlockchainUpdaterGeneratorFeeNextBlockOrMicroBlockTest
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
       case (domain, (genesis, somePayment, generatorPaymentOnFee, someOtherPayment)) =>
         val (block, microBlocks) =
-          chainBaseAndMicro(randomSig, genesis, Seq(Seq(somePayment), Seq(generatorPaymentOnFee, someOtherPayment)))
+          chainBaseAndMicro(randomSig, genesis, Seq(Seq(somePayment), Seq(generatorPaymentOnFee, someOtherPayment)),genesis.timestamp)
         domain.blockchainUpdater.processBlock(block).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks(0)) shouldBe 'right
         domain.blockchainUpdater.processMicroBlock(microBlocks(1)) should produce("unavailable funds")
@@ -63,7 +63,7 @@ class BlockchainUpdaterGeneratorFeeNextBlockOrMicroBlockTest
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
       case (domain, (genesis, somePayment, generatorPaymentOnFee, someOtherPayment)) =>
         val (block, microBlocks) =
-          chainBaseAndMicro(randomSig, genesis, Seq(Seq(somePayment), Seq(generatorPaymentOnFee, someOtherPayment)))
+          chainBaseAndMicro(randomSig, genesis, Seq(Seq(somePayment), Seq(generatorPaymentOnFee, someOtherPayment)),genesis.timestamp)
         domain.blockchainUpdater.processBlock(block).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks(0)).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks(1)) should produce("unavailable funds")
