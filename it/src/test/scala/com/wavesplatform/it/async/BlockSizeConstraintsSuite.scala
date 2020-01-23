@@ -64,11 +64,6 @@ object BlockSizeConstraintsSuite {
                                                              |    functionality {
                                                              |      feature-check-blocks-period = 1
                                                              |      blocks-for-feature-activation = 1
-                                                             |
-                                                             |      pre-activated-features {
-                                                             |        2: 0
-                                                             |        3: 2
-                                                             |      }
                                                              |    }
                                                              |
                                                              |    store-transactions-in-state = false

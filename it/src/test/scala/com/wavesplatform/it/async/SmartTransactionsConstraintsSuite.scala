@@ -46,7 +46,6 @@ class SmartTransactionsConstraintsSuite extends FreeSpec with Matchers with Tran
          |      blocks-for-feature-activation = 1
          |
          |      pre-activated-features {
-         |        2: 0
          |        4: 0
          |      }
          |    }
@@ -54,7 +53,7 @@ class SmartTransactionsConstraintsSuite extends FreeSpec with Matchers with Tran
          |    store-transactions-in-state = false
          |  }
          |
-         |  features.supported = [2, 4]
+         |  features.supported = [4]
          |}""".stripMargin
       ))
     .withDefault(1)
