@@ -19,21 +19,18 @@ class BlockSizeConstraintsSuite extends FreeSpec with Matchers with TransferSend
   private val nodeAddresses               = nodeConfigs.map(_.getString("address")).toSet
   val transfers: Seq[TransferSending.Req] = generateTransfersToRandomAddresses(maxTxsGroup, nodeAddresses)
   private val miner                       = nodes.head
-  s"Block is limited by size after activation" in result(
+  s"Block is limited by size" in result(
     for {
       _                 <- Future.sequence((0 to maxGroups).map(_ => processRequests(transfers, includeAttachment = true)))
       _                 <- miner.waitForHeight(3)
       _                 <- Future.sequence((0 to maxGroups).map(_ => processRequests(transfers, includeAttachment = true)))
-      blockHeaderBefore <- miner.blockHeadersAt(2)
       _                 <- miner.waitForHeight(4)
       blockHeaderAfter  <- miner.blockHeadersAt(3)
     } yield {
-      val maxSizeInBytesAfterActivation = (1.1d * 1024 * 1024).toInt // including headers
-      val blockSizeInBytesBefore        = blockHeaderBefore.blocksize
-      blockSizeInBytesBefore should be > maxSizeInBytesAfterActivation
+      val maxSizeInBytes = (1.1d * 1024 * 1024).toInt // including headers
 
-      val blockSizeInBytesAfter = blockHeaderAfter.blocksize
-      blockSizeInBytesAfter should be <= maxSizeInBytesAfterActivation
+      val blockSizeInBytes = blockHeaderAfter.blocksize
+      blockSizeInBytes should be <= maxSizeInBytes
     },
     10.minutes
   )
