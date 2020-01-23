@@ -243,7 +243,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
     val smartAccountsFs = TestFunctionalitySettings.Enabled.copy(preActivatedFeatures = Map(BlockchainFeatures.SmartAccounts.id -> 0))
     preconditions.foreach(b => bcu.processBlock(b).explicitGet())
     val utx = new UtxPoolImpl(
-      new TestTime(),
+      new TestTime(preconditions.head.timestamp),
       bcu,
       mkCalculator(bcu),
       smartAccountsFs,
