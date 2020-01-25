@@ -29,16 +29,7 @@ class BlockchainUpdaterGeneratorFeeSameBlockTest
     generatorPaymentOnFee: TransferTransactionV1 = createWavesTransfer(defaultSigner, recipient, payment.fee, fee, ts + 1).explicitGet()
   } yield (genesis, payment, generatorPaymentOnFee)
 
-  property("block generator can spend fee after transaction before applyMinerFeeWithTransactionAfter") {
-
-    scenario(preconditionsAndPayments, DefaultWavesSettings) {
-      case (domain, (genesis, somePayment, generatorPaymentOnFee)) =>
-        val blocks = chainBlocks(Seq(Seq(genesis), Seq(generatorPaymentOnFee, somePayment)))
-        all(blocks.map(block => domain.blockchainUpdater.processBlock(block))) shouldBe 'right
-    }
-  }
-
-  property("block generator can't spend fee after transaction after applyMinerFeeWithTransactionAfter") {
+  property("block generator can't spend fee after transaction") {
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
       case (domain, (genesis, somePayment, generatorPaymentOnFee)) =>
         val blocks = chainBlocks(Seq(Seq(genesis), Seq(generatorPaymentOnFee, somePayment)))

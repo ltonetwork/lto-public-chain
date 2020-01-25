@@ -36,6 +36,8 @@ package object history {
   val generationSignature = ByteStr(Array.fill(Block.GeneratorSignatureLength)(0: Byte))
 
   def buildBlockOfTxs(refTo: ByteStr, txs: Seq[Transaction]): Block = customBuildBlockOfTxs(refTo, txs, defaultSigner, 1, txs.head.timestamp)
+  def buildBlockOfTxs(refTo: ByteStr, txs: Seq[Transaction], timestamp: Long): Block = customBuildBlockOfTxs(refTo, txs, defaultSigner, 1, timestamp)
+
 
   def customBuildBlockOfTxs(refTo: ByteStr,
                             txs: Seq[Transaction],
@@ -89,9 +91,10 @@ package object history {
   def randomSig: ByteStr = TestBlock.randomOfLength(Block.BlockIdLength)
 
   def chainBlocks(txs: Seq[Seq[Transaction]]): Seq[Block] = {
+    val ts = txs.flatten.head.timestamp
     def chainBlocksR(refTo: ByteStr, txs: Seq[Seq[Transaction]]): Seq[Block] = txs match {
       case (x :: xs) =>
-        val block = buildBlockOfTxs(refTo, x)
+        val block = buildBlockOfTxs(refTo, x, ts)
         block +: chainBlocksR(block.uniqueId, xs)
       case _ => Seq.empty
     }

@@ -114,9 +114,9 @@ class BlockchainUpdaterMicroblockSunnyDayTest
   property("doesn't discard liquid block if competitor is not better: B0 <- B1 <- B1m1; B0 <- B2!") {
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
       case (domain, (genesis, masterToAlice, aliceToBob, aliceToBob2)) =>
-        val block0                 = buildBlockOfTxs(randomSig, Seq(genesis))
-        val (block1, microBlocks1) = chainBaseAndMicro(block0.uniqueId, masterToAlice, Seq(Seq(aliceToBob)))
-        val block2                 = buildBlockOfTxs(block0.uniqueId, Seq(aliceToBob2))
+        val block0                 = buildBlockOfTxs(randomSig, Seq(genesis), genesis.timestamp)
+        val (block1, microBlocks1) = chainBaseAndMicro(block0.uniqueId, masterToAlice, Seq(Seq(aliceToBob)), genesis.timestamp)
+        val block2                 = buildBlockOfTxs(block0.uniqueId, Seq(aliceToBob2), genesis.timestamp)
         domain.blockchainUpdater.processBlock(block0).explicitGet()
         domain.blockchainUpdater.processBlock(block1).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks1(0)).explicitGet()
