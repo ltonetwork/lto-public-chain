@@ -35,9 +35,8 @@ package object history {
   val defaultSigner       = PrivateKeyAccount(Array.fill(KeyLength)(0))
   val generationSignature = ByteStr(Array.fill(Block.GeneratorSignatureLength)(0: Byte))
 
-  def buildBlockOfTxs(refTo: ByteStr, txs: Seq[Transaction]): Block = customBuildBlockOfTxs(refTo, txs, defaultSigner, 1, txs.head.timestamp)
+  def buildBlockOfTxs(refTo: ByteStr, txs: Seq[Transaction]): Block                  = customBuildBlockOfTxs(refTo, txs, defaultSigner, 1, txs.head.timestamp)
   def buildBlockOfTxs(refTo: ByteStr, txs: Seq[Transaction], timestamp: Long): Block = customBuildBlockOfTxs(refTo, txs, defaultSigner, 1, timestamp)
-
 
   def customBuildBlockOfTxs(refTo: ByteStr,
                             txs: Seq[Transaction],

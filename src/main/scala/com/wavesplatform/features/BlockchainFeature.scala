@@ -15,7 +15,8 @@ object BlockchainFeatures {
     SponsorshipTransaction
   ).map(f => f.id -> f).toMap
 
-  val implemented: Set[Short] = dict.keySet
+  private val preActivated: Set[Short] = Set(1, 2, 3, 5, 8).map(_.toShort) // consensus logic hardcoded
+  val implemented: Set[Short] = preActivated ++ dict.keySet
 
   def feature(id: Short): Option[BlockchainFeature] = dict.get(id)
 }

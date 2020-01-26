@@ -20,7 +20,7 @@ class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with
     richAccount        <- accountGen
     totalTxNumber      <- Gen.chooseNum(Block.MaxTransactionsPerBlockVer3 + 1, Block.MaxTransactionsPerBlockVer3 + 100)
     txNumberInKeyBlock <- Gen.chooseNum(0, Block.MaxTransactionsPerBlockVer3)
-    ts <- timestampGen
+    ts                 <- timestampGen
     allTxs             <- Gen.listOfN(totalTxNumber, validTransferGen(richAccount, ts))
   } yield {
     val (keyBlockTxs, microTxs) = allTxs.splitAt(txNumberInKeyBlock)
