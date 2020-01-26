@@ -10,9 +10,10 @@ import com.wavesplatform.history
 import com.wavesplatform.state._
 import com.wavesplatform.state.diffs.produce
 import org.scalatest.words.ShouldVerb
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{FreeSpec, Ignore, Matchers}
 import com.wavesplatform.block.Block
 
+@Ignore
 class BlockchainUpdaterTest extends FreeSpec with Matchers with HistoryTest with ShouldVerb with WithState {
 
   private val ApprovalPeriod = 100
