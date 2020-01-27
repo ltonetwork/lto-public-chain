@@ -60,13 +60,6 @@ package object diffs extends WithState with Matchers {
       })
     }
 
-  def assertBalanceInvariant(diff: Diff): Unit = {
-    val portfolioDiff = Monoid.combineAll(diff.portfolios.values)
-    // not true for always-enabled ng
-    // portfolioDiff.balance shouldBe 0
-    portfolioDiff.effectiveBalance shouldBe 0
-  }
-
   def assertLeft(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings = TFS.Enabled)(errorMessage: String): Unit =
     assertDiffEi(preconditions, block, fs)(_ should produce(errorMessage))
 

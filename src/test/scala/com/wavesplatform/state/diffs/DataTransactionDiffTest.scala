@@ -13,7 +13,7 @@ import com.wavesplatform.transaction.{DataTransaction, GenesisTransaction}
 
 class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
 
-  val fs = TestFunctionalitySettings.Enabled
+  val fs = TestFunctionalitySettings.Disabled
 
   val baseSetup: Gen[(GenesisTransaction, PrivateKeyAccount, Long)] = for {
     master <- accountGen
@@ -58,7 +58,6 @@ class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers
         val item1 = items.head
         assertDiffAndState(Seq(genesis), blocks(0), fs) {
           case (totalDiff, state) =>
-            assertBalanceInvariant(totalDiff)
             state.portfolio(sender).balance shouldBe (ENOUGH_AMT - txs(0).fee)
             state.accountData(sender, item1.key) shouldBe Some(item1)
             state.accountData(sender).data.get(item1.key) shouldBe Some(item1)
@@ -67,7 +66,6 @@ class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers
         val item2 = items(1)
         assertDiffAndState(Seq(genesis, blocks(0)), blocks(1), fs) {
           case (totalDiff, state) =>
-            assertBalanceInvariant(totalDiff)
             state.portfolio(sender).balance shouldBe (ENOUGH_AMT - txs.take(2).map(_.fee).sum)
             state.accountData(sender, item1.key) shouldBe Some(item1)
             state.accountData(sender).data.get(item1.key) shouldBe Some(item1)
@@ -78,7 +76,6 @@ class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers
         val item3 = items(2)
         assertDiffAndState(Seq(genesis, blocks(0), blocks(1)), blocks(2), fs) {
           case (totalDiff, state) =>
-            assertBalanceInvariant(totalDiff)
             state.portfolio(sender).balance shouldBe (ENOUGH_AMT - txs.map(_.fee).sum)
             state.accountData(sender, item1.key) shouldBe Some(item3)
             state.accountData(sender).data.get(item1.key) shouldBe Some(item3)

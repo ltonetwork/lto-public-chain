@@ -13,6 +13,7 @@ object TestFunctionalitySettings {
     ),
     doubleFeaturesPeriodsAfterHeight = Int.MaxValue
   )
+  val Disabled = Enabled.copy(preActivatedFeatures = Map.empty)
 
   val Stub: FunctionalitySettings = Enabled.copy(featureCheckBlocksPeriod = 100, blocksForFeatureActivation = 90)
 

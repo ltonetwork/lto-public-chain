@@ -38,8 +38,6 @@ class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with 
         case (genesis, transfer) =>
           assertDiffAndState(Seq(block(Seq(genesis))), block(Seq(transfer)), fs) {
             case (totalDiff, newState) =>
-              assertBalanceInvariant(totalDiff)
-
               val totalAmount     = transfer.transfers.map(_.amount).sum
               val fees            = transfer.fee
               val senderPortfolio = newState.portfolio(transfer.sender)
