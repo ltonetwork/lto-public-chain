@@ -116,7 +116,7 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
       preActivatedFeatures = Map[Short, Int]((2, ngAtHeight)),
       doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
     )
-    assertNgDiffState(blocks.init, blocks.last, fs)(assertion)
+    assertDiffAndState(blocks.init, blocks.last, fs)(assertion)
   }
 
   private def getTwoMinersBlockChain(from: PrivateKeyAccount, to: PrivateKeyAccount, numPayments: Int): Seq[Block] = {
