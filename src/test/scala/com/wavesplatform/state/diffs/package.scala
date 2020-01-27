@@ -62,7 +62,8 @@ package object diffs extends WithState with Matchers {
 
   def assertBalanceInvariant(diff: Diff): Unit = {
     val portfolioDiff = Monoid.combineAll(diff.portfolios.values)
-    portfolioDiff.balance shouldBe 0
+    // not true for always-enabled ng
+    // portfolioDiff.balance shouldBe 0
     portfolioDiff.effectiveBalance shouldBe 0
   }
 
