@@ -332,7 +332,7 @@ object TransactionFactory extends BroadcastRequest {
       tx <- AnchorTransaction.signed(
         request.version,
         sender,
-        anchors.map(AnchorRequest.prependZeros),
+        anchors,
         request.fee,
         request.timestamp.getOrElse(time.getTimestamp()),
         signer
@@ -345,13 +345,13 @@ object TransactionFactory extends BroadcastRequest {
       tx <- AnchorTransaction.create(
         request.version,
         sender,
-        anchors.map(AnchorRequest.prependZeros),
+        anchors,
         request.fee,
         0,
         Proofs.empty
       )
     } yield tx
-
+  val IncorectHashMessage =  "Incorrect hash length, should be <= 64 bytes"
   private def association[T](signedCtor: AssociationTransaction.SignedCtor[T])(request: AssociationRequest,
                                                                                wallet: Wallet,
                                                                                signerAddress: String,
@@ -361,13 +361,13 @@ object TransactionFactory extends BroadcastRequest {
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       party  <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
-      else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
+      else parseBase58(request.hash, IncorectHashMessage, AssociationTransaction.StringHashLength).map(Some(_))
       tx <- signedCtor(
         request.version,
         sender,
         party,
         request.associationType,
-        hash.map(AnchorRequest.prependZeros),
+        hash,
         request.fee,
         request.timestamp.getOrElse(time.getTimestamp()),
         signer
@@ -378,13 +378,13 @@ object TransactionFactory extends BroadcastRequest {
     for {
       party <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
-      else parseBase58(request.hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
+      else parseBase58(request.hash, IncorectHashMessage, AssociationTransaction.StringHashLength).map(Some(_))
       tx <- createCtor(
         request.version,
         sender,
         party,
         request.associationType,
-        hash.map(AnchorRequest.prependZeros),
+        hash,
         request.fee,
         0,
         Proofs.empty

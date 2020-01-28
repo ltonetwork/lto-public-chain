@@ -431,7 +431,7 @@ trait TransactionGenBase extends ScriptGen {
     assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
     action    <- Gen.oneOf(AssociationTransaction.ActionType.Issue, AssociationTransaction.ActionType.Revoke)
     fee       <- smallFeeGen
-    hashOpt   <- Gen.option(genBoundedBytes(AssociationTransaction.HashLength, AssociationTransaction.HashLength).map(ByteStr(_)))
+    hashOpt   <- Gen.option(genBoundedBytes(0, AssociationTransaction.MaxHashLength).map(ByteStr(_)))
   } yield {
     action match {
       case AssociationTransaction.ActionType.Issue =>

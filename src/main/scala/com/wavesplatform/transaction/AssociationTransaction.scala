@@ -89,8 +89,8 @@ object AssociationTransaction {
   }
 
   val supportedVersions: Set[Byte] = Set(1)
-  val HashLength                   = 64
-  val StringHashLength             = com.wavesplatform.utils.base58Length(AssociationTransaction.HashLength)
+  val MaxHashLength                   = 64
+  val StringHashLength             = com.wavesplatform.utils.base58Length(AssociationTransaction.MaxHashLength)
 
   def networkByte = AddressScheme.current.chainId
 
@@ -119,8 +119,8 @@ object AssociationTransaction {
   def validate(version: Byte, sender: PublicKeyAccount, party: Address, hash: Option[ByteStr], feeAmount: Long): Either[ValidationError, Unit] = {
     if (!supportedVersions.contains(version)) {
       Left(ValidationError.UnsupportedVersion(version))
-    } else if (hash.exists(_.arr.size != HashLength)) {
-      Left(ValidationError.GenericError("Hash length must be " + HashLength + " bytes"))
+    } else if (hash.exists(_.arr.size > MaxHashLength)) {
+      Left(ValidationError.GenericError("Hash length must be " + MaxHashLength + " bytes"))
     } else if (feeAmount <= 0) {
       Left(ValidationError.InsufficientFee())
     } else if (sender.address == party.address) {
