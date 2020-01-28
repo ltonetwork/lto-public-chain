@@ -23,7 +23,8 @@ class CommonValidationTimeTest extends PropSpec with PropertyChecks with Matcher
     } yield (prevBlockTs, height, transfer1)) {
       case (prevBlockTs, height, transfer1) =>
         withStateAndHistory(TestFunctionalitySettings.Enabled) { blockchain: Blockchain =>
-          TransactionDiffer(TestFunctionalitySettings.Enabled, Some(prevBlockTs), prevBlockTs, height)(blockchain, transfer1) should produce("too old")
+          TransactionDiffer(TestFunctionalitySettings.Enabled, Some(prevBlockTs), prevBlockTs, height)(blockchain, transfer1) should produce(
+            "too old")
         }
     }
   }

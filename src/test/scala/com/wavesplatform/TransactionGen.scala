@@ -251,9 +251,9 @@ trait TransactionGenBase extends ScriptGen {
 
   def massTransferGeneratorP(sender: PrivateKeyAccount, transfers: List[ParsedTransfer], assetId: Option[AssetId]): Gen[MassTransferTransaction] =
     for {
-      version                                     <- Gen.oneOf(MassTransferTransaction.supportedVersions.toSeq)
-      (_, _, _, timestamp, feeAmount, attachment) <- transferParamGen
-    } yield MassTransferTransaction.selfSigned(version, sender, transfers, timestamp, feeAmount, attachment).explicitGet()
+      version                             <- Gen.oneOf(MassTransferTransaction.supportedVersions.toSeq)
+      (_, _, _, timestamp, _, attachment) <- transferParamGen
+    } yield MassTransferTransaction.selfSigned(version, sender, transfers, timestamp, 100000000 + 10000000 * transfers.size, attachment).explicitGet()
 
   def createWavesTransfer(sender: PrivateKeyAccount,
                           recipient: Address,

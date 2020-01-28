@@ -65,9 +65,8 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
   property("cannot cancel lease twice after allowMultipleLeaseCancelTransactionUntilTimestamp") {
     forAll(cancelLeaseTwice) {
       case ((genesis, payment, lease, leaseCancel, leaseCancel2)) =>
-        assertDiffEi(Seq(TestBlock.create(Seq(genesis, payment, lease, leaseCancel))), TestBlock.create(Seq(leaseCancel2)), settings) {
-          totalDiffEi =>
-            totalDiffEi should produce("Cannot cancel already cancelled lease")
+        assertDiffEi(Seq(TestBlock.create(Seq(genesis, payment, lease, leaseCancel))), TestBlock.create(Seq(leaseCancel2)), settings) { totalDiffEi =>
+          totalDiffEi should produce("Cannot cancel already cancelled lease")
         }
     }
   }
@@ -109,9 +108,8 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
   property("cannot cancel lease of another sender") {
     forAll(Gen.oneOf(true, false).flatMap(cancelLeaseOfAnotherSender)) {
       case ((genesis, genesis2, lease, unleaseOtherOrRecipient)) =>
-        assertDiffEi(Seq(TestBlock.create(Seq(genesis, genesis2, lease))), TestBlock.create(Seq(unleaseOtherOrRecipient)), settings) {
-          totalDiffEi =>
-            totalDiffEi should produce("LeaseTransaction was leased by other sender")
+        assertDiffEi(Seq(TestBlock.create(Seq(genesis, genesis2, lease))), TestBlock.create(Seq(unleaseOtherOrRecipient)), settings) { totalDiffEi =>
+          totalDiffEi should produce("LeaseTransaction was leased by other sender")
         }
     }
   }
