@@ -2,7 +2,7 @@ package com.wavesplatform.api.http
 
 import cats.implicits._
 import com.wavesplatform.account.{Address, PublicKeyAccount}
-import com.wavesplatform.transaction.{AssociationTransaction, IssueAssociationTransaction, Proofs, ValidationError}
+import com.wavesplatform.transaction.{AssociationTransaction, IssueAssociationTransaction, Proofs, TransactionFactory, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
 import play.api.libs.json.Json
 
@@ -42,8 +42,9 @@ case class SignedAssociationRequest(@ApiModelProperty(required = true)
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _party      <- Address.fromString(party)
       _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
-      _hash       <- if (hash == "") Right(None) else parseBase58(hash, "Incorrect hash", AssociationTransaction.StringHashLength).map(Some(_))
-      _proofs     <- Proofs.create(_proofBytes)
-      t           <- ctor(version, _sender, _party, associationType, _hash.map(AnchorRequest.prependZeros), fee, timestamp, _proofs)
+      _hash <- if (hash == "") Right(None)
+      else parseBase58(hash, TransactionFactory.IncorectHashMessage, AssociationTransaction.StringHashLength).map(Some(_))
+      _proofs <- Proofs.create(_proofBytes)
+      t       <- ctor(version, _sender, _party, associationType, _hash, fee, timestamp, _proofs)
     } yield t
 }

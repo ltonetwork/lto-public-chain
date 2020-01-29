@@ -104,7 +104,8 @@ case class AssociationsApiRoute(settings: RestAPISettings,
         paramType = "body",
         dataType = "com.wavesplatform.api.http.AssociationRequest",
         defaultValue =
-          "\n   {\n       \"sender\": \"3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg\",\n       \"fee\": 100000,\n       \"version\": 1,\n       \"party\" : \"3MSDfsdfsdfsdfsdfsdfsdsdfsdfsdfsdf\",\n       \"associationType\" : 420,\n       \"hash\" : \"\"\n   }\n")
+          "\n   {\n       \"sender\": \"3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg\",\n       \"fee\": 100000,\n       \"version\": 1,\n       \"party\" : \"3MSDfsdfsdfsdfsdfsdfsdsdfsdfsdfsdf\",\n       \"associationType\" : 420,\n       \"hash\" : \"\"\n   }\n"
+      )
     ))
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def issueAssociation: Route =
@@ -121,7 +122,8 @@ case class AssociationsApiRoute(settings: RestAPISettings,
         paramType = "body",
         dataType = "com.wavesplatform.api.http.AssociationRequest",
         defaultValue =
-          "\n   {\n       \"sender\": \"3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg\",\n       \"fee\": 100000,\n       \"version\": 1,\n       \"party\" : \"3MSDfsdfsdfsdfsdfsdfsdsdfsdfsdfsdf\",\n       \"associationType\" : 420,\n       \"hash\" : \"\"\n   }\n")
+          "\n   {\n       \"sender\": \"3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg\",\n       \"fee\": 100000,\n       \"version\": 1,\n       \"party\" : \"3MSDfsdfsdfsdfsdfsdfsdsdfsdfsdfsdf\",\n       \"associationType\" : 420,\n       \"hash\" : \"\"\n   }\n"
+      )
     ))
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def revokeAssociation: Route =

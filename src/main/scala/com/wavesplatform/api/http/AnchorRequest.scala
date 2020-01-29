@@ -12,10 +12,6 @@ object AnchorRequest {
   implicit val unsignedDataRequestReads = Json.reads[AnchorRequest]
   implicit val signedDataRequestReads   = Json.reads[SignedAnchorRequest]
 
-  def prependZeros(a: ByteStr) =
-    if (a.arr.length >= AnchorTransaction.NewEntryLength) a
-    else
-      ByteStr(Array.fill(AnchorTransaction.NewEntryLength - a.arr.length)(0: Byte) ++ a.arr)
 }
 
 case class AnchorRequest(version: Byte, sender: String, anchors: List[String], fee: Long, timestamp: Option[Long] = None)
@@ -40,6 +36,6 @@ case class SignedAnchorRequest(@ApiModelProperty(required = true)
       _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
       _anchors    <- anchors.traverse(s => parseBase58(s, "invalid anchor", Proofs.MaxAnchorStringSize))
       _proofs     <- Proofs.create(_proofBytes)
-      t           <- AnchorTransaction.create(version, _sender, _anchors.map(AnchorRequest.prependZeros), fee, timestamp, _proofs)
+      t           <- AnchorTransaction.create(version, _sender, _anchors, fee, timestamp, _proofs)
     } yield t
 }
