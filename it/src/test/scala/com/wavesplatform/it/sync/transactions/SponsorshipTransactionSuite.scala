@@ -1,8 +1,10 @@
 package com.wavesplatform.it.sync.transactions
 
+import com.typesafe.config.{Config, ConfigFactory}
 import com.wavesplatform.account.PrivateKeyAccount
 import com.wavesplatform.account.PublicKeyAccount._
 import com.wavesplatform.api.http.SponsorshipApiRoute.SponsorshipInfo
+import com.wavesplatform.it.NodeConfigs.Default
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.it.util._
@@ -18,32 +20,55 @@ class SponsorshipTransactionSuite extends BaseTransactionSuite with CancelAfterF
   val recipient = PrivateKeyAccount.fromSeed("recipient").explicitGet()
   val sponsor   = PrivateKeyAccount.fromSeed("sponsor").explicitGet()
 
+  override protected def nodeConfigs: Seq[Config] = SponsorshipTransactionSuite.Configs
+  
   test("sponsor pays for sender") {
 
     val topUpPayer =
-      TransferTransactionV2.selfSigned(2, notMiner.privateKey, payer, 10.waves, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
+      TransferTransactionV2.selfSigned(2, sender.privateKey, payer, 10.waves, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
     val topUpSponsor =
-      TransferTransactionV2.selfSigned(2, notMiner.privateKey, sponsor, 10.waves, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
-    val becomeSponsor = SponsorshipTransaction.selfSigned(1, sponsor, payer, fee, System.currentTimeMillis()).explicitGet()
+      TransferTransactionV2.selfSigned(2, sender.privateKey, sponsor, 10.waves, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
+    val becomeSponsor = SponsorshipTransaction.selfSigned(1, sponsor, payer, 5*fee, System.currentTimeMillis()).explicitGet()
     val makePayment =
       TransferTransactionV2.selfSigned(2, payer, recipient, 4.waves, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
 
-    val topUpPayerId = notMiner.signedBroadcast(topUpPayer.json()).id
+    val topUpPayerId = sender.signedBroadcast(topUpPayer.json()).id
     nodes.waitForHeightAriseAndTxPresent(topUpPayerId)
 
-    val topUpSponsorId = notMiner.signedBroadcast(topUpSponsor.json()).id
+    val topUpSponsorId = sender.signedBroadcast(topUpSponsor.json()).id
     nodes.waitForHeightAriseAndTxPresent(topUpSponsorId)
 
-    val sponsorshipId = notMiner.signedBroadcast(becomeSponsor.json()).id
+    val sponsorshipId = sender.signedBroadcast(becomeSponsor.json()).id
     nodes.waitForHeightAriseAndTxPresent(sponsorshipId)
 
-    notMiner.getSponsorship(payer.address) shouldBe SponsorshipInfo(Some(sponsor.address))
+    sender.getSponsorship(payer.address) shouldBe SponsorshipInfo(Some(sponsor.address))
 
-    val paymentId = notMiner.signedBroadcast(makePayment.json()).id
+    val paymentId = sender.signedBroadcast(makePayment.json()).id
     nodes.waitForHeightAriseAndTxPresent(paymentId)
-    notMiner.assertBalances(payer.address, (10 - 1 - 4).waves)
-    notMiner.assertBalances(recipient.address, (10 + 4).waves)
-    notMiner.assertBalances(sponsor.address, (10 - 5 - 1).waves)
+    sender.assertBalances(payer.address, (10 - 1 - 4).waves)
+    sender.assertBalances(recipient.address, (10 + 4).waves)
+    sender.assertBalances(sponsor.address, (10 - 5 - 1).waves)
 
   }
+}
+object SponsorshipTransactionSuite {
+  private val config =
+    ConfigFactory.parseString(s"""
+                                 |lto {
+                                 |   blockchain.custom {
+                                 |      functionality {
+                                 |        pre-activated-features = {
+                                 |          2 = 0
+                                 |          3 = 0
+                                 |          4 = 0
+                                 |          5 = 0
+                                 |          6 = 0
+                                 |          7 = 0,
+                                 |          10 = 0,
+                                 |          11 = 0
+                                 |        }
+                                 |      }
+                                 |   }
+                                 |}""".stripMargin)
+  val Configs: Seq[Config] = Default.map(config.withFallback(_)).take(4)
 }
