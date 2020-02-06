@@ -43,18 +43,21 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
      This breaks the test.
   2. We have RollbackSuite
    */
+  
   override protected def nodeConfigs: Seq[Config] =
     NodeConfigs.newBuilder
       .overrideBase(_.quorum(0))
       .withDefault(1)
       .buildNonConflicting()
 
+  lazy val node = nodes.head
+
   test("step1: Balances initialization") {
     val toAliceBC1TxId = sender.transfer(sender.address, AliceBC1, 10 * transferAmount, minFee).id
-    nodes.waitForHeightAriseAndTxPresent(toAliceBC1TxId)
+    node.waitForTransaction(toAliceBC1TxId)
 
     val toSwapBC1TxId = sender.transfer(sender.address, swapBC1, minFee, minFee).id
-    nodes.waitForHeightAriseAndTxPresent(toSwapBC1TxId)
+    node.waitForTransaction(toSwapBC1TxId)
   }
 
   test("step2: Create and setup smart contract for swapBC1") {
@@ -89,7 +92,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
       .signedBroadcast(sc1SetTx.json() + ("type" -> JsNumber(SetScriptTransaction.typeId.toInt)))
       .id
 
-    nodes.waitForHeightAriseAndTxPresent(setScriptId)
+    node.waitForTransaction(setScriptId)
 
     val swapBC1ScriptInfo = sender.addressScriptInfo(swapBC1)
 
@@ -114,7 +117,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
     val transferId = sender
       .signedBroadcast(txToSwapBC1.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt)))
       .id
-    nodes.waitForHeightAriseAndTxPresent(transferId)
+    node.waitForTransaction(transferId)
   }
 
   test("step4: Alice cannot make transfer from swapBC1 if height is incorrect") {
@@ -161,7 +164,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
 
     nodes.waitForHeightArise()
     val versionedTransferId = sender.signedBroadcast(signed.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))).id
-    nodes.waitForHeightAriseAndTxPresent(versionedTransferId)
+    node.waitForTransaction(versionedTransferId)
 
     notMiner.assertBalances(swapBC1, swapBalance - transferAmount - (minFee + smartFee), swapEffBalance - transferAmount - (minFee + smartFee))
     notMiner.assertBalances(BobBC1, bobBalance + transferAmount, bobEffBalance + transferAmount)
@@ -188,7 +191,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
 
     val transferToAlice =
       sender.signedBroadcast(selfSignedToAlice.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))).id
-    nodes.waitForHeightAriseAndTxPresent(transferToAlice)
+    node.waitForTransaction(transferToAlice)
 
     notMiner.assertBalances(swapBC1, swapBalance - transferAmount - (minFee + smartFee), swapEffBalance - transferAmount - (minFee + smartFee))
     notMiner.assertBalances(BobBC1, bobBalance, bobEffBalance)
