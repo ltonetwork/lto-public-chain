@@ -1,7 +1,9 @@
 package com.wavesplatform.api.http
 
+import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Route
 import com.wavesplatform.account.Address
+import com.wavesplatform.api.http.SponsorshipApiRoute.SponsorshipInfo
 import com.wavesplatform.http.BroadcastRoute
 import com.wavesplatform.settings.RestAPISettings
 import com.wavesplatform.state.Blockchain
@@ -12,7 +14,7 @@ import com.wavesplatform.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
 import javax.ws.rs.Path
-import play.api.libs.json.JsNumber
+import play.api.libs.json.{Format, JsNumber, Json}
 
 @Path("/sponsorship")
 @Api(value = "/sponsorship")
@@ -21,7 +23,7 @@ case class SponsorshipApiRoute(settings: RestAPISettings, wallet: Wallet, blockc
     with BroadcastRoute {
 
   override val route = pathPrefix("sponsorship") {
-    sponsor ~ cancel ~ active
+    sponsor ~ cancel ~ status
   }
 
   @Path("/sponsor")
@@ -61,18 +63,20 @@ case class SponsorshipApiRoute(settings: RestAPISettings, wallet: Wallet, blockc
     Array(
       new ApiImplicitParam(name = "address", value = "Wallet address ", required = true, dataType = "string", paramType = "path")
     ))
-  def active: Route = (pathPrefix("status") & get) {
+  def status: Route = (pathPrefix("status") & get) {
     pathPrefix(Segment) { address =>
       complete(Address.fromString(address) match {
         case Left(e) => ApiError.fromValidationError(e)
-        case Right(a) => ???
-//          blockchain
-//            .addressTransactions(a, Set(LeaseTransactionV1.typeId), Int.MaxValue, 0)
-//            .collect {
-//              case (h, lt: LeaseTransaction) if blockchain.leaseDetails(lt.id()).exists(_.isActive) =>
-//                lt.json() + ("height" -> JsNumber(h))
-//            }
+        case Right(a) =>
+          ToResponseMarshallable(SponsorshipInfo(blockchain.sponsorOf(a).map(_.address)))
       })
     }
   }
 }
+
+object SponsorshipApiRoute {
+  case class SponsorshipInfo(sponsor: Option[String])
+  implicit val sponsorshipInfoFormat: Format[SponsorshipInfo]   = Json.format
+
+}
+

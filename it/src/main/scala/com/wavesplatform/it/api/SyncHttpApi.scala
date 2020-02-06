@@ -3,6 +3,7 @@ package com.wavesplatform.it.api
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.StatusCodes.BadRequest
 import com.wavesplatform.api.http.AddressApiRoute
+import com.wavesplatform.api.http.SponsorshipApiRoute.SponsorshipInfo
 import com.wavesplatform.features.api.ActivationStatus
 import com.wavesplatform.http.DebugMessage
 import com.wavesplatform.it.Node
@@ -144,8 +145,12 @@ object SyncHttpApi extends Assertions {
       Await.result(async(n).getData(sourceAddress, key), RequestAwaitTime)
 
     import com.wavesplatform.api.http.AssociationsApiRoute.AssociationsInfo
+
     def getAssociations(address: String): AssociationsInfo =
       Await.result(async(n).getAssociations(address), RequestAwaitTime)
+
+    def getSponsorship(address: String): SponsorshipInfo =
+      Await.result(async(n).getSponsorship(address), RequestAwaitTime)
 
     def broadcastRequest[A: Writes](req: A): Transaction =
       Await.result(async(n).broadcastRequest(req), RequestAwaitTime)
