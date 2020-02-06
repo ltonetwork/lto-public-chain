@@ -69,8 +69,8 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
 
     match tx {
       case ttx: TransferTransaction =>
-        let txToBob = (ttx.recipient == Bob) && (sha256(ttx.proofs[0]) == base58'$shaSecret') && ((20 + $beforeHeight) >= height)
-        let backToAliceAfterHeight = ((height >= (21 + $beforeHeight)) && (ttx.recipient == Alice))
+        let txToBob = (ttx.recipient == Bob) && (sha256(ttx.proofs[0]) == base58'$shaSecret') && ((10 + $beforeHeight) >= height)
+        let backToAliceAfterHeight = ((height >= (11 + $beforeHeight)) && (ttx.recipient == Alice))
 
         txToBob || backToAliceAfterHeight
       case other => false
@@ -172,7 +172,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
 
     nodes.rollback(height, false)
 
-    nodes.waitForHeight(height + 20)
+    nodes.waitForHeight(height + 10)
 
     notMiner.accountBalances(swapBC1)
     assertNotFoundAndMessage(notMiner.transactionInfo(versionedTransferId), "Transaction is not in blockchain")
