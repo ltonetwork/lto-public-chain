@@ -64,7 +64,7 @@ object Keys {
 
 
   def sponsorshipHistory(addressId:BigInt): Key[Seq[Int]] = historyKey(48,addressId.toByteArray)
-  def sponsorshipStatus(addressId: BigInt)(height: Int): Key[Option[Address]] =
+  def sponsorshipStatus(addressId: BigInt)(height: Int): Key[List[Address]] =
     Key.opt(hAddr(49, height, addressId), arr => Address.fromBytes(arr).explicitGet(), _.bytes.arr)
 
   def transactionInfo(txId: ByteStr): Key[Option[(Int, Transaction)]] = Key.opt(hash(18, txId), readTransactionInfo, writeTransactionInfo)

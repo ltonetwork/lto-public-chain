@@ -122,8 +122,8 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       db.hasInHistory(Keys.addressScriptHistory(addressId), Keys.addressScript(addressId))
     }
   }
-  override def sponsorOf(address: Address): Option[Address] = readOnly { db =>
-    addressId(address).fold(Option.empty[Address]) { addressId =>
+  override def sponsorOf(address: Address): List[Address] = readOnly { db =>
+    addressId(address).fold(List.empty[Address]) { addressId =>
       db.fromHistory(Keys.sponsorshipHistory(addressId), Keys.sponsorshipStatus(addressId)).flatten
     }
   }
