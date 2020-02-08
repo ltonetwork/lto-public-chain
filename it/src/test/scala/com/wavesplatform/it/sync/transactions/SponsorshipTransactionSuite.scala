@@ -41,7 +41,7 @@ class SponsorshipTransactionSuite extends BaseTransactionSuite with CancelAfterF
     val sponsorshipId = sender.signedBroadcast(becomeSponsor.json()).id
     nodes.waitForHeightAriseAndTxPresent(sponsorshipId)
 
-    sender.getSponsorship(payer.address) shouldBe SponsorshipInfo(Some(sponsor.address))
+    sender.getSponsorship(payer.address) shouldBe SponsorshipInfo(List(sponsor.address))
 
     val paymentId = sender.signedBroadcast(makePayment.json()).id
     nodes.waitForHeightAriseAndTxPresent(paymentId)

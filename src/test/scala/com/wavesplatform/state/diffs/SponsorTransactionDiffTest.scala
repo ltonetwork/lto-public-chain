@@ -41,7 +41,7 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
             d.portfolios(transfer.sender.toAddress).balance shouldBe (-transfer.amount)
             d.portfolios(transfer.recipient.asInstanceOf[Address]).balance shouldBe (transfer.amount)
             d.portfolios(TestBlock.defaultSigner).balance shouldBe (transfer.fee)
-            b.sponsorOf(transfer.sender.toAddress) shouldBe Some(sponsorship.sender.toAddress)
+            b.sponsorOf(transfer.sender.toAddress) shouldBe List(sponsorship.sender.toAddress)
         }
     }
   }
@@ -54,7 +54,7 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
             d.portfolios(transfer.sender.toAddress).balance shouldBe (-transfer.fee - transfer.amount)
             d.portfolios(transfer.recipient.asInstanceOf[Address]).balance shouldBe (transfer.amount)
             d.portfolios(TestBlock.defaultSigner).balance shouldBe (cancel.fee + transfer.fee)
-            b.sponsorOf(transfer.sender.toAddress) shouldBe None
+            b.sponsorOf(transfer.sender.toAddress) shouldBe List.empty
         }
     }
   }
@@ -66,7 +66,7 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
             d.portfolios(transfer.sender.toAddress).balance shouldBe (-transfer.fee - transfer.amount)
             d.portfolios(transfer.recipient.asInstanceOf[Address]).balance shouldBe (transfer.amount)
             d.portfolios(TestBlock.defaultSigner).balance shouldBe (transfer.fee)
-            b.sponsorOf(transfer.sender.toAddress) shouldBe None
+            b.sponsorOf(transfer.sender.toAddress) shouldBe List.empty
         }
     }
   }
@@ -97,7 +97,7 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
       case (genesis, sponsorship, sponsorship2, _, transfer) =>
         assertDiffAndState(Seq(block(genesis), block(Seq(sponsorship)),block(Seq(sponsorship2))), block(Seq(transfer))) {
           case (d, b) =>
-            d.portfolios.get(sponsorship2.sender.toAddress) shouldBe None
+            d.portfolios.get(sponsorship.sender.toAddress) shouldBe None
             d.portfolios(sponsorship2.sender.toAddress).balance shouldBe (-transfer.fee)
             d.portfolios(transfer.sender.toAddress).balance shouldBe (-transfer.amount)
             d.portfolios(transfer.recipient.asInstanceOf[Address]).balance shouldBe (transfer.amount)

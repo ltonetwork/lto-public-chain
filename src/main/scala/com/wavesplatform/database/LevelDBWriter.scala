@@ -124,7 +124,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
   }
   override def sponsorOf(address: Address): List[Address] = readOnly { db =>
     addressId(address).fold(List.empty[Address]) { addressId =>
-      db.fromHistory(Keys.sponsorshipHistory(addressId), Keys.sponsorshipStatus(addressId)).flatten
+      db.fromHistory(Keys.sponsorshipHistory(addressId), Keys.sponsorshipStatus(addressId)).getOrElse(List.empty)
     }
   }
 
@@ -187,7 +187,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   scripts: Map[BigInt, Option[Script]],
                                   data: Map[BigInt, AccountDataInfo],
                                   assocs: List[(Int, AssociationTransactionBase)],
-                                  sponsorship: Map[BigInt, Option[Address]]): Unit = readWrite { rw =>
+                                  sponsorship: Map[BigInt, List[Address]]): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
     rw.put(Keys.height, height)
@@ -240,9 +240,9 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       script.foreach(s => rw.put(Keys.addressScript(addressId)(height), Some(s)))
     }
 
-    for ((addressId, maybeSponsor) <- sponsorship) {
+    for ((addressId, newSponsorList) <- sponsorship) {
       expiredKeys ++= updateHistory(rw, Keys.sponsorshipHistory(addressId), threshold, Keys.sponsorshipStatus(addressId))
-      maybeSponsor.foreach(s => rw.put(Keys.sponsorshipStatus(addressId)(height), Some(s)))
+      rw.put(Keys.sponsorshipStatus(addressId)(height),newSponsorList)
     }
 
     for ((addressId, addressData) <- data) {

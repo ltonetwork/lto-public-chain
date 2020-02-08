@@ -6,6 +6,7 @@ import com.google.common.base.Charsets.UTF_8
 import com.google.common.primitives.{Ints, Longs, Shorts}
 import com.wavesplatform.account.Address
 import com.wavesplatform.block.{Block, BlockHeader}
+import com.wavesplatform.serialization.Deser
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.Transaction
 import com.wavesplatform.transaction.smart.script.{Script, ScriptReader}
@@ -62,10 +63,9 @@ object Keys {
   def leaseStatus(leaseId: ByteStr)(height: Int): Key[Boolean] =
     Key(hBytes(15, height, leaseId.arr), _(0) == 1, active => Array[Byte](if (active) 1 else 0))
 
-
   def sponsorshipHistory(addressId:BigInt): Key[Seq[Int]] = historyKey(48,addressId.toByteArray)
   def sponsorshipStatus(addressId: BigInt)(height: Int): Key[List[Address]] =
-    Key.opt(hAddr(49, height, addressId), arr => Address.fromBytes(arr).explicitGet(), _.bytes.arr)
+    Key(hAddr(49, height, addressId), arr => Deser.parseArrays(arr).map(a => Address.fromBytes(a).explicitGet()).toList, (l:List[Address]) => Deser.serializeArrays(l.map(_.bytes.arr)))
 
   def transactionInfo(txId: ByteStr): Key[Option[(Int, Transaction)]] = Key.opt(hash(18, txId), readTransactionInfo, writeTransactionInfo)
   def transactionHeight(txId: ByteStr): Key[Option[Int]] =
