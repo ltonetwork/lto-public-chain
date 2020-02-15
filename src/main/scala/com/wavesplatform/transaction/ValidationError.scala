@@ -22,6 +22,7 @@ object ValidationError {
   case object OverflowError                                    extends ValidationError
   case object ToSelf                                           extends ValidationError
   case object MissingSenderPrivateKey                          extends ValidationError
+  case object AccountBasedWallet                          extends ValidationError
   case object UnsupportedTransactionType                       extends ValidationError
   case object InvalidRequestSignature                          extends ValidationError
   case class BlockFromFuture(ts: Long)                         extends ValidationError
