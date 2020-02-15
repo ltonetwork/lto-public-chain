@@ -351,7 +351,7 @@ object TransactionFactory extends BroadcastRequest {
         Proofs.empty
       )
     } yield tx
-  val IncorectHashMessage =  "Incorrect hash length, should be <= 64 bytes"
+  val IncorectHashMessage = "Incorrect hash length, should be <= 64 bytes"
   private def association[T](signedCtor: AssociationTransaction.SignedCtor[T])(request: AssociationRequest,
                                                                                wallet: Wallet,
                                                                                signerAddress: String,

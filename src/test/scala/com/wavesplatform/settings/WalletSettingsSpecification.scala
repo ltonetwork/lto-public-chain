@@ -14,7 +14,7 @@ class WalletSettingsSpecification extends FlatSpec with Matchers {
         |}""".stripMargin))
     val settings = config.as[WalletSettings]("lto.wallet")
 
-    settings.seed should be(Some(ByteStr.decodeBase58("BASE58SEED").get))
+    settings.miningWalletSeed should be(Some(ByteStr.decodeBase58("BASE58SEED").get))
     settings.password should be("some string as password")
   }
 }

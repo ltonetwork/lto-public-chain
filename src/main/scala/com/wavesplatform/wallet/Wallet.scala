@@ -58,7 +58,7 @@ object Wallet extends ScorexLogging {
   def generateAccountSeed(seed: Array[Byte], nonce: Int): Array[Byte] =
     crypto.secureHash(Bytes.concat(Ints.toByteArray(nonce), seed))
 
-  def apply(settings: WalletSettings): Wallet = new WalletImpl(settings.file, settings.password, settings.seed)
+  def apply(settings: WalletSettings): Wallet = new WalletImpl(settings.file, settings.password, settings.miningWalletSeed)
 
   private class WalletImpl(maybeFile: Option[File], password: String, maybeSeedFromConfig: Option[ByteStr]) extends ScorexLogging with Wallet {
 

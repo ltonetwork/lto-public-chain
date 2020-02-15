@@ -11,7 +11,7 @@ import org.scalatest.{FunSuite, Matchers}
 class WalletSpecification extends FunSuite with Matchers {
 
   private val walletSize = 10
-  val w                  = Wallet(WalletSettings(None, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
+  val w                  = Wallet(WalletSettings(None, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption,None,None))
 
   test("wallet - acc creation") {
     w.generateNewAccounts(walletSize)
@@ -48,12 +48,12 @@ class WalletSpecification extends FunSuite with Matchers {
   test("reopening") {
     val walletFile = Some(createTestTemporaryFile("wallet", ".dat"))
 
-    val w1 = Wallet(WalletSettings(walletFile, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
+    val w1 = Wallet(WalletSettings(walletFile, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption,None,None))
     w1.generateNewAccounts(10)
     val w1privateKeyAccounts = w1.privateKeyAccounts
     val w1nonce              = w1.nonce
 
-    val w2 = Wallet(WalletSettings(walletFile, "cookies", None))
+    val w2 = Wallet(WalletSettings(walletFile, "cookies", None, None,None))
     w2.privateKeyAccounts.nonEmpty shouldBe true
     w2.privateKeyAccounts shouldEqual w1privateKeyAccounts
     w2.nonce shouldBe w1nonce
@@ -61,11 +61,11 @@ class WalletSpecification extends FunSuite with Matchers {
 
   test("reopen with incorrect password") {
     val file = Some(createTestTemporaryFile("wallet", ".dat"))
-    val w1   = Wallet(WalletSettings(file, "password", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
+    val w1   = Wallet(WalletSettings(file, "password", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption,None,None))
     w1.generateNewAccounts(3)
 
     assertThrows[IllegalStateException] {
-      Wallet(WalletSettings(file, "incorrect password", None))
+      Wallet(WalletSettings(file, "incorrect password", None, None,None))
     }
   }
 

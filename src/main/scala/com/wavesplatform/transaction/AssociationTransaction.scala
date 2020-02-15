@@ -89,7 +89,7 @@ object AssociationTransaction {
   }
 
   val supportedVersions: Set[Byte] = Set(1)
-  val MaxHashLength                   = 64
+  val MaxHashLength                = 64
   val StringHashLength             = com.wavesplatform.utils.base58Length(AssociationTransaction.MaxHashLength)
 
   def networkByte = AddressScheme.current.chainId
