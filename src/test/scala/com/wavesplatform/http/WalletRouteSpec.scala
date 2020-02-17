@@ -19,7 +19,7 @@ class WalletRouteSpec extends RouteSpec("/wallet") with RestAPISettingsHelper wi
 
     "returns seed when api-key header is present" in {
       Get(routePath("/seed")) ~> api_key(apiKey) ~> route ~> check {
-        (responseAs[JsObject] \ "seed").as[String] shouldEqual Base58.encode(testWallet.seed)
+        (responseAs[JsObject] \ "seed").as[String] shouldEqual Base58.encode(testWallet.seed.right.get)
       }
     }
 
