@@ -73,8 +73,11 @@ case class AddressApiRoute(settings: RestAPISettings,
       if (Address.fromString(address).isLeft) {
         complete(InvalidAddress)
       } else {
-        val deleted = wallet.findPrivateKey(address).exists(account => wallet.deleteAccount(account))
-        complete(Json.obj("deleted" -> deleted))
+        val deleted = wallet.findPrivateKey(address).flatMap(account => wallet.deleteAccount(account))
+        deleted match {
+          case Right(d) => complete(Json.obj("deleted" -> JsBoolean(d)))
+          case Left(e) => complete(e)
+        }
       }
     }
   }
@@ -336,8 +339,9 @@ case class AddressApiRoute(settings: RestAPISettings,
   @ApiOperation(value = "Create", notes = "Create a new account in the wallet(if it exists)", httpMethod = "POST")
   def create: Route = (path("addresses") & post & withAuth) {
     wallet.generateNewAccount() match {
-      case Some(pka) => complete(Json.obj("address" -> pka.address))
-      case None      => complete(Unknown)
+      case Right(Some(pka)) => complete(Json.obj("address" -> pka.address))
+      case Right(None)      => complete(Unknown)
+      case Left(e)      => complete(e)
     }
   }
 
