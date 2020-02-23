@@ -2,6 +2,7 @@ package com.wavesplatform.settings
 
 import java.io.File
 
+import com.wavesplatform.crypto
 import com.wavesplatform.state.ByteStr
 
 case class WalletSettings(
@@ -12,10 +13,11 @@ case class WalletSettings(
     accountSeed: Option[ByteStr]
 ) {
   require(List(seed, seedPhrase, accountSeed).count(_.nonEmpty) <= 1, "Can only have one: seed, seedPhrase, accountSeed")
-  private lazy val seedFromPhrase: Option[ByteStr] = seedPhrase.map(s => ByteStr(Array.concat(WalletSettings.zeros, s.getBytes())))
-  def miningWalletSeed: Option[ByteStr]    = seed.orElse(seedFromPhrase)
+  private lazy val seedFromPhrase: Option[ByteStr] =
+    seedPhrase.map(s => ByteStr(crypto.secureHash(Array.concat(WalletSettings.zeros, s.getBytes()))))
+  def miningWalletSeed: Option[ByteStr] = seed.orElse(seedFromPhrase)
 }
 object WalletSettings {
-  val zeros = Array(0, Byte, 0: Byte, 0: Byte, 0: Byte)
+  val zeros = Array(0: Byte, 0: Byte, 0: Byte, 0: Byte)
 
 }

@@ -12,6 +12,7 @@ class WalletSpecification extends FunSuite with Matchers {
 
   private val walletSize = 10
   val w                  = Wallet(WalletSettings(None, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption,None,None))
+  val w2                  = Wallet(WalletSettings(None, "cookies",None,None, ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
 
   test("wallet - acc creation") {
     w.generateNewAccounts(walletSize)
@@ -57,6 +58,39 @@ class WalletSpecification extends FunSuite with Matchers {
     w2.privateKeyAccounts.nonEmpty shouldBe true
     w2.privateKeyAccounts shouldEqual w1privateKeyAccounts
     w2.nonce shouldBe w1nonce
+  }
+
+  test("reopening with accountSeed") {
+    val walletFile = Some(createTestTemporaryFile("wallet", ".dat"))
+
+    val w1 = Wallet(WalletSettings(walletFile, "cookies",None, None,ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
+    val w1privateKeyAccounts = w1.privateKeyAccounts
+    w1.accountSeed.nonEmpty shouldBe true
+    w1.seed shouldBe 'left
+    w1.save()
+
+    val w2 = Wallet(WalletSettings(walletFile, "cookies", None, None,None))
+    ByteStr(w2.accountSeed.get) shouldEqual ByteStr(w1.accountSeed.get)
+    w2.seed shouldBe 'left
+    w2.privateKeyAccounts.nonEmpty shouldBe true
+    w2.privateKeyAccounts shouldEqual w1privateKeyAccounts
+  }
+
+  test("reopening with seed phrase") {
+    val walletFile = Some(createTestTemporaryFile("wallet", ".dat"))
+
+    val w1 = Wallet(WalletSettings(walletFile, "cookies",None, Some("crypto is here to stay"),None))
+    val w1privateKeyAccounts = w1.privateKeyAccounts
+    w1.privateKeyAccounts.nonEmpty shouldBe true
+    w1.accountSeed shouldBe empty
+    w1.seed shouldBe 'right
+    w1.save()
+
+    val w2 = Wallet(WalletSettings(walletFile, "cookies", None, None,None))
+    w2.accountSeed shouldBe None
+    w2.privateKeyAccounts.nonEmpty shouldBe true
+    w2.privateKeyAccounts shouldEqual w1privateKeyAccounts
+    ByteStr(w2.seed.right.get) shouldEqual ByteStr(w1.seed.right.get)
   }
 
   test("reopen with incorrect password") {

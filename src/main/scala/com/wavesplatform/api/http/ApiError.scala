@@ -36,7 +36,7 @@ object ApiError {
       case ValidationError.OverflowError           => OverflowError
       case ValidationError.ToSelf                  => ToSelfError
       case ValidationError.MissingSenderPrivateKey => MissingSenderPrivateKey
-      case ValidationError.AccountBasedWallet => AccountBasedWallet
+      case ValidationError.AccountBasedWallet      => AccountBasedWallet
       case ValidationError.GenericError(ge)        => CustomValidationError(ge)
       case ValidationError.AlreadyInTheState(tx, txHeight) =>
         CustomValidationError(s"Transaction $tx is already in the state on a height of $txHeight")

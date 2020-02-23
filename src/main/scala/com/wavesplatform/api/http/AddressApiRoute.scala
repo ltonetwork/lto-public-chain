@@ -76,7 +76,7 @@ case class AddressApiRoute(settings: RestAPISettings,
         val deleted = wallet.findPrivateKey(address).flatMap(account => wallet.deleteAccount(account))
         deleted match {
           case Right(d) => complete(Json.obj("deleted" -> JsBoolean(d)))
-          case Left(e) => complete(e)
+          case Left(e)  => complete(e)
         }
       }
     }
@@ -341,7 +341,7 @@ case class AddressApiRoute(settings: RestAPISettings,
     wallet.generateNewAccount() match {
       case Right(Some(pka)) => complete(Json.obj("address" -> pka.address))
       case Right(None)      => complete(Unknown)
-      case Left(e)      => complete(e)
+      case Left(e)          => complete(e)
     }
   }
 
