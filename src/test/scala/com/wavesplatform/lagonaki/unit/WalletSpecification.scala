@@ -52,6 +52,7 @@ class WalletSpecification extends FunSuite with Matchers {
     val w1 = Wallet(WalletSettings(walletFile, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption,None,None))
     w1.generateNewAccounts(10)
     val w1privateKeyAccounts = w1.privateKeyAccounts
+    w1.privateKeyAccounts.nonEmpty shouldBe true
     val w1nonce              = w1.nonce
 
     val w2 = Wallet(WalletSettings(walletFile, "cookies", None, None,None))
