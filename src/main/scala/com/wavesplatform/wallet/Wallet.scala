@@ -59,7 +59,7 @@ object Wallet extends ScorexLogging {
     def copyWithAccountSeeds(ass: Set[ByteStr]) = {
       accountSeed match {
         case Some(as) => throw new IllegalStateException("this is account-seed-based wallet, can't do")
-        case None     => this.copy(accountSeeds = accountSeeds)
+        case None     => this.copy(accountSeeds = ass)
       }
     }
     def accountBased = accountSeed.nonEmpty
@@ -95,16 +95,17 @@ object Wallet extends ScorexLogging {
 
     private lazy val actualSeed = maybeSeedFromConfig
       .getOrElse {
-      val randomSeed = ByteStr(randomBytes(64))
-      log.info(s"Your randomly generated seed is ${randomSeed.base58}")
-      randomSeed
-    }
+        val randomSeed = ByteStr(randomBytes(64))
+        log.info(s"Your randomly generated seed is ${randomSeed.base58}")
+        randomSeed
+      }
 
     private lazy val actualAccountSeed = maybeAccountSeedFromConfig
 
-    private var walletData: WalletData = {
+    def loadWalletData(): WalletData = {
+      lazy val  first =ByteStr(generateAccountSeed(actualSeed.arr,0))
       if (maybeFile.isEmpty)
-        WalletData(actualSeed, Set.empty, 0, actualAccountSeed)
+        WalletData(actualSeed, Set(first), 0, actualAccountSeed)
       else {
         val file = maybeFile.get
         if (file.exists() && file.length() > 0) {
@@ -113,15 +114,16 @@ object Wallet extends ScorexLogging {
           else {
             throw new IllegalStateException(s"Failed to open existing wallet file '${maybeFile.get}' maybe provided password is incorrect")
           }
-        } else WalletData(actualSeed, Set.empty, 0, actualAccountSeed)
+        } else WalletData(actualSeed, Set(first), 0, actualAccountSeed)
       }
     }
+    private var walletData: WalletData = loadWalletData()
 
     private val l = new Object
 
     private def lock[T](f: => T): T = l.synchronized(f)
 
-    private val accountsCache: TrieMap[String, PrivateKeyAccount] = {
+    private def readAccountsFromWalletData: TrieMap[String, PrivateKeyAccount] = {
       val accounts = walletData.getAccountSeeds().map(seed => PrivateKeyAccount(seed.arr))
       TrieMap(accounts.map(acc => acc.address -> acc).toSeq: _*)
     }
@@ -134,8 +136,7 @@ object Wallet extends ScorexLogging {
       val account = Wallet.generateNewAccount(seed.explicitGet(), nonce) // called from guarded public methods only
 
       val address = account.address
-      if (!accountsCache.contains(address)) {
-        accountsCache += account.address -> account
+      if (!readAccountsFromWalletData.contains(address)) {
         walletData = walletData.copyWithAccountSeeds(walletData.getAccountSeeds() + ByteStr(account.seed))
         log.info("Added account #" + privateKeyAccounts.size)
         Some(account)
@@ -146,7 +147,7 @@ object Wallet extends ScorexLogging {
 
     override def accountSeed: Option[Array[Byte]] = walletData.accountSeed.map(_.arr)
 
-    override def privateKeyAccounts: List[PrivateKeyAccount] = accountsCache.values.toList
+    override def privateKeyAccounts: List[PrivateKeyAccount] = readAccountsFromWalletData.values.toList
 
     override def generateNewAccounts(howMany: Int) =
       if (walletData.accountBased) Left(AccountBasedWallet)
@@ -172,14 +173,13 @@ object Wallet extends ScorexLogging {
         Right {
           val before = walletData.getAccountSeeds().size
           walletData = walletData.copyWithAccountSeeds(walletData.getAccountSeeds() - ByteStr(account.seed))
-          accountsCache -= account.address
           save()
           before > walletData.getAccountSeeds().size
         }
     }
 
     override def privateKeyAccount(account: Address): Either[ValidationError, PrivateKeyAccount] =
-      accountsCache.get(account.address).toRight[ValidationError](MissingSenderPrivateKey)
+      readAccountsFromWalletData.get(account.address).toRight[ValidationError](MissingSenderPrivateKey)
 
     override def nonce = Either.cond(!walletData.accountBased, walletData.nonce, AccountBasedWallet)
 

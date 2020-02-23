@@ -66,6 +66,7 @@ class WalletSpecification extends FunSuite with Matchers {
 
     val w1 = Wallet(WalletSettings(walletFile, "cookies",None, None,ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
     val w1privateKeyAccounts = w1.privateKeyAccounts
+    w1.privateKeyAccounts.nonEmpty shouldBe true
     w1.accountSeed.nonEmpty shouldBe true
     w1.seed shouldBe 'left
     w1.save()
@@ -82,7 +83,7 @@ class WalletSpecification extends FunSuite with Matchers {
 
     val w1 = Wallet(WalletSettings(walletFile, "cookies",None, Some("crypto is here to stay"),None))
     val w1privateKeyAccounts = w1.privateKeyAccounts
-    w1.privateKeyAccounts.nonEmpty shouldBe true
+    w1privateKeyAccounts.nonEmpty shouldBe true
     w1.accountSeed shouldBe empty
     w1.seed shouldBe 'right
     w1.save()
