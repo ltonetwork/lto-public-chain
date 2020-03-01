@@ -134,7 +134,7 @@ object Wallet extends ScorexLogging {
     override def save(): Unit = maybeFile.foreach(f => JsonFileStorage.save(walletData, f.getCanonicalPath, Some(key)))
 
     private def generateAndSave(): Option[PrivateKeyAccount] = lock {
-      val nonce = getAndIncrementNonce()
+      val nonce = incrementAndGetNonce()
       import com.wavesplatform.state._
       val account = Wallet.generateNewAccount(seed.explicitGet(), nonce) // called from guarded public methods only
 
@@ -184,9 +184,9 @@ object Wallet extends ScorexLogging {
 
     override def nonce = Either.cond(!walletData.accountBased, walletData.nonce, AccountBasedWallet)
 
-    private def getAndIncrementNonce(): Int = lock {
-      val r = walletData.nonce
-      walletData = walletData.copy(nonce = walletData.nonce + 1)
+    private def incrementAndGetNonce(): Int = lock {
+      val r = walletData.nonce + 1
+      walletData = walletData.copy(nonce = r)
       r
     }
   }

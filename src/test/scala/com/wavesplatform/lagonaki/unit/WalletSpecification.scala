@@ -25,8 +25,9 @@ class WalletSpecification extends FunSuite with Matchers {
     val w = newW()
     w.generateNewAccounts(walletSize)
 
-    w.privateKeyAccounts.size shouldBe walletSize
+    w.privateKeyAccounts.size shouldBe walletSize+1
     w.privateKeyAccounts.map(_.address) shouldBe Seq(
+      "3MsY36nMfpp3PgH7q5J7upa2WbNkjz9eYnN",
       "3N14vexKx7EpVy4iSBCyG3esoEggqSvZvn5",
       "3N2qbDFCL1R568R59X56SduiRGzj4C2ACmE",
       "3MuCs3n1eKQyzJuyBhP5gAr3AJKmNttB3DA",
@@ -39,19 +40,19 @@ class WalletSpecification extends FunSuite with Matchers {
       "3N7vtzezG94RF59qgEPuu7GYS92x6rVdu3h"
     )
   }
-  test("wallet - one acc deletion") {
+  test("wallet - one acc creation") {
     val w = newW()
     val r = w.generateNewAccount()
-    println(r)
+    r.right.get.nonEmpty shouldBe true
   }
   test("wallet - acc deletion") {
     val w = newW()
     w.generateNewAccount()
     w.generateNewAccount()
-    w.privateKeyAccounts.size shouldBe 2
+    w.privateKeyAccounts.size shouldBe 3
 
     w.deleteAccount(w.privateKeyAccounts.head)
-    w.privateKeyAccounts.size shouldBe 1
+    w.privateKeyAccounts.size shouldBe 2
 
     w.privateKeyAccounts.foreach(w.deleteAccount)
     assert(w.privateKeyAccounts.isEmpty)
