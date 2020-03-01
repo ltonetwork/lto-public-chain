@@ -20,7 +20,8 @@ class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with
     richAccount        <- accountGen
     totalTxNumber      <- Gen.chooseNum(Block.MaxTransactionsPerBlockVer3 + 1, Block.MaxTransactionsPerBlockVer3 + 100)
     txNumberInKeyBlock <- Gen.chooseNum(0, Block.MaxTransactionsPerBlockVer3)
-    allTxs             <- Gen.listOfN(totalTxNumber, validTransferGen(richAccount))
+    ts                 <- timestampGen
+    allTxs             <- Gen.listOfN(totalTxNumber, validTransferGen(richAccount, ts))
   } yield {
     val (keyBlockTxs, microTxs) = allTxs.splitAt(txNumberInKeyBlock)
     val txNumberInMicros        = totalTxNumber - txNumberInKeyBlock
@@ -30,7 +31,7 @@ class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with
       txs = Seq(GenesisTransaction.create(richAccount, ENOUGH_AMT, 0).explicitGet()),
       signer = TestBlock.defaultSigner,
       version = 3,
-      timestamp = 0
+      timestamp = ts
     )
 
     val (keyBlock, microBlocks) = unsafeChainBaseAndMicro(
@@ -39,7 +40,7 @@ class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with
       micros = microTxs.grouped(math.max(1, txNumberInMicros / 5)).toSeq,
       signer = TestBlock.defaultSigner,
       version = 3,
-      timestamp = System.currentTimeMillis()
+      timestamp = ts
     )
 
     (prevBlock, keyBlock, microBlocks)
@@ -73,11 +74,10 @@ class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with
     }
   }
 
-  private def validTransferGen(from: PrivateKeyAccount): Gen[Transaction] =
+  private def validTransferGen(from: PrivateKeyAccount, timestamp: Long): Gen[Transaction] =
     for {
       amount    <- smallFeeGen
       feeAmount <- smallFeeGen
-      timestamp <- timestampGen
       recipient <- accountGen
     } yield TransferTransactionV1.selfSigned(from, recipient, amount, timestamp, feeAmount, Array.empty).explicitGet()
 

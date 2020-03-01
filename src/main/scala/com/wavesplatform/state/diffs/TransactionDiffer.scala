@@ -1,5 +1,7 @@
 package com.wavesplatform.state.diffs
 
+import cats.kernel.Monoid
+import com.wavesplatform.account.Address
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.ValidationError.UnsupportedTransactionType
@@ -24,16 +26,29 @@ object TransactionDiffer {
       _ <- CommonValidation.disallowSendingGreaterThanBalance(blockchain, settings, currentBlockTimestamp, tx)
       _ <- CommonValidation.checkFee(blockchain, settings, currentBlockHeight, tx)
       diff <- tx match {
-        case gtx: GenesisTransaction        => GenesisTransactionDiff(currentBlockHeight)(gtx)
-        case ttx: TransferTransaction       => TransferTransactionDiff(blockchain, settings, currentBlockTimestamp, currentBlockHeight)(ttx)
-        case mtx: MassTransferTransaction   => MassTransferTransactionDiff(blockchain, currentBlockTimestamp, currentBlockHeight)(mtx)
-        case ltx: LeaseTransaction          => LeaseTransactionsDiff.lease(blockchain, currentBlockHeight)(ltx)
-        case ltx: LeaseCancelTransaction    => LeaseTransactionsDiff.leaseCancel(blockchain, settings, currentBlockTimestamp, currentBlockHeight)(ltx)
-        case dtx: DataTransaction           => DataTransactionDiff(blockchain, currentBlockHeight)(dtx)
-        case sstx: SetScriptTransaction     => SetScriptTransactionDiff(currentBlockHeight)(sstx)
-        case at: AnchorTransaction          => AnchorTransactionDiff(blockchain, currentBlockHeight)(at)
-        case as: AssociationTransactionBase => AssociationTransactionDiff(currentBlockHeight)(as)
-        case _                              => Left(UnsupportedTransactionType)
+        case gtx: GenesisTransaction => GenesisTransactionDiff(currentBlockHeight)(gtx)
+        case t: AuthorizedTransaction =>
+          (t match {
+            case ttx: TransferTransaction     => TransferTransactionDiff(blockchain, settings, currentBlockTimestamp, currentBlockHeight)(ttx)
+            case mtx: MassTransferTransaction => MassTransferTransactionDiff(blockchain, currentBlockTimestamp, currentBlockHeight)(mtx)
+            case ltx: LeaseTransaction        => LeaseTransactionsDiff.lease(blockchain, currentBlockHeight)(ltx)
+            case ltx: LeaseCancelTransaction =>
+              LeaseTransactionsDiff.leaseCancel(blockchain, settings, currentBlockTimestamp, currentBlockHeight)(ltx)
+            case dtx: DataTransaction               => DataTransactionDiff(blockchain, currentBlockHeight)(dtx)
+            case sstx: SetScriptTransaction         => SetScriptTransactionDiff(currentBlockHeight)(sstx)
+            case at: AnchorTransaction              => AnchorTransactionDiff(blockchain, currentBlockHeight)(at)
+            case as: AssociationTransactionBase     => AssociationTransactionDiff(currentBlockHeight)(as)
+            case stx: SponsorshipTransaction        => SponsorshipTransactionDiff.sponsor(blockchain, currentBlockHeight)(stx)
+            case sctx: SponsorshipCancelTransaction => SponsorshipTransactionDiff.cancel(blockchain, currentBlockHeight)(sctx)
+            case _                                  => Left(UnsupportedTransactionType)
+          }).map { d: Diff =>
+            val feePayer: Address = blockchain
+              .sponsorOf(t.sender)
+              .find(a => blockchain.portfolio(a).spendableBalance >= t.fee)
+              .getOrElse(t.sender.toAddress)
+            Monoid.combine(d, Diff.empty.copy(portfolios = Map((feePayer -> Portfolio(-t.fee, LeaseBalance.empty)))))
+
+          }
       }
       positiveDiff <- BalanceDiffValidation(blockchain, currentBlockHeight, settings)(diff)
     } yield positiveDiff

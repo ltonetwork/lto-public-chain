@@ -435,10 +435,6 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
       blockchain.leaseDetails(leaseId)
   }
 
-  override def filledVolumeAndFee(orderId: AssetId): VolumeAndFee =
-    ngState.fold(blockchain.filledVolumeAndFee(orderId))(
-      _.bestLiquidDiff.orderFills.get(orderId).orEmpty.combine(blockchain.filledVolumeAndFee(orderId)))
-
   /** Retrieves Waves balance snapshot in the [from, to] range (inclusive) */
   override def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot] = {
     val blockchainBlock = blockchain.heightOf(to)
@@ -487,6 +483,13 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
     if (height < this.height) innerDistribution
     else {
       innerDistribution ++ changedBalances(_.balance != 0, portfolio(_).balance)
+    }
+  }
+
+  override def sponsorOf(address: Address): List[Address] = ngState.fold(blockchain.sponsorOf(address)) { ng =>
+    ng.bestLiquidDiff.sponsoredBy.get(address) match {
+      case Some(l) => l
+      case None    => blockchain.sponsorOf(address)
     }
   }
 

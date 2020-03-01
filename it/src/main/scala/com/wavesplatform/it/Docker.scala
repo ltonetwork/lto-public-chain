@@ -551,8 +551,12 @@ object Docker {
       .map { case (k, v) => s"-D$k=$v" }
       .mkString(" ")
 
-  private def extractHostPort(m: JMap[String, JList[PortBinding]], containerPort: Int) =
-    m.get(s"$containerPort/tcp").get(0).hostPort().toInt
+  private def extractHostPort(m: JMap[String, JList[PortBinding]], containerPort: Int) = {
+    val bindings = m.get(s"$containerPort/tcp")
+    val binding = bindings.get(0)
+    val str = binding.hostPort()
+    str.toInt
+  }
 
   case class NodeInfo(nodeApiEndpoint: URL, hostNetworkAddress: InetSocketAddress, containerNetworkAddress: InetSocketAddress)
 

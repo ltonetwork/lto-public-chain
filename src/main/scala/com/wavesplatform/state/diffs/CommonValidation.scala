@@ -1,11 +1,11 @@
 package com.wavesplatform.state.diffs
 
 import cats._
+import com.wavesplatform.account.Address
 import com.wavesplatform.features.FeatureProvider._
 import com.wavesplatform.features.{BlockchainFeature, BlockchainFeatures}
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
-import com.wavesplatform.account.Address
 import com.wavesplatform.transaction.ValidationError._
 import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.lease._
@@ -24,38 +24,36 @@ object CommonValidation {
   def disallowSendingGreaterThanBalance[T <: Transaction](blockchain: Blockchain,
                                                           settings: FunctionalitySettings,
                                                           blockTime: Long,
-                                                          tx: T): Either[ValidationError, T] =
-    if (blockTime >= settings.allowTemporaryNegativeUntil) {
-      def checkTransfer(sender: Address, amount: Long, feeAmount: Long) = {
-        val amountDiff = Portfolio(-amount, LeaseBalance.empty)
+                                                          tx: T): Either[ValidationError, T] = {
+    def checkTransfer(sender: Address, amount: Long, feeAmount: Long) = {
+      val amountDiff = Portfolio(-amount, LeaseBalance.empty)
 
-        val feeDiff = Portfolio(-feeAmount, LeaseBalance.empty)
+      val feeDiff = Portfolio(-feeAmount, LeaseBalance.empty)
 
-        val spendings       = Monoid.combine(amountDiff, feeDiff)
-        val oldWavesBalance = blockchain.portfolio(sender).balance
+      val spendings       = Monoid.combine(amountDiff, feeDiff)
+      val oldWavesBalance = blockchain.portfolio(sender).balance
 
-        val newWavesBalance = oldWavesBalance + spendings.balance
-        if (newWavesBalance < 0) {
-          Left(
-            GenericError(
-              "Attempt to transfer unavailable funds: Transaction application leads to " +
-                s"negative lto balance to (at least) temporary negative state, current balance equals $oldWavesBalance, " +
-                s"spends equals ${spendings.balance}, result is $newWavesBalance"))
-        } else Right(tx)
-      }
+      val newWavesBalance = oldWavesBalance + spendings.balance
+      if (newWavesBalance < 0) {
+        Left(
+          GenericError(
+            "Attempt to transfer unavailable funds: Transaction application leads to " +
+              s"negative lto balance to (at least) temporary negative state, current balance equals $oldWavesBalance, " +
+              s"spends equals ${spendings.balance}, result is $newWavesBalance"))
+      } else Right(tx)
+    }
 
-      tx match {
-        case ptx: PaymentTransaction if blockchain.portfolio(ptx.sender).balance < (ptx.amount + ptx.fee) =>
-          Left(
-            GenericError(
-              "Attempt to pay unavailable funds: balance " +
-                s"${blockchain.portfolio(ptx.sender).balance} is less than ${ptx.amount + ptx.fee}"))
-        case ttx: TransferTransaction     => checkTransfer(ttx.sender, ttx.amount, ttx.fee)
-        case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.transfers.map(_.amount).sum, mtx.fee)
-        case _                            => Right(tx)
-      }
-    } else Right(tx)
-
+    tx match {
+      case ptx: PaymentTransaction if blockchain.portfolio(ptx.sender).balance < (ptx.amount + ptx.fee) =>
+        Left(
+          GenericError(
+            "Attempt to pay unavailable funds: balance " +
+              s"${blockchain.portfolio(ptx.sender).balance} is less than ${ptx.amount + ptx.fee}"))
+      case ttx: TransferTransaction     => checkTransfer(ttx.sender, ttx.amount, ttx.fee)
+      case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.transfers.map(_.amount).sum, mtx.fee)
+      case _                            => Right(tx)
+    }
+  }
   def disallowDuplicateIds[T <: Transaction](blockchain: Blockchain,
                                              settings: FunctionalitySettings,
                                              height: Int,
@@ -89,23 +87,22 @@ object CommonValidation {
       case _: LeaseTransactionV2       => activationBarrier(BlockchainFeatures.SmartAccounts)
       case _: LeaseCancelTransactionV1 => Right(tx)
       case _: LeaseCancelTransactionV2 => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case _: MassTransferTransaction  => activationBarrier(BlockchainFeatures.MassTransfer)
+      case _: MassTransferTransaction  => Right(tx)
       case _: DataTransaction =>
         for {
-          _ <- activationBarrier(BlockchainFeatures.DataTransaction)
           _ <- deactivationBarrier(BlockchainFeatures.SmartAccounts)
         } yield tx
       case _: SetScriptTransaction       => Right(tx)
       case _: AnchorTransaction          => Right(tx)
       case _: AssociationTransactionBase => activationBarrier(BlockchainFeatures.AssociationTransaction)
+      case _: SponsorshipTransactionBase => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
       case _: PaymentTransaction         => disabled
       case _                             => Left(GenericError("Unknown transaction must be explicitly activated"))
     }
   }
 
   def disallowTxFromFuture[T <: Transaction](settings: FunctionalitySettings, time: Long, tx: T): Either[ValidationError, T] = {
-    val allowTransactionsFromFutureByTimestamp = tx.timestamp < settings.allowTransactionsFromFutureUntil
-    if (!allowTransactionsFromFutureByTimestamp && tx.timestamp - time > MaxTimeTransactionOverBlockDiff.toMillis)
+    if (tx.timestamp - time > MaxTimeTransactionOverBlockDiff.toMillis)
       Left(Mistiming(s"Transaction ts ${tx.timestamp} is from far future. BlockTime: $time"))
     else Right(tx)
   }
@@ -133,52 +130,38 @@ object CommonValidation {
   }
 
   private def newFeeInUnits(tx: Transaction): Either[ValidationError, Long] = tx match {
-    case _: GenesisTransaction          => Right(0)
-    case _: TransferTransaction         => Right(1000)
-    case _: LeaseTransaction            => Right(1000)
-    case _: SetScriptTransaction        => Right(1000)
-    case _: LeaseCancelTransaction      => Right(1000)
-    case tx: MassTransferTransaction    => Right(1000 + tx.transfers.size * 100)
-    case tx: AnchorTransaction          => Right(100)
-    case tx: AssociationTransactionBase => Right(1000)
-    case _                              => Left(UnsupportedTransactionType)
+    case _: GenesisTransaction         => Right(0)
+    case _: TransferTransaction        => Right(1000)
+    case _: LeaseTransaction           => Right(1000)
+    case _: SetScriptTransaction       => Right(1000)
+    case _: LeaseCancelTransaction     => Right(1000)
+    case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
+    case _: AnchorTransaction          => Right(100)
+    case _: AssociationTransactionBase => Right(1000)
+    case _: SponsorshipTransactionBase => Right(5000)
+    case _                             => Left(UnsupportedTransactionType)
   }
 
-  def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, (Option[AssetId], Long)] = {
+  def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Long] = {
 
     def oldFees() = {
-      type FeeInfo = (Option[(AssetId, AssetDescription)], Long)
-
-      def feeAfterSponsorship(txAsset: Option[AssetId]): Either[ValidationError, FeeInfo] =
-        if (height < Sponsorship.sponsoredFeesSwitchHeight(blockchain, fs)) {
-          // This could be true for private blockchains
-          oldFeeInUnits(blockchain, height, tx).map(x => (None, x * Sponsorship.FeeUnit))
-        } else
-          for {
-            feeInUnits <- oldFeeInUnits(blockchain, height, tx)
-            r          <- Right((None, feeInUnits * Sponsorship.FeeUnit))
-          } yield r
+      type FeeInfo = Long
 
       def hasSmartAccountScript: Boolean = tx match {
         case tx: Transaction with Authorized => blockchain.hasScript(tx.sender)
         case _                               => false
       }
 
-      def feeAfterSmartAccounts(inputFee: FeeInfo): Either[ValidationError, FeeInfo] = Right {
+      def feeAfterSmartAccounts(inputFee: FeeInfo): FeeInfo =
         if (hasSmartAccountScript) {
-          val (feeAssetInfo, feeAmount) = inputFee
-          (feeAssetInfo, feeAmount + ScriptExtraFee)
+          inputFee + ScriptExtraFee
         } else inputFee
-      }
 
-      feeAfterSponsorship(None)
-        .flatMap(feeAfterSmartAccounts)
-        .map {
-          case (Some((assetId, assetInfo)), amountInWaves) => (Some(assetId), Sponsorship.fromWaves(amountInWaves, assetInfo.sponsorship))
-          case (None, amountInWaves)                       => (None, amountInWaves)
-        }
+      oldFeeInUnits(blockchain, height, tx)
+        .map(_ * Sponsorship.FeeUnit)
+        .map(feeAfterSmartAccounts)
     }
-    def newFees() = newFeeInUnits(tx).map(fee => (None, fee * Sponsorship.FeeUnit))
+    def newFees() = newFeeInUnits(tx).map(_ * Sponsorship.FeeUnit)
 
     if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
       newFees()
@@ -187,38 +170,19 @@ object CommonValidation {
 
   def checkFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Unit] = {
     def oldFees() = {
-      def restFeeAfterSponsorship(inputFee: Long): Either[ValidationError, (Option[AssetId], Long)] =
-        if (height < Sponsorship.sponsoredFeesSwitchHeight(blockchain, fs)) Right(None, inputFee)
-        else {
-          val feeAmount = inputFee
-          for {
-            feeInUnits <- oldFeeInUnits(blockchain, height, tx)
-            feeAmount  <- Right(feeAmount)
-            minimumFee    = feeInUnits * Sponsorship.FeeUnit
-            restFeeAmount = feeAmount - minimumFee
-            _ <- Either.cond(
-              restFeeAmount >= 0,
-              (),
-              GenericError(s"Fee in LTO for ${tx.builder.classTag} does not exceed minimal value of $minimumFee LTOs: $feeAmount")
-            )
-          } yield (None, restFeeAmount)
-        }
-
-      def isSmartToken: Boolean = false
-
-      def restFeeAfterSmartTokens(inputFee: (Option[AssetId], Long)): Either[ValidationError, (Option[AssetId], Long)] =
-        if (isSmartToken) {
-          val (feeAssetId, feeAmount) = inputFee
-          for {
-            _ <- Either.cond(feeAssetId.isEmpty, (), GenericError("Transactions with smart tokens require LTO as fee"))
-            restFeeAmount = feeAmount - ScriptExtraFee
-            _ <- Either.cond(
-              restFeeAmount >= 0,
-              (),
-              InsufficientFee(s"This transaction with a smart token requires ${-restFeeAmount} additional fee")
-            )
-          } yield (feeAssetId, restFeeAmount)
-        } else Right(inputFee)
+      def restFee(inputFee: Long): Either[ValidationError, (Option[AssetId], Long)] = {
+        val feeAmount = inputFee
+        for {
+          feeInUnits <- oldFeeInUnits(blockchain, height, tx)
+          minimumFee    = feeInUnits * Sponsorship.FeeUnit
+          restFeeAmount = feeAmount - minimumFee
+          _ <- Either.cond(
+            restFeeAmount >= 0,
+            (),
+            GenericError(s"Fee in LTO for ${tx.builder.classTag} does not exceed minimal value of $minimumFee LTOs: $feeAmount")
+          )
+        } yield (None, restFeeAmount)
+      }
 
       def hasSmartAccountScript: Boolean = tx match {
         case tx: Transaction with Authorized => blockchain.hasScript(tx.sender)
@@ -239,8 +203,7 @@ object CommonValidation {
           } yield (feeAssetId, restFeeAmount)
         } else Right(inputFee)
 
-      restFeeAfterSponsorship(tx.fee)
-        .flatMap(restFeeAfterSmartTokens)
+      restFee(tx.fee)
         .flatMap(restFeeAfterSmartAccounts)
         .map(_ => ())
     }

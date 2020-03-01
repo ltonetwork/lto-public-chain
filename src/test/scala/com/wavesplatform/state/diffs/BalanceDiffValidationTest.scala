@@ -74,23 +74,8 @@ class BalanceDiffValidationTest extends PropSpec with PropertyChecks with Matche
 
   } yield (genesis, masterTransfersToAlice, aliceLeasesToBob, masterLeasesToAlice, aliceTransfersMoreThanOwnsMinusLeaseOut)
 
-  property("can transfer more than own-leaseOut before allow-leased-balance-transfer-until") {
-    val settings = TestFunctionalitySettings.Enabled.copy(blockVersion3AfterHeight = 4)
-
-    forAll(ownLessThatLeaseOut) {
-      case (genesis, masterTransfersToAlice, aliceLeasesToBob, masterLeasesToAlice, aliceTransfersMoreThanOwnsMinusLeaseOut) =>
-        assertDiffEi(
-          Seq(TestBlock.create(Seq(genesis, masterTransfersToAlice, aliceLeasesToBob, masterLeasesToAlice))),
-          TestBlock.create(Seq(aliceTransfersMoreThanOwnsMinusLeaseOut)),
-          settings
-        ) { totalDiffEi =>
-          totalDiffEi shouldBe 'right
-        }
-    }
-  }
-
-  property("cannot transfer more than own-leaseOut after allow-leased-balance-transfer-until") {
-    val settings = TestFunctionalitySettings.Enabled.copy(blockVersion3AfterHeight = 4)
+  property("cannot transfer more than own-leaseOut") {
+    val settings = TestFunctionalitySettings.Enabled
 
     forAll(ownLessThatLeaseOut) {
       case (genesis, masterTransfersToAlice, aliceLeasesToBob, masterLeasesToAlice, aliceTransfersMoreThanOwnsMinusLeaseOut) =>

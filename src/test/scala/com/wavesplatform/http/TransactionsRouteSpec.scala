@@ -7,7 +7,7 @@ import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.http.ApiMarshallers._
 import com.wavesplatform.lang.v1.compiler.Terms.TRUE
 import com.wavesplatform.settings.{FeeSettings, FeesSettings, TestFunctionalitySettings, WalletSettings}
-import com.wavesplatform.state.{AssetDescription, Blockchain, ByteStr}
+import com.wavesplatform.state.{Blockchain, ByteStr}
 import com.wavesplatform.transaction.smart.script.v1.ScriptV1
 import com.wavesplatform.utils.Base58
 import com.wavesplatform.utx.UtxPool
@@ -51,10 +51,8 @@ class TransactionsRouteSpec
           "recipient"       -> accountGen.sample.get.toAddress
         )
 
-        val featuresSettings = TestFunctionalitySettings.Enabled.copy(
-          preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures + (BlockchainFeatures.FeeSponsorship.id -> 100)
-        )
-        val blockchain = mock[Blockchain]
+        val featuresSettings = TestFunctionalitySettings.Enabled
+        val blockchain       = mock[Blockchain]
         (blockchain.height _).expects().returning(1).anyNumberOfTimes()
         (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
         (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures)
@@ -86,10 +84,8 @@ class TransactionsRouteSpec
           )
         )
 
-        val featuresSettings = TestFunctionalitySettings.Enabled.copy(
-          preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures + (BlockchainFeatures.FeeSponsorship.id -> 100)
-        )
-        val blockchain = mock[Blockchain]
+        val featuresSettings = TestFunctionalitySettings.Enabled
+        val blockchain       = mock[Blockchain]
         (blockchain.height _).expects().returning(1).anyNumberOfTimes()
         (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
         (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures)

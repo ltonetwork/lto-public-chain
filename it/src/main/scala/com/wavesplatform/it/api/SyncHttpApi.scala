@@ -3,6 +3,7 @@ package com.wavesplatform.it.api
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.StatusCodes.BadRequest
 import com.wavesplatform.api.http.AddressApiRoute
+import com.wavesplatform.api.http.SponsorshipApiRoute.SponsorshipInfo
 import com.wavesplatform.features.api.ActivationStatus
 import com.wavesplatform.http.DebugMessage
 import com.wavesplatform.it.Node
@@ -144,8 +145,12 @@ object SyncHttpApi extends Assertions {
       Await.result(async(n).getData(sourceAddress, key), RequestAwaitTime)
 
     import com.wavesplatform.api.http.AssociationsApiRoute.AssociationsInfo
+
     def getAssociations(address: String): AssociationsInfo =
       Await.result(async(n).getAssociations(address), RequestAwaitTime)
+
+    def getSponsorship(address: String): SponsorshipInfo =
+      Await.result(async(n).getSponsorship(address), RequestAwaitTime)
 
     def broadcastRequest[A: Writes](req: A): Transaction =
       Await.result(async(n).broadcastRequest(req), RequestAwaitTime)
@@ -202,7 +207,7 @@ object SyncHttpApi extends Assertions {
 
     import com.wavesplatform.it.api.AsyncHttpApi.{NodesAsyncHttpApi => async}
 
-    private val TxInBlockchainAwaitTime = 8 * nodes.head.blockDelay
+    private val TxInBlockchainAwaitTime = 20 * nodes.head.blockDelay
     private val ConditionAwaitTime      = 5.minutes
 
     def height(implicit pos: Position): Seq[Int] =

@@ -247,13 +247,7 @@ class PoSSuite extends FunSuite with Matchers with NodesFromDocker with WaitForH
           |    custom {
           |      functionality {
           |        pre-activated-features = {
-          |          2 = 0
-          |          3 = 0
           |          4 = 0
-          |          5 = 0
-          |          6 = 0
-          |          7 = 0
-          |          8 = 0
           |        }
           |      }
           |    }

@@ -22,16 +22,16 @@ class BlockchainUpdaterBadReferencesTest
     recipient <- accountGen
     ts        <- positiveIntGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    payment: TransferTransactionV1  <- wavesTransferGeneratorP(master, recipient)
-    payment2: TransferTransactionV1 <- wavesTransferGeneratorP(master, recipient)
-    payment3: TransferTransactionV1 <- wavesTransferGeneratorP(master, recipient)
+    payment: TransferTransactionV1  <- wavesTransferGeneratorP(ts, master, recipient)
+    payment2: TransferTransactionV1 <- wavesTransferGeneratorP(ts, master, recipient)
+    payment3: TransferTransactionV1 <- wavesTransferGeneratorP(ts, master, recipient)
   } yield (genesis, payment, payment2, payment3)
 
   property("microBlock: referenced (micro)block doesn't exist") {
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
       case (domain, (genesis, payment, payment2, payment3)) =>
         val block0                 = buildBlockOfTxs(randomSig, Seq(genesis))
-        val (block1, microblocks1) = chainBaseAndMicro(block0.uniqueId, payment, Seq(payment2, payment3).map(Seq(_)))
+        val (block1, microblocks1) = chainBaseAndMicro(block0.uniqueId, payment, Seq(payment2, payment3).map(Seq(_)), genesis.timestamp)
         val goodMicro              = microblocks1(0)
         val badMicroRef            = microblocks1(1).copy(prevResBlockSig = randomSig)
 
@@ -74,7 +74,7 @@ class BlockchainUpdaterBadReferencesTest
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
       case (domain, (genesis, payment, payment2, payment3)) =>
         val block0                 = buildBlockOfTxs(randomSig, Seq(genesis))
-        val (block1, microblocks1) = chainBaseAndMicro(block0.uniqueId, payment, Seq(payment2).map(Seq(_)))
+        val (block1, microblocks1) = chainBaseAndMicro(block0.uniqueId, payment, Seq(payment2).map(Seq(_)), genesis.timestamp)
         domain.blockchainUpdater.processBlock(block0).explicitGet()
         domain.blockchainUpdater.processBlock(block1).explicitGet()
         domain.blockchainUpdater.removeAfter(block0.uniqueId).explicitGet()
@@ -86,7 +86,7 @@ class BlockchainUpdaterBadReferencesTest
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
       case (domain, (genesis, payment, payment2, payment3)) =>
         val block0                 = buildBlockOfTxs(randomSig, Seq(genesis))
-        val (block1, microblocks1) = chainBaseAndMicro(block0.uniqueId, payment, Seq(payment2, payment3).map(Seq(_)))
+        val (block1, microblocks1) = chainBaseAndMicro(block0.uniqueId, payment, Seq(payment2, payment3).map(Seq(_)), genesis.timestamp)
         val goodMicro              = microblocks1(0)
         val badRefMicro            = microblocks1(1).copy(prevResBlockSig = block1.uniqueId)
         domain.blockchainUpdater.processBlock(block0).explicitGet()
