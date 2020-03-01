@@ -31,92 +31,44 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
   }
 
   "BlockDiffer" - {
-    "enableMicroblocksAfterHeight" - {
+    "NG fees calculation" - {
+
       /*
       | N | fee | signer | A receive | A balance | B receive | B balance |
       |--:|:---:|:------:|----------:|----------:|----------:|-----------|
       |1  |0    |A       |0          |0          |0          |0          | <- genesis
-      |2  |10   |B       |0          |0          |10         |+10        |
-      |3  |10   |A       |10         |+10        |0          |0          |
-      |4  |10   |B       |0          |10         |+10        |10+10=20   |
-      |5  |10   |A       |10         |10+10=20   |0          |20         |
-      |6  |10   |B       |0          |20         |+10        |20+10=30   |
-      |7  |10   |A       |10         |20+10=30   |0          |30         |
-      |8  |10   |B       |0          |30         |+10        |30+10=40   |
-      |9  |10   |A       |10         |30+10=40   |0          |40         | <- 1st check
-      |10 |10   |B       |0          |40         |+10        |40+10=50   | <- 2nd check
+      |2  |10   |B       |0          |0          |10         |+10        |  b: 0.4
+      |3  |10   |A       |10         |+10        |0          |0          |  a: 1
+      |4  |10   |B       |0          |10         |+10        |10+10=20   |  b: 1.4
+      |5  |10   |A       |4          |10+4=14    |0          |20         |  a: 2
+      |6  |10   |B       |0          |14         |+4+6=10    |20+10=30   |  b: 2.4
+      |7  |10   |A       |4+6=10     |14+10=24   |0          |30         |  a: 3
+      |8  |10   |B       |0          |24         |+4+6=10    |30+10=40   |  b: 3.4
+      |9  |10   |A       |4+6=10     |24+10=34   |0          |40         |  a:4        <- 1st check
+      |10 |10   |B       |0          |34         |+4+6=10    |40+10=50   |  b: 4.4     <- 2nd check
        */
-      "height < enableMicroblocksAfterHeight - a miner should receive 100% of the current block's fee" in {
-        assertDiff(testChain.init, 1000) {
+      "height > enableMicroblocksAfterHeight - a miner should receive 60% of previous block's fee and 40% of the current one" in {
+        assertDiff(testChain.init) {
           case (_, s) =>
             s.portfolio(signerA).balance shouldBe 400000000
         }
 
-        assertDiff(testChain, 1000) {
-          case (_, s) =>
-            s.portfolio(signerB).balance shouldBe 500000000
-        }
-      }
-
-      /*
-      | N | fee | signer | A receive | A balance | B receive | B balance |
-      |--:|:---:|:------:|----------:|----------:|----------:|-----------|
-      |1  |0    |A       |0          |0          |0          |0          | <- genesis
-      |2  |10   |B       |0          |0          |10         |+10        |
-      |3  |10   |A       |10         |+10        |0          |0          |
-      |4  |10   |B       |0          |10         |+10        |10+10=20   |
-      |5  |10   |A       |10         |10+10=20   |0          |20         |
-      |6  |10   |B       |0          |20         |+10        |20+10=30   |
-      |7  |10   |A       |10         |20+10=30   |0          |30         |
-      |8  |10   |B       |0          |30         |+10        |30+10=40   |
-      |9  |10   |A       |10         |30+10=40   |0          |40         |
-      |-------------------------- Enable NG -----------------------------|
-      |10 |10   |B       |0          |40         |+4         |40+4=44    | <- check
-       */
-      "height = enableMicroblocksAfterHeight - a miner should receive 40% of the current block's fee only" in {
-        assertDiff(testChain, 9) {
+        assertDiff(testChain) {
           case (_, s) =>
             s.portfolio(signerB).balance shouldBe 440000000
-        }
-      }
-
-      /*
-      | N | fee | signer | A receive | A balance | B receive | B balance |
-      |--:|:---:|:------:|----------:|----------:|----------:|-----------|
-      |1  |0    |A       |0          |0          |0          |0          | <- genesis
-      |2  |10   |B       |0          |0          |10         |+10        |
-      |3  |10   |A       |10         |+10        |0          |0          |
-      |4  |10   |B       |0          |10         |+10        |10+10=20   |
-      |-------------------------- Enable NG -----------------------------|
-      |5  |10   |A       |4          |10+4=14    |0          |20         |
-      |6  |10   |B       |0          |14         |+4+6=10    |20+10=30   |
-      |7  |10   |A       |4+6=10     |14+10=24   |0          |30         |
-      |8  |10   |B       |0          |24         |+4+6=10    |30+10=40   |
-      |9  |10   |A       |4+6=10     |24+10=34   |0          |40         | <- 1st check
-      |10 |10   |B       |0          |34         |+4+6=10    |40+10=50   | <- 2nd check
-       */
-      "height > enableMicroblocksAfterHeight - a miner should receive 60% of previous block's fee and 40% of the current one" in {
-        assertDiff(testChain.init, 4) {
-          case (_, s) =>
-            s.portfolio(signerA).balance shouldBe 340000000
-        }
-
-        assertDiff(testChain, 4) {
-          case (_, s) =>
-            s.portfolio(signerB).balance shouldBe 500000000
         }
       }
     }
   }
 
-  private def assertDiff(blocks: Seq[Block], ngAtHeight: Int)(assertion: (Diff, Blockchain) => Unit): Unit = {
+  private def assertDiff(blocks: Seq[Block])(assertion: (Diff, Blockchain) => Unit): Unit = {
     val fs = FunctionalitySettings(
-      featureCheckBlocksPeriod = ngAtHeight / 2,
+      featureCheckBlocksPeriod = 42,
       blocksForFeatureActivation = 1,
-      preActivatedFeatures = Map[Short, Int]((2, ngAtHeight)),
+      preActivatedFeatures = Map.empty,
       doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
     )
-    assertNgDiffState(blocks.init, blocks.last, fs)(assertion)
+    assertDiffAndState(blocks.init, blocks.last, fs)(assertion)
   }
 
   private def getTwoMinersBlockChain(from: PrivateKeyAccount, to: PrivateKeyAccount, numPayments: Int): Seq[Block] = {

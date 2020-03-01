@@ -376,7 +376,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                   rollbackLeaseStatus(rw, tx.leaseId, currentHeight)
 
                 case tx: SponsorshipTransactionBase =>
-                  rollbackSponsorshipStatus(rw,tx.recipient, currentHeight)
+                  rollbackSponsorshipStatus(rw, tx.recipient, currentHeight)
 
                 case tx: SetScriptTransaction =>
                   val address = tx.sender.toAddress

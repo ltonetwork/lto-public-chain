@@ -24,7 +24,7 @@ class NotActivateFeatureTestSuite
   private val votingInterval             = 14
   private val blocksForActivation        = 14
   private val votingFeatureNum: Short    = 1
-  private val nonVotingFeatureNum: Short = 2
+  private val nonVotingFeatureNum: Short = 4
   private var activationStatusInfoBefore = Option.empty[FeatureActivationStatus]
   private var activationStatusInfoAfter  = Option.empty[FeatureActivationStatus]
 

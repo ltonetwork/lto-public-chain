@@ -103,8 +103,6 @@ class MinerImpl(allChannels: ChannelGroup,
     Either.cond(!blockchainUpdater.hasScript(account), (), s"Account(${account.toAddress}) is scripted and therefore not allowed to forge blocks")
   }
 
-  private def ngEnabled: Boolean = blockchainUpdater.featureActivationHeight(BlockchainFeatures.NG.id).exists(blockchainUpdater.height > _ + 1)
-
   private def generateOneBlockTask(account: PrivateKeyAccount, balance: Long)(
       delay: FiniteDuration): Task[Either[String, (MiningConstraints, Block, MiningConstraint)]] = {
     Task {
@@ -317,7 +315,7 @@ class MinerImpl(allChannels: ChannelGroup,
                   BlockStats.mined(block, blockchainUpdater.height)
                   allChannels.broadcast(BlockForged(block))
                   scheduleMining()
-                  if (ngEnabled && !totalConstraint.isEmpty) startMicroBlockMining(account, block, estimators, totalConstraint)
+                  if (!totalConstraint.isEmpty) startMicroBlockMining(account, block, estimators, totalConstraint)
                 case Right(None) => log.warn("Newly created block has already been appended, should not happen")
               }
           case Left(err) =>

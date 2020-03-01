@@ -179,7 +179,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
                 val minFee    = Math.max(utxMinFee, assetAmount)
                 Json.obj(
 //                  "feeAssetId" -> null,
-                  "feeAmount"  -> minFee
+                  "feeAmount" -> minFee
                 )
             }
             r1

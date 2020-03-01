@@ -63,7 +63,7 @@ object Keys {
   def leaseStatus(leaseId: ByteStr)(height: Int): Key[Boolean] =
     Key(hBytes(15, height, leaseId.arr), _(0) == 1, active => Array[Byte](if (active) 1 else 0))
 
-  def sponsorshipHistory(addressId:BigInt): Key[Seq[Int]] = historyKey(48,addressId.toByteArray)
+  def sponsorshipHistory(addressId: BigInt): Key[Seq[Int]] = historyKey(48, addressId.toByteArray)
   def sponsorshipStatus(addressId: BigInt)(height: Int): Key[List[Address]] =
     Key(hAddr(49, height, addressId), arr => Deser.parseArrays(arr).map(a => Address.fromBytes(a).explicitGet()).toList, (l:List[Address]) => Deser.serializeArrays(l.map(_.bytes.arr)))
 

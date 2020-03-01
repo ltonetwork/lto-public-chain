@@ -1,15 +1,14 @@
 package com.wavesplatform.consensus.nxt.api.http
 
 import akka.http.scaladsl.server.Route
+import com.wavesplatform.account.Address
+import com.wavesplatform.api.http.{ApiRoute, CommonApiFunctions, InvalidAddress}
 import com.wavesplatform.consensus.GeneratingBalanceProvider
-import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.settings.{FunctionalitySettings, RestAPISettings}
 import com.wavesplatform.state.Blockchain
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import play.api.libs.json.Json
-import com.wavesplatform.account.Address
-import com.wavesplatform.api.http.{ApiRoute, CommonApiFunctions, InvalidAddress}
 
 @Path("/consensus")
 @Api(value = "/consensus")
@@ -79,11 +78,6 @@ case class NxtConsensusApiRoute(settings: RestAPISettings, blockchain: Blockchai
   @Path("/algo")
   @ApiOperation(value = "Consensus algo", notes = "Shows which consensus algo being using", httpMethod = "GET")
   def algo: Route = (path("algo") & get) {
-    complete(
-      if (blockchain.activatedFeatures.contains(BlockchainFeatures.FairPoS.id))
-        Json.obj("consensusAlgo" -> "Fair Proof-of-Stake (FairPoS)")
-      else
-        Json.obj("consensusAlgo" -> "proof-of-stake (PoS)")
-    )
+    complete(Json.obj("consensusAlgo" -> "Fair Proof-of-Stake (FairPoS)"))
   }
 }
