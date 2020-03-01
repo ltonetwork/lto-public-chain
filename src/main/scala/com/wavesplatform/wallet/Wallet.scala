@@ -103,18 +103,21 @@ object Wallet extends ScorexLogging {
     private lazy val actualAccountSeed = maybeAccountSeedFromConfig
 
     def loadWalletData(): WalletData = {
-      lazy val  first =ByteStr(generateAccountSeed(actualSeed.arr,0))
-      if (maybeFile.isEmpty)
-        WalletData(actualSeed, Set(first), 0, actualAccountSeed)
+      if (maybeAccountSeedFromConfig.nonEmpty) WalletData(ByteStr.empty, maybeAccountSeedFromConfig.toSet, 0, maybeAccountSeedFromConfig)
       else {
-        val file = maybeFile.get
-        if (file.exists() && file.length() > 0) {
-          val wd = loadOrImport(maybeFile.get)
-          if (wd.isDefined) wd.get
-          else {
-            throw new IllegalStateException(s"Failed to open existing wallet file '${maybeFile.get}' maybe provided password is incorrect")
-          }
-        } else WalletData(actualSeed, Set(first), 0, actualAccountSeed)
+        lazy val first = ByteStr(generateAccountSeed(actualSeed.arr, 0))
+        if (maybeFile.isEmpty)
+          WalletData(actualSeed, Set(first), 0, actualAccountSeed)
+        else {
+          val file = maybeFile.get
+          if (file.exists() && file.length() > 0) {
+            val wd = loadOrImport(maybeFile.get)
+            if (wd.isDefined) wd.get
+            else {
+              throw new IllegalStateException(s"Failed to open existing wallet file '${maybeFile.get}' maybe provided password is incorrect")
+            }
+          } else WalletData(actualSeed, Set(first), 0, actualAccountSeed)
+        }
       }
     }
     private var walletData: WalletData = loadWalletData()
@@ -130,7 +133,7 @@ object Wallet extends ScorexLogging {
 
     override def save(): Unit = maybeFile.foreach(f => JsonFileStorage.save(walletData, f.getCanonicalPath, Some(key)))
 
-    private def generateNewAccountWithoutSave(): Option[PrivateKeyAccount] = lock {
+    private def generateAndSave(): Option[PrivateKeyAccount] = lock {
       val nonce = getAndIncrementNonce()
       import com.wavesplatform.state._
       val account = Wallet.generateNewAccount(seed.explicitGet(), nonce) // called from guarded public methods only
@@ -139,6 +142,7 @@ object Wallet extends ScorexLogging {
       if (!readAccountsFromWalletData.contains(address)) {
         walletData = walletData.copyWithAccountSeeds(walletData.getAccountSeeds() + ByteStr(account.seed))
         log.info("Added account #" + privateKeyAccounts.size)
+        save()
         Some(account)
       } else None
     }
@@ -153,17 +157,14 @@ object Wallet extends ScorexLogging {
       if (walletData.accountBased) Left(AccountBasedWallet)
       else
         Right {
-          (1 to howMany).flatMap(_ => generateNewAccountWithoutSave()).tap(_ => save())
+          (1 to howMany).flatMap(_ => generateAndSave())
         }
 
     override def generateNewAccount() = lock {
       if (walletData.accountBased) Left(AccountBasedWallet)
       else
         Right {
-          generateNewAccountWithoutSave().map(acc => {
-            save()
-            acc
-          })
+          generateAndSave()
         }
     }
 

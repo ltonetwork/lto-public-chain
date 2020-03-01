@@ -11,10 +11,18 @@ import org.scalatest.{FunSuite, Matchers}
 class WalletSpecification extends FunSuite with Matchers {
 
   private val walletSize = 10
-  val w                  = Wallet(WalletSettings(None, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption,None,None))
-  val w2                  = Wallet(WalletSettings(None, "cookies",None,None, ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
+  def newW()                  = Wallet(WalletSettings(None, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption,None,None))
+  def neww2()                  = Wallet(WalletSettings(None, "cookies",None,None, ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
 
-  test("wallet - acc creation") {
+  test("wallet from accountSeed") {
+    val w2 = neww2()
+    val accounts = w2.privateKeyAccounts
+    accounts.size shouldBe 1
+  }
+
+
+  test("wallet - accs creation") {
+    val w = newW()
     w.generateNewAccounts(walletSize)
 
     w.privateKeyAccounts.size shouldBe walletSize
@@ -31,18 +39,21 @@ class WalletSpecification extends FunSuite with Matchers {
       "3N7vtzezG94RF59qgEPuu7GYS92x6rVdu3h"
     )
   }
-
+  test("wallet - one acc deletion") {
+    val w = newW()
+    val r = w.generateNewAccount()
+    println(r)
+  }
   test("wallet - acc deletion") {
-
-    val head = w.privateKeyAccounts.head
-    w.deleteAccount(head)
-    assert(w.privateKeyAccounts.lengthCompare(walletSize - 1) == 0)
+    val w = newW()
+    w.generateNewAccount()
+    w.generateNewAccount()
+    w.privateKeyAccounts.size shouldBe 2
 
     w.deleteAccount(w.privateKeyAccounts.head)
-    assert(w.privateKeyAccounts.lengthCompare(walletSize - 2) == 0)
+    w.privateKeyAccounts.size shouldBe 1
 
     w.privateKeyAccounts.foreach(w.deleteAccount)
-
     assert(w.privateKeyAccounts.isEmpty)
   }
 
