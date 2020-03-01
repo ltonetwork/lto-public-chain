@@ -242,7 +242,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
     for ((addressId, newSponsorList) <- sponsorship) {
       expiredKeys ++= updateHistory(rw, Keys.sponsorshipHistory(addressId), threshold, Keys.sponsorshipStatus(addressId))
-      rw.put(Keys.sponsorshipStatus(addressId)(height),newSponsorList)
+      rw.put(Keys.sponsorshipStatus(addressId)(height), newSponsorList)
     }
 
     for ((addressId, addressData) <- data) {

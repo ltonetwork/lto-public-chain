@@ -252,18 +252,18 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
           withClue("rollback sponsorship") {
             val prev = d.lastBlockId
             appendTx(tx)
-            d.blockchainUpdater.sponsorOf(sender) shouldBe Some(sponsor.toAddress)
+            d.blockchainUpdater.sponsorOf(sender) shouldBe List(sponsor.toAddress)
             d.removeAfter(prev)
-            d.blockchainUpdater.sponsorOf(sender) shouldBe None
+            d.blockchainUpdater.sponsorOf(sender) shouldBe List.empty
           }
           withClue("rollback sponsorship cancel") {
             appendTx(tx)
-            d.blockchainUpdater.sponsorOf(sender) shouldBe Some(sponsor.toAddress)
+            d.blockchainUpdater.sponsorOf(sender) shouldBe List(sponsor.toAddress)
             val prev = d.lastBlockId
             appendTx(tx2)
-            d.blockchainUpdater.sponsorOf(sender) shouldBe None
+            d.blockchainUpdater.sponsorOf(sender) shouldBe List.empty
             d.removeAfter(prev)
-            d.blockchainUpdater.sponsorOf(sender) shouldBe Some(sponsor.toAddress)
+            d.blockchainUpdater.sponsorOf(sender) shouldBe List(sponsor.toAddress)
           }
         }
     }
