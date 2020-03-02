@@ -75,7 +75,7 @@ case class SponsorshipApiRoute(settings: RestAPISettings, wallet: Wallet, blockc
 }
 
 object SponsorshipApiRoute {
-  case class SponsorshipInfo(sponsor: Option[String])
+  case class SponsorshipInfo(sponsor: List[String])
   implicit val sponsorshipInfoFormat: Format[SponsorshipInfo]   = Json.format
 
 }

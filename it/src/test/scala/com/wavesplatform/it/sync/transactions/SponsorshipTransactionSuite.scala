@@ -41,12 +41,12 @@ class SponsorshipTransactionSuite extends BaseTransactionSuite with CancelAfterF
     val sponsorshipId = sender.signedBroadcast(becomeSponsor.json()).id
     nodes.waitForHeightAriseAndTxPresent(sponsorshipId)
 
-    sender.getSponsorship(payer.address) shouldBe SponsorshipInfo(Some(sponsor.address))
+    sender.getSponsorship(payer.address) shouldBe SponsorshipInfo(List(sponsor.address))
 
     val paymentId = sender.signedBroadcast(makePayment.json()).id
     nodes.waitForHeightAriseAndTxPresent(paymentId)
-    sender.assertBalances(payer.address, (10 - 1 - 4).waves)
-    sender.assertBalances(recipient.address, (10 + 4).waves)
+    sender.assertBalances(payer.address, (10 - 4).waves)
+    sender.assertBalances(recipient.address, (4).waves)
     sender.assertBalances(sponsor.address, (10 - 5 - 1).waves)
 
   }

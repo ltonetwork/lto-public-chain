@@ -48,7 +48,7 @@ object Sponsorship {
 
 case class Diff(transactions: Map[ByteStr, (Int, Transaction, Set[Address])],
                 portfolios: Map[Address, Portfolio],
-                sponsoredBy: Map[Address,(Address,Boolean)], // single sponsor, true/false as enable-disable
+                sponsoredBy: Map[Address,List[Address]], // multiple sponsors, first priority
                 leaseState: Map[ByteStr, Boolean],
                 scripts: Map[Address, Option[Script]],
                 accountData: Map[Address, AccountDataInfo]) {
@@ -71,7 +71,7 @@ object Diff {
   def apply(height: Int,
             tx: Transaction,
             portfolios: Map[Address, Portfolio] = Map.empty,
-            sponsoredBy: Map[Address,(Address,Boolean)] = Map.empty,
+            sponsoredBy: Map[Address,List[Address]] = Map.empty,
             leaseState: Map[ByteStr, Boolean] = Map.empty,
             scripts: Map[Address, Option[Script]] = Map.empty,
             accountData: Map[Address, AccountDataInfo] = Map.empty): Diff =
@@ -93,7 +93,7 @@ object Diff {
       Diff(
         transactions = older.transactions ++ newer.transactions,
         portfolios = older.portfolios.combine(newer.portfolios),
-        sponsoredBy = older.sponsoredBy ++ newer.sponsoredBy,  // single sponsor overriding
+        sponsoredBy = older.sponsoredBy ++ newer.sponsoredBy,  // whole list overriding
         leaseState = older.leaseState ++ newer.leaseState,
         scripts = older.scripts ++ newer.scripts,
         accountData = older.accountData.combine(newer.accountData)

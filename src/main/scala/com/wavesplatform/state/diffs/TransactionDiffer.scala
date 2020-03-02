@@ -44,7 +44,7 @@ object TransactionDiffer {
           }).map { d: Diff =>
             val feePayer: Address = blockchain
               .sponsorOf(t.sender)
-              .filter(a => blockchain.portfolio(a).spendableBalance >= t.fee)
+              .find(a => blockchain.portfolio(a).spendableBalance >= t.fee)
               .getOrElse(t.sender.toAddress)
             Monoid.combine(d, Diff.empty.copy(portfolios = Map((feePayer -> Portfolio(-t.fee, LeaseBalance.empty)))))
 
