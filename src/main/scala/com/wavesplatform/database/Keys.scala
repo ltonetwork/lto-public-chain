@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 
 import com.google.common.base.Charsets.UTF_8
 import com.google.common.primitives.{Ints, Longs, Shorts}
-import com.wavesplatform.account.{Address, Alias}
+import com.wavesplatform.account.Address
 import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.Transaction
@@ -55,14 +55,6 @@ object Keys {
   def wavesBalance(addressId: BigInt)(height: Int): Key[Long] =
     Key(hAddr(6, height, addressId), Option(_).fold(0L)(Longs.fromByteArray), Longs.toByteArray)
 
-  def assetList(addressId: BigInt): Key[Set[ByteStr]]                         = Key(addr(7, addressId), readTxIds(_).toSet, assets => writeTxIds(assets.toSeq))
-  def assetBalanceHistory(addressId: BigInt, assetId: ByteStr): Key[Seq[Int]] = historyKey(8, addressId.toByteArray ++ assetId.arr)
-  def assetBalance(addressId: BigInt, assetId: ByteStr)(height: Int): Key[Long] =
-    Key(hBytes(9, height, addressId.toByteArray ++ assetId.arr), Option(_).fold(0L)(Longs.fromByteArray), Longs.toByteArray)
-
-  def assetInfoHistory(assetId: ByteStr): Key[Seq[Int]]        = historyKey(10, assetId.arr)
-  def assetInfo(assetId: ByteStr)(height: Int): Key[AssetInfo] = Key(hBytes(11, height, assetId.arr), readAssetInfo, writeAssetInfo)
-
   def leaseBalanceHistory(addressId: BigInt): Key[Seq[Int]] = historyKey(12, addressId.toByteArray)
   def leaseBalance(addressId: BigInt)(height: Int): Key[LeaseBalance] =
     Key(hAddr(13, height, addressId), readLeaseBalance, writeLeaseBalance)
@@ -70,8 +62,10 @@ object Keys {
   def leaseStatus(leaseId: ByteStr)(height: Int): Key[Boolean] =
     Key(hBytes(15, height, leaseId.arr), _(0) == 1, active => Array[Byte](if (active) 1 else 0))
 
-  def filledVolumeAndFeeHistory(orderId: ByteStr): Key[Seq[Int]]           = historyKey(16, orderId.arr)
-  def filledVolumeAndFee(orderId: ByteStr)(height: Int): Key[VolumeAndFee] = Key(hBytes(17, height, orderId.arr), readVolumeAndFee, writeVolumeAndFee)
+
+  def sponsorshipHistory(addressId:BigInt): Key[Seq[Int]] = historyKey(48,addressId.toByteArray)
+  def sponsorshipStatus(addressId: BigInt)(height: Int): Key[Option[Address]] =
+    Key.opt(hAddr(49, height, addressId), arr => Address.fromBytes(arr).explicitGet(), _.bytes.arr)
 
   def transactionInfo(txId: ByteStr): Key[Option[(Int, Transaction)]] = Key.opt(hash(18, txId), readTransactionInfo, writeTransactionInfo)
   def transactionHeight(txId: ByteStr): Key[Option[Int]] =
@@ -79,13 +73,9 @@ object Keys {
 
   def carryFee(height: Int) = Key(h(19, height), Longs.fromByteArray, Longs.toByteArray)
 
-  // 20 was never used
-
   def changedAddresses(height: Int): Key[Seq[BigInt]] = Key(h(21, height), readBigIntSeq, writeBigIntSeq)
 
   def transactionIdsAtHeight(height: Int): Key[Seq[ByteStr]] = Key(h(22, height), readTxIds, writeTxIds)
-
-  def addressIdOfAlias(alias: Alias): Key[Option[BigInt]] = Key.opt(bytes(23, alias.bytes.arr), BigInt(_), _.toByteArray)
 
   val lastAddressId: Key[Option[BigInt]] = Key.opt(Array[Byte](0, 24), BigInt(_), _.toByteArray)
 
@@ -107,9 +97,6 @@ object Keys {
   def data(addressId: BigInt, key: String)(height: Int): Key[Option[DataEntry[_]]] =
     Key.opt(hBytes(34, height, addressId.toByteArray ++ key.getBytes(UTF_8)), DataEntry.parseValue(key, _, 0)._1, _.valueBytes)
 
-  def sponsorshipHistory(assetId: ByteStr): Key[Seq[Int]]               = historyKey(35, assetId.arr)
-  def sponsorship(assetId: ByteStr)(height: Int): Key[SponsorshipValue] = Key(hBytes(36, height, assetId.arr), readSponsorship, writeSponsorship)
-
   val addressesForWavesSeqNr: Key[Int]                = intKey(37)
   def addressesForWaves(seqNr: Int): Key[Seq[BigInt]] = Key(h(38, seqNr), readBigIntSeq, writeBigIntSeq)
 
@@ -119,10 +106,6 @@ object Keys {
   def addressTransactionSeqNr(addressId: BigInt): Key[Int] = bytesSeqNr(41, addressId.toByteArray)
   def addressTransactionIds(addressId: BigInt, seqNr: Int): Key[Seq[(Int, ByteStr)]] =
     Key(hBytes(42, seqNr, addressId.toByteArray), readTransactionIds, writeTransactionIds)
-
-  val AliasIsDisabledPrefix: Short = 43
-  def aliasIsDisabled(alias: Alias): Key[Boolean] =
-    Key(bytes(AliasIsDisabledPrefix, alias.bytes.arr), Option(_).exists(_(0) == 1), if (_) Array[Byte](1) else Array[Byte](0))
 
   def outgoingAssociationsSeqNr(address: ByteStr): Key[Int] = bytesSeqNr(44, address.arr)
   def outgoingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[Array[Byte]] =

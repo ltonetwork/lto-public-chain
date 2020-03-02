@@ -2,7 +2,7 @@ package com.wavesplatform.mining
 
 import com.wavesplatform.TransactionGen
 import com.wavesplatform.lang.v1.compiler.Terms
-import com.wavesplatform.state.{AssetDescription, Blockchain, ByteStr, EitherExt2}
+import com.wavesplatform.state.{Blockchain, ByteStr, EitherExt2}
 import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.{FreeSpec, Matchers}
 import com.wavesplatform.account.{Address, PrivateKeyAccount}
@@ -54,14 +54,4 @@ class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with
     )
     .explicitGet()
 
-  private val assetDescription = AssetDescription(
-    issuer = PrivateKeyAccount("sender".getBytes()),
-    name = "coin".getBytes(),
-    description = "description".getBytes(),
-    decimals = 2,
-    reissuable = false,
-    totalVolume = Long.MaxValue,
-    script = Some(script),
-    sponsorship = 0
-  )
 }

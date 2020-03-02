@@ -174,11 +174,11 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           )
           createTransaction(senderPk, enrichedJsv) { tx =>
             val r1 = CommonValidation.getMinFee(blockchain, functionalitySettings, blockchain.height, tx).map {
-              case (assetId, assetAmount) =>
+              case assetAmount =>
                 val utxMinFee = new FeeCalculator(feesSettings, blockchain).map.getOrElse(tx.builder.typeId.toInt.toString, 0L)
                 val minFee    = Math.max(utxMinFee, assetAmount)
                 Json.obj(
-                  "feeAssetId" -> assetId,
+//                  "feeAssetId" -> null,
                   "feeAmount"  -> minFee
                 )
             }
@@ -245,6 +245,9 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case IssueAssociationTransaction => TransactionFactory.issueAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time)
               case RevokeAssociationTransaction =>
                 TransactionFactory.revokeAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time)
+              case SponsorshipTransaction => TransactionFactory.sponsorship(txJson.as[SponsorshipRequest], wallet, signerAddress, time)
+              case SponsorshipCancelTransaction =>
+                TransactionFactory.cancelSponsorship(txJson.as[SponsorshipRequest], wallet, signerAddress, time)
               case TransferTransactionV1    => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], wallet, signerAddress, time)
               case TransferTransactionV2    => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], wallet, signerAddress, time)
               case MassTransferTransaction  => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], wallet, signerAddress, time)
@@ -278,6 +281,8 @@ case class TransactionsApiRoute(settings: RestAPISettings,
                   case AnchorTransaction            => TransactionFactory.anchor(txJson.as[AnchorRequest], senderPk)
                   case IssueAssociationTransaction  => TransactionFactory.issueAssociation(txJson.as[AssociationRequest], senderPk)
                   case RevokeAssociationTransaction => TransactionFactory.revokeAssociation(txJson.as[AssociationRequest], senderPk)
+                  case SponsorshipTransaction       => TransactionFactory.sponsorship(txJson.as[SponsorshipRequest], senderPk)
+                  case SponsorshipCancelTransaction => TransactionFactory.cancelSponsorship(txJson.as[SponsorshipRequest], senderPk)
                   case TransferTransactionV1        => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], senderPk)
                   case TransferTransactionV2        => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], senderPk)
                   case MassTransferTransaction      => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], senderPk)
@@ -310,8 +315,9 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         val typeId  = (jsv \ "type").as[Byte]
         val version = (jsv \ "version").asOpt[Byte](versionReads).getOrElse(1.toByte)
 
-        implicit val broadcastAnchorRequestReadsFormat: Format[SignedAnchorRequest]     = Json.format
-        implicit val broadcastAssocRequestReadsFormat: Format[SignedAssociationRequest] = Json.format
+        implicit val broadcastAnchorRequestReadsFormat: Format[SignedAnchorRequest]           = Json.format
+        implicit val broadcastAssocRequestReadsFormat: Format[SignedAssociationRequest]       = Json.format
+        implicit val broadcastSponsorshipRequestReadsFormat: Format[SignedSponsorshipRequest] = Json.format
 
         val r = TransactionParsers.by(typeId, version) match {
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
@@ -320,6 +326,8 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case AnchorTransaction            => jsv.as[SignedAnchorRequest].toTx
               case IssueAssociationTransaction  => jsv.as[SignedAssociationRequest].toTx(IssueAssociationTransaction.create)
               case RevokeAssociationTransaction => jsv.as[SignedAssociationRequest].toTx(RevokeAssociationTransaction.create)
+              case SponsorshipTransaction       => jsv.as[SignedSponsorshipRequest].toTx(SponsorshipTransaction.create)
+              case SponsorshipCancelTransaction => jsv.as[SignedSponsorshipRequest].toTx(SponsorshipCancelTransaction.create)
               case TransferTransactionV1        => jsv.as[SignedTransferV1Request].toTx
               case TransferTransactionV2        => jsv.as[SignedTransferV2Request].toTx
               case MassTransferTransaction      => jsv.as[SignedMassTransferRequest].toTx

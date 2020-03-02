@@ -7,16 +7,15 @@ import com.wavesplatform.account.PrivateKeyAccount
 import com.wavesplatform.block.Block
 import com.wavesplatform.db.WithState
 import com.wavesplatform.lagonaki.mocks.TestBlock
-import com.wavesplatform.mining.MiningConstraint
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state.{Blockchain, Diff, EitherExt2}
-import com.wavesplatform.transaction.{GenesisTransaction, ValidationError}
+import com.wavesplatform.transaction.GenesisTransaction
 import org.scalatest.{FreeSpecLike, Matchers}
 import scorex.crypto.signatures.Curve25519._
 
 class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with WithState {
 
-  private val TransactionFee = 10
+  private val TransactionFee = 100000000L
 
   def randomPrivateKeyAccount(): PrivateKeyAccount = {
     val seed = Array.ofDim[Byte](KeyLength)
@@ -50,12 +49,12 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
       "height < enableMicroblocksAfterHeight - a miner should receive 100% of the current block's fee" in {
         assertDiff(testChain.init, 1000) {
           case (_, s) =>
-            s.portfolio(signerA).balance shouldBe 40
+            s.portfolio(signerA).balance shouldBe 400000000
         }
 
         assertDiff(testChain, 1000) {
           case (_, s) =>
-            s.portfolio(signerB).balance shouldBe 50
+            s.portfolio(signerB).balance shouldBe 500000000
         }
       }
 
@@ -77,7 +76,7 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
       "height = enableMicroblocksAfterHeight - a miner should receive 40% of the current block's fee only" in {
         assertDiff(testChain, 9) {
           case (_, s) =>
-            s.portfolio(signerB).balance shouldBe 44
+            s.portfolio(signerB).balance shouldBe 440000000
         }
       }
 
@@ -99,12 +98,12 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
       "height > enableMicroblocksAfterHeight - a miner should receive 60% of previous block's fee and 40% of the current one" in {
         assertDiff(testChain.init, 4) {
           case (_, s) =>
-            s.portfolio(signerA).balance shouldBe 34
+            s.portfolio(signerA).balance shouldBe 340000000
         }
 
         assertDiff(testChain, 4) {
           case (_, s) =>
-            s.portfolio(signerB).balance shouldBe 50
+            s.portfolio(signerB).balance shouldBe 500000000
         }
       }
     }
@@ -114,18 +113,8 @@ class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with With
     val fs = FunctionalitySettings(
       featureCheckBlocksPeriod = ngAtHeight / 2,
       blocksForFeatureActivation = 1,
-      allowTemporaryNegativeUntil = 0L,
-      generationBalanceDepthFrom50To1000AfterHeight = 0,
-      minimalGeneratingBalanceAfter = 0L,
-      allowTransactionsFromFutureUntil = Long.MaxValue,
-      allowUnissuedAssetsUntil = 0L,
-      allowInvalidReissueInSameBlockUntilTimestamp = 0L,
-      allowMultipleLeaseCancelTransactionUntilTimestamp = 0L,
-      resetEffectiveBalancesAtHeight = 0,
-      blockVersion3AfterHeight = 0,
       preActivatedFeatures = Map[Short, Int]((2, ngAtHeight)),
       doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
-      requireSortedTransactionsAfter = 0
     )
     assertNgDiffState(blocks.init, blocks.last, fs)(assertion)
   }

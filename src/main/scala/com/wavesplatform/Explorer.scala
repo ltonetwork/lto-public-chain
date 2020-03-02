@@ -102,26 +102,6 @@ object Explorer extends ScorexLogging {
             }
           } else log.error("No block ID was provided")
 
-        case "O" =>
-          val orderId = Base58.decode(args(2)).toOption.map(ByteStr.apply)
-          if (orderId.isDefined) {
-            val kVolumeAndFee = Keys.filledVolumeAndFee(orderId.get)(blockchainHeight)
-            val bytes1        = db.get(kVolumeAndFee.keyBytes)
-            val v             = kVolumeAndFee.parse(bytes1)
-            log.info(s"OrderId = ${Base58.encode(orderId.get.arr)}: Volume = ${v.volume}, Fee = ${v.fee}")
-
-            val kVolumeAndFeeHistory = Keys.filledVolumeAndFeeHistory(orderId.get)
-            val bytes2               = db.get(kVolumeAndFeeHistory.keyBytes)
-            val value2               = kVolumeAndFeeHistory.parse(bytes2)
-            val value2Str            = value2.mkString("[", ", ", "]")
-            log.info(s"OrderId = ${Base58.encode(orderId.get.arr)}: History = $value2Str")
-            value2.foreach { h =>
-              val k = Keys.filledVolumeAndFee(orderId.get)(h)
-              val v = k.parse(db.get(k.keyBytes))
-              log.info(s"\t h = $h: Volume = ${v.volume}, Fee = ${v.fee}")
-            }
-          } else log.error("No order ID was provided")
-
         case "A" =>
           val address   = Address.fromString(args(2)).explicitGet()
           val aid       = Keys.addressId(address)
@@ -158,24 +138,6 @@ object Explorer extends ScorexLogging {
           for ((k, v) <- result.asScala if v > 1) {
             log.info(s"$k,$v")
           }
-
-        case "AA" =>
-          val secondaryId = args(3)
-
-          val address   = Address.fromString(args(2)).explicitGet()
-          val asset     = ByteStr.decodeBase58(secondaryId).get
-          val ai        = Keys.addressId(address)
-          val addressId = ai.parse(db.get(ai.keyBytes)).get
-          log.info(s"Address ID = $addressId")
-
-          val kabh = Keys.assetBalanceHistory(addressId, asset)
-          val abh  = kabh.parse(db.get(kabh.keyBytes))
-
-          val balances = abh.map { h =>
-            val k = Keys.assetBalance(addressId, asset)(h)
-            h -> k.parse(db.get(k.keyBytes))
-          }
-          balances.foreach(b => log.info(s"h = ${b._1}: balance = ${b._2}"))
 
         case "S" =>
           log.info("Collecting DB stats")

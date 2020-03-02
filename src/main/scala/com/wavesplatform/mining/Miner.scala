@@ -135,7 +135,7 @@ class MinerImpl(allChannels: ChannelGroup,
   private def forgeBlock(account: PrivateKeyAccount, balance: Long): Either[String, (MiningConstraints, Block, MiningConstraint)] = {
     // should take last block right at the time of mining since microblocks might have been added
     val height              = blockchainUpdater.height
-    val version             = if (height <= blockchainSettings.functionalitySettings.blockVersion3AfterHeight) PlainBlockVersion else NgBlockVersion
+    val version             = NgBlockVersion
     val lastBlock           = blockchainUpdater.lastBlock.get
     val referencedBlockInfo = blockchainUpdater.bestLastBlockInfo(System.currentTimeMillis() - minMicroBlockDurationMills).get
     val refBlockBT          = referencedBlockInfo.consensus.baseTarget
@@ -157,7 +157,7 @@ class MinerImpl(allChannels: ChannelGroup,
         consensusData <- consensusData(height, account, lastBlock, refBlockBT, refBlockTS, balance, currentTime)
         estimators                         = MiningConstraints(minerSettings, blockchainUpdater, height)
         mdConstraint                       = MultiDimensionalMiningConstraint(estimators.total, estimators.keyBlock)
-        (unconfirmed, updatedMdConstraint) = utx.packUnconfirmed(mdConstraint, isSortingRequired())
+        (unconfirmed, updatedMdConstraint) = utx.packUnconfirmed(mdConstraint, false)
         _                                  = log.debug(s"Adding ${unconfirmed.size} unconfirmed transaction(s) to new block")
         block <- Block
           .buildAndSign(version.toByte, currentTime, refBlockID, consensusData, unconfirmed, account, blockFeatures(version))
@@ -170,8 +170,6 @@ class MinerImpl(allChannels: ChannelGroup,
     val chanCount = allChannels.size()
     Either.cond(chanCount >= minerSettings.quorum, (), s"Quorum not available ($chanCount/${minerSettings.quorum}, not forging block.")
   }
-
-  private def isSortingRequired(): Boolean = blockchainUpdater.height <= blockchainSettings.functionalitySettings.dontRequireSortedTransactionsAfter
 
   private def blockFeatures(version: Byte): Set[Short] = {
     if (version <= 2) Set.empty[Short]

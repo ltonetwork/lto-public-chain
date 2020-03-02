@@ -2,9 +2,9 @@ package com.wavesplatform.state.diffs
 
 import cats._
 import cats.implicits._
+import com.wavesplatform.account.Address
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
-import com.wavesplatform.account.Address
 import com.wavesplatform.transaction.ValidationError
 import com.wavesplatform.transaction.ValidationError.GenericError
 import com.wavesplatform.transaction.lease._
@@ -24,7 +24,7 @@ object LeaseTransactionsDiff {
         Left(GenericError(s"Cannot lease more than own: Balance:${ap.balance}, already leased: ${ap.lease.out}"))
       } else {
         val portfolioDiff: Map[Address, Portfolio] = Map(
-          sender    -> Portfolio(-tx.fee, LeaseBalance(0, tx.amount)),
+          sender    -> Portfolio(0, LeaseBalance(0, tx.amount)),
           recipient -> Portfolio(0, LeaseBalance(tx.amount, 0))
         )
         Right(Diff(height = height, tx = tx, portfolios = portfolioDiff, leaseState = Map(tx.id() -> true)))
@@ -40,25 +40,14 @@ object LeaseTransactionsDiff {
     }
     for {
       lease <- leaseEi
-      recipient     = lease.recipient.asInstanceOf[Address]
-      isLeaseActive = lease.isActive
-      _ <- if (!isLeaseActive && time > settings.allowMultipleLeaseCancelTransactionUntilTimestamp)
-        Left(GenericError(s"Cannot cancel already cancelled lease"))
-      else Right(())
+      recipient = lease.recipient.asInstanceOf[Address]
+      _ <- Either.cond(lease.isActive, (), GenericError(s"Cannot cancel already cancelled lease"))
       canceller = Address.fromPublicKey(tx.sender.publicKey)
       portfolioDiff <- if (tx.sender == lease.sender) {
         Right(
-          Monoid.combine(Map(canceller -> Portfolio(-tx.fee, LeaseBalance(0, -lease.amount))),
+          Monoid.combine(Map(canceller -> Portfolio(0, LeaseBalance(0, -lease.amount))),
                          Map(recipient -> Portfolio(0, LeaseBalance(-lease.amount, 0)))))
-      } else if (time < settings.allowMultipleLeaseCancelTransactionUntilTimestamp) { // cancel of another acc
-        Right(
-          Monoid.combine(Map(canceller -> Portfolio(-tx.fee, LeaseBalance(0, -lease.amount))),
-                         Map(recipient -> Portfolio(0, LeaseBalance(-lease.amount, 0)))))
-      } else
-        Left(
-          GenericError(
-            s"LeaseTransaction was leased by other sender " +
-              s"and time=$time > allowMultipleLeaseCancelTransactionUntilTimestamp=${settings.allowMultipleLeaseCancelTransactionUntilTimestamp}"))
+      } else Left(GenericError(s"LeaseTransaction was leased by other sender"))
 
     } yield Diff(height = height, tx = tx, portfolios = portfolioDiff, leaseState = Map(tx.leaseId -> false))
   }

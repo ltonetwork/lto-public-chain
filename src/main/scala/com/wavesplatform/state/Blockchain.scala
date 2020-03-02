@@ -51,8 +51,6 @@ trait Blockchain {
 
   def leaseDetails(leaseId: ByteStr): Option[LeaseDetails]
 
-  def filledVolumeAndFee(orderId: ByteStr): VolumeAndFee
-
   /** Retrieves Waves balance snapshot in the [from, to] range (inclusive) */
   def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot]
 
@@ -70,6 +68,8 @@ trait Blockchain {
   def allActiveLeases: Set[LeaseTransaction]
 
   def associations(address: Address): Blockchain.Associations
+
+  def sponsorOf(address: Address) : Option[Address]
 
   /** Builds a new portfolio map by applying a partial function to all portfolios on which the function is defined.
     *
