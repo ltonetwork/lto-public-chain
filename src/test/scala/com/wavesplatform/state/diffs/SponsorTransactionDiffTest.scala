@@ -92,7 +92,7 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
       sponsorship = SponsorshipTransaction.selfSigned(version, sponsor, sender, sposorTxFee, ts + 1).explicitGet()
       sponsorship2 = SponsorshipTransaction.selfSigned(version, sponsor2, sender, sposorTxFee, ts + 1).explicitGet()
       cancel = SponsorshipCancelTransaction.selfSigned(version, sponsor, sender, sposorTxFee, ts + 1).explicitGet()
-      transfer = TransferTransactionV2.selfSigned(2, sender, other, transferAmt, transferTxFee, ts + 1, Array.emptyByteArray).explicitGet()
+      transfer = TransferTransactionV2.selfSigned(2, sender, other, transferAmt,  ts + 1,transferTxFee, Array.emptyByteArray).explicitGet()
     } yield (List(g1, g2,g3), sponsorship, sponsorship2, cancel, transfer)
 
 
