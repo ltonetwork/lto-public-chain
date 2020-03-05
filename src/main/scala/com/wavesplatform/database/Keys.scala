@@ -65,8 +65,11 @@ object Keys {
 
   def sponsorshipHistory(addressId: BigInt): Key[Seq[Int]] = historyKey(48, addressId.toByteArray)
   def sponsorshipStatus(addressId: BigInt)(height: Int): Key[List[Address]] =
-    Key(hAddr(49, height, addressId), arr => Deser.parseArrays(arr).map(a => Address.fromBytes(a).explicitGet()).toList, (l:List[Address]) => Deser.serializeArrays(l.map(_.bytes.arr)))
-
+    Key(
+      hAddr(49, height, addressId),
+      arr => Deser.parseArrays(arr).map(a => Address.fromBytes(a).explicitGet()).toList,
+      (l: List[Address]) => Deser.serializeArrays(l.map(_.bytes.arr))
+    )
   def transactionInfo(txId: ByteStr): Key[Option[(Int, Transaction)]] = Key.opt(hash(18, txId), readTransactionInfo, writeTransactionInfo)
   def transactionHeight(txId: ByteStr): Key[Option[Int]] =
     Key.opt(hash(18, txId), readTransactionHeight, unsupported("Can't write transaction height only"))

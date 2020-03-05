@@ -59,7 +59,6 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
             d.portfolios(sponsorship.sender.toAddress).balance shouldBe (-cancel.fee)
             d.portfolios(transfer.sender.toAddress).balance shouldBe (-transfer.fee - transfer.amount)
             d.portfolios(transfer.recipient.asInstanceOf[Address]).balance shouldBe (transfer.amount)
-            d.portfolios(TestBlock.defaultSigner).balance shouldBe (cancel.fee + transfer.fee)
             b.sponsorOf(transfer.sender.toAddress) shouldBe List.empty
         }
     }
@@ -71,7 +70,6 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
           case (d, b) =>
             d.portfolios(transfer.sender.toAddress).balance shouldBe (-transfer.fee - transfer.amount)
             d.portfolios(transfer.recipient.asInstanceOf[Address]).balance shouldBe (transfer.amount)
-            d.portfolios(TestBlock.defaultSigner).balance shouldBe (transfer.fee)
             b.sponsorOf(transfer.sender.toAddress) shouldBe List.empty
         }
     }
@@ -106,7 +104,6 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
             d.portfolios(sponsorship2.sender.toAddress).balance shouldBe (-transfer.fee)
             d.portfolios(transfer.sender.toAddress).balance shouldBe (-transfer.amount)
             d.portfolios(transfer.recipient.asInstanceOf[Address]).balance shouldBe (transfer.amount)
-            d.portfolios(TestBlock.defaultSigner).balance shouldBe (transfer.fee)
             b.sponsorOf(transfer.sender.toAddress) shouldBe List(sponsorship2, sponsorship).map(_.sender.toAddress)
         }
     }
