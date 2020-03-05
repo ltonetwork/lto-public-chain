@@ -37,7 +37,8 @@ case class SponsorshipApiRoute(settings: RestAPISettings, wallet: Wallet, blockc
         paramType = "body",
         dataType = "com.wavesplatform.api.http.SponsorshipRequest",
         defaultValue =
-          "{\n                       \"version\": 1,\n                       \"sender\": \"3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg\",\n                       \"recipient\" : \"3M8CzCtoURGBVQn9FXkhvz8vXwq2KHZbDmC\",\n                       \"fee\": 100000,\n                       }")
+          "{\n                       \"version\": 1,\n                       \"sender\": \"3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg\",\n                       \"recipient\" : \"3M8CzCtoURGBVQn9FXkhvz8vXwq2KHZbDmC\",\n                       \"fee\": 100000,\n                       }"
+      )
     ))
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def sponsor: Route = processRequest("lease", (t: SponsorshipRequest) => doBroadcast(TransactionFactory.sponsorship(t, wallet, time)))
@@ -53,7 +54,8 @@ case class SponsorshipApiRoute(settings: RestAPISettings, wallet: Wallet, blockc
         paramType = "body",
         dataType = "com.wavesplatform.api.http.SponsorshipRequest",
         defaultValue =
-          "{\n                       \"version\": 1,\n                       \"sender\": \"3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg\",\n                       \"recipient\" : \"3M8CzCtoURGBVQn9FXkhvz8vXwq2KHZbDmC\",\n                       \"fee\": 100000,\n                       }")
+          "{\n                       \"version\": 1,\n                       \"sender\": \"3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg\",\n                       \"recipient\" : \"3M8CzCtoURGBVQn9FXkhvz8vXwq2KHZbDmC\",\n                       \"fee\": 100000,\n                       }"
+      )
     ))
   def cancel: Route = processRequest("cancel", (t: SponsorshipRequest) => doBroadcast(TransactionFactory.cancelSponsorship(t, wallet, time)))
 
@@ -66,7 +68,7 @@ case class SponsorshipApiRoute(settings: RestAPISettings, wallet: Wallet, blockc
   def status: Route = (pathPrefix("status") & get) {
     pathPrefix(Segment) { address =>
       complete(Address.fromString(address) match {
-        case Left(e) => ApiError.fromValidationError(e)
+        case Left(e)  => ApiError.fromValidationError(e)
         case Right(a) =>
           ToResponseMarshallable(SponsorshipInfo(blockchain.sponsorOf(a).map(_.address)))
       })

@@ -52,7 +52,7 @@ class TransactionsRouteSpec
         )
 
         val featuresSettings = TestFunctionalitySettings.Enabled
-        val blockchain = mock[Blockchain]
+        val blockchain       = mock[Blockchain]
         (blockchain.height _).expects().returning(1).anyNumberOfTimes()
         (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
         (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures)
@@ -85,7 +85,7 @@ class TransactionsRouteSpec
         )
 
         val featuresSettings = TestFunctionalitySettings.Enabled
-        val blockchain = mock[Blockchain]
+        val blockchain       = mock[Blockchain]
         (blockchain.height _).expects().returning(1).anyNumberOfTimes()
         (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
         (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures)

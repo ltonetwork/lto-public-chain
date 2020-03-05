@@ -74,7 +74,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
 
     "forget rollbacked transaction for quering" in forAll(accountGen, accountGen, Gen.nonEmptyListOf(Gen.choose(1, 10))) {
       case (sender, recipient, txCount) =>
-        val settings = createSettings(BlockchainFeatures.MassTransfer -> 0)
+        val settings = createSettings()
         val wavesSettings = history.DefaultWavesSettings.copy(
           blockchainSettings = history.DefaultWavesSettings.blockchainSettings.copy(functionalitySettings = settings))
         withDomain(wavesSettings) { d =>
@@ -233,13 +233,13 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
         val settings = createSettings(BlockchainFeatures.SponsorshipTransaction -> 0, BlockchainFeatures.SmartAccounts -> 0)
         val wavesSettings = history.DefaultWavesSettings.copy(
           blockchainSettings = history.DefaultWavesSettings.blockchainSettings.copy(functionalitySettings = settings))
-        val tx = SponsorshipTransaction.selfSigned(1, sponsor, sender, 5 * 100000000L, nextTs).explicitGet()
+        val tx  = SponsorshipTransaction.selfSigned(1, sponsor, sender, 5 * 100000000L, nextTs).explicitGet()
         val tx2 = SponsorshipCancelTransaction.selfSigned(1, sponsor, sender, 5 * 100000000L, nextTs).explicitGet()
 
         withDomain(wavesSettings) { d =>
           d.appendBlock(genesisBlock(nextTs, Seq((sponsor, ENOUGH_AMT), (sender, ENOUGH_AMT))))
 
-          def appendTx(tx:Transaction) = {
+          def appendTx(tx: Transaction) = {
             val block = TestBlock.create(
               nextTs,
               d.lastBlockId,
@@ -267,8 +267,6 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
           }
         }
     }
-
-
 
     "address script" in pendingUntilFixed(forAll(accountGen, positiveLongGen, scriptGen) {
       case (sender, initialBalance, script) =>

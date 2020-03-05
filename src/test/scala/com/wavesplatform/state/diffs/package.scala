@@ -25,14 +25,11 @@ package object diffs extends WithState with Matchers {
     val totalDiff1 = differ(state, block)
     assertion(totalDiff1.map(_._1))
   }
-  def assertNgDiffState(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings = TFS.Enabled)(
-      assertion: (Diff, Blockchain) => Unit): Unit =
-    assertDiffAndState(preconditions, block, fs, withNg = true)(assertion)
 
   private def assertDiffAndState(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings, withNg: Boolean)(
       assertion: (Diff, Blockchain) => Unit): Unit = withStateAndHistory(fs) { state =>
     def differ(blockchain: Blockchain, prevBlock: Option[Block], b: Block) =
-      BlockDiffer.fromBlock(fs, blockchain, if (withNg) prevBlock else None, b, MiningConstraint.Unlimited)
+      BlockDiffer.fromBlock(fs, blockchain, prevBlock, b, MiningConstraint.Unlimited)
 
     preconditions.foldLeft[Option[Block]](None) { (prevBlock, curBlock) =>
       val (diff, fees, _) = differ(state, prevBlock, curBlock).explicitGet()
@@ -42,11 +39,11 @@ package object diffs extends WithState with Matchers {
 
     val (diff, fees, _) = differ(state, preconditions.lastOption, block).explicitGet()
     val cb              = new CompositeBlockchain(state, Some(diff), 0)
-    withClue("asserting composite blockchain")(assertion(diff, cb))
+    withClue("[asserting composite blockchain] ")(assertion(diff, cb))
 
     state.append(diff, fees, block)
 
-    withClue("asserting persisted blockchain")(assertion(diff, state))
+    withClue("[asserting persisted blockchain] ")(assertion(diff, state))
   }
 
   def assertDiffAndState(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings = TFS.Enabled)(
@@ -62,12 +59,6 @@ package object diffs extends WithState with Matchers {
         differ(state, block).map(diff => state.append(diff._1, diff._2, block))
       })
     }
-
-  def assertBalanceInvariant(diff: Diff): Unit = {
-    val portfolioDiff = Monoid.combineAll(diff.portfolios.values)
-    portfolioDiff.balance shouldBe 0
-    portfolioDiff.effectiveBalance shouldBe 0
-  }
 
   def assertLeft(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings = TFS.Enabled)(errorMessage: String): Unit =
     assertDiffEi(preconditions, block, fs)(_ should produce(errorMessage))

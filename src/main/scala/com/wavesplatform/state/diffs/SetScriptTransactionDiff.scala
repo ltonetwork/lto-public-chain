@@ -12,7 +12,7 @@ object SetScriptTransactionDiff {
       Diff(
         height = height,
         tx = tx,
-        scripts = Map(tx.sender.toAddress    -> tx.script)
+        scripts = Map(tx.sender.toAddress -> tx.script)
       ))
   }
 }

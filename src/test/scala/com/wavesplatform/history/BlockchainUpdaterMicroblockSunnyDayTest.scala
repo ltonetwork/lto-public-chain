@@ -1,15 +1,14 @@
 package com.wavesplatform.history
 
 import com.wavesplatform.TransactionGen
-import com.wavesplatform.features.BlockchainFeatures
+import com.wavesplatform.account.{Address, AddressOrAlias, PrivateKeyAccount}
 import com.wavesplatform.state._
 import com.wavesplatform.state.diffs._
+import com.wavesplatform.transaction._
+import com.wavesplatform.transaction.transfer._
 import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
-import com.wavesplatform.account.{Address, AddressOrAlias, PrivateKeyAccount}
-import com.wavesplatform.transaction._
-import com.wavesplatform.transaction.transfer._
 import scorex.crypto.signatures.Curve25519._
 
 class BlockchainUpdaterMicroblockSunnyDayTest
@@ -27,7 +26,7 @@ class BlockchainUpdaterMicroblockSunnyDayTest
     ts     <- positiveIntGen
     fee    <- smallFeeGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    masterToAlice: TransferTransactionV1 <- wavesTransferGeneratorP(master, alice)
+    masterToAlice: TransferTransactionV1 <- wavesTransferGeneratorP(ts, master, alice)
     aliceToBob  = createWavesTransfer(alice, bob, masterToAlice.amount - fee - 1, fee, ts).explicitGet()
     aliceToBob2 = createWavesTransfer(alice, bob, masterToAlice.amount - fee - 1, fee, ts + 1).explicitGet()
   } yield (genesis, masterToAlice, aliceToBob, aliceToBob2)
@@ -37,7 +36,9 @@ class BlockchainUpdaterMicroblockSunnyDayTest
     scenario(preconditionsAndPayments) {
       case (domain, (genesis, masterToAlice, aliceToBob, aliceToBob2)) =>
         val blocks = chainBlocks(Seq(Seq(genesis), Seq(masterToAlice), Seq(aliceToBob), Seq(aliceToBob2)))
-        blocks.init.foreach(block => domain.blockchainUpdater.processBlock(block).explicitGet())
+        blocks.init.foreach { block =>
+          domain.blockchainUpdater.processBlock(block).explicitGet()
+        }
         domain.blockchainUpdater.processBlock(blocks.last) should produce("unavailable funds")
 
         effBalance(genesis.recipient, domain) > 0 shouldBe true
@@ -49,7 +50,7 @@ class BlockchainUpdaterMicroblockSunnyDayTest
   property("all txs in one block: B0 <- B0m1 <- B0m2 <- B0m3!") {
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
       case (domain, (genesis, masterToAlice, aliceToBob, aliceToBob2)) =>
-        val (block, microBlocks) = chainBaseAndMicro(randomSig, genesis, Seq(masterToAlice, aliceToBob, aliceToBob2).map(Seq(_)))
+        val (block, microBlocks) = chainBaseAndMicro(randomSig, genesis, Seq(masterToAlice, aliceToBob, aliceToBob2).map(Seq(_)), genesis.timestamp)
         domain.blockchainUpdater.processBlock(block).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks(0)).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks(1)).explicitGet()
@@ -65,7 +66,7 @@ class BlockchainUpdaterMicroblockSunnyDayTest
   property("block references microBlock: B0 <- B1 <- B1m1 <- B2!") {
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
       case (domain, (genesis, masterToAlice, aliceToBob, aliceToBob2)) =>
-        val (block, microBlocks) = chainBaseAndMicro(randomSig, genesis, Seq(masterToAlice, aliceToBob, aliceToBob2).map(Seq(_)))
+        val (block, microBlocks) = chainBaseAndMicro(randomSig, genesis, Seq(masterToAlice, aliceToBob, aliceToBob2).map(Seq(_)), genesis.timestamp)
         domain.blockchainUpdater.processBlock(block).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks(0)).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks(1)).explicitGet()
@@ -80,7 +81,7 @@ class BlockchainUpdaterMicroblockSunnyDayTest
   property("discards some of microBlocks: B0 <- B0m1 <- B0m2; B0m1 <- B1") {
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
       case (domain, (genesis, masterToAlice, aliceToBob, aliceToBob2)) =>
-        val (block0, microBlocks0) = chainBaseAndMicro(randomSig, genesis, Seq(masterToAlice, aliceToBob).map(Seq(_)))
+        val (block0, microBlocks0) = chainBaseAndMicro(randomSig, genesis, Seq(masterToAlice, aliceToBob).map(Seq(_)), genesis.timestamp)
         val block1                 = buildBlockOfTxs(microBlocks0.head.totalResBlockSig, Seq(aliceToBob2))
         domain.blockchainUpdater.processBlock(block0).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks0(0)).explicitGet()
@@ -97,7 +98,7 @@ class BlockchainUpdaterMicroblockSunnyDayTest
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
       case (domain, (genesis, masterToAlice, aliceToBob, aliceToBob2)) =>
         val block0                 = buildBlockOfTxs(randomSig, Seq(genesis))
-        val (block1, microBlocks1) = chainBaseAndMicro(block0.uniqueId, masterToAlice, Seq(Seq(aliceToBob)))
+        val (block1, microBlocks1) = chainBaseAndMicro(block0.uniqueId, masterToAlice, Seq(Seq(aliceToBob)), genesis.timestamp)
         val block2                 = buildBlockOfTxs(block1.uniqueId, Seq(aliceToBob2))
         domain.blockchainUpdater.processBlock(block0).explicitGet()
         domain.blockchainUpdater.processBlock(block1).explicitGet()
@@ -113,9 +114,9 @@ class BlockchainUpdaterMicroblockSunnyDayTest
   property("doesn't discard liquid block if competitor is not better: B0 <- B1 <- B1m1; B0 <- B2!") {
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
       case (domain, (genesis, masterToAlice, aliceToBob, aliceToBob2)) =>
-        val block0                 = buildBlockOfTxs(randomSig, Seq(genesis))
-        val (block1, microBlocks1) = chainBaseAndMicro(block0.uniqueId, masterToAlice, Seq(Seq(aliceToBob)))
-        val block2                 = buildBlockOfTxs(block0.uniqueId, Seq(aliceToBob2))
+        val block0                 = buildBlockOfTxs(randomSig, Seq(genesis), genesis.timestamp)
+        val (block1, microBlocks1) = chainBaseAndMicro(block0.uniqueId, masterToAlice, Seq(Seq(aliceToBob)), genesis.timestamp)
+        val block2                 = buildBlockOfTxs(block0.uniqueId, Seq(aliceToBob2), genesis.timestamp)
         domain.blockchainUpdater.processBlock(block0).explicitGet()
         domain.blockchainUpdater.processBlock(block1).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks1(0)).explicitGet()
@@ -133,8 +134,9 @@ class BlockchainUpdaterMicroblockSunnyDayTest
         val block0                 = buildBlockOfTxs(randomSig, Seq(genesis))
         val (block1, microBlocks1) = chainBaseAndMicro(block0.uniqueId, masterToAlice, Seq(Seq(aliceToBob)))
         val otherSigner            = PrivateKeyAccount(Array.fill(KeyLength)(1))
-        val block2                 = customBuildBlockOfTxs(block0.uniqueId, Seq(masterToAlice, aliceToBob2), otherSigner, 1, 0L, DefaultBaseTarget / 2)
         domain.blockchainUpdater.processBlock(block0).explicitGet()
+        val block2 =
+          customBuildBlockOfTxs(block0.uniqueId, Seq(masterToAlice, aliceToBob2), otherSigner, 1, masterToAlice.timestamp, DefaultBaseTarget / 2)
         domain.blockchainUpdater.processBlock(block1).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks1(0)).explicitGet()
         domain.blockchainUpdater.processBlock(block2) shouldBe 'right

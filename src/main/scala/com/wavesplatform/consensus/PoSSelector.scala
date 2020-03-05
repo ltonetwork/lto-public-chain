@@ -16,9 +16,7 @@ class PoSSelector(blockchain: Blockchain, settings: BlockchainSettings) {
 
   import PoSCalculator._
 
-  protected def pos(height: Int): PoSCalculator =
-    if (fairPosActivated(height)) FairPoSCalculator
-    else NxtPoSCalculator
+  protected def pos(height: Int): PoSCalculator = FairPoSCalculator
 
   def consensusData(accountPublicKey: Array[Byte],
                     height: Int,
@@ -80,7 +78,7 @@ class PoSSelector(blockchain: Blockchain, settings: BlockchainSettings) {
 
   private def getHit(height: Int, accountPublicKey: Array[Byte]): Option[BigInt] = {
     val blockForHit =
-      if (fairPosActivated(height) && height > 100) blockchain.blockAt(height - 100)
+      if (height > 100) blockchain.blockAt(height - 100)
       else blockchain.lastBlock
 
     blockForHit.map(b => {
@@ -89,5 +87,5 @@ class PoSSelector(blockchain: Blockchain, settings: BlockchainSettings) {
     })
   }
 
-  private def fairPosActivated(height: Int): Boolean = blockchain.activatedFeaturesAt(height).contains(BlockchainFeatures.FairPoS.id)
+  private def fairPosActivated(height: Int): Boolean = true
 }

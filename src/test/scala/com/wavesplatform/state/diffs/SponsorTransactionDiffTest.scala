@@ -1,6 +1,7 @@
 package com.wavesplatform.state.diffs
 
 import com.wavesplatform.account.{Address, PrivateKeyAccount}
+import com.wavesplatform.block.Block
 import com.wavesplatform.lagonaki.mocks.TestBlock
 import com.wavesplatform.lagonaki.mocks.TestBlock.{create => block}
 import com.wavesplatform.state.EitherExt2
@@ -23,7 +24,7 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
     sponsor <- accountGen
     sender  <- accountGen
     other   <- accountGen
-    ts      <- positiveLongGen
+    ts      <- timestampGen
     sposorTxFee = 5 * 100000000L
     transferTxFee <- enoughFeeGen
     transferAmt   <- positiveLongGen
@@ -44,7 +45,8 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
             d.portfolios(sponsorship.sender.toAddress).balance shouldBe (-transfer.fee)
             d.portfolios(transfer.sender.toAddress).balance shouldBe (-transfer.amount)
             d.portfolios(transfer.recipient.asInstanceOf[Address]).balance shouldBe (transfer.amount)
-            d.portfolios(TestBlock.defaultSigner).balance shouldBe (transfer.fee)
+            val fees = Block.CurrentBlockFeePart(transfer.fee) + sponsorship.fee - Block.CurrentBlockFeePart(sponsorship.fee)
+            d.portfolios(TestBlock.defaultSigner).balance shouldBe fees
             b.sponsorOf(transfer.sender.toAddress) shouldBe List(sponsorship.sender.toAddress)
         }
     }
