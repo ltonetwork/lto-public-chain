@@ -242,9 +242,13 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case Some(x) =>
             x match {
               case AnchorTransaction           => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
-              case IssueAssociationTransaction => TransactionFactory.issueAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time)
+              case IssueAssociationTransaction => TransactionFactory.issueAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time).flatMap { is =>
+                if (blockchain.assocExists(is)) Left(GenericError("The exact same association already exists")) else Right(is)
+              }
               case RevokeAssociationTransaction =>
                 TransactionFactory.revokeAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time)
+                  .flatMap { is =>
+                    if (!blockchain.assocExists(is)) Left(GenericError("The association doesn't exist")) else Right(is) }
               case SponsorshipTransaction => TransactionFactory.sponsorship(txJson.as[SponsorshipRequest], wallet, signerAddress, time)
               case SponsorshipCancelTransaction =>
                 TransactionFactory.cancelSponsorship(txJson.as[SponsorshipRequest], wallet, signerAddress, time)
@@ -279,8 +283,11 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case Some(x) =>
                 x match {
                   case AnchorTransaction            => TransactionFactory.anchor(txJson.as[AnchorRequest], senderPk)
-                  case IssueAssociationTransaction  => TransactionFactory.issueAssociation(txJson.as[AssociationRequest], senderPk)
-                  case RevokeAssociationTransaction => TransactionFactory.revokeAssociation(txJson.as[AssociationRequest], senderPk)
+                  case IssueAssociationTransaction  => TransactionFactory.issueAssociation(txJson.as[AssociationRequest], senderPk).flatMap { is =>
+                    if (blockchain.assocExists(is)) Left(GenericError("The exact same association already exists")) else Right(is)
+                  }
+                  case RevokeAssociationTransaction => TransactionFactory.revokeAssociation(txJson.as[AssociationRequest], senderPk).flatMap { is =>
+                    if (!blockchain.assocExists(is)) Left(GenericError("The association doesn't exist")) else Right(is)}
                   case SponsorshipTransaction       => TransactionFactory.sponsorship(txJson.as[SponsorshipRequest], senderPk)
                   case SponsorshipCancelTransaction => TransactionFactory.cancelSponsorship(txJson.as[SponsorshipRequest], senderPk)
                   case TransferTransactionV1        => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], senderPk)

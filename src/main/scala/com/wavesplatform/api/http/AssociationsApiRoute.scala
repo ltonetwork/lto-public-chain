@@ -109,7 +109,11 @@ case class AssociationsApiRoute(settings: RestAPISettings,
     ))
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def issueAssociation: Route =
-    processRequest("issue", (req: AssociationRequest) => doBroadcast(TransactionFactory.issueAssociation(req, wallet, time)))
+    processRequest("issue", (req: AssociationRequest) =>
+            {
+              doBroadcast(TransactionFactory.issueAssociation(req, wallet, time).flatMap { is =>
+                if (blockchain.assocExists(is)) Left(GenericError("The exact same association already exists")) else Right(is)
+              })})
 
   @Path("/revoke")
   @ApiOperation(value = "Revokes an association between accounts", httpMethod = "POST", produces = "application/json", consumes = "application/json")
@@ -127,7 +131,9 @@ case class AssociationsApiRoute(settings: RestAPISettings,
     ))
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def revokeAssociation: Route =
-    processRequest("revoke", (req: AssociationRequest) => doBroadcast(TransactionFactory.revokeAssociation(req, wallet, time)))
+    processRequest("revoke", (req: AssociationRequest) => doBroadcast(TransactionFactory.revokeAssociation(req, wallet, time).flatMap { is =>
+      if (!blockchain.assocExists(is)) Left(GenericError("The association doesn't exist")) else Right(is)
+    }))
 
 }
 

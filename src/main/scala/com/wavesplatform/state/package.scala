@@ -36,6 +36,10 @@ package object state {
   }
 
   implicit class BlockchainExt(blockchain: Blockchain) {
+
+    def assocExists(as: AssociationTransactionBase) =
+      blockchain.associations(as.sender).outgoing.map(_._2).exists(_.assoc == as.assoc)
+
     def isEmpty: Boolean = blockchain.height == 0
 
     def contains(block: Block): Boolean       = blockchain.contains(block.uniqueId)
