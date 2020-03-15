@@ -120,7 +120,7 @@ object AssociationTransaction {
     if (!supportedVersions.contains(version)) {
       Left(ValidationError.UnsupportedVersion(version))
     } else if (hash.exists(_.arr.size > MaxHashLength)) {
-      Left(ValidationError.GenericError("Hash length must be " + MaxHashLength + " bytes"))
+      Left(ValidationError.GenericError("Hash length must be <=" + MaxHashLength + " bytes"))
     } else if (feeAmount <= 0) {
       Left(ValidationError.InsufficientFee())
     } else if (sender.address == party.address) {
