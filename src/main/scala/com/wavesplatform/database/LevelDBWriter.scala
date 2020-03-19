@@ -270,7 +270,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(t, txs)
       rw.put(kk, nextSeqNr)
     }
-    
+
     def f(addr: Address,txs:  Seq[AssociationTransactionBase], seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]] ) = {
       val curSeq: Key[Int] = seqNrKey(addr.bytes)
       val last             = rw.get(curSeq)
