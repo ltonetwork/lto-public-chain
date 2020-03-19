@@ -73,7 +73,7 @@ object GenesisSettings {
   val MAINNET = GenesisSettings(
     1547303338475L,
     1547303338475L,
-    Constants.UnitsInWave * Constants.TotalLTOMain,
+    Constants.UnitsInLTO * Constants.TotalLTOMain,
     ByteStr.decodeBase58("3xfb8SHvXK1eUT73kqq89Ayvt2w5ivy9CM2HHVYZ6H5zjgmbukadkFhis74vXsfak9YjwUCBMQUKsKmiRPmAWaB3").toOption,
     List(
       GenesisTransactionSettings("3JpzrZcSDhzRVeENoqqB98c6hTNg7WJaBKt", Constants.UnitsInLTO * 1000L),

@@ -39,11 +39,11 @@ package object diffs extends WithState with Matchers {
 
     val (diff, fees, _) = differ(state, preconditions.lastOption, block).explicitGet()
     val cb              = new CompositeBlockchain(state, Some(diff), 0)
-    withClue("[asserting composite blockchain] ")(assertion(diff, cb))
+    withClue("[step1 -- asserting composite blockchain] ")(assertion(diff, cb))
 
     state.append(diff, fees, block)
 
-    withClue("[asserting persisted blockchain] ")(assertion(diff, state))
+    withClue("[step2 -- asserting persisted blockchain] ")(assertion(diff, state))
   }
 
   def assertDiffAndState(preconditions: Seq[Block], block: Block, fs: FunctionalitySettings = TFS.Enabled)(

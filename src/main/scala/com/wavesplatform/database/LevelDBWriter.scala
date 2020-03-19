@@ -1,8 +1,7 @@
 package com.wavesplatform.database
 
-import cats.kernel.Monoid
 import com.google.common.cache.CacheBuilder
-import com.wavesplatform.account.{Address, Alias}
+import com.wavesplatform.account.Address
 import com.wavesplatform.block.{Block, BlockHeader}
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
@@ -17,8 +16,8 @@ import com.wavesplatform.utils.ScorexLogging
 import org.iq80.leveldb.{DB, ReadOptions}
 
 import scala.annotation.tailrec
+import scala.collection.immutable
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.{immutable, mutable}
 
 object LevelDBWriter {
   private def loadLeaseStatus(db: ReadOnlyDB, leaseId: ByteStr): Boolean =
@@ -242,7 +241,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
     for ((addressId, newSponsorList) <- sponsorship) {
       expiredKeys ++= updateHistory(rw, Keys.sponsorshipHistory(addressId), threshold, Keys.sponsorshipStatus(addressId))
-      rw.put(Keys.sponsorshipStatus(addressId)(height),newSponsorList)
+      rw.put(Keys.sponsorshipStatus(addressId)(height), newSponsorList)
     }
 
     for ((addressId, addressData) <- data) {
@@ -271,23 +270,26 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(t, txs)
       rw.put(kk, nextSeqNr)
     }
+    
+    def f(addr: Address,txs:  Seq[AssociationTransactionBase], seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]] ) = {
+      val curSeq: Key[Int] = seqNrKey(addr.bytes)
+      val last             = rw.get(curSeq)
+      txs.zipWithIndex
+        .map { case (tx, nr) => (tx, nr + last + 1) }
+        .foreach {
+          case (tx, nr) =>
+            val t: Key[Array[Byte]] = idKey(addr.bytes, nr)
+            rw.put(t.keyBytes, tx.id().arr)
+        }
+      rw.put(curSeq, last + txs.size)
+    }
 
-    for ((_, tx) <- assocs) {
-      val sender = tx.sender.toAddress
-      val party  = tx.assoc.party
-      val id     = tx.id()
+    assocs.map(_._2).groupBy(_.sender.toAddress).foreach {
+      case (addr, txs) => f(addr,txs,Keys.outgoingAssociationsSeqNr, Keys.outgoingAssociationTransactionId)
+    }
 
-      def f(p: Address, seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]]) = {
-        val curSeq: Key[Int]    = seqNrKey(p.bytes)
-        val last                = rw.get(curSeq)
-        val nextSeqNr           = last + 1
-        val t: Key[Array[Byte]] = idKey(p.bytes, nextSeqNr)
-        rw.put(t.keyBytes, id.arr)
-        rw.put(curSeq, nextSeqNr)
-      }
-
-      f(sender, Keys.outgoingAssociationsSeqNr, Keys.outgoingAssociationTransactionId)
-      f(party, Keys.incomingAssociationsSeqNr, Keys.incomingAssociationTransactionId)
+    assocs.map(_._2).groupBy(_.assoc.party).foreach {
+      case (addr, txs) => f(addr,txs,Keys.incomingAssociationsSeqNr, Keys.incomingAssociationTransactionId)
     }
 
     for ((id, (tx, _)) <- transactions) {
