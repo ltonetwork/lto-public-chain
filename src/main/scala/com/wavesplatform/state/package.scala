@@ -6,6 +6,7 @@ import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.transaction.ValidationError.GenericError
 import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.lease.{LeaseTransaction, LeaseTransactionV1}
+import com.wavesplatform.utils.ScorexLogging
 
 import scala.reflect.ClassTag
 import scala.util.Try
@@ -35,8 +36,7 @@ package object state {
     }
   }
 
-  implicit class BlockchainExt(blockchain: Blockchain) {
-
+  implicit class BlockchainExt(blockchain: Blockchain) extends ScorexLogging {
     def assocExists(as: AssociationTransactionBase) =
       blockchain.associations(as.sender).outgoing.map(_._2).exists(_.assoc == as.assoc)
 

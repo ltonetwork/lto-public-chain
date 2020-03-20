@@ -146,13 +146,13 @@ object IssueAssociationTransaction extends TransactionParserFor[IssueAssociation
              timestamp: Long,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
     AssociationTransaction.validate(version, sender, party, hash, feeAmount).map { _ =>
-      val uns = IssueAssociationTransaction(version,
-                                            AssociationTransaction.networkByte,
-                                            sender,
-                                            Assoc(party, assocType, hash),
-                                            feeAmount,
-                                            timestamp,
-                                            Proofs.empty)
+      val uns = IssueAssociationTransaction(version = version,
+                                            chainId = AssociationTransaction.networkByte,
+                                            sender = sender,
+                                            assoc = Assoc(party, assocType, hash),
+                                            fee = feeAmount,
+                                            timestamp = timestamp,
+                                            proofs = Proofs.empty)
       uns.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, uns.bodyBytes())))).explicitGet())
     }
   }

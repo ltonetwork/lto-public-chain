@@ -14,6 +14,7 @@ import com.wavesplatform.http.BroadcastRoute
 import com.wavesplatform.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
 import com.wavesplatform.state.diffs.CommonValidation
 import com.wavesplatform.state.{Blockchain, ByteStr}
+import com.wavesplatform.transaction.AssociationTransaction.ActionType
 import com.wavesplatform.transaction.ValidationError.{ActivationError, GenericError}
 import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.lease._
@@ -241,14 +242,15 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             x match {
-              case AnchorTransaction           => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
-              case IssueAssociationTransaction => TransactionFactory.issueAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time).flatMap { is =>
-                if (blockchain.assocExists(is)) Left(GenericError("The exact same association already exists")) else Right(is)
-              }
+              case AnchorTransaction => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
+              case IssueAssociationTransaction =>
+                TransactionFactory
+                  .issueAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time)
+                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
               case RevokeAssociationTransaction =>
-                TransactionFactory.revokeAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time)
-                  .flatMap { is =>
-                    if (!blockchain.assocExists(is)) Left(GenericError("The association doesn't exist")) else Right(is) }
+                TransactionFactory
+                  .revokeAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time)
+                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
               case SponsorshipTransaction => TransactionFactory.sponsorship(txJson.as[SponsorshipRequest], wallet, signerAddress, time)
               case SponsorshipCancelTransaction =>
                 TransactionFactory.cancelSponsorship(txJson.as[SponsorshipRequest], wallet, signerAddress, time)
@@ -282,12 +284,15 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
               case Some(x) =>
                 x match {
-                  case AnchorTransaction            => TransactionFactory.anchor(txJson.as[AnchorRequest], senderPk)
-                  case IssueAssociationTransaction  => TransactionFactory.issueAssociation(txJson.as[AssociationRequest], senderPk).flatMap { is =>
-                    if (blockchain.assocExists(is)) Left(GenericError("The exact same association already exists")) else Right(is)
-                  }
-                  case RevokeAssociationTransaction => TransactionFactory.revokeAssociation(txJson.as[AssociationRequest], senderPk).flatMap { is =>
-                    if (!blockchain.assocExists(is)) Left(GenericError("The association doesn't exist")) else Right(is)}
+                  case AnchorTransaction => TransactionFactory.anchor(txJson.as[AnchorRequest], senderPk)
+                  case IssueAssociationTransaction =>
+                    TransactionFactory
+                      .issueAssociation(txJson.as[AssociationRequest], senderPk)
+                      .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+                  case RevokeAssociationTransaction =>
+                    TransactionFactory
+                      .revokeAssociation(txJson.as[AssociationRequest], senderPk)
+                      .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
                   case SponsorshipTransaction       => TransactionFactory.sponsorship(txJson.as[SponsorshipRequest], senderPk)
                   case SponsorshipCancelTransaction => TransactionFactory.cancelSponsorship(txJson.as[SponsorshipRequest], senderPk)
                   case TransferTransactionV1        => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], senderPk)
@@ -330,9 +335,17 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             x match {
-              case AnchorTransaction            => jsv.as[SignedAnchorRequest].toTx
-              case IssueAssociationTransaction  => jsv.as[SignedAssociationRequest].toTx(IssueAssociationTransaction.create)
-              case RevokeAssociationTransaction => jsv.as[SignedAssociationRequest].toTx(RevokeAssociationTransaction.create)
+              case AnchorTransaction => jsv.as[SignedAnchorRequest].toTx
+              case IssueAssociationTransaction =>
+                jsv
+                  .as[SignedAssociationRequest]
+                  .toTx(IssueAssociationTransaction.create)
+                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+              case RevokeAssociationTransaction =>
+                jsv
+                  .as[SignedAssociationRequest]
+                  .toTx(RevokeAssociationTransaction.create)
+                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
               case SponsorshipTransaction       => jsv.as[SignedSponsorshipRequest].toTx(SponsorshipTransaction.create)
               case SponsorshipCancelTransaction => jsv.as[SignedSponsorshipRequest].toTx(SponsorshipCancelTransaction.create)
               case TransferTransactionV1        => jsv.as[SignedTransferV1Request].toTx
@@ -392,4 +405,12 @@ case class TransactionsApiRoute(settings: RestAPISettings,
 
 object TransactionsApiRoute {
   val MaxTransactionsPerRequest = 10000
+  def ifPossible(bc: Blockchain, tx: AssociationTransactionBase) = {
+    tx.actionType match {
+      case ActionType.Issue =>
+        if (bc.assocExists(tx)) Left(GenericError("The exact same association already exists")) else Right(tx)
+      case ActionType.Revoke =>
+        if (!bc.assocExists(tx)) Left(GenericError("The association doesn't exist")) else Right(tx)
+    }
+  }
 }
