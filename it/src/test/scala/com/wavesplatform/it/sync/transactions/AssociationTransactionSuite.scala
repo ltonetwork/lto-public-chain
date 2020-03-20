@@ -71,13 +71,13 @@ class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterF
   }
 
   test("can't revoke non-existing assoc") {
-    postAssoc(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 42))
+    postAssoc(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 88))
 
-    assertError(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 42),"*already exists*")
+    assertError(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 88),"*already exists*")
 
-    assertError(build(AssociationTransaction.ActionType.Revoke, notMiner.privateKey, party.toAddress, 43),"*doesn't exist*")
+    assertError(build(AssociationTransaction.ActionType.Revoke, notMiner.privateKey, party.toAddress, 89),"*doesn't exist*")
 
-    postAssoc(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 43))
-    postAssoc(build(AssociationTransaction.ActionType.Revoke, notMiner.privateKey, party.toAddress, 43))
+    postAssoc(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 89))
+    postAssoc(build(AssociationTransaction.ActionType.Revoke, notMiner.privateKey, party.toAddress, 89))
   }
 }
