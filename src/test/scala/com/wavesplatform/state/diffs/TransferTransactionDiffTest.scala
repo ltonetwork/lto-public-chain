@@ -27,8 +27,6 @@ class TransferTransactionDiffTest extends PropSpec with PropertyChecks with Matc
       case ((genesis, transfer)) =>
         assertDiffAndState(Seq(TestBlock.create(Seq(genesis))), TestBlock.create(Seq(transfer))) {
           case (totalDiff, newState) =>
-            assertBalanceInvariant(totalDiff)
-
             val recipient: Address = transfer.recipient.asInstanceOf[Address]
             val recipientPortfolio = newState.portfolio(recipient)
             if (transfer.sender.toAddress != recipient) {

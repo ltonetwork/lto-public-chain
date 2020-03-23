@@ -14,21 +14,21 @@ object GeneratingBalanceProvider {
   private val SecondDepth                                = 1000
 
   def isMiningAllowed(blockchain: Blockchain, height: Int, effectiveBalance: Long): Boolean = {
-    val activated = blockchain.activatedFeatures.get(BlockchainFeatures.SmallerMinimalGeneratingBalance.id).exists(height >= _)
+    val activated = blockchain.activatedFeatures.get(BlockchainFeatures.DUMMY_FOR_TESTS_SmallerMinimalGeneratingBalance.id).exists(height >= _)
     (!activated && effectiveBalance >= MinimalEffectiveBalanceForGenerator1) || (activated && effectiveBalance >= MinimalEffectiveBalanceForGenerator2)
   }
 
   def isEffectiveBalanceValid(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, block: Block, effectiveBalance: Long): Boolean =
-    block.timestamp < fs.minimalGeneratingBalanceAfter || (block.timestamp >= fs.minimalGeneratingBalanceAfter && effectiveBalance >= MinimalEffectiveBalanceForGenerator1) ||
+    (effectiveBalance >= MinimalEffectiveBalanceForGenerator1) ||
       blockchain.activatedFeatures
-        .get(BlockchainFeatures.SmallerMinimalGeneratingBalance.id)
+        .get(BlockchainFeatures.DUMMY_FOR_TESTS_SmallerMinimalGeneratingBalance.id)
         .exists(height >= _) && effectiveBalance >= MinimalEffectiveBalanceForGenerator2
 
   def balance(blockchain: Blockchain, fs: FunctionalitySettings, account: Address, blockId: BlockId = ByteStr.empty): Long = {
     val height =
       if (blockId == ByteStr.empty) blockchain.height
       else blockchain.heightOf(blockId).getOrElse(throw new IllegalArgumentException(s"Invalid block ref: $blockId"))
-    val depth = if (height >= fs.generationBalanceDepthFrom50To1000AfterHeight) SecondDepth else FirstDepth
+    val depth = SecondDepth
     blockchain.effectiveBalance(account, depth, blockId)
   }
 }

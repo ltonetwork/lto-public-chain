@@ -84,7 +84,7 @@ class ObsoleteTransactionBindingsTest extends PropSpec with PropertyChecks with 
     nextTransfer <- transferGeneratorP(ts, recipient, master.toAddress, ENOUGH_AMT)
   } yield (genesis, payment, setScriptTransaction, nextTransfer)
 
-  val settings = TestFunctionalitySettings.Enabled.copy(blockVersion3AfterHeight = 100)
+  val settings = TestFunctionalitySettings.Enabled
   ignore("Diff doesn't break invariant before block version 3") {
     forAll(preconditionsAndPayments) {
       case ((genesis, payment, setScriptTransaction, nextTransfer)) =>

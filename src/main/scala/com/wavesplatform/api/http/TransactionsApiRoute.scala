@@ -14,6 +14,7 @@ import com.wavesplatform.http.BroadcastRoute
 import com.wavesplatform.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
 import com.wavesplatform.state.diffs.CommonValidation
 import com.wavesplatform.state.{Blockchain, ByteStr}
+import com.wavesplatform.transaction.AssociationTransaction.ActionType
 import com.wavesplatform.transaction.ValidationError.{ActivationError, GenericError}
 import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.lease._
@@ -174,12 +175,12 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           )
           createTransaction(senderPk, enrichedJsv) { tx =>
             val r1 = CommonValidation.getMinFee(blockchain, functionalitySettings, blockchain.height, tx).map {
-              case (assetId, assetAmount) =>
+              case assetAmount =>
                 val utxMinFee = new FeeCalculator(feesSettings, blockchain).map.getOrElse(tx.builder.typeId.toInt.toString, 0L)
                 val minFee    = Math.max(utxMinFee, assetAmount)
                 Json.obj(
-                  "feeAssetId" -> assetId,
-                  "feeAmount"  -> minFee
+//                  "feeAssetId" -> null,
+                  "feeAmount" -> minFee
                 )
             }
             r1
@@ -241,10 +242,18 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             x match {
-              case AnchorTransaction           => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
-              case IssueAssociationTransaction => TransactionFactory.issueAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time)
+              case AnchorTransaction => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
+              case IssueAssociationTransaction =>
+                TransactionFactory
+                  .issueAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time)
+                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
               case RevokeAssociationTransaction =>
-                TransactionFactory.revokeAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time)
+                TransactionFactory
+                  .revokeAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time)
+                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+              case SponsorshipTransaction => TransactionFactory.sponsorship(txJson.as[SponsorshipRequest], wallet, signerAddress, time)
+              case SponsorshipCancelTransaction =>
+                TransactionFactory.cancelSponsorship(txJson.as[SponsorshipRequest], wallet, signerAddress, time)
               case TransferTransactionV1    => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], wallet, signerAddress, time)
               case TransferTransactionV2    => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], wallet, signerAddress, time)
               case MassTransferTransaction  => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], wallet, signerAddress, time)
@@ -275,9 +284,17 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
               case Some(x) =>
                 x match {
-                  case AnchorTransaction            => TransactionFactory.anchor(txJson.as[AnchorRequest], senderPk)
-                  case IssueAssociationTransaction  => TransactionFactory.issueAssociation(txJson.as[AssociationRequest], senderPk)
-                  case RevokeAssociationTransaction => TransactionFactory.revokeAssociation(txJson.as[AssociationRequest], senderPk)
+                  case AnchorTransaction => TransactionFactory.anchor(txJson.as[AnchorRequest], senderPk)
+                  case IssueAssociationTransaction =>
+                    TransactionFactory
+                      .issueAssociation(txJson.as[AssociationRequest], senderPk)
+                      .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+                  case RevokeAssociationTransaction =>
+                    TransactionFactory
+                      .revokeAssociation(txJson.as[AssociationRequest], senderPk)
+                      .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+                  case SponsorshipTransaction       => TransactionFactory.sponsorship(txJson.as[SponsorshipRequest], senderPk)
+                  case SponsorshipCancelTransaction => TransactionFactory.cancelSponsorship(txJson.as[SponsorshipRequest], senderPk)
                   case TransferTransactionV1        => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], senderPk)
                   case TransferTransactionV2        => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], senderPk)
                   case MassTransferTransaction      => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], senderPk)
@@ -310,16 +327,27 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         val typeId  = (jsv \ "type").as[Byte]
         val version = (jsv \ "version").asOpt[Byte](versionReads).getOrElse(1.toByte)
 
-        implicit val broadcastAnchorRequestReadsFormat: Format[SignedAnchorRequest]     = Json.format
-        implicit val broadcastAssocRequestReadsFormat: Format[SignedAssociationRequest] = Json.format
+        implicit val broadcastAnchorRequestReadsFormat: Format[SignedAnchorRequest]           = Json.format
+        implicit val broadcastAssocRequestReadsFormat: Format[SignedAssociationRequest]       = Json.format
+        implicit val broadcastSponsorshipRequestReadsFormat: Format[SignedSponsorshipRequest] = Json.format
 
         val r = TransactionParsers.by(typeId, version) match {
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             x match {
-              case AnchorTransaction            => jsv.as[SignedAnchorRequest].toTx
-              case IssueAssociationTransaction  => jsv.as[SignedAssociationRequest].toTx(IssueAssociationTransaction.create)
-              case RevokeAssociationTransaction => jsv.as[SignedAssociationRequest].toTx(RevokeAssociationTransaction.create)
+              case AnchorTransaction => jsv.as[SignedAnchorRequest].toTx
+              case IssueAssociationTransaction =>
+                jsv
+                  .as[SignedAssociationRequest]
+                  .toTx(IssueAssociationTransaction.create)
+                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+              case RevokeAssociationTransaction =>
+                jsv
+                  .as[SignedAssociationRequest]
+                  .toTx(RevokeAssociationTransaction.create)
+                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+              case SponsorshipTransaction       => jsv.as[SignedSponsorshipRequest].toTx(SponsorshipTransaction.create)
+              case SponsorshipCancelTransaction => jsv.as[SignedSponsorshipRequest].toTx(SponsorshipCancelTransaction.create)
               case TransferTransactionV1        => jsv.as[SignedTransferV1Request].toTx
               case TransferTransactionV2        => jsv.as[SignedTransferV2Request].toTx
               case MassTransferTransaction      => jsv.as[SignedMassTransferRequest].toTx
@@ -377,4 +405,12 @@ case class TransactionsApiRoute(settings: RestAPISettings,
 
 object TransactionsApiRoute {
   val MaxTransactionsPerRequest = 10000
+  def ifPossible(bc: Blockchain, tx: AssociationTransactionBase) = {
+    tx.actionType match {
+      case ActionType.Issue =>
+        if (bc.assocExists(tx)) Left(GenericError("The exact same association already exists")) else Right(tx)
+      case ActionType.Revoke =>
+        if (!bc.assocExists(tx)) Left(GenericError("The association doesn't exist")) else Right(tx)
+    }
+  }
 }

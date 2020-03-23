@@ -77,7 +77,6 @@ object NetworkSeparationTestSuite {
                                                                 |  blockchain.custom.functionality {
                                                                 |    pre-activated-features = {
                                                                 |    1 = 0
-                                                                |    6 = 0
                                                                 |    }
                                                                 |  }
                                                                 |  miner.quorum = 0
@@ -88,7 +87,6 @@ object NetworkSeparationTestSuite {
                                                             |  blockchain.custom.functionality {
                                                             |    pre-activated-features = {
                                                             |     1 = 0
-                                                            |     6 = 100
                                                             |     }
                                                             |  }
                                                             |  miner.quorum = 0

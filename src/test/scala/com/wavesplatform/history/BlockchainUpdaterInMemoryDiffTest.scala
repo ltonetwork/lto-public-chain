@@ -21,8 +21,8 @@ class BlockchainUpdaterInMemoryDiffTest
     recipient <- accountGen
     ts        <- positiveIntGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    payment: TransferTransactionV1  <- wavesTransferGeneratorP(master, recipient)
-    payment2: TransferTransactionV1 <- wavesTransferGeneratorP(master, recipient)
+    payment: TransferTransactionV1  <- wavesTransferGeneratorP(ts, master, recipient)
+    payment2: TransferTransactionV1 <- wavesTransferGeneratorP(ts, master, recipient)
   } yield (genesis, payment, payment2)
 
   property("compaction with liquid block doesn't make liquid block affect state once") {
@@ -55,7 +55,7 @@ class BlockchainUpdaterInMemoryDiffTest
       case (domain, (genesis, payment1, payment2)) =>
         val firstBlocks             = chainBlocks(Seq(Seq(genesis)) ++ Seq.fill(MaxTransactionsPerBlockDiff * 2 - 2)(Seq.empty[Transaction]))
         val payment1Block           = buildBlockOfTxs(firstBlocks.last.uniqueId, Seq(payment1))
-        val emptyBlock              = buildBlockOfTxs(payment1Block.uniqueId, Seq.empty)
+        val emptyBlock              = buildBlockOfTxs(payment1Block.uniqueId, Seq.empty, genesis.timestamp)
         val blockTriggersCompaction = buildBlockOfTxs(payment1Block.uniqueId, Seq(payment2))
 
         firstBlocks.foreach(b => domain.blockchainUpdater.processBlock(b).explicitGet())

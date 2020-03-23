@@ -1,30 +1,21 @@
 package com.wavesplatform.api.http
 
-import java.nio.charset.StandardCharsets
-
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Route
-import com.wavesplatform.account.{Address, PublicKeyAccount}
-import com.wavesplatform.consensus.GeneratingBalanceProvider
-import com.wavesplatform.crypto
+import com.wavesplatform.account.Address
 import com.wavesplatform.http.BroadcastRoute
-import com.wavesplatform.settings.{FunctionalitySettings, RestAPISettings}
-import com.wavesplatform.state.diffs.CommonValidation
+import com.wavesplatform.settings.RestAPISettings
 import com.wavesplatform.state.{Blockchain, ByteStr}
 import com.wavesplatform.transaction.AssociationTransaction.ActionType.{Issue, Revoke}
 import com.wavesplatform.transaction.AssociationTransaction.Assoc
-import com.wavesplatform.transaction.ValidationError.GenericError
-import com.wavesplatform.transaction.smart.script.ScriptCompiler
-import com.wavesplatform.transaction.{AssociationTransactionBase, TransactionFactory, ValidationError}
-import com.wavesplatform.utils.{Base58, Time}
+import com.wavesplatform.transaction.{AssociationTransactionBase, TransactionFactory}
+import com.wavesplatform.utils.Time
 import com.wavesplatform.utx.UtxPool
 import com.wavesplatform.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import play.api.libs.json._
-
-import scala.util.{Failure, Success, Try}
 
 @Path("/associations")
 @Api(value = "/associations/")
@@ -109,7 +100,15 @@ case class AssociationsApiRoute(settings: RestAPISettings,
     ))
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def issueAssociation: Route =
-    processRequest("issue", (req: AssociationRequest) => doBroadcast(TransactionFactory.issueAssociation(req, wallet, time)))
+    processRequest(
+      "issue",
+      (req: AssociationRequest) => {
+        doBroadcast(
+          TransactionFactory
+            .issueAssociation(req, wallet, time)
+            .flatMap(TransactionsApiRoute.ifPossible(blockchain, _)))
+      }
+    )
 
   @Path("/revoke")
   @ApiOperation(value = "Revokes an association between accounts", httpMethod = "POST", produces = "application/json", consumes = "application/json")
@@ -127,7 +126,14 @@ case class AssociationsApiRoute(settings: RestAPISettings,
     ))
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def revokeAssociation: Route =
-    processRequest("revoke", (req: AssociationRequest) => doBroadcast(TransactionFactory.revokeAssociation(req, wallet, time)))
+    processRequest(
+      "revoke",
+      (req: AssociationRequest) =>
+        doBroadcast(
+          TransactionFactory
+            .revokeAssociation(req, wallet, time)
+            .flatMap(TransactionsApiRoute.ifPossible(blockchain, _)))
+    )
 
 }
 

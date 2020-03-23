@@ -1,19 +1,19 @@
 package com.wavesplatform.state
 
-import com.wavesplatform.consensus.{GeneratingBalanceProvider, PoSSelector, TransactionsOrdering}
+import cats.implicits._
+import com.wavesplatform.block.Block
+import com.wavesplatform.block.Block.BlockId
+import com.wavesplatform.consensus.{GeneratingBalanceProvider, PoSSelector}
 import com.wavesplatform.mining._
 import com.wavesplatform.network._
-import com.wavesplatform.settings.{FunctionalitySettings, WavesSettings}
+import com.wavesplatform.settings.WavesSettings
+import com.wavesplatform.transaction.ValidationError.{BlockAppendError, BlockFromFuture, GenericError}
+import com.wavesplatform.transaction._
+import com.wavesplatform.utils.{ScorexLogging, Time}
 import com.wavesplatform.utx.UtxPool
 import io.netty.channel.Channel
 import io.netty.channel.group.ChannelGroup
 import monix.eval.Task
-import com.wavesplatform.block.Block
-import com.wavesplatform.transaction.ValidationError.{BlockAppendError, BlockFromFuture, GenericError}
-import com.wavesplatform.transaction._
-import cats.implicits._
-import com.wavesplatform.block.Block.BlockId
-import com.wavesplatform.utils.{ScorexLogging, Time}
 
 import scala.util.{Left, Right}
 
@@ -98,9 +98,7 @@ package object appender extends ScorexLogging {
       parent <- blockchain.parent(block).toRight(GenericError(s"parent: history does not contain parent ${block.reference}"))
       grandParent = blockchain.parent(parent, 2)
       effectiveBalance <- genBalance(height, block.reference).left.map(GenericError(_))
-      _                <- validateBlockVersion(height, block, settings.blockchainSettings.functionalitySettings)
       _                <- Either.cond(blockTime - currentTs < MaxTimeDrift, (), BlockFromFuture(blockTime))
-      _                <- validateTransactionSorting(height, block, settings.blockchainSettings.functionalitySettings)
       _                <- pos.validateBaseTarget(height, block, parent, grandParent)
       _                <- pos.validateGeneratorSignature(height, block)
       _                <- pos.validateBlockDelay(height, block, parent, effectiveBalance).orElse(checkExceptions(height, block))
@@ -117,30 +115,6 @@ package object appender extends ScorexLogging {
         (),
         GenericError(s"Block time ${block.timestamp} less than expected")
       )
-  }
-
-  private def validateBlockVersion(height: Int, block: Block, fs: FunctionalitySettings): Either[ValidationError, Unit] = {
-    val version3Height = fs.blockVersion3AfterHeight
-    Either.cond(
-      height > version3Height
-        || block.version == Block.GenesisBlockVersion
-        || block.version == Block.PlainBlockVersion,
-      (),
-      GenericError(s"Block Version 3 can only appear at height greater than $version3Height")
-    )
-  }
-
-  private def validateTransactionSorting(height: Int, block: Block, settings: FunctionalitySettings): Either[ValidationError, Unit] = {
-    val blockTime = block.timestamp
-    for {
-      _ <- Either.cond(
-        blockTime < settings.requireSortedTransactionsAfter
-          || height > settings.dontRequireSortedTransactionsAfter
-          || block.transactionData.sorted(TransactionsOrdering.InBlock) == block.transactionData,
-        (),
-        GenericError("transactions are not sorted")
-      )
-    } yield ()
   }
 
 }

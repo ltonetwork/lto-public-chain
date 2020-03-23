@@ -22,8 +22,8 @@ class FeatureActivationTestSuite
 
   private val votingInterval      = 12
   private val blocksForActivation = 12 // should be even
-  private val featureNum: Short   = BlockchainFeatures.SmallerMinimalGeneratingBalance.id
-  private val featureDescr        = BlockchainFeatures.SmallerMinimalGeneratingBalance.description
+  private val featureNum: Short   = BlockchainFeatures.DUMMY_FOR_TESTS_SmallerMinimalGeneratingBalance.id
+  private val featureDescr        = BlockchainFeatures.UnknownFeature
 
   override protected def nodeConfigs: Seq[Config] = {
     NodeConfigs.newBuilder

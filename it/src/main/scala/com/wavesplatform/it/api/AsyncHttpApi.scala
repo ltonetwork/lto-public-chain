@@ -9,7 +9,7 @@ import com.wavesplatform.api.http.AssociationsApiRoute.AssociationsInfo
 import com.wavesplatform.api.http.PeersApiRoute.{ConnectReq, connectFormat}
 import com.wavesplatform.api.http.assets._
 import com.wavesplatform.api.http.leasing.{LeaseCancelV1Request, LeaseV1Request, SignedLeaseCancelV1Request, SignedLeaseV1Request}
-import com.wavesplatform.api.http.{AddressApiRoute, DataRequest}
+import com.wavesplatform.api.http.{AddressApiRoute, DataRequest, SponsorshipApiRoute}
 import com.wavesplatform.features.api.ActivationStatus
 import com.wavesplatform.http.DebugApiRoute._
 import com.wavesplatform.http.DebugMessage._
@@ -230,6 +230,9 @@ object AsyncHttpApi extends Assertions {
     def getData(address: String, key: String): Future[DataEntry[_]] = get(s"/addresses/data/$address/$key").as[DataEntry[_]]
 
     def getAssociations(address: String): Future[AssociationsInfo] = get(s"/associations/status/$address").as[AssociationsInfo]
+
+    def getSponsorship(address: String): Future[SponsorshipApiRoute.SponsorshipInfo] = get(s"/sponsorship/status/$address").as[SponsorshipApiRoute.SponsorshipInfo]
+
 
     def signedTransfer(transfer: SignedTransferV1Request): Future[Transaction] =
       postJson("/assets/broadcast/transfer", transfer).as[Transaction]

@@ -4,11 +4,11 @@ import com.typesafe.config.ConfigFactory
 import com.wavesplatform.account.PrivateKeyAccount
 import com.wavesplatform.block.{Block, MicroBlock}
 import com.wavesplatform.consensus.nxt.NxtLikeConsensusBlockData
-import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.lagonaki.mocks.TestBlock
 import com.wavesplatform.settings.{BlockchainSettings, TestFunctionalitySettings, WavesSettings}
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.Transaction
+import monix.eval.TaskCircuitBreaker.Timestamp
 import scorex.crypto.signatures.Curve25519._
 
 package object history {
@@ -24,8 +24,8 @@ package object history {
   val config   = ConfigFactory.load()
   val settings = WavesSettings.fromConfig(config)
 
-  val MicroblocksActivatedAt0BlockchainSettings: BlockchainSettings = DefaultBlockchainSettings.copy(
-    functionalitySettings = DefaultBlockchainSettings.functionalitySettings.copy(preActivatedFeatures = Map(BlockchainFeatures.NG.id -> 0)))
+  val MicroblocksActivatedAt0BlockchainSettings: BlockchainSettings =
+    DefaultBlockchainSettings.copy(functionalitySettings = DefaultBlockchainSettings.functionalitySettings.copy(preActivatedFeatures = Map()))
 
   val MicroblocksActivatedAt0WavesSettings: WavesSettings = settings.copy(blockchainSettings = MicroblocksActivatedAt0BlockchainSettings)
 
@@ -35,7 +35,8 @@ package object history {
   val defaultSigner       = PrivateKeyAccount(Array.fill(KeyLength)(0))
   val generationSignature = ByteStr(Array.fill(Block.GeneratorSignatureLength)(0: Byte))
 
-  def buildBlockOfTxs(refTo: ByteStr, txs: Seq[Transaction]): Block = customBuildBlockOfTxs(refTo, txs, defaultSigner, 1, 0L)
+  def buildBlockOfTxs(refTo: ByteStr, txs: Seq[Transaction]): Block                  = customBuildBlockOfTxs(refTo, txs, defaultSigner, 1, txs.head.timestamp)
+  def buildBlockOfTxs(refTo: ByteStr, txs: Seq[Transaction], timestamp: Long): Block = customBuildBlockOfTxs(refTo, txs, defaultSigner, 1, timestamp)
 
   def customBuildBlockOfTxs(refTo: ByteStr,
                             txs: Seq[Transaction],
@@ -89,9 +90,10 @@ package object history {
   def randomSig: ByteStr = TestBlock.randomOfLength(Block.BlockIdLength)
 
   def chainBlocks(txs: Seq[Seq[Transaction]]): Seq[Block] = {
+    val ts = txs.flatten.head.timestamp
     def chainBlocksR(refTo: ByteStr, txs: Seq[Seq[Transaction]]): Seq[Block] = txs match {
       case (x :: xs) =>
-        val block = buildBlockOfTxs(refTo, x)
+        val block = buildBlockOfTxs(refTo, x, ts)
         block +: chainBlocksR(block.uniqueId, xs)
       case _ => Seq.empty
     }
@@ -99,9 +101,11 @@ package object history {
     chainBlocksR(randomSig, txs)
   }
 
-  def chainBaseAndMicro(totalRefTo: ByteStr, base: Transaction, micros: Seq[Seq[Transaction]]): (Block, Seq[MicroBlock]) =
-    chainBaseAndMicro(totalRefTo, Seq(base), micros, defaultSigner, 3, 0L)
+  def chainBaseAndMicro(totalRefTo: ByteStr, base: Transaction, micros: Seq[Seq[Transaction]], timestamp: Long): (Block, Seq[MicroBlock]) =
+    chainBaseAndMicro(totalRefTo, Seq(base), micros, defaultSigner, 3, timestamp = timestamp)
 
+  def chainBaseAndMicro(totalRefTo: ByteStr, base: Transaction, micros: Seq[Seq[Transaction]]): (Block, Seq[MicroBlock]) =
+    chainBaseAndMicro(totalRefTo, Seq(base), micros, defaultSigner, 3, timestamp = base.timestamp)
   def chainBaseAndMicro(totalRefTo: ByteStr,
                         base: Seq[Transaction],
                         micros: Seq[Seq[Transaction]],

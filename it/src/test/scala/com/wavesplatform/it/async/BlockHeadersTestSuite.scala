@@ -40,7 +40,7 @@ class BlockHeadersTestSuite
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    Await.result(traverse(nodes)(_.waitForHeight(2)), 1.minute)
+    Await.result(traverse(nodes)(_.waitForHeight(2)), 2.minute)
   }
 
   private def txRequestsGen(n: Int, fee: Long): Future[Unit] = {
@@ -78,7 +78,7 @@ class BlockHeadersTestSuite
     } yield {
       assertBlockInfo(blocks, blocksHeaders)
     }
-    Await.result(f, 2.minute)
+    Await.result(f, 4.minute)
   }
 
   "lastBlock content should be equal to lastBlockHeader, except transactions info" in {
@@ -91,7 +91,7 @@ class BlockHeadersTestSuite
       assertBlockInfo(blocksAndBlocksHeaders.map(_._1), blocksAndBlocksHeaders.map(_._2))
     }
 
-    Await.result(f, 2.minute)
+    Await.result(f, 4.minute)
   }
 
   "blockSeq content should be equal to blockHeaderSeq, except transactions info" in {
@@ -111,7 +111,7 @@ class BlockHeadersTestSuite
       }
     }
 
-    Await.result(f, 2.minute)
+    Await.result(f, 4.minute)
   }
 
 }

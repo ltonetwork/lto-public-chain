@@ -1,16 +1,15 @@
 package com.wavesplatform.it.sync.transactions
 
-import com.wavesplatform.account.PrivateKeyAccount
 import com.wavesplatform.account.PublicKeyAccount._
+import com.wavesplatform.account.{Address, PrivateKeyAccount}
 import com.wavesplatform.api.http.AssociationsApiRoute.AssociationInfo
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
-import com.wavesplatform.state.EitherExt2
-import com.wavesplatform.transaction.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
-import org.scalatest.CancelAfterFailure
-import play.api.libs.json._
 import com.wavesplatform.it.util._
+import com.wavesplatform.state.EitherExt2
 import com.wavesplatform.transaction.AssociationTransaction.ActionType
+import com.wavesplatform.transaction.{AssociationTransaction, AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
+import org.scalatest.CancelAfterFailure
 class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
   val fee   = 1.waves
   val party = PrivateKeyAccount.fromSeed("party").explicitGet()
@@ -23,22 +22,26 @@ class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterF
     a.revokeTransactionId shouldBe revokeTxId
   }
 
-  test("post and revoke association") {
-    def postAssoc(tpe: ActionType) = {
-      val m = tpe match {
-        case ActionType.Revoke => RevokeAssociationTransaction.selfSigned _
-        case ActionType.Issue => IssueAssociationTransaction.selfSigned _
-      }
-      val assocTx = m(1, notMiner.privateKey, party.toAddress, 42, None, fee, System.currentTimeMillis()).explicitGet()
-      val assocId = sender
-        .signedBroadcast(assocTx.json())
-        .id
-      nodes.waitForHeightAriseAndTxPresent(assocId)
-      assocId
-
+  def build(tpe: ActionType, from: PrivateKeyAccount, to: Address, id: Int) = {
+    val m = tpe match {
+      case ActionType.Revoke => RevokeAssociationTransaction.selfSigned _
+      case ActionType.Issue  => IssueAssociationTransaction.selfSigned _
     }
+    m(1, from, to, id, None, fee, System.currentTimeMillis()).explicitGet()
+  }
+  def postAssoc(assocTx: AssociationTransactionBase) = {
+    val assocId = sender
+      .signedBroadcast(assocTx.json())
+      .id
+    nodes.waitForHeightAriseAndTxPresent(assocId)
+    assocId
+  }
+  def assertError(assocTx: AssociationTransactionBase, err: String) = {
+    assertBadRequestAndResponse(sender.signedBroadcast(assocTx.json()), err)
+  }
 
-    val assocId = postAssoc(AssociationTransaction.ActionType.Issue)
+  test("post and revoke association") {
+    val assocId = postAssoc(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 42))
 
     val alice = notMiner.address
     val bob   = party.address
@@ -54,7 +57,7 @@ class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterF
     bobAssocs.incoming.size shouldBe 1
     verifyAssoc(bobAssocs.incoming.head)(alice, "", 42, assocId, None)
 
-    val revokeId = postAssoc(AssociationTransaction.ActionType.Revoke)
+    val revokeId = postAssoc(build(AssociationTransaction.ActionType.Revoke, notMiner.privateKey, party.toAddress, 42))
 
     val revokedAliceAssocs = notMiner.getAssociations(alice)
     revokedAliceAssocs.outgoing.size shouldBe 1
@@ -67,4 +70,14 @@ class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterF
     verifyAssoc(revokedBobAssocs.incoming.head)(alice, "", 42, assocId, Some(revokeId))
   }
 
+  test("can't revoke non-existing assoc") {
+    postAssoc(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 88))
+
+    assertError(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 88), ".+already.+")
+
+    assertError(build(AssociationTransaction.ActionType.Revoke, notMiner.privateKey, party.toAddress, 89), ".+doesn't exist.+")
+
+    postAssoc(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 89))
+    postAssoc(build(AssociationTransaction.ActionType.Revoke, notMiner.privateKey, party.toAddress, 89))
+  }
 }
