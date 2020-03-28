@@ -21,11 +21,11 @@ class BlockSizeConstraintsSuite extends FreeSpec with Matchers with TransferSend
   private val miner                       = nodes.head
   s"Block is limited by size" in result(
     for {
-      _                 <- Future.sequence((0 to maxGroups).map(_ => processRequests(transfers, includeAttachment = true)))
-      _                 <- miner.waitForHeight(3)
-      _                 <- Future.sequence((0 to maxGroups).map(_ => processRequests(transfers, includeAttachment = true)))
-      _                 <- miner.waitForHeight(4)
-      blockHeaderAfter  <- miner.blockHeadersAt(3)
+      _                <- Future.sequence((0 to maxGroups).map(_ => processRequests(transfers, includeAttachment = true)))
+      _                <- miner.waitForHeight(3)
+      _                <- Future.sequence((0 to maxGroups).map(_ => processRequests(transfers, includeAttachment = true)))
+      _                <- miner.waitForHeight(4)
+      blockHeaderAfter <- miner.blockHeadersAt(3)
     } yield {
       val maxSizeInBytes = (1.1d * 1024 * 1024).toInt // including headers
 

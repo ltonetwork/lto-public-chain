@@ -271,7 +271,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(kk, nextSeqNr)
     }
 
-    def f(addr: Address,txs:  Seq[AssociationTransactionBase], seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]] ) = {
+    def f(addr: Address, txs: Seq[AssociationTransactionBase], seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]]) = {
       val curSeq: Key[Int] = seqNrKey(addr.bytes)
       val last             = rw.get(curSeq)
       txs.zipWithIndex
@@ -285,11 +285,11 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     }
 
     assocs.map(_._2).groupBy(_.sender.toAddress).foreach {
-      case (addr, txs) => f(addr,txs,Keys.outgoingAssociationsSeqNr, Keys.outgoingAssociationTransactionId)
+      case (addr, txs) => f(addr, txs, Keys.outgoingAssociationsSeqNr, Keys.outgoingAssociationTransactionId)
     }
 
     assocs.map(_._2).groupBy(_.assoc.party).foreach {
-      case (addr, txs) => f(addr,txs,Keys.incomingAssociationsSeqNr, Keys.incomingAssociationTransactionId)
+      case (addr, txs) => f(addr, txs, Keys.incomingAssociationsSeqNr, Keys.incomingAssociationTransactionId)
     }
 
     for ((id, (tx, _)) <- transactions) {

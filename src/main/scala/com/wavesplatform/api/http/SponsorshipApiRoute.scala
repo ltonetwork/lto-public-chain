@@ -68,7 +68,7 @@ case class SponsorshipApiRoute(settings: RestAPISettings, wallet: Wallet, blockc
   def status: Route = (pathPrefix("status") & get) {
     pathPrefix(Segment) { address =>
       complete(Address.fromString(address) match {
-        case Left(e)  => ApiError.fromValidationError(e)
+        case Left(e) => ApiError.fromValidationError(e)
         case Right(a) =>
           ToResponseMarshallable(SponsorshipInfo(blockchain.sponsorOf(a).map(_.address)))
       })
@@ -78,7 +78,6 @@ case class SponsorshipApiRoute(settings: RestAPISettings, wallet: Wallet, blockc
 
 object SponsorshipApiRoute {
   case class SponsorshipInfo(sponsor: List[String])
-  implicit val sponsorshipInfoFormat: Format[SponsorshipInfo]   = Json.format
+  implicit val sponsorshipInfoFormat: Format[SponsorshipInfo] = Json.format
 
 }
-

@@ -7,12 +7,13 @@ import com.wavesplatform.it.api.AsyncHttpApi._
 import com.wavesplatform.it.api.BlockHeaders
 import com.wavesplatform.it.transactions.NodesFromDocker
 import com.wavesplatform.it.{NodeConfigs, ReportingTestName}
-import org.scalatest.{CancelAfterFailure, FreeSpec, Matchers}
+import org.scalatest.{CancelAfterFailure, FreeSpec, Ignore, Matchers}
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
+@Ignore
 class NotActivateFeatureTestSuite
     extends FreeSpec
     with Matchers
