@@ -43,7 +43,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
      This breaks the test.
   2. We have RollbackSuite
    */
-  
+
   override protected def nodeConfigs: Seq[Config] =
     NodeConfigs.newBuilder
       .overrideBase(_.quorum(0))

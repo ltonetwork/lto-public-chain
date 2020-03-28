@@ -21,14 +21,14 @@ class SponsorshipTransactionSuite extends BaseTransactionSuite with CancelAfterF
   val sponsor   = PrivateKeyAccount.fromSeed("sponsor").explicitGet()
 
   override protected def nodeConfigs: Seq[Config] = SponsorshipTransactionSuite.Configs
-  
+
   test("sponsor pays for sender") {
 
     val topUpPayer =
       TransferTransactionV2.selfSigned(2, sender.privateKey, payer, 10.waves, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
     val topUpSponsor =
       TransferTransactionV2.selfSigned(2, sender.privateKey, sponsor, 10.waves, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
-    val becomeSponsor = SponsorshipTransaction.selfSigned(1, sponsor, payer, 5*fee, System.currentTimeMillis()).explicitGet()
+    val becomeSponsor = SponsorshipTransaction.selfSigned(1, sponsor, payer, 5 * fee, System.currentTimeMillis()).explicitGet()
     val makePayment =
       TransferTransactionV2.selfSigned(2, payer, recipient, 4.waves, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
 

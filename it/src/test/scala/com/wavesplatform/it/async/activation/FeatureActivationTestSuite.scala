@@ -5,11 +5,12 @@ import com.wavesplatform.features.api.NodeFeatureStatus
 import com.wavesplatform.features.{BlockchainFeatureStatus, BlockchainFeatures}
 import com.wavesplatform.it.transactions.NodesFromDocker
 import com.wavesplatform.it.{NodeConfigs, ReportingTestName}
-import org.scalatest.{CancelAfterFailure, FreeSpec, Matchers}
+import org.scalatest.{CancelAfterFailure, FreeSpec, Ignore, Matchers}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
+@Ignore
 class FeatureActivationTestSuite
     extends FreeSpec
     with Matchers

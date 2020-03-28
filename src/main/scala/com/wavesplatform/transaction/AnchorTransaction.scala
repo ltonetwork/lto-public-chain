@@ -44,10 +44,10 @@ object AnchorTransaction extends TransactionParserFor[AnchorTransaction] with Tr
   override val typeId: Byte                 = 15
   override val supportedVersions: Set[Byte] = Set(1)
 
-  val EntryLength    = List(16, 20, 32, 48, 64)
+  val EntryLength       = List(16, 20, 32, 48, 64)
   val NewMaxEntryLength = 64
-  val MaxBytes       = 150 * 1024
-  val MaxEntryCount  = 100
+  val MaxBytes          = 150 * 1024
+  val MaxEntryCount     = 100
 
   override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
     Try {

@@ -231,8 +231,8 @@ object AsyncHttpApi extends Assertions {
 
     def getAssociations(address: String): Future[AssociationsInfo] = get(s"/associations/status/$address").as[AssociationsInfo]
 
-    def getSponsorship(address: String): Future[SponsorshipApiRoute.SponsorshipInfo] = get(s"/sponsorship/status/$address").as[SponsorshipApiRoute.SponsorshipInfo]
-
+    def getSponsorship(address: String): Future[SponsorshipApiRoute.SponsorshipInfo] =
+      get(s"/sponsorship/status/$address").as[SponsorshipApiRoute.SponsorshipInfo]
 
     def signedTransfer(transfer: SignedTransferV1Request): Future[Transaction] =
       postJson("/assets/broadcast/transfer", transfer).as[Transaction]

@@ -191,11 +191,13 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
   }
 
   override def sponsorOf(address: Address): List[Address] =
-    maybeDiff.map(d =>
-      d.sponsoredBy.get(address) match {
-        case Some(list) => list
-        case None                     => inner.sponsorOf(address)
-      }).getOrElse(inner.sponsorOf(address))
+    maybeDiff
+      .map(d =>
+        d.sponsoredBy.get(address) match {
+          case Some(list) => list
+          case None       => inner.sponsorOf(address)
+      })
+      .getOrElse(inner.sponsorOf(address))
 }
 
 object CompositeBlockchain {
