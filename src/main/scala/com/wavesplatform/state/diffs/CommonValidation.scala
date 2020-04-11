@@ -194,13 +194,12 @@ object CommonValidation {
           val (feeAssetId, feeAmount) = inputFee
           for {
             _ <- Either.cond(feeAssetId.isEmpty, (), GenericError("Transactions from scripted accounts require Waves as fee"))
-            restFeeAmount = feeAmount - ScriptExtraFee
             _ <- Either.cond(
-              restFeeAmount >= 0,
+              feeAmount >= 0,
               (),
-              InsufficientFee(s"Scripted account requires ${-restFeeAmount} additional fee for this transaction")
+              InsufficientFee()
             )
-          } yield (feeAssetId, restFeeAmount)
+          } yield (feeAssetId, feeAmount)
         } else Right(inputFee)
 
       restFee(tx.fee)
