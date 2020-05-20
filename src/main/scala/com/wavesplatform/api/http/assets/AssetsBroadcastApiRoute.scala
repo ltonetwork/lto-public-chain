@@ -21,7 +21,7 @@ import scala.util.{Left, Right}
 case class AssetsBroadcastApiRoute(settings: RestAPISettings, utx: UtxPool, allChannels: ChannelGroup) extends ApiRoute with BroadcastRoute {
 
   override val route: Route = pathPrefix("assets" / "broadcast") {
-    batchTransfer
+    batchTransfer ~ transfer
   }
 
   @Path("/batch-transfer")
