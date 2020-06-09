@@ -142,7 +142,7 @@ object CommonValidation {
     case _                             => Left(UnsupportedTransactionType)
   }
 
-  private def superNewFeeInUnits(tx: Transaction) : Either[ValidationError, Long] = tx match {
+  private def superNewFeeInUnits(tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: GenesisTransaction         => Right(0)
     case _: TransferTransaction        => Right(1000)
     case _: LeaseTransaction           => Right(1000)
@@ -174,9 +174,9 @@ object CommonValidation {
         .map(_ * Sponsorship.FeeUnit)
         .map(feeAfterSmartAccounts)
     }
-    def newFees() = newFeeInUnits(tx).map(_ * Sponsorship.FeeUnit)
+    def newFees()      = newFeeInUnits(tx).map(_ * Sponsorship.FeeUnit)
     def superNewFees() = superNewFeeInUnits(tx).map(_ * Sponsorship.FeeUnit)
-    if(blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
+    if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
       superNewFees()
     else if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
       newFees()

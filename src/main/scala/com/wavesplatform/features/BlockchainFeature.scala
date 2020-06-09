@@ -10,8 +10,7 @@ object BlockchainFeatures {
   val SmartAccounts                                   = BlockchainFeature(4, "Smart Accounts")
   val AssociationTransaction                          = BlockchainFeature(10, "Association Transaction")
   val SponsorshipTransaction                          = BlockchainFeature(11, "Sponsorship Transaction")
-  val BurnFeeture = BlockchainFeature(12, "Partial Fee Burn")
-
+  val BurnFeeture                                     = BlockchainFeature(12, "Partial Fee Burn")
 
   private val dict = Seq(
     SmartAccounts,
