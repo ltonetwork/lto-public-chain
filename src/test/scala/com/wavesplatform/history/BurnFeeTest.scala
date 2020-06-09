@@ -28,12 +28,12 @@ class BurnFeeTest extends PropSpec with PropertyChecks with DomainScenarioDriven
     alice  <- accountGen
     ts     <- positiveIntGen
     amount <- Gen.choose(1000000000L, 100000000000L)
-    fee    <- Gen.choose(100000000L, 10000000000L)
+    fee    <- Gen.choose(150000000L, 150000000L)
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
     tx                          = TransferTransactionV1.selfSigned(master, alice, amount, ts, fee, ByteStr.empty.arr).explicitGet()
   } yield (genesis, tx)
 
-  property("all txs in different blocks: B0 <- B1 <- B2 <- B3!") {
+  property("burns exactly 0.1 LTO for 1 transaction") {
 
     scenario(preconditionsAndPayments, burnFeeEnabledSettings) {
       case (domain, (genesis, masterToAlice)) =>
