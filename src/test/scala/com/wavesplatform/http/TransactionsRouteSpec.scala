@@ -51,7 +51,7 @@ class TransactionsRouteSpec
           "recipient"       -> accountGen.sample.get.toAddress
         )
 
-        val featuresSettings = TestFunctionalitySettings.Enabled
+        val featuresSettings = TestFunctionalitySettings.Enabled.copy(preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0))
         val blockchain       = mock[Blockchain]
         (blockchain.height _).expects().returning(1).anyNumberOfTimes()
         (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
@@ -84,7 +84,7 @@ class TransactionsRouteSpec
           )
         )
 
-        val featuresSettings = TestFunctionalitySettings.Enabled
+        val featuresSettings = TestFunctionalitySettings.Enabled.copy(preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0))
         val blockchain       = mock[Blockchain]
         (blockchain.height _).expects().returning(1).anyNumberOfTimes()
         (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()

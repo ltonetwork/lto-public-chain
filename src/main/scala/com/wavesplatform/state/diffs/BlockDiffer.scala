@@ -1,9 +1,12 @@
 package com.wavesplatform.state.diffs
 
+import cats.Monoid
 import cats.implicits._
 import cats.syntax.either.catsSyntaxEitherId
 import com.wavesplatform.account.Address
+import com.wavesplatform.block.Block.CurrentBlockFeePart
 import com.wavesplatform.block.{Block, MicroBlock}
+import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.metrics.Instrumented
 import com.wavesplatform.mining.MiningConstraint
 import com.wavesplatform.settings.FunctionalitySettings
@@ -14,6 +17,15 @@ import com.wavesplatform.utils.ScorexLogging
 
 object BlockDiffer extends ScorexLogging with Instrumented {
 
+  val feeBurnAmt = 10 * 1000 * 1000
+  def maybeBurnFee(bc: Blockchain, tx: Transaction): Portfolio = {
+    import com.wavesplatform.features.FeatureProvider._
+    if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, bc.height))
+      Portfolio(balance = Math.max(0,tx.fee - feeBurnAmt), lease = LeaseBalance.empty)
+    else
+      Portfolio(balance = tx.fee, lease = LeaseBalance.empty)
+  }
+
   def fromBlock[Constraint <: MiningConstraint](settings: FunctionalitySettings,
                                                 blockchain: Blockchain,
                                                 maybePrevBlock: Option[Block],
@@ -22,7 +34,11 @@ object BlockDiffer extends ScorexLogging with Instrumented {
                                                 verify: Boolean = true): Either[ValidationError, (Diff, Long, Constraint)] = {
     val stateHeight = blockchain.height
 
-    lazy val prevBlockFeeDistr: Option[Portfolio] = maybePrevBlock.map(_.prevBlockFeePart())
+    lazy val prevBlockFeeDistr: Option[Portfolio] = maybePrevBlock.map(b =>
+      Monoid[Portfolio].combineAll(b.transactionData.map { tx =>
+        val fees = maybeBurnFee(blockchain, tx)
+        fees.minus(fees.multiply(CurrentBlockFeePart))
+      }))
 
     lazy val currentBlockFeeDistr: Option[Portfolio] = None
 
@@ -112,7 +128,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
             txDiffer(updatedBlockchain, tx).map { newDiff =>
               val updatedDiff = currDiff.combine(newDiff)
               if (hasNg) {
-                val (curBlockFees, nextBlockFee) = calcNextBlockFee(updatedBlockchain, tx.feeDiff())
+                val (curBlockFees, nextBlockFee) = calcNextBlockFee(updatedBlockchain, maybeBurnFee(blockchain, tx))
                 val diff                         = updatedDiff.combine(Diff.empty.copy(portfolios = Map(blockGenerator -> curBlockFees)))
                 (diff, carryFee + nextBlockFee, updatedConstraint)
               } else (updatedDiff, 0L, updatedConstraint)

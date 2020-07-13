@@ -23,8 +23,4 @@ trait Transaction extends BytesSerializable with JsonSerializable {
 
 object Transaction {
   type Type = Byte
-
-  implicit class TransactionExt(tx: Transaction) {
-    def feeDiff(): Portfolio = Portfolio(balance = tx.fee, lease = LeaseBalance.empty)
-  }
 }

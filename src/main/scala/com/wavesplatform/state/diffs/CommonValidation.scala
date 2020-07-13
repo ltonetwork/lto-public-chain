@@ -142,6 +142,19 @@ object CommonValidation {
     case _                             => Left(UnsupportedTransactionType)
   }
 
+  private def superNewFeeInUnits(tx: Transaction): Either[ValidationError, Long] = tx match {
+    case _: GenesisTransaction         => Right(0)
+    case _: TransferTransaction        => Right(1000)
+    case _: LeaseTransaction           => Right(1000)
+    case _: SetScriptTransaction       => Right(1000)
+    case _: LeaseCancelTransaction     => Right(1000)
+    case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
+    case _: AnchorTransaction          => Right(350)
+    case _: AssociationTransactionBase => Right(1000)
+    case _: SponsorshipTransactionBase => Right(5000)
+    case _                             => Left(UnsupportedTransactionType)
+  }
+
   def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Long] = {
 
     def oldFees() = {
@@ -161,9 +174,11 @@ object CommonValidation {
         .map(_ * Sponsorship.FeeUnit)
         .map(feeAfterSmartAccounts)
     }
-    def newFees() = newFeeInUnits(tx).map(_ * Sponsorship.FeeUnit)
-
-    if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
+    def newFees()      = newFeeInUnits(tx).map(_ * Sponsorship.FeeUnit)
+    def superNewFees() = superNewFeeInUnits(tx).map(_ * Sponsorship.FeeUnit)
+    if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
+      superNewFees()
+    else if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
       newFees()
     else oldFees()
   }

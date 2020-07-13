@@ -159,9 +159,6 @@ case class Block private (override val timestamp: Long,
     Portfolio(totalFee, LeaseBalance.empty)
   }
 
-  val prevBlockFeePart: Coeval[Portfolio] =
-    Coeval.evalOnce(Monoid[Portfolio].combineAll(transactionData.map(tx => tx.feeDiff().minus(tx.feeDiff().multiply(CurrentBlockFeePart)))))
-
   protected val signatureValid: Coeval[Boolean] =
     Coeval.evalOnce(crypto.verify(signerData.signature.arr, bytesWithoutSignature(), signerData.generator.publicKey))
   protected override val signedDescendants: Coeval[Seq[Signed]] = Coeval.evalOnce(transactionData.flatMap(_.cast[Signed]))
