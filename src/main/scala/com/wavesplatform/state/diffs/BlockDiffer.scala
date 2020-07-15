@@ -21,7 +21,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
   def maybeBurnFee(bc: Blockchain, tx: Transaction): Portfolio = {
     import com.wavesplatform.features.FeatureProvider._
     if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, bc.height))
-      Portfolio(balance = Math.max(0,tx.fee - feeBurnAmt), lease = LeaseBalance.empty)
+      Portfolio(balance = Math.max(0, tx.fee - feeBurnAmt), lease = LeaseBalance.empty)
     else
       Portfolio(balance = tx.fee, lease = LeaseBalance.empty)
   }
