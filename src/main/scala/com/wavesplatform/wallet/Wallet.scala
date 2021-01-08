@@ -3,40 +3,46 @@ package com.wavesplatform.wallet
 import java.io.File
 
 import com.google.common.primitives.{Bytes, Ints}
+import com.wavesplatform.account.{Address, PrivateKeyAccount}
 import com.wavesplatform.crypto
 import com.wavesplatform.settings.WalletSettings
 import com.wavesplatform.state.ByteStr
-import com.wavesplatform.utils.{JsonFileStorage, _}
-import play.api.libs.json._
-import com.wavesplatform.account.{Address, PrivateKeyAccount}
 import com.wavesplatform.transaction.ValidationError
-import com.wavesplatform.transaction.ValidationError.MissingSenderPrivateKey
-import com.wavesplatform.utils.randomBytes
+import com.wavesplatform.transaction.ValidationError.{AccountBasedWallet, MissingSenderPrivateKey}
+import com.wavesplatform.utils.{JsonFileStorage, randomBytes, _}
+import play.api.libs.json._
 
 import scala.collection.concurrent.TrieMap
 import scala.util.control.NonFatal
 
 trait Wallet {
 
-  def seed: Array[Byte]
+  def seed: Either[ValidationError, Array[Byte]]
 
-  def nonce: Int
+  def accountSeed: Option[Array[Byte]]
+
+  def nonce: Either[ValidationError, Int]
 
   def privateKeyAccounts: List[PrivateKeyAccount]
 
-  def generateNewAccounts(howMany: Int): Seq[PrivateKeyAccount]
+  def generateNewAccounts(howMany: Int): Either[ValidationError, Seq[PrivateKeyAccount]]
 
-  def generateNewAccount(): Option[PrivateKeyAccount]
+  def generateNewAccount(): Either[ValidationError, Option[PrivateKeyAccount]]
 
-  def deleteAccount(account: PrivateKeyAccount): Boolean
+  def deleteAccount(account: PrivateKeyAccount): Either[ValidationError, Boolean]
 
   def privateKeyAccount(account: Address): Either[ValidationError, PrivateKeyAccount]
+
+  def save(): Unit
 
 }
 
 object Wallet extends ScorexLogging {
 
   implicit class WalletExtension(w: Wallet) {
+
+    def accountBased = w.accountSeed.nonEmpty
+
     def findPrivateKey(addressString: String): Either[ValidationError, PrivateKeyAccount] =
       for {
         acc        <- Address.fromString(addressString)
@@ -44,9 +50,20 @@ object Wallet extends ScorexLogging {
       } yield privKeyAcc
 
     def exportAccountSeed(account: Address): Either[ValidationError, Array[Byte]] = w.privateKeyAccount(account).map(_.seed)
+
   }
 
-  private case class WalletData(seed: ByteStr, accountSeeds: Set[ByteStr], nonce: Int)
+  private case class WalletData(seed: ByteStr, accountSeeds: Set[ByteStr], nonce: Int, accountSeed: Option[ByteStr] = None) {
+    def getAccountSeeds() =
+      accountSeeds ++ accountSeed.toSet
+    def copyWithAccountSeeds(ass: Set[ByteStr]) = {
+      accountSeed match {
+        case Some(as) => throw new IllegalStateException("this is account-seed-based wallet, can't do")
+        case None     => this.copy(accountSeeds = ass)
+      }
+    }
+    def accountBased = accountSeed.nonEmpty
+  }
 
   private implicit val walletFormat: Format[WalletData] = Json.format
 
@@ -58,9 +75,14 @@ object Wallet extends ScorexLogging {
   def generateAccountSeed(seed: Array[Byte], nonce: Int): Array[Byte] =
     crypto.secureHash(Bytes.concat(Ints.toByteArray(nonce), seed))
 
-  def apply(settings: WalletSettings): Wallet = new WalletImpl(settings.file, settings.password, settings.seed)
+  def apply(settings: WalletSettings): Wallet = new WalletImpl(settings.file, settings.password, settings.miningWalletSeed, settings.accountSeed)
 
-  private class WalletImpl(maybeFile: Option[File], password: String, maybeSeedFromConfig: Option[ByteStr]) extends ScorexLogging with Wallet {
+  private class WalletImpl(maybeFile: Option[File],
+                           password: String,
+                           maybeSeedFromConfig: Option[ByteStr],
+                           maybeAccountSeedFromConfig: Option[ByteStr])
+      extends ScorexLogging
+      with Wallet {
 
     private val key = JsonFileStorage.prepareKey(password)
 
@@ -71,81 +93,100 @@ object Wallet extends ScorexLogging {
         case NonFatal(_) => None
       }
 
-    private lazy val actualSeed = maybeSeedFromConfig.getOrElse {
-      val randomSeed = ByteStr(randomBytes(64))
-      log.info(s"Your randomly generated seed is ${randomSeed.base58}")
-      randomSeed
-    }
+    private lazy val actualSeed = maybeSeedFromConfig
+      .getOrElse {
+        val randomSeed = ByteStr(randomBytes(64))
+        log.info(s"Your randomly generated seed is ${randomSeed.base58}")
+        randomSeed
+      }
 
-    private var walletData: WalletData = {
-      if (maybeFile.isEmpty)
-        WalletData(actualSeed, Set.empty, 0)
+    private lazy val actualAccountSeed = maybeAccountSeedFromConfig
+
+    def loadWalletData(): WalletData = {
+      if (maybeAccountSeedFromConfig.nonEmpty) WalletData(ByteStr.empty, maybeAccountSeedFromConfig.toSet, 0, maybeAccountSeedFromConfig)
       else {
-        val file = maybeFile.get
-        if (file.exists() && file.length() > 0) {
-          val wd = loadOrImport(maybeFile.get)
-          if (wd.isDefined) wd.get
-          else {
-            throw new IllegalStateException(s"Failed to open existing wallet file '${maybeFile.get}' maybe provided password is incorrect")
-          }
-        } else WalletData(actualSeed, Set.empty, 0)
+        lazy val first = ByteStr(generateAccountSeed(actualSeed.arr, 0))
+        if (maybeFile.isEmpty)
+          WalletData(actualSeed, Set(first), 0, actualAccountSeed)
+        else {
+          val file = maybeFile.get
+          if (file.exists() && file.length() > 0) {
+            val wd = loadOrImport(maybeFile.get)
+            if (wd.isDefined) wd.get
+            else {
+              throw new IllegalStateException(s"Failed to open existing wallet file '${maybeFile.get}' maybe provided password is incorrect")
+            }
+          } else WalletData(actualSeed, Set(first), 0, actualAccountSeed)
+        }
       }
     }
+    private var walletData: WalletData = loadWalletData()
 
     private val l = new Object
 
     private def lock[T](f: => T): T = l.synchronized(f)
 
-    private val accountsCache: TrieMap[String, PrivateKeyAccount] = {
-      val accounts = walletData.accountSeeds.map(seed => PrivateKeyAccount(seed.arr))
+    private def readAccountsFromWalletData: TrieMap[String, PrivateKeyAccount] = {
+      val accounts = walletData.getAccountSeeds().map(seed => PrivateKeyAccount(seed.arr))
       TrieMap(accounts.map(acc => acc.address -> acc).toSeq: _*)
     }
 
-    private def save(): Unit = maybeFile.foreach(f => JsonFileStorage.save(walletData, f.getCanonicalPath, Some(key)))
+    override def save(): Unit = maybeFile.foreach(f => JsonFileStorage.save(walletData, f.getCanonicalPath, Some(key)))
 
-    private def generateNewAccountWithoutSave(): Option[PrivateKeyAccount] = lock {
-      val nonce   = getAndIncrementNonce()
-      val account = Wallet.generateNewAccount(seed, nonce)
+    private def generateAndSave(): Option[PrivateKeyAccount] = lock {
+      val nonce = incrementAndGetNonce()
+      import com.wavesplatform.state._
+      val account = Wallet.generateNewAccount(seed.explicitGet(), nonce) // called from guarded public methods only
 
       val address = account.address
-      if (!accountsCache.contains(address)) {
-        accountsCache += account.address -> account
-        walletData = walletData.copy(accountSeeds = walletData.accountSeeds + ByteStr(account.seed))
+      if (!readAccountsFromWalletData.contains(address)) {
+        walletData = walletData.copyWithAccountSeeds(walletData.getAccountSeeds() + ByteStr(account.seed))
         log.info("Added account #" + privateKeyAccounts.size)
+        save()
         Some(account)
       } else None
     }
 
-    override def seed: Array[Byte] = walletData.seed.arr
+    override def seed = Either.cond(!walletData.accountBased, walletData.seed.arr, AccountBasedWallet)
 
-    override def privateKeyAccounts: List[PrivateKeyAccount] = accountsCache.values.toList
+    override def accountSeed: Option[Array[Byte]] = walletData.accountSeed.map(_.arr)
 
-    override def generateNewAccounts(howMany: Int): Seq[PrivateKeyAccount] =
-      (1 to howMany).flatMap(_ => generateNewAccountWithoutSave()).tap(_ => save())
+    override def privateKeyAccounts: List[PrivateKeyAccount] = readAccountsFromWalletData.values.toList
 
-    override def generateNewAccount(): Option[PrivateKeyAccount] = lock {
-      generateNewAccountWithoutSave().map(acc => {
-        save()
-        acc
-      })
+    override def generateNewAccounts(howMany: Int) =
+      if (walletData.accountBased) Left(AccountBasedWallet)
+      else
+        Right {
+          (1 to howMany).flatMap(_ => generateAndSave())
+        }
+
+    override def generateNewAccount() = lock {
+      if (walletData.accountBased) Left(AccountBasedWallet)
+      else
+        Right {
+          generateAndSave()
+        }
     }
 
-    override def deleteAccount(account: PrivateKeyAccount): Boolean = lock {
-      val before = walletData.accountSeeds.size
-      walletData = walletData.copy(accountSeeds = walletData.accountSeeds - ByteStr(account.seed))
-      accountsCache -= account.address
-      save()
-      before > walletData.accountSeeds.size
+    override def deleteAccount(account: PrivateKeyAccount) = lock {
+      if (walletData.accountBased) Left(AccountBasedWallet)
+      else
+        Right {
+          val before = walletData.getAccountSeeds().size
+          walletData = walletData.copyWithAccountSeeds(walletData.getAccountSeeds() - ByteStr(account.seed))
+          save()
+          before > walletData.getAccountSeeds().size
+        }
     }
 
     override def privateKeyAccount(account: Address): Either[ValidationError, PrivateKeyAccount] =
-      accountsCache.get(account.address).toRight[ValidationError](MissingSenderPrivateKey)
+      readAccountsFromWalletData.get(account.address).toRight[ValidationError](MissingSenderPrivateKey)
 
-    override def nonce: Int = walletData.nonce
+    override def nonce = Either.cond(!walletData.accountBased, walletData.nonce, AccountBasedWallet)
 
-    private def getAndIncrementNonce(): Int = lock {
-      val r = walletData.nonce
-      walletData = walletData.copy(nonce = walletData.nonce + 1)
+    private def incrementAndGetNonce(): Int = lock {
+      val r = walletData.nonce + 1
+      walletData = walletData.copy(nonce = r)
       r
     }
   }

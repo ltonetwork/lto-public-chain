@@ -18,6 +18,9 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
   @Path("/seed")
   @ApiOperation(value = "Seed", notes = "Export wallet seed", httpMethod = "GET")
   def seed: Route = (path("wallet" / "seed") & get & withAuth) {
-    complete(Json.obj("seed" -> Base58.encode(wallet.seed)))
+    wallet.seed match {
+      case Right(w) => complete(Json.obj("seed" -> Base58.encode(w)))
+      case Left(l)  => complete(l)
+    }
   }
 }

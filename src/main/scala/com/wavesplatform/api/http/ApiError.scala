@@ -36,6 +36,7 @@ object ApiError {
       case ValidationError.OverflowError           => OverflowError
       case ValidationError.ToSelf                  => ToSelfError
       case ValidationError.MissingSenderPrivateKey => MissingSenderPrivateKey
+      case ValidationError.AccountBasedWallet      => AccountBasedWallet
       case ValidationError.GenericError(ge)        => CustomValidationError(ge)
       case ValidationError.AlreadyInTheState(tx, txHeight) =>
         CustomValidationError(s"Transaction $tx is already in the state on a height of $txHeight")
@@ -203,6 +204,12 @@ case object ToSelfError extends ApiError {
 case object MissingSenderPrivateKey extends ApiError {
   override val id: Int          = 115
   override val message: String  = "no private key for sender address in wallet"
+  override val code: StatusCode = StatusCodes.BadRequest
+}
+
+case object AccountBasedWallet extends ApiError {
+  override val id: Int          = 116
+  override val message: String  = "The wallet is account-based, can't add/remove any accounts"
   override val code: StatusCode = StatusCodes.BadRequest
 }
 
