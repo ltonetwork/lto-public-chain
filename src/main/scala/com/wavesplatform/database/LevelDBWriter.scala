@@ -84,7 +84,7 @@ object LevelDBWriter {
   }
 }
 
-class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize: Int = 100000) extends Caches with ScorexLogging {
+class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize: Int = 100000, val maxRollbackDepth: Int = 2000) extends Caches with ScorexLogging {
 
   import LevelDBWriter._
 
@@ -200,7 +200,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(Keys.idToAddress(id), address)
     }
 
-    val threshold = height - 2000
+    val threshold = height - maxRollbackDepth
 
     val newAddressesForWaves = ArrayBuffer.empty[BigInt]
     val updatedBalanceAddresses = for ((addressId, balance) <- wavesBalances) yield {
