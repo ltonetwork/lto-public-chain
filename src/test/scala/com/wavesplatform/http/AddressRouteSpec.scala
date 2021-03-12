@@ -36,7 +36,8 @@ class AddressRouteSpec
     mock[UtxPool],
     mock[ChannelGroup],
     new TestTime,
-    TestFunctionalitySettings.Stub
+    TestFunctionalitySettings.Stub,
+    _ => Seq.empty
   ).route
 
   private val generatedMessages = for {

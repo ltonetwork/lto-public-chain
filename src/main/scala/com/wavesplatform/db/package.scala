@@ -3,7 +3,8 @@ package com.wavesplatform
 import java.io.File
 
 import com.wavesplatform.utils.ScorexLogging
-import org.iq80.leveldb.{DB, Options}
+import com.wavesplatform.database.{ReadOnlyDB, RW}
+import org.iq80.leveldb.{DB, Options, ReadOptions}
 
 package object db extends ScorexLogging {
 
@@ -22,4 +23,11 @@ package object db extends ScorexLogging {
     LevelDBFactory.factory.open(file, options)
   }
 
+  implicit class DBExt(val db: DB) extends AnyVal {
+    def readOnly[A](f: ReadOnlyDB => A): A = {
+      val snapshot = db.getSnapshot
+      try f(new ReadOnlyDB(db, new ReadOptions().snapshot(snapshot)))
+      finally snapshot.close()
+    }
+  }
 }

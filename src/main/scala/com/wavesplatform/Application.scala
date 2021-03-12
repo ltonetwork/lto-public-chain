@@ -10,14 +10,15 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.stream.ActorMaterializer
 import cats.instances.all._
 import com.typesafe.config._
-import com.wavesplatform.account.AddressScheme
+import com.wavesplatform.account.{Address, AddressScheme}
 import com.wavesplatform.actor.RootActorSystem
 import com.wavesplatform.api.http._
 import com.wavesplatform.api.http.assets.AssetsBroadcastApiRoute
 import com.wavesplatform.api.http.leasing.LeaseApiRoute
 import com.wavesplatform.consensus.PoSSelector
 import com.wavesplatform.consensus.nxt.api.http.NxtConsensusApiRoute
-import com.wavesplatform.db.openDB
+import com.wavesplatform.db.{openDB, DBExt}
+import com.wavesplatform.database.Keys
 import com.wavesplatform.features.api.ActivationApiRoute
 import com.wavesplatform.history.{CheckpointServiceImpl, StorageFactory}
 import com.wavesplatform.http.{DebugApiRoute, NodeApiRoute}
@@ -204,6 +205,14 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     if (settings.restAPISettings.enable) {
+      def loadBalanceHistory(address: Address): Seq[(Int, Long)] = db.readOnly { rdb =>
+        rdb.get(Keys.addressId(address)).fold(Seq.empty[(Int, Long)]) { aid =>
+          rdb.get(Keys.wavesBalanceHistory(aid)).map { h =>
+            h -> rdb.get(Keys.wavesBalance(aid)(h))
+          }
+        }
+      }
+
       val apiRoutes = Seq(
         NodeApiRoute(settings.restAPISettings, blockchainUpdater, () => apiShutdown()),
         BlocksApiRoute(settings.restAPISettings, blockchainUpdater, allChannels, c => processCheckpoint(None, c)),
@@ -227,7 +236,8 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
                         utxStorage,
                         allChannels,
                         time,
-                        settings.blockchainSettings.functionalitySettings),
+                        settings.blockchainSettings.functionalitySettings,
+                        loadBalanceHistory),
         AssociationsApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, allChannels, time),
         DebugApiRoute(
           settings,

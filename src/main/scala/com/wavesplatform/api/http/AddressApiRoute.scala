@@ -32,7 +32,8 @@ case class AddressApiRoute(settings: RestAPISettings,
                            utx: UtxPool,
                            allChannels: ChannelGroup,
                            time: Time,
-                           functionalitySettings: FunctionalitySettings)
+                           functionalitySettings: FunctionalitySettings,
+                           loadBalanceHistory: Address => Seq[(Int, Long)])
     extends ApiRoute
     with BroadcastRoute {
 
@@ -42,7 +43,7 @@ case class AddressApiRoute(settings: RestAPISettings,
 
   override lazy val route =
     pathPrefix("addresses") {
-      validate ~ seed ~ balanceWithConfirmations ~ balanceDetails ~ balance ~ balanceWithConfirmations ~ verify ~ sign ~ deleteAddress ~ verifyText ~
+      validate ~ seed ~ balanceWithConfirmations ~ balanceDetails ~ balanceHistory ~ balance ~ balanceWithConfirmations ~ verify ~ sign ~ deleteAddress ~ verifyText ~
         signText ~ seq ~ publicKey ~ effectiveBalance ~ effectiveBalanceWithConfirmations ~ getData ~ getDataItem ~
         postData ~ postAnchor ~ scriptInfo
     } ~ root ~ create
@@ -187,6 +188,18 @@ case class AddressApiRoute(settings: RestAPISettings,
           ToResponseMarshallable(balancesDetailsJson(acc))
         })
         .getOrElse(InvalidAddress))
+  }
+
+  @Path("/balance/history/{address}")
+  @ApiOperation(value = "Balance history", notes = "Balance history of {address}", httpMethod = "GET")
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
+    ))
+  def balanceHistory: Route = {
+    (path("balance" / "history" / Segment) & get) { address =>
+      complete(balanceHistoryJson(address));
+    }
   }
 
   @Path("/balance/{address}/{confirmations}")
@@ -384,6 +397,19 @@ case class AddressApiRoute(settings: RestAPISettings,
       portfolio.balance - portfolio.lease.out,
       portfolio.effectiveBalance
     )
+  }
+
+  private def balanceHistoryJson(address: String): ToResponseMarshallable = {
+    Address
+      .fromString(address)
+      .right
+      .map(acc =>
+        ToResponseMarshallable(
+          loadBalanceHistory(acc).map {
+            case (h, b) => Json.obj("height" -> h, "balance" -> b)
+          }
+      ))
+      .getOrElse(InvalidAddress)
   }
 
   private def addressScriptInfoJson(account: Address): Either[ValidationError, AddressScriptInfo] =

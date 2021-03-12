@@ -19,7 +19,8 @@ object StorageFactory extends ScorexLogging {
     val levelDBWriter = new LevelDBWriter(
       db,
       settings.blockchainSettings.functionalitySettings,
-      settings.maxCacheSize
+      settings.maxCacheSize,
+      settings.maxRollbackDepth
     )
     new BlockchainUpdaterImpl(levelDBWriter, settings, time)
   }
