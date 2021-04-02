@@ -155,8 +155,23 @@ object CommonValidation {
     case _                             => Left(UnsupportedTransactionType)
   }
 
+  private def feeInUnitsVersion4(tx: Transaction): Either[ValidationError, Long] = tx match {
+    case _: GenesisTransaction           => Right(0)
+    case _: TransferTransaction          => Right(10)
+    case _: LeaseTransaction             => Right(10)
+    case _: SetScriptTransaction         => Right(100)
+    case _: LeaseCancelTransaction       => Right(10)
+    case tx: MassTransferTransaction     => Right(10 + tx.transfers.size * 10)
+    case tx: AnchorTransaction           => Right(10 + tx.anchors.size * 1)
+    case _: AssociationTransactionBase   => Right(10)
+    case _: SponsorshipTransaction       => Right(100)
+    case _: SponsorshipCancelTransaction => Right(10)
+    case _                               => Left(UnsupportedTransactionType)
+  }
+
   def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Long] = {
 
+    // TODO: smart accounts were not activated, so why the check in fees V1?
     def feesV1() = {
       type FeeInfo = Long
 
@@ -176,6 +191,10 @@ object CommonValidation {
     }
     def feesV2() = feeInUnitsVersion2(tx).map(_ * Sponsorship.FeeUnit)
     def feesV3() = feeInUnitsVersion3(tx).map(_ * Sponsorship.FeeUnit)
+    def feesV4() = feeInUnitsVersion4(tx).map(_ * Sponsorship.FeeUnit)
+
+    if (blockchain.isFeatureActivated(BlockchainFeatures.PercentageBurn, height))
+      feesV4()
     if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
       feesV3()
     else if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
@@ -227,7 +246,21 @@ object CommonValidation {
         .map(_ * Sponsorship.FeeUnit)
         .flatMap(minFee => Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
 
-    if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
+    def feesV3() =
+      feeInUnitsVersion3(tx)
+        .map(_ * Sponsorship.FeeUnit)
+        .flatMap(minFee => Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
+
+    def feesV4() =
+      feeInUnitsVersion4(tx)
+        .map(_ * Sponsorship.FeeUnit)
+        .flatMap(minFee => Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
+
+    if (blockchain.isFeatureActivated(BlockchainFeatures.PercentageBurn, height))
+      feesV4()
+    if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
+      feesV3()
+    else if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
       feesV2()
     else feesV1()
   }
