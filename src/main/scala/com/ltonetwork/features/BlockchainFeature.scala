@@ -6,7 +6,7 @@ object BlockchainFeatures {
 
   val UnknownFeature = "Unknown feature"
 
-  val DUMMY_FOR_TESTS_SmallerMinimalGeneratingBalance = BlockchainFeature(1, "Minimum Generating Balance of 1000 LTO")
+  val MinimalGeneratingBalance                        = BlockchainFeature(1, "Minimum Generating Balance of 1000 LTO")
   val SmartAccounts                                   = BlockchainFeature(4, "Smart Accounts")
   val AssociationTransaction                          = BlockchainFeature(10, "Association Transaction")
   val SponsorshipTransaction                          = BlockchainFeature(11, "Sponsorship Transaction")

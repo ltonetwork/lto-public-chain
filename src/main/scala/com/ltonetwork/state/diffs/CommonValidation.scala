@@ -114,7 +114,7 @@ object CommonValidation {
       case _ => Right(tx)
     }
 
-  private def oldFeeInUnits(blockchain: Blockchain, height: Int, tx: Transaction): Either[ValidationError, Long] = tx match {
+  private def feeInUnitsVersion1(blockchain: Blockchain, height: Int, tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: GenesisTransaction       => Right(0)
     case _: PaymentTransaction       => Right(1)
     case _: TransferTransaction      => Right(1)
@@ -129,7 +129,7 @@ object CommonValidation {
     case _                       => Left(UnsupportedTransactionType)
   }
 
-  private def newFeeInUnits(tx: Transaction): Either[ValidationError, Long] = tx match {
+  private def feeInUnitsVersion2(tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: GenesisTransaction         => Right(0)
     case _: TransferTransaction        => Right(1000)
     case _: LeaseTransaction           => Right(1000)
@@ -142,7 +142,7 @@ object CommonValidation {
     case _                             => Left(UnsupportedTransactionType)
   }
 
-  private def superNewFeeInUnits(tx: Transaction): Either[ValidationError, Long] = tx match {
+  private def feeInUnitsVersion3(tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: GenesisTransaction         => Right(0)
     case _: TransferTransaction        => Right(1000)
     case _: LeaseTransaction           => Right(1000)
@@ -157,7 +157,7 @@ object CommonValidation {
 
   def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Long] = {
 
-    def oldFees() = {
+    def feesV1() = {
       type FeeInfo = Long
 
       def hasSmartAccountScript: Boolean = tx match {
@@ -170,25 +170,25 @@ object CommonValidation {
           inputFee + ScriptExtraFee
         } else inputFee
 
-      oldFeeInUnits(blockchain, height, tx)
+      feeInUnitsVersion1(blockchain, height, tx)
         .map(_ * Sponsorship.FeeUnit)
         .map(feeAfterSmartAccounts)
     }
-    def newFees()      = newFeeInUnits(tx).map(_ * Sponsorship.FeeUnit)
-    def superNewFees() = superNewFeeInUnits(tx).map(_ * Sponsorship.FeeUnit)
+    def feesV2()      = feeInUnitsVersion2(tx).map(_ * Sponsorship.FeeUnit)
+    def feesV3() = feeInUnitsVersion3(tx).map(_ * Sponsorship.FeeUnit)
     if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
-      superNewFees()
+      feesV3()
     else if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
-      newFees()
-    else oldFees()
+      feesV2()
+    else feesV1()
   }
 
   def checkFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Unit] = {
-    def oldFees() = {
+    def feesV1() = {
       def restFee(inputFee: Long): Either[ValidationError, (Option[AssetId], Long)] = {
         val feeAmount = inputFee
         for {
-          feeInUnits <- oldFeeInUnits(blockchain, height, tx)
+          feeInUnits <- feeInUnitsVersion1(blockchain, height, tx)
           minimumFee    = feeInUnits * Sponsorship.FeeUnit
           restFeeAmount = feeAmount - minimumFee
           _ <- Either.cond(
@@ -222,14 +222,14 @@ object CommonValidation {
         .map(_ => ())
     }
 
-    def newFees() =
-      newFeeInUnits(tx)
+    def feesV2() =
+      feeInUnitsVersion2(tx)
         .map(_ * Sponsorship.FeeUnit)
         .flatMap(minFee => Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
 
     if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
-      newFees()
-    else oldFees()
+      feesV2()
+    else feesV1()
   }
 
 }
