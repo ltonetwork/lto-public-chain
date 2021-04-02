@@ -174,7 +174,7 @@ object CommonValidation {
         .map(_ * Sponsorship.FeeUnit)
         .map(feeAfterSmartAccounts)
     }
-    def feesV2()      = feeInUnitsVersion2(tx).map(_ * Sponsorship.FeeUnit)
+    def feesV2() = feeInUnitsVersion2(tx).map(_ * Sponsorship.FeeUnit)
     def feesV3() = feeInUnitsVersion3(tx).map(_ * Sponsorship.FeeUnit)
     if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
       feesV3()
