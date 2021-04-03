@@ -12,7 +12,16 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
   val map: Map[String, Long] = {
     settings.fees.flatMap { fs =>
       val transactionType = fs._1
-      fs._2.filter(v => v.asset.toUpperCase() == "LTO").map { v =>
+      fs._2.filter(v => v.asset.toUpperCase() == "BASE").map { v =>
+        transactionType.toString -> v.fee
+      }
+    }
+  }
+
+  val mapVar: Map[String, Long] = {
+    settings.fees.flatMap { fs =>
+      val transactionType = fs._1
+      fs._2.filter(v => v.asset.toUpperCase() == "VAR").map { v =>
         transactionType.toString -> v.fee
       }
     }
@@ -40,10 +49,12 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     case tx: DataTransaction =>
       val sizeInKb = 1 + (tx.bytes().length - 1) / Kb
       txMinBaseFee * sizeInKb
+    case tx: AnchorTransaction =>
+      val varFee = mapVar.getOrElse(AnchorTransaction.typeId.toString, throw new IllegalStateException("Can't find variable fee for AnchorTransaction"))
+      txMinBaseFee + varFee * tx.anchors.size
     case tx: MassTransferTransaction =>
-      val transferFeeSpec =
-        map.getOrElse(TransferTransactionV1.typeId.toString, throw new IllegalStateException("Can't find spec for TransferTransaction"))
-      transferFeeSpec + txMinBaseFee * tx.transfers.size
+      val varFee = mapVar.getOrElse(MassTransferTransaction.typeId.toString, throw new IllegalStateException("Can't find variable fee for TransferTransaction"))
+      txMinBaseFee + varFee * tx.transfers.size
     case _ => txMinBaseFee
   }
 }
