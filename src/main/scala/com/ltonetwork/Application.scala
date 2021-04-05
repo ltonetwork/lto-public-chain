@@ -49,7 +49,7 @@ import scala.concurrent.duration._
 import scala.reflect.runtime.universe._
 import scala.util.Try
 
-class Application(val actorSystem: ActorSystem, val settings: WavesSettings, configRoot: ConfigObject) extends ScorexLogging {
+class Application(val actorSystem: ActorSystem, val settings: LtoSettings, configRoot: ConfigObject) extends ScorexLogging {
 
   import monix.execution.Scheduler.Implicits.{global => scheduler}
 
@@ -207,8 +207,8 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
     if (settings.restAPISettings.enable) {
       def loadBalanceHistory(address: Address): Seq[(Int, Long)] = db.readOnly { rdb =>
         rdb.get(Keys.addressId(address)).fold(Seq.empty[(Int, Long)]) { aid =>
-          rdb.get(Keys.wavesBalanceHistory(aid)).map { h =>
-            h -> rdb.get(Keys.wavesBalance(aid)(h))
+          rdb.get(Keys.ltoBalanceHistory(aid)).map { h =>
+            h -> rdb.get(Keys.ltoBalance(aid)(h))
           }
         }
       }
@@ -362,8 +362,6 @@ object Application extends ScorexLogging {
         val cfg = ConfigFactory.parseFile(file)
         if (!cfg.hasPath("lto")) {
           log.error("Malformed configuration file was provided! Aborting!")
-//          log.error("Please, read following article about configuration file format:")
-//          log.error("https://github.com/ltonetwork/Waves/wiki/Waves-Node-configuration-file")
           forceStopApplication()
         }
         loadConfig(cfg)
@@ -398,7 +396,7 @@ object Application extends ScorexLogging {
       SystemInformationReporter.report(config)
     }
 
-    val settings = WavesSettings.fromConfig(config)
+    val settings = LtoSettings.fromConfig(config)
     Kamon.start(config)
     val isMetricsStarted = Metrics.start(settings.metrics)
 

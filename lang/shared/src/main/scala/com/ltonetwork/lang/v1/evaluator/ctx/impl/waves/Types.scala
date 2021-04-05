@@ -1,4 +1,4 @@
-package com.ltonetwork.lang.v1.evaluator.ctx.impl.waves
+package com.ltonetwork.lang.v1.evaluator.ctx.impl.lto
 
 import com.ltonetwork.lang.v1.compiler.Types._
 import com.ltonetwork.lang.v1.evaluator.ctx.CaseType
@@ -152,5 +152,5 @@ object Types {
   val outgoingTransactionType = UNION.create(activeTransactionTypes.map(_.typeRef))
   val anyTransactionType      = UNION.create(transactionTypes.map(_.typeRef))
 
-  val wavesTypes = Seq(addressType, transfer) ++ transactionTypes
+  val ltoTypes = Seq(addressType, transfer) ++ transactionTypes
 }

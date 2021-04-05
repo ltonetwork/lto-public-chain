@@ -22,13 +22,13 @@ class BlockchainUpdaterBadReferencesTest
     recipient <- accountGen
     ts        <- positiveIntGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    payment: TransferTransactionV1  <- wavesTransferGeneratorP(ts, master, recipient)
-    payment2: TransferTransactionV1 <- wavesTransferGeneratorP(ts, master, recipient)
-    payment3: TransferTransactionV1 <- wavesTransferGeneratorP(ts, master, recipient)
+    payment: TransferTransactionV1  <- ltoTransferGeneratorP(ts, master, recipient)
+    payment2: TransferTransactionV1 <- ltoTransferGeneratorP(ts, master, recipient)
+    payment3: TransferTransactionV1 <- ltoTransferGeneratorP(ts, master, recipient)
   } yield (genesis, payment, payment2, payment3)
 
   property("microBlock: referenced (micro)block doesn't exist") {
-    scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
+    scenario(preconditionsAndPayments, MicroblocksActivatedAt0LtoSettings) {
       case (domain, (genesis, payment, payment2, payment3)) =>
         val block0                 = buildBlockOfTxs(randomSig, Seq(genesis))
         val (block1, microblocks1) = chainBaseAndMicro(block0.uniqueId, payment, Seq(payment2, payment3).map(Seq(_)), genesis.timestamp)
@@ -43,7 +43,7 @@ class BlockchainUpdaterBadReferencesTest
   }
 
   property("microblock: first micro doesn't reference base block(references nothing)") {
-    scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
+    scenario(preconditionsAndPayments, MicroblocksActivatedAt0LtoSettings) {
       case (domain, (genesis, payment, payment2, payment3)) =>
         val blocks = chainBlocks(Seq(Seq(genesis), Seq(payment)))
         val block0 = blocks(0)
@@ -57,7 +57,7 @@ class BlockchainUpdaterBadReferencesTest
   }
 
   property("microblock: first micro doesn't reference base block(references firm block)") {
-    scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
+    scenario(preconditionsAndPayments, MicroblocksActivatedAt0LtoSettings) {
       case (domain, (genesis, payment, payment2, payment3)) =>
         val blocks = chainBlocks(Seq(Seq(genesis), Seq(payment)))
         val block0 = blocks(0)
@@ -71,7 +71,7 @@ class BlockchainUpdaterBadReferencesTest
   }
 
   property("microblock: no base block at all") {
-    scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
+    scenario(preconditionsAndPayments, MicroblocksActivatedAt0LtoSettings) {
       case (domain, (genesis, payment, payment2, payment3)) =>
         val block0                 = buildBlockOfTxs(randomSig, Seq(genesis))
         val (block1, microblocks1) = chainBaseAndMicro(block0.uniqueId, payment, Seq(payment2).map(Seq(_)), genesis.timestamp)
@@ -83,7 +83,7 @@ class BlockchainUpdaterBadReferencesTest
   }
 
   property("microblock: follow-up micro doesn't reference last known micro") {
-    scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
+    scenario(preconditionsAndPayments, MicroblocksActivatedAt0LtoSettings) {
       case (domain, (genesis, payment, payment2, payment3)) =>
         val block0                 = buildBlockOfTxs(randomSig, Seq(genesis))
         val (block1, microblocks1) = chainBaseAndMicro(block0.uniqueId, payment, Seq(payment2, payment3).map(Seq(_)), genesis.timestamp)
@@ -97,7 +97,7 @@ class BlockchainUpdaterBadReferencesTest
   }
 
   property("block: second 'genesis' block") {
-    scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
+    scenario(preconditionsAndPayments, MicroblocksActivatedAt0LtoSettings) {
       case (domain, (genesis, payment, payment2, payment3)) =>
         val block0 = buildBlockOfTxs(randomSig, Seq(genesis, payment))
         val block1 = buildBlockOfTxs(randomSig, Seq(genesis, payment2))
@@ -107,7 +107,7 @@ class BlockchainUpdaterBadReferencesTest
   }
 
   property("block: incorrect or non-existing block when liquid is empty") {
-    scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
+    scenario(preconditionsAndPayments, MicroblocksActivatedAt0LtoSettings) {
       case (domain, (genesis, payment, payment2, payment3)) =>
         val blocks = chainBlocks(Seq(Seq(genesis), Seq(payment), Seq(payment2)))
         domain.blockchainUpdater.processBlock(blocks.head) shouldBe 'right
@@ -120,7 +120,7 @@ class BlockchainUpdaterBadReferencesTest
 
   property("block: incorrect or non-existing block when liquid exists") {
 
-    scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
+    scenario(preconditionsAndPayments, MicroblocksActivatedAt0LtoSettings) {
       case (domain, (genesis, payment, payment2, payment3)) =>
         val blocks   = chainBlocks(Seq(Seq(genesis), Seq(payment), Seq(payment2)))
         val block1v2 = buildBlockOfTxs(blocks(0).uniqueId, Seq(payment3))

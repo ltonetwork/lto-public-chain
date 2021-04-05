@@ -25,12 +25,12 @@ class BlockchainUpdaterGeneratorFeeSameBlockTest
     fee       <- smallFeeGen
     ts        <- positiveIntGen
     genesis: GenesisTransaction = GenesisTransaction.create(sender, ENOUGH_AMT, ts).explicitGet()
-    payment: TransferTransactionV1 <- wavesTransferGeneratorP(sender, recipient)
-    generatorPaymentOnFee: TransferTransactionV1 = createWavesTransfer(defaultSigner, recipient, payment.fee, fee, ts + 1).explicitGet()
+    payment: TransferTransactionV1 <- ltoTransferGeneratorP(sender, recipient)
+    generatorPaymentOnFee: TransferTransactionV1 = createLtoTransfer(defaultSigner, recipient, payment.fee, fee, ts + 1).explicitGet()
   } yield (genesis, payment, generatorPaymentOnFee)
 
   property("block generator can't spend fee after transaction") {
-    scenario(preconditionsAndPayments, MicroblocksActivatedAt0WavesSettings) {
+    scenario(preconditionsAndPayments, MicroblocksActivatedAt0LtoSettings) {
       case (domain, (genesis, somePayment, generatorPaymentOnFee)) =>
         val blocks = chainBlocks(Seq(Seq(genesis), Seq(generatorPaymentOnFee, somePayment)))
         blocks.init.foreach(block => domain.blockchainUpdater.processBlock(block).explicitGet())

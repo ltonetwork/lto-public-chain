@@ -75,9 +75,9 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
     "forget rollbacked transaction for quering" in forAll(accountGen, accountGen, Gen.nonEmptyListOf(Gen.choose(1, 10))) {
       case (sender, recipient, txCount) =>
         val settings = createSettings()
-        val wavesSettings = history.DefaultWavesSettings.copy(
-          blockchainSettings = history.DefaultWavesSettings.blockchainSettings.copy(functionalitySettings = settings))
-        withDomain(wavesSettings) { d =>
+        val ltoSettings = history.DefaultLtoSettings.copy(
+          blockchainSettings = history.DefaultLtoSettings.blockchainSettings.copy(functionalitySettings = settings))
+        withDomain(ltoSettings) { d =>
           d.appendBlock(genesisBlock(nextTs, sender, com.ltonetwork.state.diffs.ENOUGH_AMT))
 
           val genesisSignature = d.lastBlockId
@@ -117,7 +117,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
         }
     }
 
-    "waves balances" in forAll(accountGen, positiveLongGen, accountGen, Gen.nonEmptyListOf(Gen.choose(1, 10))) {
+    "lto balances" in forAll(accountGen, positiveLongGen, accountGen, Gen.nonEmptyListOf(Gen.choose(1, 10))) {
       case (sender, initialBalance, recipient, txCount) =>
         withDomain() { d =>
           d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
@@ -231,12 +231,12 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
       case (sponsor, sender) =>
         import com.ltonetwork.state.diffs.ENOUGH_AMT
         val settings = createSettings(BlockchainFeatures.SponsorshipTransaction -> 0, BlockchainFeatures.SmartAccounts -> 0)
-        val wavesSettings = history.DefaultWavesSettings.copy(
-          blockchainSettings = history.DefaultWavesSettings.blockchainSettings.copy(functionalitySettings = settings))
+        val ltoSettings = history.DefaultLtoSettings.copy(
+          blockchainSettings = history.DefaultLtoSettings.blockchainSettings.copy(functionalitySettings = settings))
         val tx  = SponsorshipTransaction.selfSigned(1, sponsor, sender, 5 * 100000000L, nextTs).explicitGet()
         val tx2 = SponsorshipCancelTransaction.selfSigned(1, sponsor, sender, 5 * 100000000L, nextTs).explicitGet()
 
-        withDomain(wavesSettings) { d =>
+        withDomain(ltoSettings) { d =>
           d.appendBlock(genesisBlock(nextTs, Seq((sponsor, ENOUGH_AMT), (sender, ENOUGH_AMT))))
 
           def appendTx(tx: Transaction) = {

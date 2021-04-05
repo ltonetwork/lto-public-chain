@@ -51,7 +51,7 @@ trait Blockchain {
 
   def leaseDetails(leaseId: ByteStr): Option[LeaseDetails]
 
-  /** Retrieves Waves balance snapshot in the [from, to] range (inclusive) */
+  /** Retrieves LTO balance snapshot in the [from, to] range (inclusive) */
   def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot]
 
   def accountScript(address: Address): Option[Script]
@@ -62,7 +62,7 @@ trait Blockchain {
 
   def balance(address: Address): Long
 
-  def wavesDistribution(height: Int): Map[Address, Long]
+  def ltoDistribution(height: Int): Map[Address, Long]
 
   // the following methods are used exclusively by patches
   def allActiveLeases: Set[LeaseTransaction]
@@ -73,7 +73,7 @@ trait Blockchain {
 
   /** Builds a new portfolio map by applying a partial function to all portfolios on which the function is defined.
     *
-    * @note Portfolios passed to `pf` only contain Waves and Leasing balances to improve performance */
+    * @note Portfolios passed to `pf` only contain LTO and Leasing balances to improve performance */
   def collectLposPortfolios[A](pf: PartialFunction[(Address, Portfolio), A]): Map[Address, A]
 
   def append(diff: Diff, carryFee: Long, block: Block): Unit

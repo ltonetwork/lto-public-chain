@@ -22,7 +22,7 @@ class TransferTransactionDiffTest extends PropSpec with PropertyChecks with Matc
     transfer   <- Gen.oneOf(transferV1, transferV2)
   } yield (genesis, transfer)
 
-  property("transfers assets to recipient preserving waves invariant") {
+  property("transfers assets to recipient preserving lto invariant") {
     forAll(preconditionsAndTransfer) {
       case ((genesis, transfer)) =>
         assertDiffAndState(Seq(TestBlock.create(Seq(genesis))), TestBlock.create(Seq(transfer))) {

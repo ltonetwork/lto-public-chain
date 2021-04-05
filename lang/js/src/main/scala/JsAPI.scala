@@ -4,7 +4,7 @@ import com.ltonetwork.lang.v1.FunctionHeader.{Native, User}
 import com.ltonetwork.lang.v1.Serde
 import com.ltonetwork.lang.v1.compiler.CompilerV1
 import com.ltonetwork.lang.v1.compiler.Terms._
-import com.ltonetwork.lang.v1.evaluator.ctx.impl.waves.WavesContext
+import com.ltonetwork.lang.v1.evaluator.ctx.impl.lto.LtoContext
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.{CryptoContext, PureContext}
 import com.ltonetwork.lang.v1.parser.{Expressions, Parser}
 import com.ltonetwork.lang.v1.traits.{Environment, Tx}
@@ -45,7 +45,7 @@ object JsAPI {
   @JSExportTopLevel("compile")
   def compile(input: String): js.Dynamic = {
 
-    val wavesContext = WavesContext.build(new Environment {
+    val ltoContext = LtoContext.build(new Environment {
       override def height: Int                                                                                     = 0
       override def networkByte: Byte                                                                               = 1: Byte
       override def transaction: Tx                                                                                 = null
@@ -54,7 +54,7 @@ object JsAPI {
     //comment
     val cryptoContext = CryptoContext.build(Global)
 
-    val compilerContext = Monoid.combineAll(Seq(PureContext.ctx, cryptoContext, wavesContext)).compilerContext
+    val compilerContext = Monoid.combineAll(Seq(PureContext.ctx, cryptoContext, ltoContext)).compilerContext
 
     def hash(m: Array[Byte]) = Global.keccak256(Global.blake2b256(m))
 

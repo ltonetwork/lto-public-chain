@@ -147,12 +147,12 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
   override def balance(address: Address): Long = readOnly { db =>
     addressId(address).fold(0L) { addressId =>
-      db.fromHistory(Keys.wavesBalanceHistory(addressId), Keys.wavesBalance(addressId)).getOrElse(0L)
+      db.fromHistory(Keys.ltoBalanceHistory(addressId), Keys.ltoBalance(addressId)).getOrElse(0L)
     }
   }
 
   private def loadLposPortfolio(db: ReadOnlyDB, addressId: BigInt) = Portfolio(
-    db.fromHistory(Keys.wavesBalanceHistory(addressId), Keys.wavesBalance(addressId)).getOrElse(0L),
+    db.fromHistory(Keys.ltoBalanceHistory(addressId), Keys.ltoBalance(addressId)).getOrElse(0L),
     db.fromHistory(Keys.leaseBalanceHistory(addressId), Keys.leaseBalance(addressId)).getOrElse(LeaseBalance.empty)
   )
 
@@ -178,7 +178,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
   override protected def doAppend(carry: Long,
                                   block: Block,
                                   newAddresses: Map[Address, BigInt],
-                                  wavesBalances: Map[BigInt, Long],
+                                  ltoBalances: Map[BigInt, Long],
                                   leaseBalances: Map[BigInt, LeaseBalance],
                                   leaseStates: Map[ByteStr, Boolean],
                                   transactions: Map[ByteStr, (Transaction, Set[BigInt])],
@@ -202,24 +202,24 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
     val threshold = height - maxRollbackDepth
 
-    val newAddressesForWaves = ArrayBuffer.empty[BigInt]
-    val updatedBalanceAddresses = for ((addressId, balance) <- wavesBalances) yield {
-      val kwbh = Keys.wavesBalanceHistory(addressId)
+    val newAddressesForLto = ArrayBuffer.empty[BigInt]
+    val updatedBalanceAddresses = for ((addressId, balance) <- ltoBalances) yield {
+      val kwbh = Keys.ltoBalanceHistory(addressId)
       val wbh  = rw.get(kwbh)
       if (wbh.isEmpty) {
-        newAddressesForWaves += addressId
+        newAddressesForLto += addressId
       }
-      rw.put(Keys.wavesBalance(addressId)(height), balance)
-      expiredKeys ++= updateHistory(rw, wbh, kwbh, threshold, Keys.wavesBalance(addressId))
+      rw.put(Keys.ltoBalance(addressId)(height), balance)
+      expiredKeys ++= updateHistory(rw, wbh, kwbh, threshold, Keys.ltoBalance(addressId))
       addressId
     }
 
     val changedAddresses = addressTransactions.keys ++ updatedBalanceAddresses
 
-    if (newAddressesForWaves.nonEmpty) {
-      val newSeqNr = rw.get(Keys.addressesForWavesSeqNr) + 1
-      rw.put(Keys.addressesForWavesSeqNr, newSeqNr)
-      rw.put(Keys.addressesForWaves(newSeqNr), newAddressesForWaves)
+    if (newAddressesForLto.nonEmpty) {
+      val newSeqNr = rw.get(Keys.addressesForLtoSeqNr) + 1
+      rw.put(Keys.addressesForLtoSeqNr, newSeqNr)
+      rw.put(Keys.addressesForLto(newSeqNr), newAddressesForLto)
     }
 
     for ((addressId, leaseBalance) <- leaseBalances) {
@@ -341,8 +341,8 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
           for (addressId <- rw.get(Keys.changedAddresses(currentHeight))) {
             val address = rw.get(Keys.idToAddress(addressId))
 
-            rw.delete(Keys.wavesBalance(addressId)(currentHeight))
-            rw.filterHistory(Keys.wavesBalanceHistory(addressId), currentHeight)
+            rw.delete(Keys.ltoBalance(addressId)(currentHeight))
+            rw.filterHistory(Keys.ltoBalanceHistory(addressId), currentHeight)
 
             rw.delete(Keys.leaseBalance(addressId)(currentHeight))
             rw.filterHistory(Keys.leaseBalanceHistory(addressId), currentHeight)
@@ -483,12 +483,12 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
   override def balanceSnapshots(address: Address, from: Int, to: ByteStr): Seq[BalanceSnapshot] = readOnly { db =>
     db.get(Keys.addressId(address)).fold(Seq(BalanceSnapshot(1, 0, 0, 0))) { addressId =>
       val toHeight = this.heightOf(to).getOrElse(this.height)
-      val ints     = db.get(Keys.wavesBalanceHistory(addressId))
+      val ints     = db.get(Keys.ltoBalanceHistory(addressId))
       val wbh      = slice(ints, from, toHeight)
       val lbh      = slice(db.get(Keys.leaseBalanceHistory(addressId)), from, toHeight)
       for {
         (wh, lh) <- merge(wbh, lbh)
-        wb = balanceAtHeightCache.get((wh, addressId), () => db.get(Keys.wavesBalance(addressId)(wh)))
+        wb = balanceAtHeightCache.get((wh, addressId), () => db.get(Keys.ltoBalance(addressId)(wh)))
         lb = leaseBalanceAtHeightCache.get((lh, addressId), () => db.get(Keys.leaseBalance(addressId)(lh)))
       } yield BalanceSnapshot(wh.max(lh), wb, lb.in, lb.out)
     }
@@ -559,13 +559,13 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       .mapValues(_.size)
   }
 
-  override def wavesDistribution(height: Int): Map[Address, Long] = readOnly { db =>
+  override def ltoDistribution(height: Int): Map[Address, Long] = readOnly { db =>
     (for {
-      seqNr     <- (1 to db.get(Keys.addressesForWavesSeqNr)).par
-      addressId <- db.get(Keys.addressesForWaves(seqNr)).par
-      history = db.get(Keys.wavesBalanceHistory(addressId))
+      seqNr     <- (1 to db.get(Keys.addressesForLtoSeqNr)).par
+      addressId <- db.get(Keys.addressesForLto(seqNr)).par
+      history = db.get(Keys.ltoBalanceHistory(addressId))
       actualHeight <- history.partition(_ > height)._2.headOption
-      balance = db.get(Keys.wavesBalance(addressId)(actualHeight))
+      balance = db.get(Keys.ltoBalance(addressId)(actualHeight))
       if balance > 0
     } yield db.get(Keys.idToAddress(addressId)) -> balance).toMap.seq
   }

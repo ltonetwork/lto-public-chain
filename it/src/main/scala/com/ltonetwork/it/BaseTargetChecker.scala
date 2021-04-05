@@ -19,7 +19,7 @@ object BaseTargetChecker {
       .withFallback(defaultApplication())
       .withFallback(defaultReference())
       .resolve()
-    val settings     = WavesSettings.fromConfig(sharedConfig)
+    val settings     = LtoSettings.fromConfig(sharedConfig)
     val genesisBlock = Block.genesis(settings.blockchainSettings.genesisSettings).explicitGet()
     val db           = openDB("/tmp/tmp-db")
     val bu           = StorageFactory(settings, db, NTP)

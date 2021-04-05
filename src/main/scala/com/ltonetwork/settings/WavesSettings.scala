@@ -5,7 +5,7 @@ import com.ltonetwork.metrics.Metrics
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 
-case class WavesSettings(directory: String,
+case class LtoSettings(directory: String,
                          dataDirectory: String,
                          maxCacheSize: Int,
                          maxRollbackDepth: Int,
@@ -21,13 +21,13 @@ case class WavesSettings(directory: String,
                          featuresSettings: FeaturesSettings,
                          metrics: Metrics.Settings)
 
-object WavesSettings {
+object LtoSettings {
 
   import NetworkSettings.networkSettingsValueReader
 
   val configPath: String = "lto"
 
-  def fromConfig(config: Config): WavesSettings = {
+  def fromConfig(config: Config): LtoSettings = {
     val directory               = config.as[String](s"$configPath.directory")
     val dataDirectory           = config.as[String](s"$configPath.data-directory")
     val maxCacheSize            = config.as[Int](s"$configPath.max-cache-size")
@@ -44,7 +44,7 @@ object WavesSettings {
     val featuresSettings        = config.as[FeaturesSettings]("lto.features")
     val metrics                 = config.as[Metrics.Settings]("metrics")
 
-    WavesSettings(
+    LtoSettings(
       directory,
       dataDirectory,
       maxCacheSize,

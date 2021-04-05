@@ -4,7 +4,7 @@ import com.ltonetwork.consensus.PoSSelector
 import com.ltonetwork.metrics.{BlockStats, Instrumented, Metrics}
 import com.ltonetwork.mining.Miner
 import com.ltonetwork.network.{InvalidBlockStorage, PeerDatabase, formatBlocks, id}
-import com.ltonetwork.settings.WavesSettings
+import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state._
 import com.ltonetwork.utils.{ScorexLogging, Time}
 import com.ltonetwork.utx.UtxPool
@@ -26,7 +26,7 @@ object ExtensionAppender extends ScorexLogging with Instrumented {
             utxStorage: UtxPool,
             pos: PoSSelector,
             time: Time,
-            settings: WavesSettings,
+            settings: LtoSettings,
             invalidBlocks: InvalidBlockStorage,
             peerDatabase: PeerDatabase,
             miner: Miner,

@@ -16,14 +16,14 @@ class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with
         val blockchain = stub[Blockchain]
         (blockchain.hasScript _).when(*).onCall((_: Address) => false).anyNumberOfTimes()
 
-        TxEstimators.scriptRunNumber(blockchain, transferWavesTx) shouldBe 0
+        TxEstimators.scriptRunNumber(blockchain, transferLtoTx) shouldBe 0
       }
 
       "should count transactions going from a smart account" in {
         val blockchain = stub[Blockchain]
         (blockchain.hasScript _).when(*).onCall((_: Address) => true).anyNumberOfTimes()
 
-        TxEstimators.scriptRunNumber(blockchain, transferWavesTx) shouldBe 1
+        TxEstimators.scriptRunNumber(blockchain, transferLtoTx) shouldBe 1
       }
     }
 
@@ -32,7 +32,7 @@ class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with
   private val assetId = ByteStr("coin_id".getBytes())
   private val script  = ScriptV1(Terms.TRUE, checkSize = false).explicitGet()
 
-  private val transferWavesTx = TransferTransactionV1
+  private val transferLtoTx = TransferTransactionV1
     .selfSigned(
       sender = PrivateKeyAccount("sender".getBytes()),
       recipient = PrivateKeyAccount("recipient".getBytes()),

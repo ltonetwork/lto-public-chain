@@ -5,7 +5,7 @@ import com.ltonetwork.consensus.PoSSelector
 import com.ltonetwork.metrics._
 import com.ltonetwork.mining.Miner
 import com.ltonetwork.network._
-import com.ltonetwork.settings.WavesSettings
+import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state.Blockchain
 import com.ltonetwork.utils.{ScorexLogging, Time}
 import com.ltonetwork.utx.UtxPool
@@ -27,7 +27,7 @@ object BlockAppender extends ScorexLogging with Instrumented {
             time: Time,
             utxStorage: UtxPool,
             pos: PoSSelector,
-            settings: WavesSettings,
+            settings: LtoSettings,
             scheduler: Scheduler)(newBlock: Block): Task[Either[ValidationError, Option[BigInt]]] =
     Task {
       measureSuccessful(
@@ -48,7 +48,7 @@ object BlockAppender extends ScorexLogging with Instrumented {
             time: Time,
             utxStorage: UtxPool,
             pos: PoSSelector,
-            settings: WavesSettings,
+            settings: LtoSettings,
             allChannels: ChannelGroup,
             peerDatabase: PeerDatabase,
             miner: Miner,

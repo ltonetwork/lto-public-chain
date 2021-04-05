@@ -25,9 +25,9 @@ class BlockSpecification extends PropSpec with PropertyChecks with TransactionGe
     assetId = Some(ByteStr(assetBytes))
     sender                    <- accountGen
     recipient                 <- accountGen
-    paymentTransaction        <- wavesTransferGeneratorP(time, sender, recipient)
+    paymentTransaction        <- ltoTransferGeneratorP(time, sender, recipient)
     transferTrancation        <- transferGeneratorP(1 + time, sender, recipient, assetId, None)
-    anotherPaymentTransaction <- wavesTransferGeneratorP(2 + time, sender, recipient)
+    anotherPaymentTransaction <- ltoTransferGeneratorP(2 + time, sender, recipient)
     transactionData = Seq(paymentTransaction, transferTrancation, anotherPaymentTransaction)
   } yield (baseTarget, reference, ByteStr(generationSignature), recipient, transactionData)
 
@@ -40,7 +40,7 @@ class BlockSpecification extends PropSpec with PropertyChecks with TransactionGe
       assetId = Some(ByteStr(assetBytes))
       sender                                    <- accountGen
       recipient                                 <- accountGen
-      paymentTransaction: TransferTransactionV1 <- wavesTransferGeneratorP(time, sender, recipient)
+      paymentTransaction: TransferTransactionV1 <- ltoTransferGeneratorP(time, sender, recipient)
     } yield
       Block
         .buildAndSign(3,

@@ -33,7 +33,7 @@ trait TransactionGen extends BeforeAndAfterAll with TransactionGenBase with Scri
 
 trait TransactionGenBase extends ScriptGen {
 
-  protected def waves(n: Float): Long = (n * 100000000L).toLong
+  protected def lto(n: Float): Long = (n * 100000000L).toLong
 
   def byteArrayGen(length: Int): Gen[Array[Byte]] = Gen.containerOfN[Array, Byte](length, Arbitrary.arbitrary[Byte])
 
@@ -85,7 +85,7 @@ trait TransactionGenBase extends ScriptGen {
 
   val timestampGen: Gen[Long] = Gen.choose(1, Long.MaxValue - 100)
 
-  val wavesAssetGen: Gen[Option[ByteStr]] = Gen.const(None)
+  val ltoAssetGen: Gen[Option[ByteStr]] = Gen.const(None)
 
   val proofsGen: Gen[Proofs] = for {
     proofsAmount <- Gen.choose(1, 8)
@@ -243,10 +243,10 @@ trait TransactionGenBase extends ScriptGen {
       (_, _, amount, _, feeAmount, attachment) <- transferParamGen
     } yield TransferTransactionV1.selfSigned(sender, recipient, amount, timestamp, feeAmount, attachment).explicitGet()
 
-  def wavesTransferGeneratorP(sender: PrivateKeyAccount, recipient: AddressOrAlias): Gen[TransferTransactionV1] =
+  def ltoTransferGeneratorP(sender: PrivateKeyAccount, recipient: AddressOrAlias): Gen[TransferTransactionV1] =
     transferGeneratorP(sender, recipient, None, None)
 
-  def wavesTransferGeneratorP(timestamp: Long, sender: PrivateKeyAccount, recipient: AddressOrAlias): Gen[TransferTransactionV1] =
+  def ltoTransferGeneratorP(timestamp: Long, sender: PrivateKeyAccount, recipient: AddressOrAlias): Gen[TransferTransactionV1] =
     transferGeneratorP(timestamp, sender, recipient, None, None)
 
   def massTransferGeneratorP(sender: PrivateKeyAccount, transfers: List[ParsedTransfer], assetId: Option[AssetId]): Gen[MassTransferTransaction] =
@@ -255,7 +255,7 @@ trait TransactionGenBase extends ScriptGen {
       (_, _, _, timestamp, _, attachment) <- transferParamGen
     } yield MassTransferTransaction.selfSigned(version, sender, transfers, timestamp, 100000000 + 10000000 * transfers.size, attachment).explicitGet()
 
-  def createWavesTransfer(sender: PrivateKeyAccount,
+  def createLtoTransfer(sender: PrivateKeyAccount,
                           recipient: Address,
                           amount: Long,
                           fee: Long,
@@ -286,11 +286,11 @@ trait TransactionGenBase extends ScriptGen {
     } yield TransferTransactionV2.create(version, sender, recipient, amt, timestamp, fee, Array.emptyByteArray, proofs).explicitGet())
       .label("VersionedTransferTransactionP")
 
-  val transferWithWavesFeeGen = for {
+  val transferWithLtoFeeGen = for {
     (sender, recipient, amount, timestamp, feeAmount, attachment) <- transferParamGen
   } yield TransferTransactionV1.selfSigned(sender, recipient, amount, timestamp, feeAmount, attachment).explicitGet()
 
-  val selfTransferWithWavesFeeGen: Gen[TransferTransactionV1] = for {
+  val selfTransferWithLtoFeeGen: Gen[TransferTransactionV1] = for {
     (sender, _, amount, timestamp, feeAmount, attachment) <- transferParamGen
   } yield TransferTransactionV1.selfSigned(sender, sender, amount, timestamp, feeAmount, attachment).explicitGet()
 

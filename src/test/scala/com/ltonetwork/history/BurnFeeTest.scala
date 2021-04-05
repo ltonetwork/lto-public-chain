@@ -3,7 +3,7 @@ package com.ltonetwork.history
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.Address
 import com.ltonetwork.features.BlockchainFeatures
-import com.ltonetwork.settings.WavesSettings
+import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.{BlockDiffer, ENOUGH_AMT}
 import com.ltonetwork.transaction.GenesisTransaction
@@ -15,7 +15,7 @@ import org.scalatest.{Matchers, PropSpec}
 class BurnFeeTest extends PropSpec with PropertyChecks with DomainScenarioDrivenPropertyCheck with Matchers with TransactionGen {
   type Setup = (GenesisTransaction, TransferTransactionV1)
 
-  val burnFeeEnabledSettings: WavesSettings = settings.copy(
+  val burnFeeEnabledSettings: LtoSettings = settings.copy(
     blockchainSettings =
       DefaultBlockchainSettings.copy(functionalitySettings =
         DefaultBlockchainSettings.functionalitySettings.copy(

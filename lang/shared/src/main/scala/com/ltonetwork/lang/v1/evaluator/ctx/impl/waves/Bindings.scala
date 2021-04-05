@@ -1,4 +1,4 @@
-package com.ltonetwork.lang.v1.evaluator.ctx.impl.waves
+package com.ltonetwork.lang.v1.evaluator.ctx.impl.lto
 
 import com.ltonetwork.lang.v1.evaluator.ctx.CaseObj
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.PureContext.fromOption

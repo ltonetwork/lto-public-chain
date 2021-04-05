@@ -83,7 +83,7 @@ trait Caches extends Blockchain {
   protected def doAppend(carryFee: Long,
                          block: Block,
                          addresses: Map[Address, BigInt],
-                         wavesBalances: Map[BigInt, Long],
+                         ltoBalances: Map[BigInt, Long],
                          leaseBalances: Map[BigInt, LeaseBalance],
                          leaseStates: Map[ByteStr, Boolean],
                          transactions: Map[ByteStr, (Transaction, Set[BigInt])],
@@ -112,14 +112,14 @@ trait Caches extends Blockchain {
 
     lastAddressId += newAddressIds.size
 
-    val wavesBalances = Map.newBuilder[BigInt, Long]
+    val ltoBalances = Map.newBuilder[BigInt, Long]
     val leaseBalances = Map.newBuilder[BigInt, LeaseBalance]
     val newPortfolios = Map.newBuilder[Address, Portfolio]
 
     for ((address, portfolioDiff) <- diff.portfolios) {
       val newPortfolio = portfolioCache.get(address).combine(portfolioDiff)
       if (portfolioDiff.balance != 0) {
-        wavesBalances += addressId(address) -> newPortfolio.balance
+        ltoBalances += addressId(address) -> newPortfolio.balance
       }
 
       if (portfolioDiff.lease != LeaseBalance.empty) {
@@ -147,7 +147,7 @@ trait Caches extends Blockchain {
       carryFee,
       block,
       newAddressIds,
-      wavesBalances.result(),
+      ltoBalances.result(),
       leaseBalances.result(),
       diff.leaseState,
       newTransactions.result(),

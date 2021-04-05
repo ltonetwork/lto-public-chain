@@ -26,9 +26,9 @@ package object predef {
 
   def scriptWithAllFunctions(t: TransferTransaction): String =
     s"""${dropLastLine(scriptWithPureFunctions(t))}
-       |${dropLastLine(scriptWithWavesFunctions(t))}
+       |${dropLastLine(scriptWithLtoFunctions(t))}
        |${dropLastLine(scriptWithCryptoFunctions)}
-       |if rnd then pure && waves else crypto""".stripMargin
+       |if rnd then pure && lto else crypto""".stripMargin
 
   def scriptWithPureFunctions(t: TransferTransaction): String =
     s"""
@@ -85,8 +85,8 @@ package object predef {
        | let pure = basic && ne && gteLong && getListSize && unary && frAction && bytesOps && strOps
        | pure""".stripMargin
 
-  def scriptWithWavesFunctions(t: TransferTransaction): String =
-    s""" # Waves context
+  def scriptWithLtoFunctions(t: TransferTransaction): String =
+    s""" # LTO context
        | let entries = match tx {
        |   case _: TransferTransaction => true
        |   case _ => false
@@ -98,8 +98,8 @@ package object predef {
        |   case _ => false
        | }
        |
-       | let waves = entries && aFromPK && aFromStrOrRecip && height > 0
-       | waves""".stripMargin
+       | let lto = entries && aFromPK && aFromStrOrRecip && height > 0
+       | lto""".stripMargin
 
   def scriptWithCryptoFunctions: String =
     s"""

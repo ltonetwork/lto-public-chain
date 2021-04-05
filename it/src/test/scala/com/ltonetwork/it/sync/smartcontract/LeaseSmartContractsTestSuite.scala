@@ -63,7 +63,7 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
           2,
           acc0,
           transferAmount,
-          minFee + 0.2.waves,
+          minFee + 0.2.lto,
           System.currentTimeMillis(),
           acc2,
           Proofs.empty
@@ -82,8 +82,8 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
     nodes.waitForHeightAriseAndTxPresent(leasingId)
 
     notMiner.assertBalances(firstAddress,
-                            balance1 + 10 * transferAmount - (2 * minFee + 0.2.waves),
-                            eff1 + 9 * transferAmount - (2 * minFee + 0.2.waves))
+                            balance1 + 10 * transferAmount - (2 * minFee + 0.2.lto),
+                            eff1 + 9 * transferAmount - (2 * minFee + 0.2.lto))
     notMiner.assertBalances(thirdAddress, balance2, eff2 + transferAmount)
 
     val unsignedCancelLeasing =
@@ -93,7 +93,7 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
           chainId = AddressScheme.current.chainId,
           sender = acc0,
           leaseId = ByteStr.decodeBase58(leasingId).get,
-          fee = minFee + 0.2.waves,
+          fee = minFee + 0.2.lto,
           timestamp = System.currentTimeMillis(),
           proofs = Proofs.empty
         )
@@ -111,8 +111,8 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
     nodes.waitForHeightAriseAndTxPresent(leasingCancelId)
 
     notMiner.assertBalances(firstAddress,
-                            balance1 + 10 * transferAmount - (3 * minFee + 2 * 0.2.waves),
-                            eff1 + 10 * transferAmount - (3 * minFee + 2 * 0.2.waves))
+                            balance1 + 10 * transferAmount - (3 * minFee + 2 * 0.2.lto),
+                            eff1 + 10 * transferAmount - (3 * minFee + 2 * 0.2.lto))
     notMiner.assertBalances(thirdAddress, balance2, eff2)
 
   }

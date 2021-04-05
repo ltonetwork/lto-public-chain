@@ -31,15 +31,15 @@ object CommonValidation {
       val feeDiff = Portfolio(-feeAmount, LeaseBalance.empty)
 
       val spendings       = Monoid.combine(amountDiff, feeDiff)
-      val oldWavesBalance = blockchain.portfolio(sender).balance
+      val oldLtoBalance = blockchain.portfolio(sender).balance
 
-      val newWavesBalance = oldWavesBalance + spendings.balance
-      if (newWavesBalance < 0) {
+      val newLtoBalance = oldLtoBalance + spendings.balance
+      if (newLtoBalance < 0) {
         Left(
           GenericError(
             "Attempt to transfer unavailable funds: Transaction application leads to " +
-              s"negative lto balance to (at least) temporary negative state, current balance equals $oldWavesBalance, " +
-              s"spends equals ${spendings.balance}, result is $newWavesBalance"))
+              s"negative lto balance to (at least) temporary negative state, current balance equals $oldLtoBalance, " +
+              s"spends equals ${spendings.balance}, result is $newLtoBalance"))
       } else Right(tx)
     }
 
@@ -208,7 +208,7 @@ object CommonValidation {
         if (hasSmartAccountScript) {
           val (feeAssetId, feeAmount) = inputFee
           for {
-            _ <- Either.cond(feeAssetId.isEmpty, (), GenericError("Transactions from scripted accounts require Waves as fee"))
+            _ <- Either.cond(feeAssetId.isEmpty, (), GenericError("Transactions from scripted accounts require LTO as fee"))
             _ <- Either.cond(
               feeAmount >= 0,
               (),

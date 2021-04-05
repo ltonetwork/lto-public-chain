@@ -9,7 +9,7 @@ import com.ltonetwork.lang.v1.compiler.Terms._
 import com.ltonetwork.lang.v1.evaluator.FunctionIds._
 import com.ltonetwork.lang.v1.evaluator.ctx._
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.PureContext
-import com.ltonetwork.lang.v1.evaluator.ctx.impl.waves.Types.transferTransactionType
+import com.ltonetwork.lang.v1.evaluator.ctx.impl.lto.Types.transferTransactionType
 import com.ltonetwork.lang.v1.parser.Parser
 import com.ltonetwork.lang.v1.testing.ScriptGen
 import monix.eval.Coeval

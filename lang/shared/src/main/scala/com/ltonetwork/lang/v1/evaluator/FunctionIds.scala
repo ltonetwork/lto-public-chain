@@ -44,7 +44,7 @@ object FunctionIds {
   val TOBASE64: Short   = 602
   val FROMBASE64: Short = 603
 
-  // Waves
+  // LTO
   val GETTRANSACTIONBYID: Short    = 1000
   val TRANSACTIONHEIGHTBYID: Short = 1001
   val ACCOUNTASSETBALANCE: Short   = 1003

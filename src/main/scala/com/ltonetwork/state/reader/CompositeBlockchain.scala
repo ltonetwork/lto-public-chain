@@ -125,8 +125,8 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
       if pred(p)
     } yield address -> f(address)
 
-  override def wavesDistribution(height: Int): Map[Address, Long] = {
-    val innerDistribution = inner.wavesDistribution(height)
+  override def ltoDistribution(height: Int): Map[Address, Long] = {
+    val innerDistribution = inner.ltoDistribution(height)
     if (height < this.height) innerDistribution
     else {
       innerDistribution ++ changedBalances(_.balance != 0, portfolio(_).balance)

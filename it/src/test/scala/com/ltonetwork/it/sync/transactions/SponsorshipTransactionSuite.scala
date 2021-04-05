@@ -14,7 +14,7 @@ import com.ltonetwork.transaction.transfer.TransferTransactionV2
 import org.scalatest.CancelAfterFailure
 
 class SponsorshipTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
-  val fee = 1.waves
+  val fee = 1.lto
 
   val payer     = PrivateKeyAccount.fromSeed("sender").explicitGet()
   val recipient = PrivateKeyAccount.fromSeed("recipient").explicitGet()
@@ -25,12 +25,12 @@ class SponsorshipTransactionSuite extends BaseTransactionSuite with CancelAfterF
   test("sponsor pays for sender") {
 
     val topUpPayer =
-      TransferTransactionV2.selfSigned(2, sender.privateKey, payer, 10.waves, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
+      TransferTransactionV2.selfSigned(2, sender.privateKey, payer, 10.lto, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
     val topUpSponsor =
-      TransferTransactionV2.selfSigned(2, sender.privateKey, sponsor, 10.waves, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
+      TransferTransactionV2.selfSigned(2, sender.privateKey, sponsor, 10.lto, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
     val becomeSponsor = SponsorshipTransaction.selfSigned(1, sponsor, payer, 5 * fee, System.currentTimeMillis()).explicitGet()
     val makePayment =
-      TransferTransactionV2.selfSigned(2, payer, recipient, 4.waves, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
+      TransferTransactionV2.selfSigned(2, payer, recipient, 4.lto, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
 
     val topUpPayerId = sender.signedBroadcast(topUpPayer.json()).id
     nodes.waitForHeightAriseAndTxPresent(topUpPayerId)
@@ -45,9 +45,9 @@ class SponsorshipTransactionSuite extends BaseTransactionSuite with CancelAfterF
 
     val paymentId = sender.signedBroadcast(makePayment.json()).id
     nodes.waitForHeightAriseAndTxPresent(paymentId)
-    sender.assertBalances(payer.address, (10 - 4).waves)
-    sender.assertBalances(recipient.address, (4).waves)
-    sender.assertBalances(sponsor.address, (10 - 5 - 1).waves)
+    sender.assertBalances(payer.address, (10 - 4).lto)
+    sender.assertBalances(recipient.address, (4).lto)
+    sender.assertBalances(sponsor.address, (10 - 5 - 1).lto)
 
   }
 }

@@ -11,10 +11,10 @@ import com.ltonetwork.state._
 import com.ltonetwork.lang.v1.compiler.CompilerContext
 import com.ltonetwork.lang.v1.compiler.CompilerContext._
 import com.ltonetwork.lang.v1.evaluator.ctx._
-import com.ltonetwork.lang.v1.evaluator.ctx.impl.waves.WavesContext
+import com.ltonetwork.lang.v1.evaluator.ctx.impl.lto.LtoContext
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.{CryptoContext, PureContext}
 import com.ltonetwork.lang.v1.{FunctionHeader, ScriptEstimator}
-import com.ltonetwork.transaction.smart.{BlockchainContext, WavesEnvironment}
+import com.ltonetwork.transaction.smart.{BlockchainContext, LtoEnvironment}
 import monix.eval.Coeval
 import monix.execution.UncaughtExceptionReporter
 import org.joda.time.Duration
@@ -52,7 +52,7 @@ package object utils extends ScorexLogging {
   def forceStopApplication(reason: ApplicationStopReason = Default): Unit =
     new Thread(() => {
       System.exit(reason.code)
-    }, "waves-platform-shutdown-thread").start()
+    }, "lto-platform-shutdown-thread").start()
 
   def humanReadableSize(bytes: Long, si: Boolean = true): String = {
     val (baseValue, unitStrings) =
@@ -117,7 +117,7 @@ package object utils extends ScorexLogging {
     Monoid.combineAll(
       Seq(
         CryptoContext.compilerContext(Global),
-        WavesContext.build(new WavesEnvironment(dummyNetworkByte, Coeval(???), Coeval(???), null)).compilerContext,
+        LtoContext.build(new LtoEnvironment(dummyNetworkByte, Coeval(???), Coeval(???), null)).compilerContext,
         PureContext.compilerContext
       ))
 

@@ -52,9 +52,9 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
         .selfSigned(
           sender = senderPrivateKey,
           recipient = receiverPrivateKey.toAddress,
-          amount = 1 * Waves,
+          amount = 1 * LTO,
           timestamp = System.currentTimeMillis(),
-          feeAmount = Waves / 3,
+          feeAmount = LTO / 3,
           attachment = Array.emptyByteArray
         )
         .right
@@ -66,9 +66,9 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
         .create(
           sender = senderPrivateKey,
           recipient = receiverPrivateKey.toAddress,
-          amount = 1 * Waves,
+          amount = 1 * LTO,
           timestamp = System.currentTimeMillis(),
-          feeAmount = Waves / 3,
+          feeAmount = LTO / 3,
           attachment = Array.emptyByteArray,
           version = 2,
           proofs = Proofs(Seq.empty)

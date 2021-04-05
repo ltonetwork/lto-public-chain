@@ -64,7 +64,7 @@ object PaymentTransaction extends TransactionParserFor[PaymentTransaction] with 
              timestamp: Long,
              signature: ByteStr): Either[ValidationError, TransactionT] = {
     if (amount <= 0) {
-      Left(ValidationError.NegativeAmount(amount, "waves")) //CHECK IF AMOUNT IS POSITIVE
+      Left(ValidationError.NegativeAmount(amount, "lto")) //CHECK IF AMOUNT IS POSITIVE
     } else if (fee <= 0) {
       Left(ValidationError.InsufficientFee()) //CHECK IF FEE IS POSITIVE
     } else if (Try(Math.addExact(amount, fee)).isFailure) {

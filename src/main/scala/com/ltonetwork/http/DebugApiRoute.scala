@@ -14,7 +14,7 @@ import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.crypto
 import com.ltonetwork.mining.{Miner, MinerDebugInfo}
 import com.ltonetwork.network.{LocalScoreChanged, PeerDatabase, PeerInfo, _}
-import com.ltonetwork.settings.WavesSettings
+import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state.{ByteStr, LeaseBalance, NG, Portfolio}
 import com.ltonetwork.transaction._
 import com.ltonetwork.utils.{Base58, ScorexLogging}
@@ -33,7 +33,7 @@ import scala.util.{Failure, Success}
 
 @Path("/debug")
 @Api(value = "/debug")
-case class DebugApiRoute(ws: WavesSettings,
+case class DebugApiRoute(ws: LtoSettings,
                          wallet: Wallet,
                          ng: NG,
                          peerDatabase: PeerDatabase,
@@ -54,7 +54,7 @@ case class DebugApiRoute(ws: WavesSettings,
 
   private lazy val configStr             = configRoot.render(ConfigRenderOptions.concise().setJson(true).setFormatted(true))
   private lazy val fullConfig: JsValue   = Json.parse(configStr)
-  private lazy val wavesConfig: JsObject = Json.obj("lto" -> (fullConfig \ "lto").get)
+  private lazy val ltoConfig: JsObject = Json.obj("lto" -> (fullConfig \ "lto").get)
 
   override val settings = ws.restAPISettings
   override lazy val route: Route = pathPrefix("debug") {
@@ -140,7 +140,7 @@ case class DebugApiRoute(ws: WavesSettings,
   @ApiOperation(value = "State", notes = "Get current state", httpMethod = "GET")
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json state")))
   def state: Route = (path("state") & get & withAuth) {
-    complete(ng.wavesDistribution(ng.height).map { case (a, b) => a.stringRepr -> b })
+    complete(ng.ltoDistribution(ng.height).map { case (a, b) => a.stringRepr -> b })
   }
 
   @Path("/stateAtHeight/{height}")
@@ -150,7 +150,7 @@ case class DebugApiRoute(ws: WavesSettings,
       new ApiImplicitParam(name = "height", value = "height", required = true, dataType = "integer", paramType = "path")
     ))
   def stateAtHeight: Route = (path("stateAtHeight" / IntNumber) & get & withAuth) { height =>
-    complete(ng.wavesDistribution(height).map { case (a, b) => a.stringRepr -> b })
+    complete(ng.ltoDistribution(height).map { case (a, b) => a.stringRepr -> b })
   }
 
   private def rollbackToBlock(blockId: ByteStr, returnTransactionsToUtx: Boolean): Future[ToResponseMarshallable] = {
@@ -265,7 +265,7 @@ case class DebugApiRoute(ws: WavesSettings,
       new ApiResponse(code = 200, message = "Json state")
     ))
   def configInfo: Route = (path("configInfo") & get & parameter('full.as[Boolean]) & withAuth) { full =>
-    complete(if (full) fullConfig else wavesConfig)
+    complete(if (full) fullConfig else ltoConfig)
   }
 
   @Path("/rollback-to/{signature}")

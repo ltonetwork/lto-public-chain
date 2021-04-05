@@ -8,7 +8,7 @@ import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.metrics.{Instrumented, TxsInBlockchainStats}
 import com.ltonetwork.mining.{MiningConstraint, MiningConstraints, MultiDimensionalMiningConstraint}
-import com.ltonetwork.settings.WavesSettings
+import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state.diffs.BlockDiffer
 import com.ltonetwork.state.reader.{CompositeBlockchain, LeaseDetails}
 import com.ltonetwork.transaction.Transaction.Type
@@ -21,7 +21,7 @@ import kamon.Kamon
 import monix.reactive.Observable
 import monix.reactive.subjects.ConcurrentSubject
 
-class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, time: Time)
+class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time: Time)
     extends BlockchainUpdater
     with NG
     with ScorexLogging
@@ -435,7 +435,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
       blockchain.leaseDetails(leaseId)
   }
 
-  /** Retrieves Waves balance snapshot in the [from, to] range (inclusive) */
+  /** Retrieves LTO balance snapshot in the [from, to] range (inclusive) */
   override def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot] = {
     val blockchainBlock = blockchain.heightOf(to)
     if (blockchainBlock.nonEmpty || ngState.isEmpty) {
@@ -478,8 +478,8 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
         } yield address -> f(address)
       }
 
-  override def wavesDistribution(height: Int): Map[Address, Long] = ngState.fold(blockchain.wavesDistribution(height)) { ng =>
-    val innerDistribution = blockchain.wavesDistribution(height)
+  override def ltoDistribution(height: Int): Map[Address, Long] = ngState.fold(blockchain.ltoDistribution(height)) { ng =>
+    val innerDistribution = blockchain.ltoDistribution(height)
     if (height < this.height) innerDistribution
     else {
       innerDistribution ++ changedBalances(_.balance != 0, portfolio(_).balance)
@@ -507,7 +507,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: WavesSettings, tim
 
   /** Builds a new portfolio map by applying a partial function to all portfolios on which the function is defined.
     *
-    * @note Portfolios passed to `pf` only contain Waves and Leasing balances to improve performance */
+    * @note Portfolios passed to `pf` only contain LTO and Leasing balances to improve performance */
   override def collectLposPortfolios[A](pf: PartialFunction[(Address, Portfolio), A]): Map[Address, A] =
     ngState.fold(blockchain.collectLposPortfolios(pf)) { ng =>
       val b = Map.newBuilder[Address, A]

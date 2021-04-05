@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigFactory
 import com.ltonetwork.TestHelpers
 import com.ltonetwork.database.LevelDBWriter
 import com.ltonetwork.history.Domain
-import com.ltonetwork.settings.{FunctionalitySettings, WavesSettings, loadConfig}
+import com.ltonetwork.settings.{FunctionalitySettings, LtoSettings, loadConfig}
 import com.ltonetwork.state.{Blockchain, BlockchainUpdaterImpl}
 import com.ltonetwork.utils.{ScorexLogging, TimeImpl}
 
@@ -23,7 +23,7 @@ trait WithState extends ScorexLogging {
 
   def withStateAndHistory(fs: FunctionalitySettings)(test: Blockchain => Any): Unit = withState(fs)(test)
 
-  def withDomain[A](settings: WavesSettings = WavesSettings.fromConfig(loadConfig(ConfigFactory.load())))(test: Domain => A): A = {
+  def withDomain[A](settings: LtoSettings = LtoSettings.fromConfig(loadConfig(ConfigFactory.load())))(test: Domain => A): A = {
     val time = new TimeImpl
 
     try withState(settings.blockchainSettings.functionalitySettings) { blockchain =>

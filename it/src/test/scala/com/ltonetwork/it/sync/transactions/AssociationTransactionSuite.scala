@@ -11,7 +11,7 @@ import com.ltonetwork.transaction.AssociationTransaction.ActionType
 import com.ltonetwork.transaction.{AssociationTransaction, AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
 import org.scalatest.CancelAfterFailure
 class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
-  val fee   = 1.waves
+  val fee   = 1.lto
   val party = PrivateKeyAccount.fromSeed("party").explicitGet()
 
   def verifyAssoc(a: AssociationInfo)(party: String, hash: String, tpe: Int, issueTxId: String, revokeTxId: Option[String]) = {

@@ -8,9 +8,9 @@ import com.ltonetwork.account.{AddressOrAlias, AddressScheme, Alias}
 import com.ltonetwork.database.LevelDBWriter
 import com.ltonetwork.db.LevelDBFactory
 import com.ltonetwork.lang.v1.traits.Environment
-import com.ltonetwork.settings.{WavesSettings, loadConfig}
+import com.ltonetwork.settings.{LtoSettings, loadConfig}
 import com.ltonetwork.state.bench.DataTestData
-import com.ltonetwork.transaction.smart.WavesEnvironment
+import com.ltonetwork.transaction.smart.LtoEnvironment
 import com.ltonetwork.utils.Base58
 import monix.eval.Coeval
 import org.iq80.leveldb.{DB, Options}
@@ -33,7 +33,7 @@ import scala.io.Codec
 @Fork(1)
 @Warmup(iterations = 10)
 @Measurement(iterations = 10)
-class WavesEnvironmentBenchmark {
+class LtoEnvironmentBenchmark {
 
   /*
   @Benchmark
@@ -52,7 +52,7 @@ class WavesEnvironmentBenchmark {
   }
 
   @Benchmark
-  def accountBalanceOf_waves_test(st: AccountBalanceOfWavesSt, bh: Blackhole): Unit = {
+  def accountBalanceOf_lto_test(st: AccountBalanceOfLtoSt, bh: Blackhole): Unit = {
     bh.consume(st.environment.accountBalanceOf(LangAddress(ByteVector(st.accounts.random)), None))
   }
 
@@ -69,7 +69,7 @@ class WavesEnvironmentBenchmark {
  */
 }
 
-object WavesEnvironmentBenchmark {
+object LtoEnvironmentBenchmark {
 
   @State(Scope.Benchmark)
   class ResolveAddressSt extends BaseSt {
@@ -85,12 +85,12 @@ object WavesEnvironmentBenchmark {
   class TransactionHeightByIdSt extends TransactionByIdSt
 
   @State(Scope.Benchmark)
-  class AccountBalanceOfWavesSt extends BaseSt {
+  class AccountBalanceOfLtoSt extends BaseSt {
     val accounts: Vector[Array[Byte]] = load("accounts", benchSettings.accountsFile)(x => AddressOrAlias.fromString(x).explicitGet().bytes.arr)
   }
 
   @State(Scope.Benchmark)
-  class AccountBalanceOfAssetSt extends AccountBalanceOfWavesSt {
+  class AccountBalanceOfAssetSt extends AccountBalanceOfLtoSt {
     val assets: Vector[Array[Byte]] = load("assets", benchSettings.assetsFile)(x => Base58.decode(x).get)
   }
 
@@ -104,24 +104,24 @@ object WavesEnvironmentBenchmark {
   @State(Scope.Benchmark)
   class BaseSt {
     protected val benchSettings: Settings = Settings.fromConfig(ConfigFactory.load())
-    private val wavesSettings: WavesSettings = {
+    private val ltoSettings: LtoSettings = {
       val config = loadConfig(ConfigFactory.parseFile(new File(benchSettings.networkConfigFile)))
-      WavesSettings.fromConfig(config)
+      LtoSettings.fromConfig(config)
     }
 
     AddressScheme.current = new AddressScheme {
-      override val chainId: Byte = wavesSettings.blockchainSettings.addressSchemeCharacter.toByte
+      override val chainId: Byte = ltoSettings.blockchainSettings.addressSchemeCharacter.toByte
     }
 
     private val db: DB = {
-      val dir = new File(wavesSettings.dataDirectory)
-      if (!dir.isDirectory) throw new IllegalArgumentException(s"Can't find directory at '${wavesSettings.dataDirectory}'")
+      val dir = new File(ltoSettings.dataDirectory)
+      if (!dir.isDirectory) throw new IllegalArgumentException(s"Can't find directory at '${ltoSettings.dataDirectory}'")
       LevelDBFactory.factory.open(dir, new Options)
     }
 
     val environment: Environment = {
-      val state = new LevelDBWriter(db, wavesSettings.blockchainSettings.functionalitySettings)
-      new WavesEnvironment(
+      val state = new LevelDBWriter(db, ltoSettings.blockchainSettings.functionalitySettings)
+      new LtoEnvironment(
         AddressScheme.current.chainId,
         Coeval.raiseError(new NotImplementedError("tx is not implemented")),
         Coeval(state.height),

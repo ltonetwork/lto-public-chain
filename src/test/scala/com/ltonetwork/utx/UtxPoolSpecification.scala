@@ -44,7 +44,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
   private def mkBlockchain(senderAccount: Address, senderBalance: Long) = {
     val config          = ConfigFactory.load()
     val genesisSettings = TestHelpers.genesisSettings(Map(senderAccount -> senderBalance))
-    val origSettings    = WavesSettings.fromConfig(config)
+    val origSettings    = LtoSettings.fromConfig(config)
     val settings = origSettings.copy(
       blockchainSettings = BlockchainSettings(
         'T',
@@ -116,7 +116,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
         UtxSettings(10, 10.minutes, Set.empty, Set.empty, 5.minutes)
       )
     val amountPart = (senderBalance - fee) / 2 - fee
-    val txs        = for (_ <- 1 to n) yield createWavesTransfer(sender, recipient, amountPart, fee, time.getTimestamp()).explicitGet()
+    val txs        = for (_ <- 1 to n) yield createLtoTransfer(sender, recipient, amountPart, fee, time.getTimestamp()).explicitGet()
     (utx, time, txs, (offset + 1000).millis)
   }).label("twoOutOfManyValidPayments")
 
@@ -254,7 +254,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
   }
 
   private def transactionGen(sender: PrivateKeyAccount, ts: Long, feeAmount: Long): Gen[TransferTransactionV2] = accountGen.map { recipient =>
-    TransferTransactionV2.selfSigned(2: Byte, sender, recipient, waves(1), ts, feeAmount, Array.emptyByteArray).explicitGet()
+    TransferTransactionV2.selfSigned(2: Byte, sender, recipient, lto(1), ts, feeAmount, Array.emptyByteArray).explicitGet()
   }
 
   private val notEnoughFeeTxWithScriptedAccount = for {

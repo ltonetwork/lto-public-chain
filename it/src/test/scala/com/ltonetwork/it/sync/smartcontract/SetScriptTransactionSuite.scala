@@ -24,14 +24,14 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
   private val acc2 = pkByAddress(thirdAddress)
   private val acc3 = pkByAddress(fourthAddress)
 
-  test("setup acc0 with 1 waves") {
+  test("setup acc0 with 1 lto") {
     val tx =
       TransferTransactionV2
         .selfSigned(
           version = 2,
           sender = sender.privateKey,
           recipient = acc0,
-          amount = 3 * transferAmount + 3 * (0.00001.waves + 0.00002.waves), // Script fee
+          amount = 3 * transferAmount + 3 * (0.00001.lto + 0.00002.lto), // Script fee
           timestamp = System.currentTimeMillis(),
           feeAmount = minFee,
           attachment = Array.emptyByteArray
@@ -90,7 +90,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
           recipient = acc3,
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee + 0.00001.waves + 0.00002.waves,
+          feeAmount = minFee + 0.00001.lto + 0.00002.lto,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
@@ -106,7 +106,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
           recipient = acc3,
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee + 0.004.waves,
+          feeAmount = minFee + 0.004.lto,
           attachment = Array.emptyByteArray,
           proofs = Proofs.empty
         )
@@ -128,7 +128,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
         version = SetScriptTransaction.supportedVersions.head,
         sender = acc0,
         script = None,
-        fee = minFee + 0.004.waves,
+        fee = minFee + 0.004.lto,
         timestamp = System.currentTimeMillis(),
         proofs = Proofs.empty
       )
@@ -153,7 +153,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
           recipient = acc3,
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee + 0.004.waves,
+          feeAmount = minFee + 0.004.lto,
           attachment = Array.emptyByteArray
         )
         .explicitGet()

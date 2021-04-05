@@ -11,8 +11,8 @@ import scala.concurrent.duration._
 class FairPoSTestSuite extends FunSuite with CancelAfterFailure with NodesFromDocker {
   import FairPoSTestSuite._
 
-  private val transferFee    = 1.waves
-  private val transferAmount = 1000.waves
+  private val transferFee    = 1.lto
+  private val transferAmount = 1000.lto
 
   override protected def nodeConfigs: Seq[Config] = Configs
 

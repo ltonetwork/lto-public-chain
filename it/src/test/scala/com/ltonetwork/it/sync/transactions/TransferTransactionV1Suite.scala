@@ -16,7 +16,7 @@ import scala.concurrent.duration._
 
 class TransferTransactionV1Suite extends BaseTransactionSuite with CancelAfterFailure {
 
-  test("waves transfer changes waves balances and eff.b.") {
+  test("lto transfer changes lto balances and eff.b.") {
     val (firstBalance, firstEffBalance)   = notMiner.accountBalances(firstAddress)
     val (secondBalance, secondEffBalance) = notMiner.accountBalances(secondAddress)
 
@@ -28,7 +28,7 @@ class TransferTransactionV1Suite extends BaseTransactionSuite with CancelAfterFa
     notMiner.assertBalances(secondAddress, secondBalance + transferAmount, secondEffBalance + transferAmount)
   }
 
-  test("invalid signed waves transfer should not be in UTX or blockchain") {
+  test("invalid signed lto transfer should not be in UTX or blockchain") {
     def invalidTx(timestamp: Long = System.currentTimeMillis, fee: Long = com.ltonetwork.it.STD_FEE) =
       TransferTransactionV1
         .selfSigned(sender.privateKey, AddressOrAlias.fromString(sender.address).explicitGet(), 1, timestamp, fee, Array.emptyByteArray)
@@ -78,7 +78,7 @@ class TransferTransactionV1Suite extends BaseTransactionSuite with CancelAfterFa
   test("can not make transfer without having enough balance") {
     val (secondBalance, secondEffBalance) = notMiner.accountBalances(secondAddress)
 
-    assertBadRequestAndResponse(sender.transfer(secondAddress, firstAddress, secondBalance + 1.waves, minFee),
+    assertBadRequestAndResponse(sender.transfer(secondAddress, firstAddress, secondBalance + 1.lto, minFee),
                                 "Attempt to transfer unavailable funds")
     notMiner.assertBalances(secondAddress, secondBalance, secondEffBalance)
   }

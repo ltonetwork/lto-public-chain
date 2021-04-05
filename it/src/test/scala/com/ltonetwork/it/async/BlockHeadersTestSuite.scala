@@ -50,7 +50,7 @@ class BlockHeadersTestSuite
       Future
         .sequence {
           (1 to n).map { _ =>
-            notMiner.transfer(notMiner.address, firstAddress, (1 + Random.nextInt(10)).waves, fee)
+            notMiner.transfer(notMiner.address, firstAddress, (1 + Random.nextInt(10)).lto, fee)
           }
         }
         .map(_ => ())
@@ -71,7 +71,7 @@ class BlockHeadersTestSuite
   "blockAt content should be equal to blockHeaderAt, except transactions info" in {
     val f = for {
       baseHeight    <- traverse(nodes)(_.height).map(_.max)
-      _             <- txRequestsGen(30, 2.waves)
+      _             <- txRequestsGen(30, 2.lto)
       _             <- traverse(nodes)(_.waitForHeight(baseHeight + 3))
       blocks        <- traverse(nodes)(_.blockAt(baseHeight + 1))
       blocksHeaders <- traverse(nodes)(_.blockHeadersAt(baseHeight + 1))
@@ -84,7 +84,7 @@ class BlockHeadersTestSuite
   "lastBlock content should be equal to lastBlockHeader, except transactions info" in {
     val f = for {
       baseHeight             <- traverse(nodes)(_.height).map(_.max)
-      _                      <- txRequestsGen(30, 2.waves)
+      _                      <- txRequestsGen(30, 2.lto)
       _                      <- traverse(nodes)(_.waitForHeight(baseHeight + 1))
       blocksAndBlocksHeaders <- traverse(nodes)(b => (b.lastBlock zip b.lastBlockHeaders))
     } yield {
@@ -97,7 +97,7 @@ class BlockHeadersTestSuite
   "blockSeq content should be equal to blockHeaderSeq, except transactions info" in {
     val f = for {
       baseHeight   <- traverse(nodes)(_.height).map(_.max)
-      _            <- txRequestsGen(30, 2.waves)
+      _            <- txRequestsGen(30, 2.lto)
       _            <- nodes.waitForSameBlockHeadesAt(baseHeight + 3)
       blocks       <- nodes.head.blockSeq(baseHeight + 1, baseHeight + 3)
       blockHeaders <- nodes.head.blockHeadersSeq(baseHeight + 1, baseHeight + 3)

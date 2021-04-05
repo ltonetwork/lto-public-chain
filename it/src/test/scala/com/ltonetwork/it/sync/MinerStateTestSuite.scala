@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 class MinerStateTestSuite extends FunSuite with CancelAfterFailure with NodesFromDocker with Matchers {
   import MinerStateTestSuite._
 
-  private val transferAmount = 1000.waves
+  private val transferAmount = 1000.lto
 
   override protected def nodeConfigs: Seq[Config] = Configs
 

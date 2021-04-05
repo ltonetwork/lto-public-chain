@@ -18,7 +18,7 @@ inTask(docker)(
   Seq(
     dockerfile := {
       val configTemplate = (Compile / resourceDirectory).value / "template.conf"
-      val startWaves     = sourceDirectory.value / "container" / "start-waves.sh"
+      val startLto       = sourceDirectory.value / "container" / "start-lto.sh"
 
       val withAspectJ     = Option(System.getenv("WITH_ASPECTJ")).fold(false)(_.toBoolean)
       val aspectjAgentUrl = "http://search.maven.org/remotecontent?filepath=org/aspectj/aspectjweaver/1.9.1/aspectjweaver-1.9.1.jar"
@@ -26,7 +26,7 @@ inTask(docker)(
 
       new Dockerfile {
         from("anapsix/alpine-java:8_server-jre")
-        runRaw("mkdir -p /opt/waves")
+        runRaw("mkdir -p /opt/lto")
 
         // Install YourKit
         runRaw(s"""apk update && \\
@@ -35,12 +35,12 @@ inTask(docker)(
                   |unzip /tmp/$yourKitArchive -d /usr/local && \\
                   |rm /tmp/$yourKitArchive""".stripMargin)
 
-        if (withAspectJ) run("wget", "--quiet", aspectjAgentUrl, "-O", "/opt/waves/aspectjweaver.jar")
+        if (withAspectJ) run("wget", "--quiet", aspectjAgentUrl, "-O", "/opt/lto/aspectjweaver.jar")
 
-        add((assembly in LocalProject("node")).value, "/opt/waves/waves.jar")
-        add(Seq(configTemplate, startWaves), "/opt/waves/")
-        run("chmod", "+x", "/opt/waves/start-waves.sh")
-        entryPoint("/opt/waves/start-waves.sh")
+        add((assembly in LocalProject("node")).value, "/opt/lto/lto.jar")
+        add(Seq(configTemplate, startLto), "/opt/lto/")
+        run("chmod", "+x", "/opt/lto/start-lto.sh")
+        entryPoint("/opt/lto/start-lto.sh")
         expose(10001)
       }
     },

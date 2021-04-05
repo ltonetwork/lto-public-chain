@@ -28,7 +28,7 @@ class HandshakeDecoderSpec extends FreeSpec with Matchers with MockFactory with 
     )
 
     val origHandshake = new Handshake(
-      applicationName = "wavesI",
+      applicationName = "ltoI",
       applicationVersion = (1, 2, 3),
       nodeName = "test",
       nodeNonce = 4,

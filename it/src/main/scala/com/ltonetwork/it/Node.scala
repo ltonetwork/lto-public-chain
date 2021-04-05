@@ -5,7 +5,7 @@ import java.net.{InetSocketAddress, URL}
 import com.typesafe.config.Config
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.it.util.GlobalTimer
-import com.ltonetwork.settings.WavesSettings
+import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV2, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
@@ -22,7 +22,7 @@ abstract class Node(config: Config) extends AutoCloseable {
   lazy val log: LoggerFacade =
     LoggerFacade(LoggerFactory.getLogger(s"${getClass.getCanonicalName}.${this.name}"))
 
-  val settings: WavesSettings = WavesSettings.fromConfig(config)
+  val settings: LtoSettings = LtoSettings.fromConfig(config)
   val client: AsyncHttpClient = asyncHttpClient(
     clientConfig()
       .setKeepAlive(false)

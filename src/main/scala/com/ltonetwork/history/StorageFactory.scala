@@ -3,7 +3,7 @@ package com.ltonetwork.history
 import com.ltonetwork.account.Address
 import com.ltonetwork.database.{Keys, LevelDBWriter, RW}
 import com.ltonetwork.history.StorageFactory.checkVersion
-import com.ltonetwork.settings.WavesSettings
+import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state.{BlockchainUpdaterImpl, NG}
 import com.ltonetwork.transaction.BlockchainUpdater
 import com.ltonetwork.utils.{ScorexLogging, Time, UnsupportedFeature, forceStopApplication}
@@ -13,7 +13,7 @@ import org.iq80.leveldb.DB
 object StorageFactory extends ScorexLogging {
   private val StorageVersion = 1
 
-  def apply(settings: WavesSettings, db: DB, time: Time): BlockchainUpdater with NG = {
+  def apply(settings: LtoSettings, db: DB, time: Time): BlockchainUpdater with NG = {
     checkVersion(db)
     import scala.concurrent.duration._
     val levelDBWriter = new LevelDBWriter(

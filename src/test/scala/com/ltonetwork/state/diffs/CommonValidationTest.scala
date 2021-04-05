@@ -26,7 +26,7 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
       recipient <- otherAccountGen(candidate = master)
       ts        <- positiveIntGen
       genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-      transfer: TransferTransactionV1 <- wavesTransferGeneratorP(master, recipient)
+      transfer: TransferTransactionV1 <- ltoTransferGeneratorP(master, recipient)
     } yield (genesis, transfer)
 
     forAll(preconditionsAndPayment) {

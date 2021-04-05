@@ -1,4 +1,4 @@
-package com.ltonetwork.lang.v1.evaluator.ctx.impl.waves
+package com.ltonetwork.lang.v1.evaluator.ctx.impl.lto
 
 import cats.data.EitherT
 import com.ltonetwork.lang.v1.compiler.Terms._
@@ -11,7 +11,7 @@ import com.ltonetwork.lang.v1.{CTX, FunctionHeader}
 import monix.eval.Coeval
 import scodec.bits.ByteVector
 
-object WavesContext {
+object LtoContext {
 
   import Bindings._
   import Types._
@@ -159,6 +159,6 @@ object WavesContext {
       addressFromStringF,
     )
 
-    CTX(Types.wavesTypes, vars, functions)
+    CTX(Types.ltoTypes, vars, functions)
   }
 }

@@ -82,7 +82,7 @@ object GenesisTransaction extends TransactionParserFor[GenesisTransaction] with 
 
   def create(recipient: Address, amount: Long, timestamp: Long): Either[ValidationError, GenesisTransaction] = {
     if (amount < 0) {
-      Left(ValidationError.NegativeAmount(amount, "waves"))
+      Left(ValidationError.NegativeAmount(amount, "lto"))
     } else {
       val signature = ByteStr(GenesisTransaction.generateSignature(recipient, amount, timestamp))
       Right(GenesisTransaction(recipient, amount, timestamp, signature))

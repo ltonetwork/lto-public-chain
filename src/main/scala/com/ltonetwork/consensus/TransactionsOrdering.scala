@@ -3,7 +3,7 @@ package com.ltonetwork.consensus
 import com.ltonetwork.transaction.Transaction
 
 object TransactionsOrdering {
-  trait WavesOrdering extends Ordering[Transaction] {
+  trait LtoOrdering extends Ordering[Transaction] {
     def txTimestampOrder(ts: Long): Long
     private def orderBy(t: Transaction): (Long, Long, String) = {
       val byFee       = -t.fee
@@ -17,12 +17,12 @@ object TransactionsOrdering {
     }
   }
 
-  object InBlock extends WavesOrdering {
+  object InBlock extends LtoOrdering {
     // sorting from network start
     override def txTimestampOrder(ts: Long): Long = -ts
   }
 
-  object InUTXPool extends WavesOrdering {
+  object InUTXPool extends LtoOrdering {
     override def txTimestampOrder(ts: Long): Long = ts
   }
 }

@@ -37,7 +37,7 @@ object StateSyntheticBenchmark {
   class St extends BaseState {
     protected override def txGenP(sender: PrivateKeyAccount, ts: Long): Gen[Transaction] =
       for {
-        amount    <- Gen.choose(1, waves(1))
+        amount    <- Gen.choose(1, lto(1))
         recipient <- accountGen
       } yield TransferTransactionV1.selfSigned(sender, recipient, amount, ts, 100000, Array.emptyByteArray).explicitGet()
   }
@@ -52,7 +52,7 @@ object StateSyntheticBenchmark {
     protected override def txGenP(sender: PrivateKeyAccount, ts: Long): Gen[Transaction] =
       for {
         recipient: PrivateKeyAccount <- accountGen
-        amount                       <- Gen.choose(1, waves(1))
+        amount                       <- Gen.choose(1, lto(1))
       } yield
         TransferTransactionV2
           .selfSigned(

@@ -33,7 +33,7 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
       .choose(1, 3)
       .map {
         case 1 => scriptWithPureFunctions(transfer)
-        case 2 => scriptWithWavesFunctions(transfer)
+        case 2 => scriptWithLtoFunctions(transfer)
         case 3 => scriptWithCryptoFunctions
       }
       .map(x => Parser(x).get.value)

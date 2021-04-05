@@ -10,7 +10,7 @@ import com.ltonetwork.consensus.PoSSelector
 import com.ltonetwork.db.openDB
 import com.ltonetwork.history.{CheckpointServiceImpl, StorageFactory}
 import com.ltonetwork.mining.MultiDimensionalMiningConstraint
-import com.ltonetwork.settings.{WavesSettings, loadConfig}
+import com.ltonetwork.settings.{LtoSettings, loadConfig}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.state.appender.BlockAppender
 import com.ltonetwork.transaction.Transaction
@@ -30,7 +30,7 @@ object Importer extends ScorexLogging {
 
     val configFilename = Try(args(0)).toOption.getOrElse("lto-testnet.conf")
     val config         = loadConfig(ConfigFactory.parseFile(new File(configFilename)))
-    val settings       = WavesSettings.fromConfig(config)
+    val settings       = LtoSettings.fromConfig(config)
     AddressScheme.current = new AddressScheme {
       override val chainId: Byte = settings.blockchainSettings.addressSchemeCharacter.toByte
     }

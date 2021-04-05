@@ -7,7 +7,7 @@ import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.metrics.{BlockStats, HistogramExt, Instrumented}
 import com.ltonetwork.network._
-import com.ltonetwork.settings.{FunctionalitySettings, WavesSettings}
+import com.ltonetwork.settings.{FunctionalitySettings, LtoSettings}
 import com.ltonetwork.state._
 import com.ltonetwork.state.appender.{BlockAppender, MicroblockAppender}
 import com.ltonetwork.utx.UtxPool
@@ -56,7 +56,7 @@ object MinerDebugInfo {
 class MinerImpl(allChannels: ChannelGroup,
                 blockchainUpdater: BlockchainUpdater with NG,
                 checkpoint: CheckpointService,
-                settings: WavesSettings,
+                settings: LtoSettings,
                 timeService: Time,
                 utx: UtxPool,
                 wallet: Wallet,

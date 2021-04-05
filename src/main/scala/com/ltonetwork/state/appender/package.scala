@@ -6,7 +6,7 @@ import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.consensus.{GeneratingBalanceProvider, PoSSelector}
 import com.ltonetwork.mining._
 import com.ltonetwork.network._
-import com.ltonetwork.settings.WavesSettings
+import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.transaction.ValidationError.{BlockAppendError, BlockFromFuture, GenericError}
 import com.ltonetwork.transaction._
 import com.ltonetwork.utils.{ScorexLogging, Time}
@@ -54,7 +54,7 @@ package object appender extends ScorexLogging {
                                     utxStorage: UtxPool,
                                     pos: PoSSelector,
                                     time: Time,
-                                    settings: WavesSettings)(block: Block): Either[ValidationError, Option[Int]] =
+                                    settings: LtoSettings)(block: Block): Either[ValidationError, Option[Int]] =
     for {
       _ <- Either.cond(
         checkpoint.isBlockValid(block.signerData.signature, blockchainUpdater.height + 1),
@@ -88,7 +88,7 @@ package object appender extends ScorexLogging {
       maybeDiscardedTxs.map(_ => baseHeight)
     }
 
-  private def blockConsensusValidation(blockchain: Blockchain, settings: WavesSettings, pos: PoSSelector, currentTs: Long, block: Block)(
+  private def blockConsensusValidation(blockchain: Blockchain, settings: LtoSettings, pos: PoSSelector, currentTs: Long, block: Block)(
       genBalance: (Int, BlockId) => Either[String, Long]): Either[ValidationError, Unit] = {
 
     val blockTime = block.timestamp

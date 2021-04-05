@@ -25,8 +25,8 @@ class BlockchainUpdaterMicroblockBadSignaturesTest
     recipient <- accountGen
     ts        <- positiveIntGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    payment: TransferTransactionV1  <- wavesTransferGeneratorP(master, recipient)
-    payment2: TransferTransactionV1 <- wavesTransferGeneratorP(master, recipient)
+    payment: TransferTransactionV1  <- ltoTransferGeneratorP(master, recipient)
+    payment2: TransferTransactionV1 <- ltoTransferGeneratorP(master, recipient)
   } yield (genesis, payment, payment2)
 
   property("bad total resulting block signature") {

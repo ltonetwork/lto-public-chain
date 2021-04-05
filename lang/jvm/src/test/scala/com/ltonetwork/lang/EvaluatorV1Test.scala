@@ -13,7 +13,7 @@ import com.ltonetwork.lang.v1.evaluator.EvaluatorV1
 import com.ltonetwork.lang.v1.evaluator.FunctionIds._
 import com.ltonetwork.lang.v1.evaluator.ctx._
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.PureContext._
-import com.ltonetwork.lang.v1.evaluator.ctx.impl.waves.WavesContext
+import com.ltonetwork.lang.v1.evaluator.ctx.impl.lto.LtoContext
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.{CryptoContext, EnvironmentFunctions, PureContext}
 import com.ltonetwork.lang.v1.testing.ScriptGen
 import com.ltonetwork.lang.v1.traits.Environment
@@ -36,7 +36,7 @@ class EvaluatorV1Test extends PropSpec with PropertyChecks with Matchers with Sc
     Seq(
       defaultCryptoContext,
       PureContext.ctx,
-      WavesContext.build(environment)
+      LtoContext.build(environment)
     )
   )
 

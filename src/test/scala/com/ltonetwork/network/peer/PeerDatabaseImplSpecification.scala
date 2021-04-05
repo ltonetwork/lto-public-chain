@@ -110,7 +110,7 @@ class PeerDatabaseImplSpecification extends path.FreeSpecLike with Matchers {
 
     "if blacklisting is disabled" - {
       "should clear blacklist at start" in {
-        val databaseFile = Files.createTempFile("waves-tests", "PeerDatabaseImplSpecification-blacklisting-clear").toAbsolutePath.toString
+        val databaseFile = Files.createTempFile("lto-tests", "PeerDatabaseImplSpecification-blacklisting-clear").toAbsolutePath.toString
         val path         = if (File.separatorChar == '\\') databaseFile.replace('\\', '/') else databaseFile
         val prevConfig   = ConfigFactory.parseString(s"""lto.network {
              |  file = "$path"

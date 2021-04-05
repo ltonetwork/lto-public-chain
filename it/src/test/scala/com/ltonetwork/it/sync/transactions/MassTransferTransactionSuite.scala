@@ -19,7 +19,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
 
   private def fakeSignature = Base58.encode(Array.fill(64)(Random.nextInt.toByte))
 
-  test("waves mass transfer changes waves balances") {
+  test("lto mass transfer changes lto balances") {
 
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
     val (balance2, eff2) = notMiner.accountBalances(secondAddress)
@@ -37,7 +37,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     notMiner.assertBalances(thirdAddress, balance3 + 2 * transferAmount, eff3 + 2 * transferAmount)
   }
 
-  test("can not make mass transfer without having enough waves") {
+  test("can not make mass transfer without having enough lto") {
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
     val (balance2, eff2) = notMiner.accountBalances(secondAddress)
     val transfers        = List(Transfer(secondAddress, balance1 / 2), Transfer(thirdAddress, balance1 / 2))
@@ -55,7 +55,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     val (balance2, eff2) = notMiner.accountBalances(secondAddress)
     val transfers        = List(Transfer(secondAddress, transferAmount))
 
-    assertBadRequestAndResponse(sender.massTransfer(firstAddress, transfers, 0.001.waves), "Fee .* does not exceed minimal value")
+    assertBadRequestAndResponse(sender.massTransfer(firstAddress, transfers, 0.001.lto), "Fee .* does not exceed minimal value")
     nodes.waitForHeightArise()
     notMiner.assertBalances(firstAddress, balance1, eff1)
     notMiner.assertBalances(secondAddress, balance2, eff2)
@@ -177,7 +177,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
   test("reporting MassTransfer transactions") {
     implicit val mtFormat: Format[MassTransferRequest] = Json.format[MassTransferRequest]
 
-    val transfers = List(Transfer(firstAddress, 5.waves), Transfer(secondAddress, 2.waves), Transfer(thirdAddress, 3.waves))
+    val transfers = List(Transfer(firstAddress, 5.lto), Transfer(secondAddress, 2.lto), Transfer(thirdAddress, 3.lto))
     val txId      = sender.massTransfer(firstAddress, transfers, 130000000).id
     nodes.waitForHeightAriseAndTxPresent(txId)
 
@@ -194,7 +194,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
       .head
     assert(txSender.as[MassTransferRequest].transfers.size == 3)
     assert((txSender \ "transferCount").as[Int] == 3)
-    assert((txSender \ "totalAmount").as[Long] == 10.waves)
+    assert((txSender \ "totalAmount").as[Long] == 10.lto)
     val transfersAfterTrans = txSender.as[MassTransferRequest].transfers
     assert(transfers.equals(transfersAfterTrans))
 
@@ -211,7 +211,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
 
     assert(txRecipient.as[MassTransferRequest].transfers.size == 1)
     assert((txRecipient \ "transferCount").as[Int] == 3)
-    assert((txRecipient \ "totalAmount").as[Long] == 10.waves)
+    assert((txRecipient \ "totalAmount").as[Long] == 10.lto)
     val transferToSecond = txRecipient.as[MassTransferRequest].transfers.head
     assert(transfers contains transferToSecond)
   }

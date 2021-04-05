@@ -9,7 +9,7 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.database.LevelDBWriter
 import com.ltonetwork.db.LevelDBFactory
 import com.ltonetwork.lang.v1.traits.DataType
-import com.ltonetwork.settings.{WavesSettings, loadConfig}
+import com.ltonetwork.settings.{LtoSettings, loadConfig}
 import com.ltonetwork.state.bench.DataTestData
 import com.ltonetwork.transaction.{Authorized, DataTransaction, Transaction}
 import com.ltonetwork.utils.ScorexLogging
@@ -32,23 +32,23 @@ object ExtractInfo extends App with ScorexLogging {
   }
 
   val benchSettings = Settings.fromConfig(ConfigFactory.load())
-  val wavesSettings = {
+  val ltoSettings = {
     val config = loadConfig(ConfigFactory.parseFile(new File(args.head)))
-    WavesSettings.fromConfig(config)
+    LtoSettings.fromConfig(config)
   }
 
   AddressScheme.current = new AddressScheme {
-    override val chainId: Byte = wavesSettings.blockchainSettings.addressSchemeCharacter.toByte
+    override val chainId: Byte = ltoSettings.blockchainSettings.addressSchemeCharacter.toByte
   }
 
   val db: DB = {
-    val dir = new File(wavesSettings.dataDirectory)
-    if (!dir.isDirectory) throw new IllegalArgumentException(s"Can't find directory at '${wavesSettings.dataDirectory}'")
+    val dir = new File(ltoSettings.dataDirectory)
+    if (!dir.isDirectory) throw new IllegalArgumentException(s"Can't find directory at '${ltoSettings.dataDirectory}'")
     LevelDBFactory.factory.open(dir, new Options)
   }
 
   try {
-    val state = new LevelDBWriter(db, wavesSettings.blockchainSettings.functionalitySettings)
+    val state = new LevelDBWriter(db, ltoSettings.blockchainSettings.functionalitySettings)
 
     def nonEmptyBlockHeights(from: Int): Iterator[Integer] =
       for {

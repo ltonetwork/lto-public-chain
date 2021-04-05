@@ -5,7 +5,7 @@ import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.block.{Block, MicroBlock}
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
 import com.ltonetwork.lagonaki.mocks.TestBlock
-import com.ltonetwork.settings.{BlockchainSettings, TestFunctionalitySettings, WavesSettings}
+import com.ltonetwork.settings.{BlockchainSettings, TestFunctionalitySettings, LtoSettings}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.Transaction
 import monix.eval.TaskCircuitBreaker.Timestamp
@@ -22,14 +22,14 @@ package object history {
   )
 
   val config   = ConfigFactory.load()
-  val settings = WavesSettings.fromConfig(config)
+  val settings = LtoSettings.fromConfig(config)
 
   val MicroblocksActivatedAt0BlockchainSettings: BlockchainSettings =
     DefaultBlockchainSettings.copy(functionalitySettings = DefaultBlockchainSettings.functionalitySettings.copy(preActivatedFeatures = Map()))
 
-  val MicroblocksActivatedAt0WavesSettings: WavesSettings = settings.copy(blockchainSettings = MicroblocksActivatedAt0BlockchainSettings)
+  val MicroblocksActivatedAt0LtoSettings: LtoSettings = settings.copy(blockchainSettings = MicroblocksActivatedAt0BlockchainSettings)
 
-  val DefaultWavesSettings: WavesSettings = settings.copy(blockchainSettings = DefaultBlockchainSettings,
+  val DefaultLtoSettings: LtoSettings = settings.copy(blockchainSettings = DefaultBlockchainSettings,
                                                           featuresSettings = settings.featuresSettings.copy(autoShutdownOnUnsupportedFeature = false))
 
   val defaultSigner       = PrivateKeyAccount(Array.fill(KeyLength)(0))

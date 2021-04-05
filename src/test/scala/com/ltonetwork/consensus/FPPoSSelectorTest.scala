@@ -6,7 +6,7 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
 import com.ltonetwork.database.LevelDBWriter
 import com.ltonetwork.lagonaki.mocks.TestBlock
-import com.ltonetwork.settings.{WavesSettings, _}
+import com.ltonetwork.settings.{LtoSettings, _}
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.{ENOUGH_AMT, ProduceError}
 import com.ltonetwork.transaction.{BlockchainUpdater, GenesisTransaction}
@@ -202,7 +202,7 @@ class FPPoSSelectorTest extends FreeSpec with Matchers with WithDB with Transact
   def withEnv(gen: Time => Gen[(Seq[PrivateKeyAccount], Seq[Block])])(f: Env => Unit): Unit = {
     val time          = new TimeImpl
     val defaultWriter = new LevelDBWriter(db, TestFunctionalitySettings.Stub)
-    val settings0     = WavesSettings.fromConfig(loadConfig(ConfigFactory.load()))
+    val settings0     = LtoSettings.fromConfig(loadConfig(ConfigFactory.load()))
     val settings      = settings0.copy(featuresSettings = settings0.featuresSettings.copy(autoShutdownOnUnsupportedFeature = false))
     val bcu           = new BlockchainUpdaterImpl(defaultWriter, settings, time)
     val pos           = new PoSSelector(bcu, settings.blockchainSettings)

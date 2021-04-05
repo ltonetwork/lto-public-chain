@@ -100,8 +100,8 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 
   private def ipForNode(nodeId: Int) = InetAddress.getByAddress(toByteArray(nodeId & 0xF | networkSeed)).getHostAddress
 
-  private lazy val wavesNetwork: Network = {
-    val networkName = s"waves-${hashCode().toLong.toHexString}"
+  private lazy val ltoNetwork: Network = {
+    val networkName = s"lto-${hashCode().toLong.toHexString}"
 
     def network: Option[Network] =
       try {
@@ -247,7 +247,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 
         if (enableProfiling) {
           config += s"-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=$ProfilerPort,listen=all," +
-            s"sampling,monitors,sessionname=WavesNode,dir=$ContainerRoot/profiler,logdir=$ContainerRoot "
+            s"sampling,monitors,sessionname=LtoNode,dir=$ContainerRoot/profiler,logdir=$ContainerRoot "
         }
 
         val withAspectJ = Option(System.getenv("WITH_ASPECTJ")).fold(false)(_.toBoolean)
@@ -260,14 +260,14 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
         .image("com.ltoneworkt/it:latest")
         .exposedPorts(s"$ProfilerPort", restApiPort, networkPort, matcherApiPort)
         .networkingConfig(ContainerConfig.NetworkingConfig.create(Map(
-          wavesNetwork.name() -> endpointConfigFor(nodeName)
+          ltoNetwork.name() -> endpointConfigFor(nodeName)
         ).asJava))
         .hostConfig(hostConfig)
         .env(s"WAVES_OPTS=$configOverrides")
         .build()
 
       val containerId = {
-        val containerName = s"${wavesNetwork.name()}-$nodeName"
+        val containerName = s"${ltoNetwork.name()}-$nodeName"
         dumpContainers(
           client.listContainers(DockerClient.ListContainersParam.filter("name", containerName)),
           "Containers with same name"
@@ -281,7 +281,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 
       client.startContainer(containerId)
 
-      val node = new DockerNode(actualConfig, containerId, getNodeInfo(containerId, WavesSettings.fromConfig(actualConfig)))
+      val node = new DockerNode(actualConfig, containerId, getNodeInfo(containerId, LtoSettings.fromConfig(actualConfig)))
       nodes.add(node)
       log.debug(s"Started $containerId -> ${node.name}: ${node.nodeInfo}")
       node
@@ -292,7 +292,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
         throw e
     }
 
-  private def getNodeInfo(containerId: String, settings: WavesSettings): NodeInfo = {
+  private def getNodeInfo(containerId: String, settings: LtoSettings): NodeInfo = {
     val restApiPort    = settings.restAPISettings.port
     val matcherApiPort = 1869
     val networkPort    = settings.networkSettings.bindAddress.getPort
@@ -300,20 +300,20 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
     val containerInfo = inspectContainer(containerId)
     val ports         = containerInfo.networkSettings().ports()
 
-    val wavesIpAddress = containerInfo.networkSettings().networks().get(wavesNetwork.name()).ipAddress()
+    val ltoIpAddress = containerInfo.networkSettings().networks().get(ltoNetwork.name()).ipAddress()
 
     NodeInfo(
       new URL(s"http://localhost:${extractHostPort(ports, restApiPort)}"),
       new InetSocketAddress("localhost", extractHostPort(ports, networkPort)),
-      new InetSocketAddress(wavesIpAddress, networkPort)
+      new InetSocketAddress(ltoIpAddress, networkPort)
     )
   }
 
   private def inspectContainer(containerId: String): ContainerInfo = {
     val containerInfo = client.inspectContainer(containerId)
-    if (containerInfo.networkSettings().networks().asScala.contains(wavesNetwork.name())) containerInfo
+    if (containerInfo.networkSettings().networks().asScala.contains(ltoNetwork.name())) containerInfo
     else {
-      log.debug(s"Container $containerId has not connected to the network ${wavesNetwork.name()} yet, retry")
+      log.debug(s"Container $containerId has not connected to the network ${ltoNetwork.name()} yet, retry")
       Thread.sleep(1000)
       inspectContainer(containerId)
     }
@@ -375,11 +375,11 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
       }
 
       try {
-        client.removeNetwork(wavesNetwork.id)
+        client.removeNetwork(ltoNetwork.id)
       } catch {
         case NonFatal(e) =>
           // https://github.com/moby/moby/issues/17217
-          log.warn(s"Can not remove network ${wavesNetwork.name()}", e)
+          log.warn(s"Can not remove network ${ltoNetwork.name()}", e)
       }
 
       http.close()
@@ -467,7 +467,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 
   def disconnectFromNetwork(node: DockerNode): Unit = disconnectFromNetwork(node.containerId)
 
-  private def disconnectFromNetwork(containerId: String): Unit = client.disconnectFromNetwork(containerId, wavesNetwork.id())
+  private def disconnectFromNetwork(containerId: String): Unit = client.disconnectFromNetwork(containerId, ltoNetwork.id())
 
   def restartContainer(node: DockerNode): DockerNode = {
     val id            = node.containerId
@@ -491,7 +491,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 
   private def connectToNetwork(node: DockerNode): Unit = {
     client.connectToNetwork(
-      wavesNetwork.id(),
+      ltoNetwork.id(),
       NetworkConnection
         .builder()
         .containerId(node.containerId)
@@ -529,7 +529,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 }
 
 object Docker {
-  private val ContainerRoot      = Paths.get("/opt/waves")
+  private val ContainerRoot      = Paths.get("/opt/lto")
   private val ProfilerController = ContainerRoot.resolve("yjp-controller-api-redist.jar")
   private val ProfilerPort       = 10001
   private val jsonMapper         = new ObjectMapper

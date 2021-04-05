@@ -27,7 +27,7 @@ object TransactionsGeneratorApp extends App with ScoptImplicits with FicusImplic
   val log = LoggerFacade(LoggerFactory.getLogger("generator"))
 
   val parser = new OptionParser[GeneratorSettings]("generator") {
-    head("TransactionsGenerator - Waves load testing transactions generator")
+    head("TransactionsGenerator - LTO load testing transactions generator")
     opt[Int]('i', "iterations").valueName("<iterations>").text("number of iterations").action { (v, c) =>
       c.copy(worker = c.worker.copy(iterations = v))
     }
