@@ -2,6 +2,7 @@ package com.wavesplatform.transaction.smart
 
 import cats.syntax.all._
 import com.wavesplatform.crypto
+import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.ValidationError.{GenericError, ScriptExecutionError, TransactionNotAllowedByScript}
 import com.wavesplatform.transaction._
@@ -17,7 +18,7 @@ object Verifier {
           case (stx: SignedTransaction, None)       => stx.signaturesValid()
           case (_: SignedTransaction, Some(_))      => Left(GenericError("Can't process transaction  with signature from scripted account"))
           case (_: ProvenTransaction, Some(script)) => verify(blockchain, script, currentBlockHeight, pt, false)
-          case (_: ProvenTransaction, None)         => verifyAsEllipticCurveSignature(pt)
+          case (_: ProvenTransaction, None)         => verifyAsEllipticCurveSignature(blockchain, pt)
         }
     }
 
@@ -33,13 +34,21 @@ object Verifier {
     }
   }
 
-  def verifyAsEllipticCurveSignature[T <: ProvenTransaction](pt: T): Either[ValidationError, T] =
+  def verifyAsEllipticCurveSignature[T <: ProvenTransaction](bc: Blockchain, pt: T): Either[ValidationError, T] = {
+    import com.wavesplatform.features.FeatureProvider._
+
     pt.proofs.proofs match {
       case p :: Nil =>
-        Either.cond(crypto.verify(p.arr, pt.bodyBytes(), pt.sender.publicKey),
+        if (bc.isFeatureActivated(BlockchainFeatures.EcDSA, bc.height))
+          Either.cond(crypto.verify(p.arr, pt.bodyBytes(), pt.sender.publicKey) || crypto.verifyEcdsa(p.arr, pt.bodyBytes(), pt.sender.publicKey),
+                    pt,
+                    GenericError(s"Script doesn't exist and proof doesn't validate as signature for $pt"))
+        else
+          Either.cond(crypto.verify(p.arr, pt.bodyBytes(), pt.sender.publicKey),
                     pt,
                     GenericError(s"Script doesn't exist and proof doesn't validate as signature for $pt"))
       case _ => Left(GenericError("Transactions from non-scripted accounts must have exactly 1 proof"))
     }
+  }
 
 }

@@ -480,7 +480,7 @@ case class AddressApiRoute(settings: RestAPISettings,
     (msg, Base58.decode(signature), Base58.decode(publicKey)) match {
       case (Success(msgBytes), Success(signatureBytes), Success(pubKeyBytes)) =>
         val account = PublicKeyAccount(pubKeyBytes)
-        val isValid = account.address == address && crypto.verify(signatureBytes, msgBytes, pubKeyBytes)
+        val isValid = account.address == address && crypto.verifyAny(signatureBytes, msgBytes, pubKeyBytes)
         Right(Json.obj("valid" -> isValid))
       case _ => Left(InvalidMessage)
     }

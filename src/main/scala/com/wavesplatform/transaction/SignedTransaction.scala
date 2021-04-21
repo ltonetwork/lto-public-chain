@@ -12,5 +12,5 @@ trait SignedTransaction extends ProvenTransaction with Signed {
 
   def proofs: Proofs = Proofs.create(Seq(signature)).explicitGet()
 
-  val signatureValid: Coeval[Boolean] = Coeval.evalOnce(crypto.verify(signature.arr, bodyBytes(), sender.publicKey))
+  val signatureValid: Coeval[Boolean] = Coeval.evalOnce(crypto.verifyAny(signature.arr, bodyBytes(), sender.publicKey))
 }
