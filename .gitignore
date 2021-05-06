@@ -34,9 +34,6 @@ local.conf
 # standalone docker
 Dockerfile
 
-# logs
-*.log
-
 package
 !src/package
 native
