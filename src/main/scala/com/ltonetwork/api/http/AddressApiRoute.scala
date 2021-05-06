@@ -45,7 +45,7 @@ case class AddressApiRoute(settings: RestAPISettings,
     pathPrefix("addresses") {
       validate ~ seed ~ balanceWithConfirmations ~ balanceDetails ~ balanceHistory ~ balance ~
         balanceWithConfirmations ~ verify ~ sign ~ deleteAddress ~ verifyText ~ signText ~ seq ~ publicKey ~
-        effectiveBalance ~ effectiveBalanceWithConfirmations ~ postAnchor ~ scriptInfo
+        effectiveBalance ~ effectiveBalanceWithConfirmations ~ scriptInfo
     } ~ root ~ create
 
   @Path("/scriptInfo/{address}")
@@ -268,22 +268,6 @@ case class AddressApiRoute(settings: RestAPISettings,
   def validate: Route = (path("validate" / Segment) & get) { address =>
     complete(Validity(address, Address.fromString(address).isRight))
   }
-
-  @Path("/anchor")
-  @ApiOperation(value = "Anchor hash to Blockchain", httpMethod = "POST", produces = "application/json", consumes = "application/json")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "Json with data",
-        required = true,
-        paramType = "body",
-        dataType = "com.ltonetwork.api.http.AnchorRequest",
-        defaultValue = "{\n\t\"version\": 1,\n\t\"sender\": \"3Mx2afTZ2KbRrLNbytyzTtXukZvqEB8SkW7\",\n\t\"fee\": 100000,\n\t\"anchors\": []\n}"
-      )
-    ))
-  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
-  def postAnchor: Route = processRequest("anchor", (req: AnchorRequest) => doBroadcast(TransactionFactory.anchor(req, wallet, time)))
 
   @Path("/")
   @ApiOperation(value = "Addresses", notes = "Get wallet accounts addresses", httpMethod = "GET")
