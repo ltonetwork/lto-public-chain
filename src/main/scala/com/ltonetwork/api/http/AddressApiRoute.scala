@@ -43,9 +43,9 @@ case class AddressApiRoute(settings: RestAPISettings,
 
   override lazy val route =
     pathPrefix("addresses") {
-      validate ~ seed ~ balanceWithConfirmations ~ balanceDetails ~ balanceHistory ~ balance ~ balanceWithConfirmations ~ verify ~ sign ~ deleteAddress ~ verifyText ~
-        signText ~ seq ~ publicKey ~ effectiveBalance ~ effectiveBalanceWithConfirmations ~ getData ~ getDataItem ~
-        postData ~ postAnchor ~ scriptInfo
+      validate ~ seed ~ balanceWithConfirmations ~ balanceDetails ~ balanceHistory ~ balance ~
+        balanceWithConfirmations ~ verify ~ sign ~ deleteAddress ~ verifyText ~ signText ~ seq ~ publicKey ~
+        effectiveBalance ~ effectiveBalanceWithConfirmations ~ postAnchor ~ scriptInfo
     } ~ root ~ create
 
   @Path("/scriptInfo/{address}")
@@ -269,22 +269,6 @@ case class AddressApiRoute(settings: RestAPISettings,
     complete(Validity(address, Address.fromString(address).isRight))
   }
 
-  @Path("/data")
-  @ApiOperation(value = "Post Data to Blockchain", httpMethod = "POST", produces = "application/json", consumes = "application/json")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "Json with data",
-        required = true,
-        paramType = "body",
-        dataType = "com.ltonetwork.api.http.DataRequest",
-        defaultValue = "{\n\t\"version\": 1,\n\t\"sender\": \"3Mx2afTZ2KbRrLNbytyzTtXukZvqEB8SkW7\",\n\t\"fee\": 100000,\n\t\"data\": {}\n}"
-      )
-    ))
-  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
-  def postData: Route = processRequest("data", (req: DataRequest) => doBroadcast(TransactionFactory.data(req, wallet, time)))
-
   @Path("/anchor")
   @ApiOperation(value = "Anchor hash to Blockchain", httpMethod = "POST", produces = "application/json", consumes = "application/json")
   @ApiImplicitParams(
@@ -300,25 +284,6 @@ case class AddressApiRoute(settings: RestAPISettings,
     ))
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
   def postAnchor: Route = processRequest("anchor", (req: AnchorRequest) => doBroadcast(TransactionFactory.anchor(req, wallet, time)))
-
-  @Path("/data/{address}")
-  @ApiOperation(value = "Complete Data", notes = "Read all data posted by an account", httpMethod = "GET")
-  @ApiImplicitParams(Array(new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")))
-  def getData: Route = (path("data" / Segment) & get) { address =>
-    complete(accountData(address))
-  }
-
-  @Path("/data/{address}/{key}")
-  @ApiOperation(value = "Data by Key", notes = "Read data associated with an account and a key", httpMethod = "GET")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "key", value = "Data key", required = true, dataType = "string", paramType = "path")
-    ))
-  def getDataItem: Route = (path("data" / Segment / Segment.?) & get) {
-    case (address, keyOpt) =>
-      complete(accountData(address, keyOpt.getOrElse("")))
-  }
 
   @Path("/")
   @ApiOperation(value = "Addresses", notes = "Get wallet accounts addresses", httpMethod = "GET")
