@@ -25,7 +25,7 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   }
 
   override val route: Route = pathPrefix("utils") {
-    compile ~ estimate ~ time ~ seedRoute ~ length ~ hashFast ~ hashSecure ~ sign
+    compile ~ estimate ~ time ~ hashFast ~ hashSecure
   }
 
   @Path("/script/compile")
@@ -100,30 +100,8 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
     complete(Json.obj("system" -> System.currentTimeMillis(), "NTP" -> timeService.correctedTime()))
   }
 
-  @Path("/seed")
-  @ApiOperation(value = "Seed", notes = "Generate random seed", httpMethod = "GET")
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 200, message = "Json with peer list or error")
-    ))
-  def seedRoute: Route = (path("seed") & get) {
-    complete(seed(DefaultSeedSize))
-  }
-
-  @Path("/seed/{length}")
-  @ApiOperation(value = "Seed of specified length", notes = "Generate random seed of specified length", httpMethod = "GET")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "length", value = "Seed length ", required = true, dataType = "integer", paramType = "path")
-    ))
-  @ApiResponse(code = 200, message = "Json with error message")
-  def length: Route = (path("seed" / IntNumber) & get) { length =>
-    if (length <= MaxSeedSize) complete(seed(length))
-    else complete(TooBigArrayAllocation)
-  }
-
   @Path("/hash/secure")
-  @ApiOperation(value = "Hash", notes = "Return SecureCryptographicHash of specified message", httpMethod = "POST")
+  @ApiOperation(value = "Hash", notes = "Return SecureHash of specified message: `blake2b(sha256(message))`", httpMethod = "POST")
   @ApiImplicitParams(
     Array(
       new ApiImplicitParam(name = "message", value = "Message to hash", required = true, paramType = "body", dataType = "string")
@@ -139,7 +117,7 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   }
 
   @Path("/hash/fast")
-  @ApiOperation(value = "Hash", notes = "Return FastCryptographicHash of specified message", httpMethod = "POST")
+  @ApiOperation(value = "Hash", notes = "Return `blake2b(message)` of specified message", httpMethod = "POST")
   @ApiImplicitParams(
     Array(
       new ApiImplicitParam(name = "message", value = "Message to hash", required = true, paramType = "body", dataType = "string")
@@ -151,25 +129,6 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   def hashFast: Route = (path("hash" / "fast") & post) {
     entity(as[String]) { message =>
       complete(Json.obj("message" -> message, "hash" -> Base58.encode(crypto.fastHash(message))))
-    }
-  }
-  @Path("/sign/{privateKey}")
-  @ApiOperation(value = "Hash", notes = "Return FastCryptographicHash of specified message", httpMethod = "POST")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "privateKey", value = "privateKey", required = true, paramType = "path", dataType = "string"),
-      new ApiImplicitParam(name = "message", value = "Message to hash", required = true, paramType = "body", dataType = "string")
-    ))
-  @ApiResponses(
-    Array(
-      new ApiResponse(code = 200, message = "Json with error or json like {\"message\": \"your message\",\"hash\": \"your message hash\"}")
-    ))
-  def sign: Route = (path("sign" / Segment) & post) { pk =>
-    entity(as[String]) { message =>
-      complete(
-        Json.obj("message" -> message,
-                 "signature" ->
-                   Base58.encode(crypto.sign(Base58.decode(pk).get, Base58.decode(message).get))))
     }
   }
 }
