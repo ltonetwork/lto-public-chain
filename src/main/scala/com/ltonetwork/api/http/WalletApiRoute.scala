@@ -17,7 +17,10 @@ import java.nio.charset.StandardCharsets
 @Api(value = "/wallet")
 case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends ApiRoute {
 
-  override lazy val route = addresses ~ deleteAddress ~ createAddress ~ seq ~ sign ~ signText
+  override lazy val route =
+    pathPrefix("wallet") {
+      addresses ~ deleteAddress ~ createAddress ~ seq ~ sign ~ signText
+    }
 
   val MaxAddressesPerRequest = 1000
 

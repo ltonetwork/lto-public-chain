@@ -193,7 +193,7 @@ case class AddressApiRoute(settings: RestAPISettings,
   }
 
   @Path("/")
-  @ApiOperation(value = "Addresses", notes = "Get wallet accounts addresses", httpMethod = "GET")
+  @ApiOperation(value = "Addresses", notes = "Get wallet accounts addresses. Deprecated: use `/wallet/addresses` instead", httpMethod = "GET")
   def root: Route = (path("addresses") & get) {
     redirect("/wallet/addresses", StatusCodes.PermanentRedirect)
   }
