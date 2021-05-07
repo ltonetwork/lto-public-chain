@@ -21,7 +21,7 @@ object ScriptCompiler extends ScorexLogging {
     val directives = DirectiveParser(scriptText)
 
     val scriptWithoutDirectives =
-      scriptText.linesIterator
+      scriptText.lines
         .filter(str => !str.contains("{-#"))
         .mkString("\n")
 
