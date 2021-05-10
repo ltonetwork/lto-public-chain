@@ -64,7 +64,7 @@ class WalletRouteSpec
       response
     }
 
-    val r2 = Get(routePath("/seq/5/9")) ~> route ~> check {
+    val r2 = Get(routePath("/addresses/seq/5/9")) ~> route ~> check {
       val response = responseAs[Seq[String]]
       response.length shouldBe 4
       allAddresses should contain allElementsOf response

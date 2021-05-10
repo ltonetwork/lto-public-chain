@@ -48,7 +48,7 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
     Array(
       new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
     ))
-  def deleteAddress: Route = path(Segment) { address =>
+  def deleteAddress: Route = path("addresses" / Segment) { address =>
     (delete & withAuth) {
       if (Address.fromString(address).isLeft) {
         complete(InvalidAddress)
@@ -70,7 +70,7 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
       new ApiImplicitParam(name = "to", value = "address", required = true, dataType = "integer", paramType = "path")
     ))
   def seq: Route = {
-    (path("seq" / IntNumber / IntNumber) & get) {
+    (path("addresses" / "seq" / IntNumber / IntNumber) & get) {
       case (start, end) =>
         if (start >= 0 && end >= 0 && start - end < MaxAddressesPerRequest) {
           val json = JsArray(
