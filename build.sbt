@@ -9,29 +9,25 @@ enablePlugins(JavaServerAppPackaging, JDebPackaging, SystemdPlugin, GitVersionin
 scalafmtOnCompile in ThisBuild := true
 
 val versionSource = Def.task {
-  // WARNING!!!
-  // Please, update the fallback version every major and minor releases.
-  // This version is used then building from sources without Git repository
-  // In case of not updating the version nodes build from headless sources will fail to connect to newer versions
-  val FallbackVersion = (1, 3, 0)
-
   val versionFile      = (sourceManaged in Compile).value / "com" / "ltonetwork" / "Version.scala"
   val versionExtractor = """(\d+)\.(\d+)\.(\d+).*""".r
-  val (major, minor, patch) = version.value match {
-    case versionExtractor(ma, mi, pa) => (ma.toInt, mi.toInt, pa.toInt)
-    case _                            => FallbackVersion
+
+  version.value match {
+    case versionExtractor(ma, mi, pa) =>
+      val (major, minor, patch) = (ma.toInt, mi.toInt, pa.toInt)
+      IO.write(
+        versionFile,
+        s"""package com.ltonetwork
+           |
+           |object Version {
+           |  val VersionString = "${version.value}"
+           |  val VersionTuple = ($major, $minor, $patch)
+           |}
+           |""".stripMargin
+      )
+      Seq(versionFile)
+    case _ => Seq()
   }
-  IO.write(
-    versionFile,
-    s"""package com.ltonetwork
-       |
-       |object Version {
-       |  val VersionString = "${version.value}"
-       |  val VersionTuple = ($major, $minor, $patch)
-       |}
-       |""".stripMargin
-  )
-  Seq(versionFile)
 }
 val network = SettingKey[Network]("network")
 network := { Network(sys.props.get("network")) }
