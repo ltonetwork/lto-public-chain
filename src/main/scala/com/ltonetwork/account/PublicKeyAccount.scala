@@ -1,11 +1,12 @@
 package com.ltonetwork.account
 
+import com.ltonetwork.account.KeyTypes._
 import com.ltonetwork.utils.base58Length
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.transaction.ValidationError.InvalidAddress
-import scorex.crypto.signatures.Curve25519
 
 trait PublicKeyAccount {
+  def keyType: KeyType
   def publicKey: Array[Byte]
 
   override def equals(b: Any): Boolean = b match {
@@ -19,12 +20,10 @@ trait PublicKeyAccount {
 }
 
 object PublicKeyAccount {
+  private case class PublicKeyAccountImpl(keyType: KeyType, publicKey: Array[Byte]) extends PublicKeyAccount
 
-  val KeyStringLength: Int = base58Length(Curve25519.KeyLength)
-
-  private case class PublicKeyAccountImpl(publicKey: Array[Byte]) extends PublicKeyAccount
-
-  def apply(publicKey: Array[Byte]): PublicKeyAccount = PublicKeyAccountImpl(publicKey)
+  def apply(publicKey: Array[Byte]): PublicKeyAccount = PublicKeyAccountImpl(ED25519, publicKey)
+  def apply(keyType: KeyType, publicKey: Array[Byte]): PublicKeyAccount = PublicKeyAccountImpl(keyType, publicKey)
 
   implicit def toAddress(publicKeyAccount: PublicKeyAccount): Address = Address.fromPublicKey(publicKeyAccount.publicKey)
 
@@ -32,9 +31,12 @@ object PublicKeyAccount {
     def toAddress: Address = PublicKeyAccount.toAddress(pk)
   }
 
-  def fromBase58String(s: String): Either[InvalidAddress, PublicKeyAccount] =
+  def fromBase58String(keyType: KeyType, s: String): Either[InvalidAddress, PublicKeyAccount] =
     (for {
-      _     <- Either.cond(s.length <= KeyStringLength, (), "Bad public key string length")
+      _     <- Either.cond(s.length <= base58Length(keyType.length), (), "Bad public key string length")
       bytes <- Base58.decode(s).toEither.left.map(ex => s"Unable to decode base58: ${ex.getMessage}")
-    } yield PublicKeyAccount(bytes)).left.map(err => InvalidAddress(s"Invalid sender: $err"))
+    } yield PublicKeyAccount(keyType, bytes)).left.map(err => InvalidAddress(s"Invalid sender: $err"))
+
+  def fromBase58String(s: String): Either[InvalidAddress, PublicKeyAccount] =
+    fromBase58String(ED25519, s)
 }

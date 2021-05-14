@@ -2,7 +2,7 @@ package com.ltonetwork.transaction.transfer
 
 import cats.implicits._
 import com.google.common.primitives.{Bytes, Longs}
-import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
+import com.ltonetwork.account.{AddressOrAlias, KeyType, PublicKeyAccount}
 import com.ltonetwork.serialization.Deser
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.validation._

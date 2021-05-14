@@ -3,6 +3,7 @@ package com.ltonetwork.transaction
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import com.ltonetwork.transaction.transfer._
+import com.ltonetwork.utils.base58Length
 
 import scala.util.Try
 
@@ -63,7 +64,7 @@ package object validation {
   def validateAttachment(attachment: Array[Byte]): Validated[Array[Byte]] = {
     Validated
       .condNel(
-        attachment.length <= TransferTransaction.MaxAttachmentSize,
+        attachment.length <= MaxAttachmentSize,
         attachment,
         ValidationError.TooBigArray
       )
