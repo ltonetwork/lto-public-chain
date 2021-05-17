@@ -64,7 +64,7 @@ package object validation {
   def validateAttachment(attachment: Array[Byte]): Validated[Array[Byte]] = {
     Validated
       .condNel(
-        attachment.length <= MaxAttachmentSize,
+        attachment.length <= TransferTransaction.MaxAttachmentSize,
         attachment,
         ValidationError.TooBigArray
       )

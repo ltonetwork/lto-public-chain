@@ -1,8 +1,10 @@
 package com.ltonetwork.account
 
+import com.ltonetwork.account.KeyTypes._
 import com.ltonetwork.crypto
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.transaction.ValidationError.GenericError
+
 import scala.util.{Failure, Success}
 
 sealed trait PrivateKeyAccount extends PublicKeyAccount {
@@ -13,11 +15,11 @@ sealed trait PrivateKeyAccount extends PublicKeyAccount {
 
 object PrivateKeyAccount {
 
-  private case class PrivateKeyAccountImpl(seed: Array[Byte], privateKey: Array[Byte], publicKey: Array[Byte]) extends PrivateKeyAccount
+  private case class PrivateKeyAccountImpl(seed: Array[Byte], keyType: KeyType, privateKey: Array[Byte], publicKey: Array[Byte]) extends PrivateKeyAccount
 
   def apply(seed: Array[Byte]): PrivateKeyAccount = {
     val pair = crypto.createKeyPair(seed)
-    PrivateKeyAccountImpl(seed, pair._1, pair._2)
+    PrivateKeyAccountImpl(seed, ED25519, pair._1, pair._2)
   }
 
   def fromSeed(s: String): Either[GenericError, PrivateKeyAccount] = Base58.decode(s) match {
