@@ -3,13 +3,11 @@ package com.ltonetwork.account
 case class KeyType private (id: Short, length: Short, description: String)
 
 object KeyTypes {
-  val NO_KEY    = KeyType(0, 0, "No key")
   val ED25519   = KeyType(1, 32, "ED25519")
   val SECP256R1 = KeyType(2, 33, "secp256r1")
   val SECP256K1 = KeyType(3, 33, "secp256k1")
 
   private val dict = Seq(
-    NO_KEY,
     ED25519,
     SECP256R1,
     SECP256K1

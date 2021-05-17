@@ -1,24 +1,22 @@
-package com.ltonetwork.transaction
+package com.ltonetwork.transaction.anchor
 
-import com.google.common.primitives.{Bytes, Longs, Shorts}
+import com.google.common.primitives.{Bytes, Longs}
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.api.http.BroadcastRequest
 import com.ltonetwork.crypto
 import com.ltonetwork.serialization.Deser
 import com.ltonetwork.state._
-import com.ltonetwork.transaction.ValidationError.{GenericError, Validation}
+import com.ltonetwork.transaction.ValidationError.GenericError
+import com.ltonetwork.transaction._
 import monix.eval.Coeval
 import play.api.libs.json._
 import scorex.crypto.signatures.Curve25519.KeyLength
 
 import scala.util.{Failure, Success, Try}
 
-case class AnchorTransaction private (version: Byte, sender: PublicKeyAccount, anchors: List[ByteStr], fee: Long, timestamp: Long, proofs: Proofs)
-    extends ProvenTransaction
-    with VersionedTransaction
-    with FastHashId {
+case class AnchorTransactionV1 private(version: Byte, sender: PublicKeyAccount, anchors: List[ByteStr], fee: Long, timestamp: Long, proofs: Proofs)
+    extends AnchorTransaction {
 
-  override val builder: TransactionParser = AnchorTransaction
+  override val builder: TransactionParser = AnchorTransactionV1
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce {
     Bytes.concat(
       Array(builder.typeId, version),
@@ -39,15 +37,9 @@ case class AnchorTransaction private (version: Byte, sender: PublicKeyAccount, a
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(0: Byte), bodyBytes(), proofs.bytes()))
 }
 
-object AnchorTransaction extends TransactionParserFor[AnchorTransaction] with TransactionParser.MultipleVersions {
+object AnchorTransactionV1 extends TransactionParserFor[AnchorTransactionV1] with AnchorTransactionParser {
 
-  override val typeId: Byte                 = 15
   override val supportedVersions: Set[Byte] = Set(1)
-
-  val EntryLength       = List(16, 20, 32, 48, 64)
-  val NewMaxEntryLength = 64
-  val MaxBytes          = 150 * 1024
-  val MaxEntryCount     = 100
 
   override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
     Try {
@@ -73,20 +65,9 @@ object AnchorTransaction extends TransactionParserFor[AnchorTransaction] with Tr
              feeAmount: Long,
              timestamp: Long,
              proofs: Proofs): Either[ValidationError, TransactionT] = {
-    if (!supportedVersions.contains(version)) {
-      Left(ValidationError.UnsupportedVersion(version))
-    } else if (data.lengthCompare(MaxEntryCount) > 0) {
-      Left(ValidationError.TooBigArray)
-    } else if (data.exists(a => !EntryLength.contains(a.arr.length))) {
-      Left(ValidationError.GenericError(s"Anchor can only be of length $EntryLength Bytes"))
-    } else if (data.distinct.lengthCompare(data.size) < 0) {
-      Left(ValidationError.GenericError("Duplicate anchor in one tx found"))
-    } else if (feeAmount <= 0) {
-      Left(ValidationError.InsufficientFee())
-    } else {
-      val tx = AnchorTransaction(version, sender, data, feeAmount, timestamp, proofs)
-      Either.cond(tx.bytes().length <= MaxBytes, tx, ValidationError.TooBigArray)
-    }
+    validate(version, data, feeAmount).right.map { _ =>
+      AnchorTransactionV1(version, sender, data, feeAmount, timestamp, proofs)
+    }.right.flatMap(tx => Either.cond(tx.bytes().length <= MaxBytes, tx, ValidationError.TooBigArray))
   }
 
   def signed(version: Byte,

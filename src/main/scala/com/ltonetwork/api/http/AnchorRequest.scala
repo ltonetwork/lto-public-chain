@@ -2,9 +2,8 @@ package com.ltonetwork.api.http
 
 import cats.implicits._
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.state.ByteStr
-import com.ltonetwork.transaction.ValidationError.Validation
-import com.ltonetwork.transaction.{AnchorTransaction, Proofs, ValidationError}
+import com.ltonetwork.transaction.anchor.AnchorTransactionV1
+import com.ltonetwork.transaction.{Proofs, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
 import play.api.libs.json.{Format, Json, Writes}
 
@@ -16,7 +15,7 @@ object AnchorRequest {
 
 case class AnchorRequest(version: Byte, sender: String, anchors: List[String], fee: Long, timestamp: Option[Long] = None)
 
-@ApiModel(value = "Signed Data transaction")
+@ApiModel(value = "Signed Anchor transaction")
 case class SignedAnchorRequest(@ApiModelProperty(required = true)
                                version: Byte,
                                @ApiModelProperty(value = "Base58 encoded sender public key", required = true)
@@ -30,12 +29,12 @@ case class SignedAnchorRequest(@ApiModelProperty(required = true)
                                @ApiModelProperty(required = true)
                                proofs: List[String])
     extends BroadcastRequest {
-  def toTx: Either[ValidationError, AnchorTransaction] =
+  def toTx: Either[ValidationError, AnchorTransactionV1] =
     for {
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
       _anchors    <- anchors.traverse(s => parseBase58(s, "invalid anchor", Proofs.MaxAnchorStringSize))
       _proofs     <- Proofs.create(_proofBytes)
-      t           <- AnchorTransaction.create(version, _sender, _anchors, fee, timestamp, _proofs)
+      t           <- AnchorTransactionV1.create(version, timestamp, _sender, fee, _anchors, None, _proofs)
     } yield t
 }

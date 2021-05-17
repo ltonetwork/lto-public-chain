@@ -8,6 +8,7 @@ import com.ltonetwork.state._
 import com.ltonetwork.state.reader.LeaseDetails
 import com.ltonetwork.transaction.Transaction.Type
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script

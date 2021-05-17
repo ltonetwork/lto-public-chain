@@ -4,16 +4,17 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.api.http.{SignedAnchorRequest, SignedDataRequest}
 import com.ltonetwork.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, EitherExt2, IntegerDataEntry}
+import com.ltonetwork.transaction.anchor.AnchorTransactionV1
 import com.ltonetwork.utils.Base58
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.{Format, Json}
 import scorex.crypto.encode.Base64
 
-class AnchorTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class AnchorTransactionV1Specification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
-  private def checkSerialization(tx: AnchorTransaction): Assertion = {
-    val parsed = AnchorTransaction.parseBytes(tx.bytes()).get
+  private def checkSerialization(tx: AnchorTransactionV1): Assertion = {
+    val parsed = AnchorTransactionV1.parseBytes(tx.bytes()).get
 
     parsed.sender.address shouldEqual tx.sender.address
     parsed.timestamp shouldEqual tx.timestamp
@@ -32,8 +33,8 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
   }
 
   property("serialization from TypedTransaction") {
-    forAll(anchorTransactionGen) { tx: AnchorTransaction =>
-      val recovered = AnchorTransaction.parseBytes(tx.bytes()).get
+    forAll(anchorTransactionGen) { tx: AnchorTransactionV1 =>
+      val recovered = AnchorTransactionV1.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
     }
   }
@@ -76,7 +77,7 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
   """)
 
     val arr = ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get
-    val tx = AnchorTransaction
+    val tx = AnchorTransactionV1
       .create(
         1,
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),

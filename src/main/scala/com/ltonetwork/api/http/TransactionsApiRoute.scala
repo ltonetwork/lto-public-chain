@@ -17,6 +17,7 @@ import com.ltonetwork.state.{Blockchain, ByteStr}
 import com.ltonetwork.transaction.AssociationTransaction.ActionType
 import com.ltonetwork.transaction.ValidationError.{ActivationError, GenericError}
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.anchor._
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.transfer._
@@ -243,7 +244,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             x match {
-              case AnchorTransaction => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
+              case AnchorTransactionV1 => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
               case IssueAssociationTransaction =>
                 TransactionFactory
                   .issueAssociation(txJson.as[AssociationRequest], wallet, signerAddress, time)
@@ -285,7 +286,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
               case Some(x) =>
                 x match {
-                  case AnchorTransaction => TransactionFactory.anchor(txJson.as[AnchorRequest], senderPk)
+                  case AnchorTransactionV1 => TransactionFactory.anchor(txJson.as[AnchorRequest], senderPk)
                   case IssueAssociationTransaction =>
                     TransactionFactory
                       .issueAssociation(txJson.as[AssociationRequest], senderPk)
@@ -336,7 +337,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             x match {
-              case AnchorTransaction => jsv.as[SignedAnchorRequest].toTx
+              case AnchorTransactionV1 => jsv.as[SignedAnchorRequest].toTx
               case IssueAssociationTransaction =>
                 jsv
                   .as[SignedAssociationRequest]

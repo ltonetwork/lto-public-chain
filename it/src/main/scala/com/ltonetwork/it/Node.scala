@@ -10,7 +10,7 @@ import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV2, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransactionV2}
-import com.ltonetwork.transaction.{AnchorTransaction, GenesisTransaction}
+import com.ltonetwork.transaction.GenesisTransaction
 import com.ltonetwork.utils.{Base58, LoggerFacade}
 import org.asynchttpclient.Dsl.{config => clientConfig, _}
 import org.asynchttpclient._

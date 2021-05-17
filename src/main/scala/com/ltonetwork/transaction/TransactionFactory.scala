@@ -7,6 +7,7 @@ import com.ltonetwork.api.http.{BroadcastRequest, DataRequest}
 import com.ltonetwork.crypto.SignatureLength
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError.Validation
+import com.ltonetwork.transaction.anchor.AnchorTransactionV1
 import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
@@ -320,15 +321,15 @@ object TransactionFactory extends BroadcastRequest {
   }
   import com.ltonetwork.api.http._
 
-  def anchor(request: AnchorRequest, wallet: Wallet, time: Time): Either[ValidationError, AnchorTransaction] =
+  def anchor(request: AnchorRequest, wallet: Wallet, time: Time): Either[ValidationError, AnchorTransactionV1] =
     anchor(request, wallet, request.sender, time)
 
-  def anchor(request: AnchorRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AnchorTransaction] =
+  def anchor(request: AnchorRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AnchorTransactionV1] =
     for {
       sender  <- wallet.findPrivateKey(request.sender)
       signer  <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       anchors <- parseAnchors(request.anchors)
-      tx <- AnchorTransaction.signed(
+      tx <- AnchorTransactionV1.signed(
         request.version,
         sender,
         anchors,
@@ -338,10 +339,10 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def anchor(request: AnchorRequest, sender: PublicKeyAccount): Either[ValidationError, AnchorTransaction] =
+  def anchor(request: AnchorRequest, sender: PublicKeyAccount): Either[ValidationError, AnchorTransactionV1] =
     for {
       anchors <- parseAnchors(request.anchors)
-      tx <- AnchorTransaction.create(
+      tx <- AnchorTransactionV1.create(
         request.version,
         sender,
         anchors,

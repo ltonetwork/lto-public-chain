@@ -11,6 +11,7 @@ import com.ltonetwork.lang.v1.testing.ScriptGen
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.ENOUGH_AMT
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.anchor.AnchorTransactionV1
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
@@ -412,16 +413,16 @@ trait TransactionGenBase extends ScriptGen {
       lease = LeaseTransactionV2.selfSigned(LeaseTransactionV2.supportedVersions.head, master, ENOUGH_AMT / 2, fee, ts, recipient).explicitGet()
     } yield (genesis, setScript, lease, transfer)
 
-  val anchorTransactionGen: Gen[AnchorTransaction] = for {
+  val anchorTransactionGen: Gen[AnchorTransactionV1] = for {
     sender    <- accountGen
     timestamp <- timestampGen
-    size      <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
-    len       <- Gen.oneOf(AnchorTransaction.EntryLength)
+    size      <- Gen.choose(0, AnchorTransactionV1.MaxEntryCount)
+    len       <- Gen.oneOf(AnchorTransactionV1.EntryLength)
     data      <- Gen.listOfN(size, genBoundedBytes(len, len))
-    version   <- Gen.oneOf(AnchorTransaction.supportedVersions.toSeq)
+    version   <- Gen.oneOf(AnchorTransactionV1.supportedVersions.toSeq)
   } yield {
     val anchors = data.map(ByteStr(_))
-    AnchorTransaction.selfSigned(version, sender, anchors, 15000000, timestamp).explicitGet()
+    AnchorTransactionV1.selfSigned(version, sender, anchors, 15000000, timestamp).explicitGet()
   }
 
   val assocTransactionGen: Gen[AssociationTransactionBase] = for {

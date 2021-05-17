@@ -3,7 +3,8 @@ package com.ltonetwork.state.diffs
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
 import com.ltonetwork.state.{ByteStr, EitherExt2}
-import com.ltonetwork.transaction.{AnchorTransaction, DataTransaction, GenesisTransaction}
+import com.ltonetwork.transaction.anchor.AnchorTransactionV1
+import com.ltonetwork.transaction.{DataTransaction, GenesisTransaction}
 import com.ltonetwork.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
@@ -16,8 +17,8 @@ class AnchorTransactionDiffTest extends PropSpec with PropertyChecks with Matche
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
   } yield (genesis, master, ts)
 
-  def anchor(version: Byte, sender: PrivateKeyAccount, data: List[ByteStr], fee: Long, timestamp: Long): AnchorTransaction =
-    AnchorTransaction.selfSigned(version, sender, data, fee, timestamp).explicitGet()
+  def anchor(version: Byte, sender: PrivateKeyAccount, data: List[ByteStr], fee: Long, timestamp: Long): AnchorTransactionV1 =
+    AnchorTransactionV1.selfSigned(version, sender, data, fee, timestamp).explicitGet()
 
   property("cannot overspend funds") {
     val setup = for {
