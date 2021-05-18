@@ -32,7 +32,7 @@ case class AssociationsApiRoute(settings: RestAPISettings,
 
   override lazy val route =
     pathPrefix("associations") {
-      issueAssociation ~ revokeAssociation ~ associations
+      associations
     }
 
   @Path("/status/{address}")
@@ -83,58 +83,6 @@ case class AssociationsApiRoute(settings: RestAPISettings,
     AssociationsInfo(address.stringRepr, f(a.outgoing), f(a.incoming))
 
   }
-
-  @Path("/issue")
-  @ApiOperation(value = "Creates an association between accounts", httpMethod = "POST", produces = "application/json", consumes = "application/json")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "Json with data",
-        required = true,
-        paramType = "body",
-        dataType = "com.ltonetwork.api.http.AssociationRequest",
-        defaultValue =
-          "\n   {\n       \"sender\": \"3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg\",\n       \"fee\": 100000,\n       \"version\": 1,\n       \"party\" : \"3MSDfsdfsdfsdfsdfsdfsdsdfsdfsdfsdf\",\n       \"associationType\" : 420,\n       \"hash\" : \"\"\n   }\n"
-      )
-    ))
-  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
-  def issueAssociation: Route =
-    processRequest(
-      "issue",
-      (req: AssociationRequest) => {
-        doBroadcast(
-          TransactionFactory
-            .issueAssociation(req, wallet, time)
-            .flatMap(TransactionsApiRoute.ifPossible(blockchain, _)))
-      }
-    )
-
-  @Path("/revoke")
-  @ApiOperation(value = "Revokes an association between accounts", httpMethod = "POST", produces = "application/json", consumes = "application/json")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "Json with data",
-        required = true,
-        paramType = "body",
-        dataType = "com.ltonetwork.api.http.AssociationRequest",
-        defaultValue =
-          "\n   {\n       \"sender\": \"3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg\",\n       \"fee\": 100000,\n       \"version\": 1,\n       \"party\" : \"3MSDfsdfsdfsdfsdfsdfsdsdfsdfsdfsdf\",\n       \"associationType\" : 420,\n       \"hash\" : \"\"\n   }\n"
-      )
-    ))
-  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
-  def revokeAssociation: Route =
-    processRequest(
-      "revoke",
-      (req: AssociationRequest) =>
-        doBroadcast(
-          TransactionFactory
-            .revokeAssociation(req, wallet, time)
-            .flatMap(TransactionsApiRoute.ifPossible(blockchain, _)))
-    )
-
 }
 
 object AssociationsApiRoute {

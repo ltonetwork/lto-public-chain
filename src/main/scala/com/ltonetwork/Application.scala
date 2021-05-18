@@ -13,7 +13,6 @@ import com.typesafe.config._
 import com.ltonetwork.account.{Address, AddressScheme}
 import com.ltonetwork.actor.RootActorSystem
 import com.ltonetwork.api.http._
-import com.ltonetwork.api.http.assets.AssetsBroadcastApiRoute
 import com.ltonetwork.api.http.leasing.LeaseApiRoute
 import com.ltonetwork.consensus.PoSSelector
 import com.ltonetwork.consensus.nxt.api.http.NxtConsensusApiRoute
@@ -255,7 +254,6 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
           scoreStatsReporter,
           configRoot
         ),
-        AssetsBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels),
         ActivationApiRoute(settings.restAPISettings, settings.blockchainSettings.functionalitySettings, settings.featuresSettings, blockchainUpdater)
       )
 
@@ -271,7 +269,6 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
         typeOf[PeersApiRoute],
         typeOf[AddressApiRoute],
         typeOf[AssociationsApiRoute],
-        typeOf[AssetsBroadcastApiRoute],
         typeOf[DebugApiRoute],
         typeOf[ActivationApiRoute]
       )
