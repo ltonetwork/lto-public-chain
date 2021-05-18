@@ -10,7 +10,7 @@ import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.{Format, Json}
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.SignedDataRequest
+import com.ltonetwork.api.http.requests.signed.SignedDataRequest
 import scorex.crypto.encode.Base64
 
 class DataTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {

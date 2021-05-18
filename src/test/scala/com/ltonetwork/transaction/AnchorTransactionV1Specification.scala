@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.{SignedAnchorRequest, SignedDataRequest}
+import com.ltonetwork.api.http.SignedAnchorRequest
 import com.ltonetwork.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, EitherExt2, IntegerDataEntry}
 import com.ltonetwork.transaction.anchor.AnchorTransactionV1
 import com.ltonetwork.utils.Base58

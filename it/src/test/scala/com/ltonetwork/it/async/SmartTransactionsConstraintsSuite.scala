@@ -2,7 +2,7 @@ package com.ltonetwork.it.async
 
 import com.typesafe.config.Config
 import com.ltonetwork.account.PrivateKeyAccount
-import com.ltonetwork.api.http.assets.SignedSetScriptRequest
+import com.ltonetwork.api.http.requests.signed.SignedSetScriptRequest
 import com.ltonetwork.it.api.AsyncHttpApi._
 import com.ltonetwork.it.transactions.NodesFromDocker
 import com.ltonetwork.it.{NodeConfigs, TransferSending}

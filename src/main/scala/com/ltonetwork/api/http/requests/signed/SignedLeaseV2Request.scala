@@ -1,13 +1,14 @@
-package com.ltonetwork.api.http.leasing
+package com.ltonetwork.api.http.requests.signed
 
 import cats.implicits._
-import io.swagger.annotations.ApiModelProperty
-import play.api.libs.json.{Format, Json}
 import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
-import com.ltonetwork.api.http.BroadcastRequest
+import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.transaction.lease.LeaseTransactionV2
 import com.ltonetwork.transaction.{Proofs, ValidationError}
+import io.swagger.annotations.{ApiModel, ApiModelProperty}
+import play.api.libs.json.{Format, Json}
 
+@ApiModel(value = "Signed Lease transaction")
 case class SignedLeaseV2Request(@ApiModelProperty(required = true)
                                 version: Byte,
                                 @ApiModelProperty(value = "Base58 encoded sender public key", required = true)

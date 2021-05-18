@@ -1,4 +1,4 @@
-package com.ltonetwork.api.http.leasing
+package com.ltonetwork.api.http.requests.unsigned
 
 import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{Format, Json}

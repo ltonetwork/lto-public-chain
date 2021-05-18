@@ -1,18 +1,11 @@
-package com.ltonetwork.api.http
+package com.ltonetwork.api.http.requests.signed
 
 import cats.implicits._
-import com.ltonetwork.state.DataEntry
-import io.swagger.annotations.{ApiModel, ApiModelProperty}
-import play.api.libs.json.Json
 import com.ltonetwork.account.PublicKeyAccount
+import com.ltonetwork.api.http.requests.BroadcastRequest
+import com.ltonetwork.state.DataEntry
 import com.ltonetwork.transaction.{DataTransaction, Proofs, ValidationError}
-
-object DataRequest {
-  implicit val unsignedDataRequestReads = Json.reads[DataRequest]
-  implicit val signedDataRequestReads   = Json.reads[SignedDataRequest]
-}
-
-case class DataRequest(version: Byte, sender: String, data: List[DataEntry[_]], fee: Long, timestamp: Option[Long] = None)
+import io.swagger.annotations.{ApiModel, ApiModelProperty}
 
 @ApiModel(value = "Signed Data transaction")
 case class SignedDataRequest(@ApiModelProperty(required = true)

@@ -1,15 +1,16 @@
-package com.ltonetwork.api.http.leasing
+package com.ltonetwork.api.http.requests.signed
 
 import cats.implicits._
-import io.swagger.annotations.ApiModelProperty
-import play.api.libs.json._
-import play.api.libs.functional.syntax._
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.BroadcastRequest
+import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.transaction.TransactionParsers.SignatureStringLength
 import com.ltonetwork.transaction.lease.LeaseCancelTransactionV2
 import com.ltonetwork.transaction.{Proofs, ValidationError}
+import io.swagger.annotations.{ApiModel, ApiModelProperty}
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
+@ApiModel(value = "Signed Cancel Lease transaction")
 case class SignedLeaseCancelV2Request(@ApiModelProperty(required = true)
                                       version: Byte,
                                       @ApiModelProperty(required = true)

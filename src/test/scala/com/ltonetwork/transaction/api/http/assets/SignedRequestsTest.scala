@@ -4,7 +4,7 @@ import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.utils.Base58
 import org.scalatest.{FunSuite, Matchers}
 import play.api.libs.json.Json
-import com.ltonetwork.api.http.assets._
+import com.ltonetwork.api.http.requests.signed.SignedTransferV1Request
 
 class SignedRequestsTest extends FunSuite with Matchers {
 

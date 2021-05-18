@@ -1,22 +1,21 @@
-package com.ltonetwork.api.http.leasing
+package com.ltonetwork.api.http
 
-import com.ltonetwork.api.http._
-import com.ltonetwork.api.http.leasing.LeaseCancelV1Request.leaseCancelRequestFormat
-import com.ltonetwork.api.http.leasing.LeaseV1Request.leaseCancelRequestFormat
+import akka.http.scaladsl.server.Route
+import com.ltonetwork.account.Address
+import com.ltonetwork.api.http.requests.unsigned.{LeaseCancelV1Request, LeaseV1Request}
+import com.ltonetwork.http.BroadcastRoute
+import com.ltonetwork.settings.RestAPISettings
+import com.ltonetwork.state.Blockchain
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.lease.{LeaseTransaction, LeaseTransactionV1}
 import com.ltonetwork.utils.Time
-import com.ltonetwork.wallet.Wallet
-import akka.http.scaladsl.server.Route
-import com.ltonetwork.settings.RestAPISettings
-import com.ltonetwork.state.Blockchain
 import com.ltonetwork.utx.UtxPool
+import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
-import javax.ws.rs.Path
 import play.api.libs.json.JsNumber
-import com.ltonetwork.http.BroadcastRoute
-import com.ltonetwork.account.Address
+
+import javax.ws.rs.Path
 
 @Path("/leasing")
 @Api(value = "/leasing")

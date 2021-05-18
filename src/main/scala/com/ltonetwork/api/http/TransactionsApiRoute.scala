@@ -1,14 +1,13 @@
 package com.ltonetwork.api.http
 
 import java.util.NoSuchElementException
-
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import com.ltonetwork.account.{Address, PublicKeyAccount}
-import com.ltonetwork.api.http.DataRequest._
-import com.ltonetwork.api.http.assets._
-import com.ltonetwork.api.http.leasing._
+import com.ltonetwork.api.http.requests.unsigned.DataRequest._
+import com.ltonetwork.api.http.requests.signed._
+import com.ltonetwork.api.http.requests.unsigned._
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
@@ -26,6 +25,7 @@ import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
+
 import javax.ws.rs.Path
 import play.api.libs.json._
 
@@ -331,7 +331,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
 
         implicit val broadcastAnchorRequestReadsFormat: Format[SignedAnchorRequest]           = Json.format
         implicit val broadcastAssocRequestReadsFormat: Format[SignedAssociationRequest]       = Json.format
-        implicit val broadcastSponsorshipRequestReadsFormat: Format[SignedSponsorshipRequest] = Json.format
+        implicit val broadcastSponsorshipRequestReadsFormat: Format[signed.SignedSponsorshipRequest] = Json.format
 
         val r = TransactionParsers.by(typeId, version) match {
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
@@ -348,8 +348,8 @@ case class TransactionsApiRoute(settings: RestAPISettings,
                   .as[SignedAssociationRequest]
                   .toTx(RevokeAssociationTransaction.create)
                   .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-              case SponsorshipTransaction       => jsv.as[SignedSponsorshipRequest].toTx(SponsorshipTransaction.create)
-              case SponsorshipCancelTransaction => jsv.as[SignedSponsorshipRequest].toTx(SponsorshipCancelTransaction.create)
+              case SponsorshipTransaction       => jsv.as[signed.SignedSponsorshipRequest].toTx(SponsorshipTransaction.create)
+              case SponsorshipCancelTransaction => jsv.as[signed.SignedSponsorshipRequest].toTx(SponsorshipCancelTransaction.create)
               case TransferTransactionV1        => jsv.as[SignedTransferV1Request].toTx
               case TransferTransactionV2        => jsv.as[SignedTransferV2Request].toTx
               case MassTransferTransaction      => jsv.as[SignedMassTransferRequest].toTx

@@ -2,6 +2,7 @@ package com.ltonetwork.api.http
 
 import cats.implicits._
 import com.ltonetwork.account.PublicKeyAccount
+import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.transaction.anchor.AnchorTransactionV1
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
@@ -35,6 +36,6 @@ case class SignedAnchorRequest(@ApiModelProperty(required = true)
       _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
       _anchors    <- anchors.traverse(s => parseBase58(s, "invalid anchor", Proofs.MaxAnchorStringSize))
       _proofs     <- Proofs.create(_proofBytes)
-      t           <- AnchorTransactionV1.create(version, timestamp, _sender, fee, _anchors, None, _proofs)
+      t           <- AnchorTransactionV1.create(version, _sender, _anchors, fee, timestamp, _proofs)
     } yield t
 }

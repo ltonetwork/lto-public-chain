@@ -1,4 +1,4 @@
-package com.ltonetwork.api.http.assets
+package com.ltonetwork.api.http.requests.unsigned
 
 import play.api.libs.json.{Format, Json}
 

@@ -1,6 +1,7 @@
 package com.ltonetwork.it.sync.transactions
 
-import com.ltonetwork.api.http.assets.{MassTransferRequest, SignedMassTransferRequest}
+import com.ltonetwork.api.http.requests.signed.SignedMassTransferRequest
+import com.ltonetwork.api.http.requests.unsigned.MassTransferRequest
 import com.ltonetwork.it.api.SyncHttpApi._
 import com.ltonetwork.it.sync._
 import com.ltonetwork.it.transactions.BaseTransactionSuite

@@ -3,13 +3,12 @@ package com.ltonetwork.it.api
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.util.concurrent.TimeoutException
-
 import com.ltonetwork.api.http.AddressApiRoute._
 import com.ltonetwork.api.http.AssociationsApiRoute.AssociationsInfo
 import com.ltonetwork.api.http.PeersApiRoute.{ConnectReq, connectFormat}
-import com.ltonetwork.api.http.assets._
-import com.ltonetwork.api.http.leasing.{LeaseCancelV1Request, LeaseV1Request, SignedLeaseCancelV1Request, SignedLeaseV1Request}
-import com.ltonetwork.api.http.{AddressApiRoute, DataRequest, SponsorshipApiRoute}
+import com.ltonetwork.api.http.requests.signed._
+import com.ltonetwork.api.http.requests.unsigned._
+import com.ltonetwork.api.http.{AddressApiRoute, SponsorshipApiRoute}
 import com.ltonetwork.features.api.ActivationStatus
 import com.ltonetwork.http.DebugApiRoute._
 import com.ltonetwork.http.DebugMessage._

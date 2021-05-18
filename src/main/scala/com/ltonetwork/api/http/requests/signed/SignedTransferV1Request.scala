@@ -1,13 +1,13 @@
-package com.ltonetwork.api.http.assets
+package com.ltonetwork.api.http.requests.signed
 
+import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
+import com.ltonetwork.api.http.requests.BroadcastRequest
+import com.ltonetwork.transaction.TransactionParsers.SignatureStringLength
+import com.ltonetwork.transaction.ValidationError
+import com.ltonetwork.transaction.transfer._
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
-import com.ltonetwork.api.http.BroadcastRequest
-import com.ltonetwork.transaction.TransactionParsers.SignatureStringLength
-import com.ltonetwork.transaction.transfer._
-import com.ltonetwork.transaction.ValidationError
 
 object SignedTransferV1Request {
   implicit val reads: Reads[SignedTransferV1Request] = (
@@ -23,7 +23,7 @@ object SignedTransferV1Request {
   implicit val writes: Writes[SignedTransferV1Request] = Json.writes[SignedTransferV1Request]
 }
 
-@ApiModel(value = "Signed Asset transfer transaction")
+@ApiModel(value = "Signed Transfer transaction")
 case class SignedTransferV1Request(@ApiModelProperty(value = "Base58 encoded sender public key", required = true)
                                    senderPublicKey: String,
                                    @ApiModelProperty(value = "Recipient address", required = true)

@@ -1,7 +1,6 @@
 package com.ltonetwork.it
 
 import java.util.concurrent.ThreadLocalRandom
-
 import com.typesafe.config.Config
 import com.ltonetwork.it.TransferSending.Req
 import com.ltonetwork.it.api.AsyncHttpApi._
@@ -10,7 +9,7 @@ import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.utils.{Base58, ScorexLogging}
 import org.scalatest.Suite
 import com.ltonetwork.account.{Address, AddressOrAlias, AddressScheme, PrivateKeyAccount}
-import com.ltonetwork.api.http.assets.SignedTransferV2Request
+import com.ltonetwork.api.http.requests.signed.SignedTransferV2Request
 import com.ltonetwork.transaction.transfer._
 
 import scala.concurrent.Future

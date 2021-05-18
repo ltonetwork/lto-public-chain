@@ -1,17 +1,10 @@
-package com.ltonetwork.api.http
+package com.ltonetwork.api.http.requests.signed
 
 import cats.implicits._
 import com.ltonetwork.account.{Address, PublicKeyAccount}
+import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.transaction.{Proofs, SponsorshipTransactionBase, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
-import play.api.libs.json.Json
-
-object SponsorshipRequest {
-  implicit val unsignedDataRequestReads = Json.reads[SponsorshipRequest]
-  implicit val signedDataRequestReads   = Json.reads[SignedSponsorshipRequest]
-}
-
-case class SponsorshipRequest(version: Byte, sender: String, recipient: String, fee: Long, timestamp: Option[Long] = None)
 
 @ApiModel(value = "Signed Data transaction")
 case class SignedSponsorshipRequest(@ApiModelProperty(required = true)

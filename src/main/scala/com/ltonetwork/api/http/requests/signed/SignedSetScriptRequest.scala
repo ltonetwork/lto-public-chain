@@ -1,19 +1,19 @@
-package com.ltonetwork.api.http.assets
+package com.ltonetwork.api.http.requests.signed
 
 import cats.implicits._
-import io.swagger.annotations.{ApiModel, ApiModelProperty}
-import play.api.libs.json.{Json, OFormat}
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.BroadcastRequest
+import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.{Proofs, ValidationError}
+import io.swagger.annotations.{ApiModel, ApiModelProperty}
+import play.api.libs.json.{Json, OFormat}
 
 object SignedSetScriptRequest {
   implicit val jsonFormat: OFormat[SignedSetScriptRequest] = Json.format
 }
 
-@ApiModel(value = "Proven SetScript transaction")
+@ApiModel(value = "Signed SetScript transaction")
 case class SignedSetScriptRequest(@ApiModelProperty(required = true)
                                   version: Byte,
                                   @ApiModelProperty(value = "Base58 encoded sender public key", required = true)

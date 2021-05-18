@@ -1,7 +1,7 @@
-package com.ltonetwork.api.http.assets
+package com.ltonetwork.api.http.requests.unsigned
 
-import play.api.libs.json.Json
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.Transfer
+import play.api.libs.json.Json
 
 case class MassTransferRequest(version: Byte,
                                sender: String,

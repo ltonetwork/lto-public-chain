@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.api.http.SignedAssociationRequest
+import com.ltonetwork.api.http.requests.signed.SignedAssociationRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.utils.Base58
 import org.scalatest._

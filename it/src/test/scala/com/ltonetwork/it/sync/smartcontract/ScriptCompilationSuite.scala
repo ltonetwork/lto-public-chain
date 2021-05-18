@@ -1,6 +1,6 @@
 package com.ltonetwork.it.sync.smartcontract
 
-import com.ltonetwork.api.http.assets.SetScriptRequest
+import com.ltonetwork.api.http.requests.unsigned.SetScriptRequest
 import com.ltonetwork.it.api.SyncHttpApi._
 import com.ltonetwork.it.transactions.BaseTransactionSuite
 

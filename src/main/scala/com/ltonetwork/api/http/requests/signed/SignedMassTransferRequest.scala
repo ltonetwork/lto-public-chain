@@ -1,19 +1,19 @@
-package com.ltonetwork.api.http.assets
+package com.ltonetwork.api.http.requests.signed
 
 import cats.implicits._
-import io.swagger.annotations.{ApiModel, ApiModelProperty}
-import play.api.libs.json._
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.BroadcastRequest
+import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.Transfer
 import com.ltonetwork.transaction.transfer._
-import com.ltonetwork.transaction.{AssetIdStringLength, Proofs, ValidationError}
+import com.ltonetwork.transaction.{Proofs, ValidationError}
+import io.swagger.annotations.{ApiModel, ApiModelProperty}
+import play.api.libs.json._
 
 object SignedMassTransferRequest {
   implicit val reads = Json.reads[SignedMassTransferRequest]
 }
 
-@ApiModel(value = "Signed Asset transfer transaction")
+@ApiModel(value = "Signed MassTransfer transaction")
 case class SignedMassTransferRequest(@ApiModelProperty(required = true)
                                      version: Byte,
                                      @ApiModelProperty(value = "Base58 encoded sender public key", required = true)

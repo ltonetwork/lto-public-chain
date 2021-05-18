@@ -1,25 +1,12 @@
-package com.ltonetwork.api.http
+package com.ltonetwork.api.http.requests.signed
 
 import cats.implicits._
 import com.ltonetwork.account.{Address, PublicKeyAccount}
-import com.ltonetwork.transaction.{AssociationTransaction, IssueAssociationTransaction, Proofs, TransactionFactory, ValidationError}
+import com.ltonetwork.api.http.requests.BroadcastRequest
+import com.ltonetwork.transaction.{AssociationTransaction, Proofs, TransactionFactory, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
-import play.api.libs.json.Json
 
-object AssociationRequest {
-  implicit val unsignedDataRequestReads = Json.reads[AssociationRequest]
-  implicit val signedDataRequestReads   = Json.reads[SignedAssociationRequest]
-}
-
-case class AssociationRequest(version: Byte,
-                              sender: String,
-                              party: String,
-                              associationType: Int,
-                              hash: String = "",
-                              fee: Long,
-                              timestamp: Option[Long] = None)
-
-@ApiModel(value = "Signed Data transaction")
+@ApiModel(value = "Signed Association transaction")
 case class SignedAssociationRequest(@ApiModelProperty(required = true)
                                     version: Byte,
                                     @ApiModelProperty(value = "Base58 encoded sender public key", required = true)

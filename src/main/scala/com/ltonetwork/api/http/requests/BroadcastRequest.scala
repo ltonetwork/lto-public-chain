@@ -1,4 +1,4 @@
-package com.ltonetwork.api.http
+package com.ltonetwork.api.http.requests
 
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError
