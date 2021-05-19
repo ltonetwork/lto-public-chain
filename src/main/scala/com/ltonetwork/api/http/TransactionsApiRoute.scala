@@ -331,7 +331,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
 
         implicit val broadcastAnchorRequestReadsFormat: Format[SignedAnchorRequest]           = Json.format
         implicit val broadcastAssocRequestReadsFormat: Format[SignedAssociationRequest]       = Json.format
-        implicit val broadcastSponsorshipRequestReadsFormat: Format[signed.SignedSponsorshipRequest] = Json.format
+        implicit val broadcastSponsorshipRequestReadsFormat: Format[SignedSponsorshipRequest] = Json.format
 
         val r = TransactionParsers.by(typeId, version) match {
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
@@ -348,8 +348,8 @@ case class TransactionsApiRoute(settings: RestAPISettings,
                   .as[SignedAssociationRequest]
                   .toTx(RevokeAssociationTransaction.create)
                   .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-              case SponsorshipTransaction       => jsv.as[signed.SignedSponsorshipRequest].toTx(SponsorshipTransaction.create)
-              case SponsorshipCancelTransaction => jsv.as[signed.SignedSponsorshipRequest].toTx(SponsorshipCancelTransaction.create)
+              case SponsorshipTransaction       => jsv.as[SignedSponsorshipRequest].toTx(SponsorshipTransaction.create)
+              case SponsorshipCancelTransaction => jsv.as[SignedSponsorshipRequest].toTx(SponsorshipCancelTransaction.create)
               case TransferTransactionV1        => jsv.as[SignedTransferV1Request].toTx
               case TransferTransactionV2        => jsv.as[SignedTransferV2Request].toTx
               case MassTransferTransaction      => jsv.as[SignedMassTransferRequest].toTx

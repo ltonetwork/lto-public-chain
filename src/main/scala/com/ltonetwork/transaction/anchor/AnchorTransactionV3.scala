@@ -50,7 +50,7 @@ object AnchorTransactionV3 extends TransactionParserFor[AnchorTransactionV3] wit
         arrays  = r._1
         pos     = r._2
         sponsor <- TransactionV3.parseSponsor(bytes, end + pos)
-        sponsorKeyLength = sponsor.map(account => account.keyType.length).getOrElse(0)
+        sponsorKeyLength: Short = sponsor.map(account => account.keyType.length).getOrElse(0)
         proofs  <- Proofs.fromBytes(bytes.drop(end + pos + 1 + sponsorKeyLength))
         tx      <- create(version, timestamp, sender, feeAmount, arrays.map(ByteStr(_)).toList, sponsor, proofs)
       } yield tx
@@ -75,7 +75,7 @@ object AnchorTransactionV3 extends TransactionParserFor[AnchorTransactionV3] wit
              feeAmount: Long,
              data: List[ByteStr],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    create(version, sender, data, feeAmount, timestamp, Proofs.empty).right.map { unsigned =>
+    create(version, timestamp, sender, feeAmount, data, None, Proofs.empty).right.map { unsigned =>
       unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes())))).explicitGet())
     }
   }

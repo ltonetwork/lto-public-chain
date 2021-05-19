@@ -6,6 +6,7 @@ import monix.eval.Coeval
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.serialization.Deser
 import com.ltonetwork.transaction.ValidationError.GenericError
+import com.ltonetwork.transaction.anchor.AnchorTransactionV1
 
 import scala.util.Try
 
@@ -20,7 +21,7 @@ object Proofs {
   val MaxProofs           = 8
   val MaxProofSize        = 64
   val MaxProofStringSize  = base58Length(MaxProofSize)
-  val MaxAnchorStringSize = base58Length(AnchorTransaction.EntryLength.last)
+  val MaxAnchorStringSize = base58Length(AnchorTransactionV1.EntryLength.last)
 
   lazy val empty = create(Seq.empty).explicitGet()
 

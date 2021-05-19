@@ -11,6 +11,7 @@ import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV1, LeaseTransact
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.anchor.AnchorTransactionV1
 import com.ltonetwork.{NoShrink, TestTime, TransactionGen, history}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
@@ -204,13 +205,13 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
         }
     })
 
-    "anchor transaction" in (forAll(accountGen, positiveLongGen, Gen.choose(0, AnchorTransaction.MaxEntryCount).flatMap(Gen.listOfN(_, bytes64gen))) {
+    "anchor transaction" in (forAll(accountGen, positiveLongGen, Gen.choose(0, AnchorTransactionV1.MaxEntryCount).flatMap(Gen.listOfN(_, bytes64gen))) {
       case (sender, initialBalance, anchors) =>
         withDomain() { d =>
           d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
           val genesisBlockId = d.lastBlockId
 
-          val tx = AnchorTransaction.selfSigned(1, sender, anchors.map(ByteStr(_)), enoughFee, nextTs).explicitGet()
+          val tx = AnchorTransactionV1.selfSigned(1, sender, anchors.map(ByteStr(_)), enoughFee, nextTs).explicitGet()
           d.appendBlock(
             TestBlock.create(
               nextTs,

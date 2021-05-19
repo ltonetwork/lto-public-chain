@@ -1,4 +1,4 @@
-package com.ltonetwork.api.http
+package com.ltonetwork.api.http.requests.signed
 
 import cats.implicits._
 import com.ltonetwork.account.PublicKeyAccount
@@ -6,15 +6,6 @@ import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.transaction.anchor.AnchorTransactionV1
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
-import play.api.libs.json.{Format, Json, Writes}
-
-object AnchorRequest {
-  implicit val unsignedDataRequestReads = Json.reads[AnchorRequest]
-  implicit val signedDataRequestReads   = Json.reads[SignedAnchorRequest]
-
-}
-
-case class AnchorRequest(version: Byte, sender: String, anchors: List[String], fee: Long, timestamp: Option[Long] = None)
 
 @ApiModel(value = "Signed Anchor transaction")
 case class SignedAnchorRequest(@ApiModelProperty(required = true)
@@ -29,7 +20,7 @@ case class SignedAnchorRequest(@ApiModelProperty(required = true)
                                timestamp: Long,
                                @ApiModelProperty(required = true)
                                proofs: List[String])
-    extends BroadcastRequest {
+  extends BroadcastRequest {
   def toTx: Either[ValidationError, AnchorTransactionV1] =
     for {
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)

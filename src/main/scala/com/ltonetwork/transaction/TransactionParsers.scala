@@ -1,5 +1,6 @@
 package com.ltonetwork.transaction
 
+import com.ltonetwork.transaction.anchor.AnchorTransactionV1
 import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.transfer._
@@ -26,7 +27,7 @@ object TransactionParsers {
   }(collection.breakOut)
 
   private val modern: Map[(Byte, Byte), TransactionParser] = Seq[TransactionParser](
-    AnchorTransaction,
+    AnchorTransactionV1,
     DataTransaction,
     TransferTransactionV2,
     SetScriptTransaction,
