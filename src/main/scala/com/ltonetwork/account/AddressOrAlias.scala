@@ -6,7 +6,6 @@ import com.ltonetwork.transaction.ValidationError
 
 trait AddressOrAlias {
   def stringRepr: String
-
   def bytes: ByteStr
 
   override def toString: String = stringRepr

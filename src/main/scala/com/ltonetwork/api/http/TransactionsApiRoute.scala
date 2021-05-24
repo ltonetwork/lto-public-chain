@@ -364,7 +364,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         import com.ltonetwork.features.FeatureProvider._
         val r0 = r match {
           case Right(tx)
-              if tx.builder.typeId == SetScriptTransaction.typeId &&
+              if tx.typeId == SetScriptTransaction.typeId &&
                 !blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, blockchain.height) =>
             Left(ActivationError("SmartAccounts feature has not been activated yet"))
           case x => x

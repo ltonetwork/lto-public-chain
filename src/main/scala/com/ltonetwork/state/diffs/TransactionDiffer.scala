@@ -6,7 +6,6 @@ import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.UnsupportedTransactionType
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.smart.{SetScriptTransaction, Verifier}
 import com.ltonetwork.transaction.transfer._

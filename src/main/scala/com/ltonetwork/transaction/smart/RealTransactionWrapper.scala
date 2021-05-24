@@ -5,7 +5,6 @@ import com.ltonetwork.state._
 import scodec.bits.ByteVector
 import com.ltonetwork.account.{Address, AddressOrAlias}
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.transfer._
 

@@ -13,17 +13,21 @@ import scala.util.Try
 case class Proofs private (proofs: Seq[ByteStr]) {
   val bytes: Coeval[Array[Byte]]  = Coeval.evalOnce(Proofs.Version +: Deser.serializeArrays(proofs.map(_.arr)))
   val base58: Coeval[Seq[String]] = Coeval.evalOnce(proofs.map(p => Base58.encode(p.arr)))
+  def toSignature: ByteStr        = proofs.headOption.getOrElse(ByteStr.empty)
+  override def toString: String   = s"Proofs(${proofs.mkString(", ")})"
 }
 
 object Proofs {
+  val Version: Byte       = 1
+  val MaxProofs: Int      = 8
+  val MaxProofSize: Int   = 64
 
-  val Version             = 1: Byte
-  val MaxProofs           = 8
-  val MaxProofSize        = 64
-  val MaxProofStringSize  = base58Length(MaxProofSize)
-  val MaxAnchorStringSize = base58Length(AnchorTransactionV1.EntryLength.last)
+  val MaxProofStringSize: Int = base58Length(MaxProofSize)
 
-  lazy val empty = create(Seq.empty).explicitGet()
+  // TODO: has nothing to do with proofs
+  val MaxAnchorStringSize: Int = base58Length(AnchorTransactionV1.EntryLength.last)
+
+  lazy val empty = new Proofs(Nil)
 
   def create(proofs: Seq[ByteStr]): Either[ValidationError, Proofs] =
     for {

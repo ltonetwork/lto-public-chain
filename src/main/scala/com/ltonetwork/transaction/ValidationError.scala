@@ -8,7 +8,7 @@ import com.ltonetwork.state.ByteStr
 
 import scala.util.Either
 
-trait ValidationError
+trait ValidationError extends Throwable
 
 object ValidationError {
   type Validation[T] = Either[ValidationError, T]
@@ -36,6 +36,7 @@ object ValidationError {
   case class UnsupportedVersion(version: Int)                  extends ValidationError
   case class GenericError(err: String)                         extends ValidationError
   case class InvalidPublicKey(err: String)                     extends ValidationError
+  case class SponsoredTxNotSupported(err: String)              extends ValidationError
 
   object GenericError {
     def apply(ex: Throwable): GenericError = new GenericError(Throwables.getStackTraceAsString(ex))

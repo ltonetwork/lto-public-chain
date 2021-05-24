@@ -1,12 +1,12 @@
 package com.ltonetwork.account
 
 import java.nio.ByteBuffer
-
 import com.ltonetwork.crypto
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.utils.{Base58, ScorexLogging, base58Length}
 import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.transaction.ValidationError.InvalidAddress
+import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Reads, Writes}
 
 sealed trait Address extends AddressOrAlias {
   val bytes: ByteStr
@@ -19,11 +19,11 @@ object Address extends ScorexLogging {
 
   val Prefix: String = "address:"
 
-  val AddressVersion: Byte = 1
-  val ChecksumLength       = 4
-  val HashLength           = 20
-  val AddressLength        = 1 + 1 + HashLength + ChecksumLength
-  val AddressStringLength  = base58Length(AddressLength)
+  val AddressVersion: Byte     = 1
+  val ChecksumLength: Int      = 4
+  val HashLength: Int          = 20
+  val AddressLength: Int       = 1 + 1 + HashLength + ChecksumLength
+  val AddressStringLength: Int = base58Length(AddressLength)
 
   private def scheme = AddressScheme.current
 
@@ -64,4 +64,8 @@ object Address extends ScorexLogging {
 
   private def calcCheckSum(withoutChecksum: Array[Byte]): Array[Byte] = crypto.secureHash(withoutChecksum).take(ChecksumLength)
 
+  implicit val jsonFormat: Format[Address] = Format[Address](
+    Reads(jsValue => fromString(jsValue.as[String]).fold(err => JsError(err.toString), JsSuccess(_))),
+    Writes(addr => JsString(addr.stringRepr))
+  )
 }

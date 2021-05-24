@@ -4,7 +4,7 @@ import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.state.{Blockchain, Diff}
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.ValidationError
-import com.ltonetwork.transaction.anchor.{AnchorTransaction, AnchorTransactionV1}
+import com.ltonetwork.transaction.anchor.AnchorTransactionV1
 
 object AnchorTransactionDiff {
   import com.ltonetwork.features.FeatureProvider._

@@ -8,7 +8,6 @@ import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.transfer._

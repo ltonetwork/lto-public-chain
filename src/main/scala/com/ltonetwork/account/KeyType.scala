@@ -1,6 +1,6 @@
 package com.ltonetwork.account
 
-case class KeyType private (id: Short, length: Short, description: String)
+case class KeyType private (id: Byte, length: Short, description: String)
 
 object KeyTypes {
   val ED25519   = KeyType(1, 32, "ED25519")
@@ -13,5 +13,5 @@ object KeyTypes {
     SECP256K1
   ).map(f => f.id -> f).toMap
 
-  def keyType(id: Short): Option[KeyType] = dict.get(id)
+  def keyType(id: Byte): Option[KeyType] = dict.get(id)
 }
