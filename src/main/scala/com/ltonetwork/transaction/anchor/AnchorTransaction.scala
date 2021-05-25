@@ -14,7 +14,7 @@ import scala.util.{Failure, Success, Try}
 case class AnchorTransaction private(version: Byte, timestamp: Long, sender: PublicKeyAccount, fee: Long, anchors: List[ByteStr], sponsor: Option[PublicKeyAccount], proofs: Proofs)
   extends Transaction {
 
-  override val builder: TransactionParser.For[AnchorTransaction] = AnchorTransaction
+  override val builder: TransactionBuilder.For[AnchorTransaction] = AnchorTransaction
   private val serializer: TransactionSerializer.For[AnchorTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
@@ -22,7 +22,7 @@ case class AnchorTransaction private(version: Byte, timestamp: Long, sender: Pub
   override val json: Coeval[JsObject] = serializer.json(this)
 }
 
-object AnchorTransaction extends TransactionParser.For[AnchorTransaction] {
+object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
   override val typeId: Byte                 = 15
   override val supportedVersions: Set[Byte] = Set(1, 3)
 
@@ -54,7 +54,7 @@ object AnchorTransaction extends TransactionParser.For[AnchorTransaction] {
   override protected def parseBytes(bytes: Array[Byte]): Try[TransactionT] = {
     Try {
       val txEi = for {
-        (version, end) <- TransactionParser.MultipleVersions(typeId, supportedVersions).parseHeader(bytes)
+        (version, end) <- TransactionBuilder.MultipleVersions(typeId, supportedVersions).parseHeader(bytes)
         tx             <- serializer(version).parseBytes(version, bytes.drop(end))
       } yield tx
       txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))

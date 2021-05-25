@@ -21,7 +21,7 @@ case class LeaseTransactionV2 private (version: Byte,
     extends LeaseTransaction
     with FastHashId {
 
-  override val builder: TransactionParser = LeaseTransactionV2
+  override val builder: TransactionBuilder = LeaseTransactionV2
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce {
     val assetId: Option[AssetId] = None // placeholder for future enhancement
     Bytes.concat(Array(builder.typeId, version), assetId.map(a => (1: Byte) +: a.arr).getOrElse(Array(0: Byte)), bytesBase())
@@ -29,7 +29,7 @@ case class LeaseTransactionV2 private (version: Byte,
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(0: Byte), bodyBytes(), proofs.bytes()))
 }
 
-object LeaseTransactionV2 extends TransactionParserFor[LeaseTransactionV2] with TransactionParser.MultipleVersions {
+object LeaseTransactionV2 extends TransactionParserFor[LeaseTransactionV2] with TransactionBuilder.MultipleVersions {
 
   override val typeId: Byte                 = 8
   override def supportedVersions: Set[Byte] = Set(2)

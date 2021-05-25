@@ -19,13 +19,13 @@ case class LeaseTransactionV1 private (sender: PublicKeyAccount,
     with SignedTransaction
     with FastHashId {
 
-  override val builder: TransactionParser = LeaseTransactionV1
+  override val builder: TransactionBuilder = LeaseTransactionV1
   val bodyBytes: Coeval[Array[Byte]]      = Coeval.evalOnce(Bytes.concat(Array(builder.typeId), bytesBase()))
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(bodyBytes(), signature.arr))
   override def version: Byte              = 1
 }
 
-object LeaseTransactionV1 extends TransactionParserFor[LeaseTransactionV1] with TransactionParser.HardcodedVersion1 {
+object LeaseTransactionV1 extends TransactionParserFor[LeaseTransactionV1] with TransactionBuilder.HardcodedVersion1 {
 
   override val typeId: Byte = 8
 

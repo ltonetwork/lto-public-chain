@@ -9,7 +9,7 @@ import com.ltonetwork.serialization.{BytesSerializable, JsonSerializable}
 import play.api.libs.json.JsObject
 
 trait Transaction extends BytesSerializable with JsonSerializable {
-  def builder: TransactionParser
+  def builder: TransactionBuilder
 
   val bytes: Coeval[Array[Byte]]
   val bodyBytes: Coeval[Array[Byte]]

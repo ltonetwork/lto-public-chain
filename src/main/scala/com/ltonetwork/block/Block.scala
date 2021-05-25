@@ -207,7 +207,7 @@ object Block extends ScorexLogging {
           val transactionLengthBytes = v._1.slice(pos, pos + TransactionSizeLength)
           val transactionLength      = Ints.fromByteArray(transactionLengthBytes)
           val transactionBytes       = v._1.slice(pos + TransactionSizeLength, pos + TransactionSizeLength + transactionLength)
-          txs += TransactionParsers.parseBytes(transactionBytes).get
+          txs += TransactionBuilders.parseBytes(transactionBytes).get
           pos + TransactionSizeLength + transactionLength
       }
 

@@ -2,7 +2,7 @@ package com.ltonetwork.api.http.requests.signed
 
 import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.BroadcastRequest
-import com.ltonetwork.transaction.TransactionParsers.SignatureStringLength
+import com.ltonetwork.transaction.TransactionBuilders.SignatureStringLength
 import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.transaction.transfer._
 import io.swagger.annotations.{ApiModel, ApiModelProperty}

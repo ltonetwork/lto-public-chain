@@ -50,7 +50,7 @@ class TransactionSpecification extends PropSpec with PropertyChecks with Matcher
         val sender    = PrivateKeyAccount(senderSeed)
         val recipient = PrivateKeyAccount(recipientSeed)
         val tx        = createLtoTransfer(sender, recipient, amount, fee, time).explicitGet()
-        val txAfter   = TransactionParsers.parseBytes(tx.bytes()).get.asInstanceOf[TransferTransactionV1]
+        val txAfter   = TransactionBuilders.parseBytes(tx.bytes()).get.asInstanceOf[TransferTransactionV1]
 
         txAfter.getClass.shouldBe(tx.getClass)
 

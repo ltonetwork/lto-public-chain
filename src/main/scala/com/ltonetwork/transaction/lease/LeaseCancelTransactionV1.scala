@@ -14,7 +14,7 @@ case class LeaseCancelTransactionV1 private (sender: PublicKeyAccount, leaseId: 
     with SignedTransaction
     with FastHashId {
 
-  override val builder: TransactionParser = LeaseCancelTransactionV1
+  override val builder: TransactionBuilder = LeaseCancelTransactionV1
 
   override def chainByte: Option[Byte] = None
 
@@ -26,7 +26,7 @@ case class LeaseCancelTransactionV1 private (sender: PublicKeyAccount, leaseId: 
   override def version: Byte = 1
 }
 
-object LeaseCancelTransactionV1 extends TransactionParserFor[LeaseCancelTransactionV1] with TransactionParser.HardcodedVersion1 {
+object LeaseCancelTransactionV1 extends TransactionParserFor[LeaseCancelTransactionV1] with TransactionBuilder.HardcodedVersion1 {
 
   override val typeId: Byte = 9
 

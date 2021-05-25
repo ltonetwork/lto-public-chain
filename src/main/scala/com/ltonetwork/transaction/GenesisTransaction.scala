@@ -6,7 +6,7 @@ import com.ltonetwork.state.{ByteStr, _}
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
 import com.ltonetwork.account.Address
-import com.ltonetwork.transaction.TransactionParsers._
+import com.ltonetwork.transaction.TransactionBuilders._
 
 import scala.util.{Failure, Success, Try}
 
@@ -14,7 +14,7 @@ case class GenesisTransaction private (recipient: Address, amount: Long, timesta
 
   import GenesisTransaction._
 
-  override val builder: TransactionParser = GenesisTransaction
+  override val builder: TransactionBuilder = GenesisTransaction
   override val fee                        = 0
   override val id: Coeval[AssetId]        = Coeval.evalOnce(signature)
 
@@ -41,7 +41,7 @@ case class GenesisTransaction private (recipient: Address, amount: Long, timesta
   }
 }
 
-object GenesisTransaction extends TransactionParserFor[GenesisTransaction] with TransactionParser.HardcodedVersion1 {
+object GenesisTransaction extends TransactionParserFor[GenesisTransaction] with TransactionBuilder.HardcodedVersion1 {
 
   override val typeId: Byte = 1
 

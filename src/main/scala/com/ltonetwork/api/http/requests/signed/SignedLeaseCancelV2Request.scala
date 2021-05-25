@@ -3,7 +3,7 @@ package com.ltonetwork.api.http.requests.signed
 import cats.implicits._
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.api.http.requests.BroadcastRequest
-import com.ltonetwork.transaction.TransactionParsers.SignatureStringLength
+import com.ltonetwork.transaction.TransactionBuilders.SignatureStringLength
 import com.ltonetwork.transaction.lease.LeaseCancelTransactionV2
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}

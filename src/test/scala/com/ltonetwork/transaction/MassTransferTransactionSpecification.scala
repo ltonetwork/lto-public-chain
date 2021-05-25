@@ -35,7 +35,7 @@ class MassTransferTransactionSpecification extends PropSpec with PropertyChecks 
 
   property("serialization from TypedTransaction") {
     forAll(massTransferGen) { tx: MassTransferTransaction =>
-      val recovered = TransactionParsers.parseBytes(tx.bytes()).get
+      val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
     }
   }

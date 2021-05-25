@@ -3,7 +3,7 @@ package com.ltonetwork.settings
 import com.google.common.base.CaseFormat
 import com.typesafe.config.Config
 import net.ceedubs.ficus.Ficus._
-import com.ltonetwork.transaction.TransactionParsers
+import com.ltonetwork.transaction.TransactionBuilders
 
 import scala.collection.JavaConverters._
 
@@ -32,7 +32,7 @@ object FeesSettings {
 
   private def txTypes: Map[String, Int] = {
     val converter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_HYPHEN)
-    TransactionParsers.byName
+    TransactionBuilders.byName
       .map {
         case (name, p) =>
           converter.convert(

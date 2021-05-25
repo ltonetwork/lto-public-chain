@@ -62,7 +62,7 @@ case class MassTransferTransaction private (version: Byte,
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(bodyBytes(), proofs.bytes()))
 }
 
-object MassTransferTransaction extends TransactionParserFor[MassTransferTransaction] with TransactionParser.OneVersion {
+object MassTransferTransaction extends TransactionParserFor[MassTransferTransaction] with TransactionBuilder.OneVersion {
 
   override val typeId: Byte  = 11
   override val version: Byte = 1

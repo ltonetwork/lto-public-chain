@@ -28,7 +28,7 @@ class TransferTransactionV1Specification extends PropSpec with PropertyChecks wi
 
   property("Transfer serialization from TypedTransaction") {
     forAll(transferV1Gen) { tx: TransferTransactionV1 =>
-      val recovered = TransactionParsers.parseBytes(tx.bytes()).get
+      val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
     }
   }

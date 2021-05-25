@@ -1,6 +1,6 @@
 package com.ltonetwork.transaction
 
-import com.ltonetwork.transaction.anchor.AnchorTransactionV1
+import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.transfer._
@@ -9,14 +9,14 @@ import scorex.crypto.signatures.Curve25519
 
 import scala.util.{Failure, Success, Try}
 
-object TransactionParsers {
+object TransactionBuilders {
 
   val TimestampLength            = 8
   val AmountLength               = 8
   val TypeLength                 = 1
   val SignatureStringLength: Int = base58Length(Curve25519.SignatureLength)
 
-  private val old: Map[Byte, TransactionParser] = Seq[TransactionParser](
+  private val old: Map[Byte, TransactionBuilder] = Seq[TransactionBuilder](
     GenesisTransaction,
     TransferTransactionV1,
     LeaseTransactionV1,
@@ -26,8 +26,8 @@ object TransactionParsers {
     x.typeId -> x
   }(collection.breakOut)
 
-  private val modern: Map[(Byte, Byte), TransactionParser] = Seq[TransactionParser](
-    AnchorTransactionV1,
+  private val modern: Map[(Byte, Byte), TransactionBuilder] = Seq[TransactionBuilder](
+    AnchorTransaction,
     DataTransaction,
     TransferTransactionV2,
     SetScriptTransaction,
@@ -43,19 +43,19 @@ object TransactionParsers {
     }
   }(collection.breakOut)
 
-  private val all: Map[(Byte, Byte), TransactionParser] = old.flatMap {
+  private val all: Map[(Byte, Byte), TransactionBuilder] = old.flatMap {
     case (typeId, builder) =>
       builder.supportedVersions.map { version =>
         ((typeId, version), builder)
       }
   } ++ modern
 
-  val byName: Map[String, TransactionParser] = (old ++ modern).map {
+  val byName: Map[String, TransactionBuilder] = (old ++ modern).map {
     case (_, builder) => builder.classTag.runtimeClass.getSimpleName -> builder
   }
 
-  def by(name: String): Option[TransactionParser]                = byName.get(name)
-  def by(typeId: Byte, version: Byte): Option[TransactionParser] = all.get((typeId, version))
+  def by(name: String): Option[TransactionBuilder]                = byName.get(name)
+  def by(typeId: Byte, version: Byte): Option[TransactionBuilder] = all.get((typeId, version))
 
   def parseBytes(data: Array[Byte]): Try[Transaction] =
     data.headOption
@@ -68,7 +68,7 @@ object TransactionParsers {
   private def oldParseBytes(tpe: Byte, data: Array[Byte]): Try[Transaction] =
     old
       .get(tpe)
-      .fold[Try[TransactionParser]](Failure(new IllegalArgumentException(s"Unknown transaction type (old encoding): '$tpe'")))(Success(_))
+      .fold[Try[TransactionBuilder]](Failure(new IllegalArgumentException(s"Unknown transaction type (old encoding): '$tpe'")))(Success(_))
       .flatMap(_.parseBytes(data))
 
   private def modernParseBytes(data: Array[Byte]): Try[Transaction] = {
@@ -78,7 +78,7 @@ object TransactionParsers {
       val Array(_, typeId, version) = data.take(3)
       modern
         .get((typeId, version))
-        .fold[Try[TransactionParser]](
+        .fold[Try[TransactionBuilder]](
           Failure(new IllegalArgumentException(s"Unknown transaction type ($typeId) and version ($version) (modern encoding)")))(Success(_))
         .flatMap(_.parseBytes(data))
     }

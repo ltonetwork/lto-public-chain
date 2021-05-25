@@ -108,7 +108,7 @@ case class BlocksApiRoute(settings: RestAPISettings,
       new ApiImplicitParam(name = "signature", value = "Base58-encoded signature", required = true, dataType = "string", paramType = "path")
     ))
   def heightEncoded: Route = (path("height" / Segment) & get) { encodedSignature =>
-    if (encodedSignature.length > TransactionParsers.SignatureStringLength)
+    if (encodedSignature.length > TransactionBuilders.SignatureStringLength)
       complete(InvalidSignature)
     else {
       ByteStr
@@ -226,7 +226,7 @@ case class BlocksApiRoute(settings: RestAPISettings,
       new ApiImplicitParam(name = "signature", value = "Base58-encoded signature", required = true, dataType = "string", paramType = "path")
     ))
   def signature: Route = (path("signature" / Segment) & get) { encodedSignature =>
-    if (encodedSignature.length > TransactionParsers.SignatureStringLength) complete(InvalidSignature)
+    if (encodedSignature.length > TransactionBuilders.SignatureStringLength) complete(InvalidSignature)
     else {
       ByteStr
         .decodeBase58(encodedSignature)

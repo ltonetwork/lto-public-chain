@@ -8,13 +8,13 @@ import com.ltonetwork.state._
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.transaction.TransactionParsers._
+import com.ltonetwork.transaction.TransactionBuilders._
 import scorex.crypto.signatures.Curve25519._
 import scala.util.{Failure, Success, Try}
 
 case class PaymentTransaction private (sender: PublicKeyAccount, recipient: Address, amount: Long, fee: Long, timestamp: Long, signature: ByteStr)
     extends SignedTransaction {
-  override val builder: TransactionParser = PaymentTransaction
+  override val builder: TransactionBuilder = PaymentTransaction
   override val id: Coeval[AssetId]        = Coeval.evalOnce(signature)
 
   override val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase() ++ Json.obj("recipient" -> recipient.address, "amount" -> amount))
@@ -41,7 +41,7 @@ case class PaymentTransaction private (sender: PublicKeyAccount, recipient: Addr
 
 }
 
-object PaymentTransaction extends TransactionParserFor[PaymentTransaction] with TransactionParser.HardcodedVersion1 {
+object PaymentTransaction extends TransactionParserFor[PaymentTransaction] with TransactionBuilder.HardcodedVersion1 {
 
   override val typeId: Byte = 2
 

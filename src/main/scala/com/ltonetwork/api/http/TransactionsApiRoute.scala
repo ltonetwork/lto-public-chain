@@ -240,7 +240,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         val version = value getOrElse (1: Byte)
         val txJson  = jsv ++ Json.obj("version" -> version)
 
-        (TransactionParsers.by(typeId, version) match {
+        (TransactionBuilders.by(typeId, version) match {
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             x match {
@@ -282,7 +282,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         PublicKeyAccount
           .fromBase58String(senderPk)
           .flatMap { senderPk =>
-            TransactionParsers.by(typeId, version) match {
+            TransactionBuilders.by(typeId, version) match {
               case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
               case Some(x) =>
                 x match {
@@ -333,7 +333,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         implicit val broadcastAssocRequestReadsFormat: Format[SignedAssociationRequest]       = Json.format
         implicit val broadcastSponsorshipRequestReadsFormat: Format[SignedSponsorshipRequest] = Json.format
 
-        val r = TransactionParsers.by(typeId, version) match {
+        val r = TransactionBuilders.by(typeId, version) match {
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             x match {

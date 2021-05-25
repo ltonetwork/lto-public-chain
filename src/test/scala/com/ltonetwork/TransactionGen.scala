@@ -315,7 +315,7 @@ trait TransactionGenBase extends ScriptGen {
 
   val MinIssueFee = 100000000
 
-  def versionGen(builder: TransactionParser): Gen[Byte] = {
+  def versionGen(builder: TransactionBuilder): Gen[Byte] = {
     Gen.oneOf(builder.supportedVersions.toSeq)
   }
   val randomTransactionGen: Gen[SignedTransaction] = (for {

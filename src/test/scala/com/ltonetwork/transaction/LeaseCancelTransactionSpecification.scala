@@ -19,7 +19,7 @@ class LeaseCancelTransactionSpecification extends PropSpec with PropertyChecks w
 
   property("Lease cancel serialization from TypedTransaction") {
     forAll(leaseCancelGen) { tx: LeaseCancelTransaction =>
-      val recovered = TransactionParsers.parseBytes(tx.bytes()).get
+      val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
       assertTxs(recovered.asInstanceOf[LeaseCancelTransaction], tx)
     }
   }

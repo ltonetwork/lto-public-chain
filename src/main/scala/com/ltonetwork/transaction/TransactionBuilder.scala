@@ -1,7 +1,5 @@
 package com.ltonetwork.transaction
 
-import cats.data.{Validated, ValidatedNel}
-import cats.data.Validated.{Invalid, Valid}
 import com.google.common.primitives.Longs
 import com.ltonetwork.account.KeyTypes.keyType
 import com.ltonetwork.account.PublicKeyAccount
@@ -9,7 +7,7 @@ import com.ltonetwork.transaction.ValidationError.InvalidPublicKey
 
 import scala.util.Try
 
-trait TransactionParser {
+trait TransactionBuilder {
   type TransactionT <: Transaction
 
   def typeId: Byte
@@ -20,7 +18,7 @@ trait TransactionParser {
   def parseBytes(bytes: Array[Byte]): Try[TransactionT]
 }
 
-object TransactionParser {
+object TransactionBuilder {
   private def longLength = 8
 
   case class HardcodedVersion1(typeId: Byte) {
@@ -97,7 +95,7 @@ object TransactionParser {
     }
   }
 
-  abstract class For[T <: Transaction] extends TransactionParser {
+  abstract class For[T <: Transaction] extends TransactionBuilder {
     override type TransactionT = T
   }
 }

@@ -22,7 +22,7 @@ case class LeaseCancelTransactionV2 private (version: Byte,
 
   override def chainByte: Option[Byte] = Some(chainId)
 
-  override val builder: TransactionParser = LeaseCancelTransactionV2
+  override val builder: TransactionBuilder = LeaseCancelTransactionV2
 
   val bodyBytes: Coeval[Array[Byte]] =
     Coeval.evalOnce(Bytes.concat(Array(builder.typeId, version, chainId), bytesBase()))
@@ -31,7 +31,7 @@ case class LeaseCancelTransactionV2 private (version: Byte,
 
 }
 
-object LeaseCancelTransactionV2 extends TransactionParserFor[LeaseCancelTransactionV2] with TransactionParser.MultipleVersions {
+object LeaseCancelTransactionV2 extends TransactionParserFor[LeaseCancelTransactionV2] with TransactionBuilder.MultipleVersions {
 
   override val typeId: Byte                 = 9
   override def supportedVersions: Set[Byte] = Set(2)

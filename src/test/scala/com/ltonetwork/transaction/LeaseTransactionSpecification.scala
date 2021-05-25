@@ -19,7 +19,7 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
 
   property("Lease transaction from TransactionParser") {
     forAll(leaseGen) { tx: LeaseTransaction =>
-      val recovered = TransactionParsers.parseBytes(tx.bytes()).get
+      val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
       assertTxs(recovered.asInstanceOf[LeaseTransaction], tx)
     }
   }

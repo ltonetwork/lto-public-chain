@@ -21,13 +21,13 @@ case class TransferTransactionV1 private (sender: PublicKeyAccount,
     with SignedTransaction
     with FastHashId {
 
-  override val builder: TransactionParser     = TransferTransactionV1
+  override val builder: TransactionBuilder     = TransferTransactionV1
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Array(builder.typeId) ++ bytesBase())
   override val bytes: Coeval[Array[Byte]]     = Coeval.evalOnce(Bytes.concat(Array(builder.typeId), signature.arr, bodyBytes()))
   override val version: Byte                  = 1: Byte
 }
 
-object TransferTransactionV1 extends TransactionParserFor[TransferTransactionV1] with TransactionParser.HardcodedVersion1 {
+object TransferTransactionV1 extends TransactionParserFor[TransferTransactionV1] with TransactionBuilder.HardcodedVersion1 {
 
   override val typeId: Byte = 4
 

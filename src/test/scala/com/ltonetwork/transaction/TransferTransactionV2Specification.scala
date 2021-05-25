@@ -23,7 +23,7 @@ class TransferTransactionV2Specification extends PropSpec with PropertyChecks wi
 
   property("VersionedTransferTransactionSpecification serialization from TypedTransaction") {
     forAll(transferV2Gen) { tx: TransferTransactionV2 =>
-      val recovered = TransactionParsers.parseBytes(tx.bytes()).get
+      val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
       assertTxs(recovered.asInstanceOf[TransferTransactionV2], tx)
     }
   }

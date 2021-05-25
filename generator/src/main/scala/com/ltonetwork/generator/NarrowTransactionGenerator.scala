@@ -140,7 +140,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
 
 object NarrowTransactionGenerator {
 
-  case class Settings(transactions: Int, probabilities: Map[TransactionParser, Double])
+  case class Settings(transactions: Int, probabilities: Map[TransactionBuilder, Double])
 
   private val minAliasLength = 4
   private val maxAliasLength = 30
