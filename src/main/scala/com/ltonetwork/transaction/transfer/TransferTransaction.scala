@@ -47,12 +47,12 @@ object TransferTransaction {
   val MaxAttachmentSize            = 140
   val MaxAttachmentStringSize: Int = base58Length(MaxAttachmentSize)
 
-  def validate(amount: Long, feeAmount: Long, attachment: Array[Byte]): Either[ValidationError, Unit] = {
+  def validate(amount: Long, fee: Long, attachment: Array[Byte]): Either[ValidationError, Unit] = {
     (
       validateAmount(amount, "lto"),
-      validateFee(feeAmount),
+      validateFee(fee),
       validateAttachment(attachment),
-      validateSum(Seq(amount, feeAmount))
+      validateSum(Seq(amount, fee))
     ).mapN { case _ => () }
       .toEither
       .leftMap(_.head)
@@ -63,12 +63,12 @@ object TransferTransaction {
     val s1        = start + KeyLength
     val timestamp = Longs.fromByteArray(bytes.slice(s1, s1 + 8))
     val amount    = Longs.fromByteArray(bytes.slice(s1 + 8, s1 + 16))
-    val feeAmount = Longs.fromByteArray(bytes.slice(s1 + 16, s1 + 24))
+    val fee = Longs.fromByteArray(bytes.slice(s1 + 16, s1 + 24))
     for {
       recRes <- AddressOrAlias.fromBytes(bytes, s1 + 24)
       (recipient, recipientEnd) = recRes
       (attachment, end)         = Deser.parseArraySize(bytes, recipientEnd)
-    } yield (sender, timestamp, amount, feeAmount, recipient, attachment, end)
+    } yield (sender, timestamp, amount, fee, recipient, attachment, end)
 
   }
 

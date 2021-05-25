@@ -1,5 +1,6 @@
 package com.ltonetwork.transaction.anchor
 
+import cats.data.{Validated, ValidatedNel}
 import com.google.common.primitives.Bytes
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
@@ -30,34 +31,27 @@ object AnchorTransaction extends TransactionParser.For[AnchorTransaction] {
   val MaxBytes: Int          = 150 * 1024
   val MaxEntryCount: Int     = 100
 
-  def validate(version: Byte,
-               anchors: List[ByteStr],
-               feeAmount: Long,
-               sponsor: Option[PublicKeyAccount]): Either[ValidationError, None.type] = {
-    if (!supportedVersions.contains(version)) {
-      Left(ValidationError.UnsupportedVersion(version))
-    } else if (anchors.lengthCompare(MaxEntryCount) > 0) {
-      Left(ValidationError.TooBigArray)
-    } else if (anchors.exists(a => !EntryLength.contains(a.arr.length))) {
-      Left(ValidationError.GenericError(s"Anchor can only be of length $EntryLength Bytes"))
-    } else if (anchors.distinct.lengthCompare(anchors.size) < 0) {
-      Left(ValidationError.GenericError("Duplicate anchor in one tx found"))
-    } else if (feeAmount <= 0) {
-      Left(ValidationError.InsufficientFee())
-    } else if (sponsor.isDefined && version < 3) {
-      Left(ValidationError.SponsoredTxNotSupported(s"Sponsored transaction not supported for tx v$version"))
-    } else {
-      Right(None)
+  implicit object Validator extends TxValidator[TransactionT] {
+    def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
+      import tx._
+      seq(tx)(
+        Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(anchors.lengthCompare(MaxEntryCount) > 0, None, ValidationError.TooBigArray),
+        Validated.condNel(anchors.exists(a => !EntryLength.contains(a.arr.length)), None, ValidationError.GenericError(s"Anchor can only be of length $EntryLength Bytes")),
+        Validated.condNel(anchors.distinct.lengthCompare(anchors.size) < 0, None, ValidationError.GenericError("Duplicate anchor in one tx found")),
+        Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.SponsoredTxNotSupported(s"Sponsored transaction not supported for tx v$version")),
+      )
     }
   }
 
-  override def serializer(version: Byte): TransactionSerializer.For[AnchorTransaction] = version match {
+  override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => AnchorSerializerV1
     case 3 => AnchorSerializerV3
     case _ => UnknownSerializer
   }
 
-  override protected def parseBytes(bytes: Array[Byte]): Try[AnchorTransaction] = {
+  override protected def parseBytes(bytes: Array[Byte]): Try[TransactionT] = {
     Try {
       val txEi = for {
         (version, end) <- TransactionParser.MultipleVersions(typeId, supportedVersions).parseHeader(bytes)
@@ -70,22 +64,20 @@ object AnchorTransaction extends TransactionParser.For[AnchorTransaction] {
   def create(version: Byte,
              timestamp: Long,
              sender: PublicKeyAccount,
-             feeAmount: Long,
+             fee: Long,
              anchors: List[ByteStr],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] = {
-    validate(version, anchors, feeAmount, sponsor).right.map { _ =>
-      AnchorTransaction(version, timestamp, sender, feeAmount, anchors, sponsor, proofs)
-    }.right.flatMap(tx => Either.cond(tx.bytes().length <= MaxBytes, tx, ValidationError.TooBigArray))
+    AnchorTransaction(version, timestamp, sender, fee, anchors, sponsor, proofs).validatedEither
   }
 
   def signed(version: Byte,
              timestamp: Long,
              sender: PublicKeyAccount,
-             feeAmount: Long,
+             fee: Long,
              data: List[ByteStr],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    create(version, timestamp, sender, feeAmount, data, None, Proofs.empty).right.map { unsigned =>
+    create(version, timestamp, sender, fee, data, None, Proofs.empty).right.map { unsigned =>
       unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes())))).explicitGet())
     }
   }
@@ -93,9 +85,9 @@ object AnchorTransaction extends TransactionParser.For[AnchorTransaction] {
   def selfSigned(version: Byte,
                  timestamp: Long,
                  sender: PrivateKeyAccount,
-                 feeAmount: Long,
+                 fee: Long,
                  data: List[ByteStr]): Either[ValidationError, TransactionT] = {
-    signed(version, timestamp, sender, feeAmount, data, sender)
+    signed(version, timestamp, sender, fee, data, sender)
   }
 
   private object UnknownSerializer extends TransactionSerializer.Unknown[AnchorTransaction]

@@ -1,5 +1,7 @@
 package com.ltonetwork.transaction
 
+import cats.data.{Validated, ValidatedNel}
+import cats.data.Validated.{Invalid, Valid}
 import com.google.common.primitives.Longs
 import com.ltonetwork.account.KeyTypes.keyType
 import com.ltonetwork.account.PublicKeyAccount
@@ -89,9 +91,9 @@ object TransactionParser {
       val sender = senderMaybe.get
 
       val s1 = start + longLength + 2 + sender.keyType.length
-      val feeAmount = Longs.fromByteArray(bytes.slice(s1, s1 + longLength))
+      val fee = Longs.fromByteArray(bytes.slice(s1, s1 + longLength))
 
-      Right(timestamp, sender, feeAmount, s1 + longLength)
+      Right(timestamp, sender, fee, s1 + longLength)
     }
   }
 

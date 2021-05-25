@@ -36,10 +36,10 @@ object AnchorSerializerV1 extends TransactionSerializer.For[AnchorTransaction] {
         arrays    = r._1
         pos       = r._2
         timestamp = Longs.fromByteArray(bytes.drop(p0 + pos))
-        feeAmount = Longs.fromByteArray(bytes.drop(p0 + pos + 8))
+        fee = Longs.fromByteArray(bytes.drop(p0 + pos + 8))
 
         proofs <- Proofs.fromBytes(bytes.drop(p0 + pos + 16))
-        tx     <- create(version, timestamp, sender, feeAmount, arrays.map(ByteStr(_)).toList, None, proofs)
+        tx     <- create(version, timestamp, sender, fee, arrays.map(ByteStr(_)).toList, None, proofs)
       } yield tx
       txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten

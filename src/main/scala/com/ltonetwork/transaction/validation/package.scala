@@ -8,12 +8,10 @@ import com.ltonetwork.utils.base58Length
 import scala.util.Try
 
 package object validation {
-  val MaxDescriptionLength = 1000
   val MaxAssetNameLength   = 16
   val MinAssetNameLength   = 4
   val MaxDecimals          = 8
   val MaxTransferCount     = 100
-  val MaxEntryCount        = 100
 
   type Validated[A] = ValidatedNel[ValidationError, A]
 
@@ -40,24 +38,6 @@ package object validation {
       .fold[Validated[Long]](
         _ => ValidationError.OverflowError.invalidNel,
         _.validNel
-      )
-  }
-
-  def validateName(name: Array[Byte]): Validated[Array[Byte]] = {
-    Validated
-      .condNel(
-        name.length >= MinAssetNameLength && name.length <= MaxAssetNameLength,
-        name,
-        ValidationError.InvalidName
-      )
-  }
-
-  def validateDescription(description: Array[Byte]): Validated[Array[Byte]] = {
-    Validated
-      .condNel(
-        description.length <= MaxDescriptionLength,
-        description,
-        ValidationError.TooBigArray
       )
   }
 

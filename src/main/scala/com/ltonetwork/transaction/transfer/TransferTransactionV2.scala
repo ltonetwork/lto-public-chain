@@ -36,9 +36,9 @@ object TransferTransactionV2 extends TransactionParserFor[TransferTransactionV2]
     Try {
       (for {
         parsed <- TransferTransaction.parseBase(bytes, 0)
-        (sender, timestamp, amount, feeAmount, recipient, attachment, end) = parsed
+        (sender, timestamp, amount, fee, recipient, attachment, end) = parsed
         proofs <- Proofs.fromBytes(bytes.drop(end))
-        tt     <- TransferTransactionV2.create(version, sender, recipient, amount, timestamp, feeAmount, attachment, proofs)
+        tt     <- TransferTransactionV2.create(version, sender, recipient, amount, timestamp, fee, attachment, proofs)
       } yield tt).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
@@ -47,13 +47,13 @@ object TransferTransactionV2 extends TransactionParserFor[TransferTransactionV2]
              recipient: AddressOrAlias,
              amount: Long,
              timestamp: Long,
-             feeAmount: Long,
+             fee: Long,
              attachment: Array[Byte],
              proofs: Proofs): Either[ValidationError, TransactionT] = {
     for {
       _ <- Either.cond(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version))
-      _ <- TransferTransaction.validate(amount, feeAmount, attachment)
-    } yield TransferTransactionV2(version, sender, recipient, amount, timestamp, feeAmount, attachment, proofs)
+      _ <- TransferTransaction.validate(amount, fee, attachment)
+    } yield TransferTransactionV2(version, sender, recipient, amount, timestamp, fee, attachment, proofs)
   }
 
   def signed(version: Byte,
@@ -61,10 +61,10 @@ object TransferTransactionV2 extends TransactionParserFor[TransferTransactionV2]
              recipient: AddressOrAlias,
              amount: Long,
              timestamp: Long,
-             feeAmount: Long,
+             fee: Long,
              attachment: Array[Byte],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    create(version, sender, recipient, amount, timestamp, feeAmount, attachment, Proofs.empty).right.map { unsigned =>
+    create(version, sender, recipient, amount, timestamp, fee, attachment, Proofs.empty).right.map { unsigned =>
       unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes())))).explicitGet())
     }
   }
@@ -74,8 +74,8 @@ object TransferTransactionV2 extends TransactionParserFor[TransferTransactionV2]
                  recipient: AddressOrAlias,
                  amount: Long,
                  timestamp: Long,
-                 feeAmount: Long,
+                 fee: Long,
                  attachment: Array[Byte]): Either[ValidationError, TransactionT] = {
-    signed(version, sender, recipient, amount, timestamp, feeAmount, attachment, sender)
+    signed(version, sender, recipient, amount, timestamp, fee, attachment, sender)
   }
 }

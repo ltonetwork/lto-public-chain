@@ -107,21 +107,21 @@ object AssociationTransaction {
         (hashOpt, s0) = Deser.parseOption(bytes, partyEnd + 4)(ByteStr(_))
         s1            = s0
         timestamp     = Longs.fromByteArray(bytes.drop(s1))
-        feeAmount     = Longs.fromByteArray(bytes.drop(s1 + 8))
+        fee     = Longs.fromByteArray(bytes.drop(s1 + 8))
         proofs <- Proofs.fromBytes(bytes.drop(s1 + 16))
         _      <- Either.cond(chainId == networkByte, (), GenericError(s"Wrong chainId ${chainId.toInt}"))
-        _      <- validate(version, sender, party, hashOpt, feeAmount)
-        tx = create(version, chainId, sender, Assoc(party, assocType, hashOpt), feeAmount, timestamp, proofs)
+        _      <- validate(version, sender, party, hashOpt, fee)
+        tx = create(version, chainId, sender, Assoc(party, assocType, hashOpt), fee, timestamp, proofs)
       } yield tx
       txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
-  def validate(version: Byte, sender: PublicKeyAccount, party: Address, hash: Option[ByteStr], feeAmount: Long): Either[ValidationError, Unit] = {
+  def validate(version: Byte, sender: PublicKeyAccount, party: Address, hash: Option[ByteStr], fee: Long): Either[ValidationError, Unit] = {
     if (!supportedVersions.contains(version)) {
       Left(ValidationError.UnsupportedVersion(version))
     } else if (hash.exists(_.arr.size > MaxHashLength)) {
       Left(ValidationError.GenericError("Hash length must be <=" + MaxHashLength + " bytes"))
-    } else if (feeAmount <= 0) {
+    } else if (fee <= 0) {
       Left(ValidationError.InsufficientFee())
     } else if (sender.address == party.address) {
       Left(GenericError("Can't associate with oneself"))
@@ -142,16 +142,16 @@ object IssueAssociationTransaction extends TransactionParserFor[IssueAssociation
              party: Address,
              assocType: Int,
              hash: Option[ByteStr],
-             feeAmount: Long,
+             fee: Long,
              timestamp: Long,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    AssociationTransaction.validate(version, sender, party, hash, feeAmount).map { _ =>
+    AssociationTransaction.validate(version, sender, party, hash, fee).map { _ =>
       val uns = IssueAssociationTransaction(
         version = version,
         chainId = AssociationTransaction.networkByte,
         sender = sender,
         assoc = Assoc(party, assocType, hash),
-        fee = feeAmount,
+        fee = fee,
         timestamp = timestamp,
         proofs = Proofs.empty
       )
@@ -164,9 +164,9 @@ object IssueAssociationTransaction extends TransactionParserFor[IssueAssociation
                  party: Address,
                  assocType: Int,
                  hash: Option[ByteStr],
-                 feeAmount: Long,
+                 fee: Long,
                  timestamp: Long): Either[ValidationError, TransactionT] = {
-    signed(version, sender, party, assocType, hash, feeAmount, timestamp, sender)
+    signed(version, sender, party, assocType, hash, fee, timestamp, sender)
   }
 
   def create(version: Byte,
@@ -174,13 +174,13 @@ object IssueAssociationTransaction extends TransactionParserFor[IssueAssociation
              party: Address,
              assocType: Int,
              hash: Option[ByteStr],
-             feeAmount: Long,
+             fee: Long,
              timestamp: Long,
              proofs: Proofs): Either[ValidationError, IssueAssociationTransaction] =
     AssociationTransaction
-      .validate(version, sender, party, hash, feeAmount)
+      .validate(version, sender, party, hash, fee)
       .map(_ =>
-        IssueAssociationTransaction(version, AssociationTransaction.networkByte, sender, Assoc(party, assocType, hash), feeAmount, timestamp, proofs))
+        IssueAssociationTransaction(version, AssociationTransaction.networkByte, sender, Assoc(party, assocType, hash), fee, timestamp, proofs))
 }
 
 object RevokeAssociationTransaction extends TransactionParserFor[RevokeAssociationTransaction] with TransactionParser.MultipleVersions {
@@ -194,15 +194,15 @@ object RevokeAssociationTransaction extends TransactionParserFor[RevokeAssociati
              party: Address,
              assocType: Int,
              hash: Option[ByteStr],
-             feeAmount: Long,
+             fee: Long,
              timestamp: Long,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    AssociationTransaction.validate(version, sender, party, hash, feeAmount).map { _ =>
+    AssociationTransaction.validate(version, sender, party, hash, fee).map { _ =>
       val uns = RevokeAssociationTransaction(version,
                                              AssociationTransaction.networkByte,
                                              sender,
                                              Assoc(party, assocType, hash),
-                                             feeAmount,
+                                             fee,
                                              timestamp,
                                              Proofs.empty)
       uns.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, uns.bodyBytes())))).explicitGet())
@@ -214,27 +214,27 @@ object RevokeAssociationTransaction extends TransactionParserFor[RevokeAssociati
                  party: Address,
                  assocType: Int,
                  hash: Option[ByteStr],
-                 feeAmount: Long,
+                 fee: Long,
                  timestamp: Long): Either[ValidationError, TransactionT] = {
-    signed(version, sender, party, assocType, hash, feeAmount, timestamp, sender)
+    signed(version, sender, party, assocType, hash, fee, timestamp, sender)
   }
   def create(version: Byte,
              sender: PublicKeyAccount,
              party: Address,
              assocType: Int,
              hash: Option[ByteStr],
-             feeAmount: Long,
+             fee: Long,
              timestamp: Long,
              proofs: Proofs): Either[ValidationError, RevokeAssociationTransaction] =
     AssociationTransaction
-      .validate(version, sender, party, hash, feeAmount)
+      .validate(version, sender, party, hash, fee)
       .map(
         _ =>
           RevokeAssociationTransaction(version,
                                        AssociationTransaction.networkByte,
                                        sender,
                                        Assoc(party, assocType, hash),
-                                       feeAmount,
+                                       fee,
                                        timestamp,
                                        proofs))
 }

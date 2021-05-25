@@ -59,10 +59,10 @@ object DataTransaction extends TransactionParserFor[DataTransaction] with Transa
         } else (List.empty, p0 + 2)
 
       val timestamp = Longs.fromByteArray(bytes.drop(p1))
-      val feeAmount = Longs.fromByteArray(bytes.drop(p1 + 8))
+      val fee = Longs.fromByteArray(bytes.drop(p1 + 8))
       val txEi = for {
         proofs <- Proofs.fromBytes(bytes.drop(p1 + 16))
-        tx     <- create(version, sender, entries, feeAmount, timestamp, proofs)
+        tx     <- create(version, sender, entries, fee, timestamp, proofs)
       } yield tx
       txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
@@ -70,7 +70,7 @@ object DataTransaction extends TransactionParserFor[DataTransaction] with Transa
   def create(version: Byte,
              sender: PublicKeyAccount,
              data: List[DataEntry[_]],
-             feeAmount: Long,
+             fee: Long,
              timestamp: Long,
              proofs: Proofs): Either[ValidationError, TransactionT] = {
     if (!supportedVersions.contains(version)) {
@@ -81,10 +81,10 @@ object DataTransaction extends TransactionParserFor[DataTransaction] with Transa
       Left(ValidationError.GenericError("Empty key found"))
     } else if (data.map(_.key).distinct.lengthCompare(data.size) < 0) {
       Left(ValidationError.GenericError("Duplicate keys found"))
-    } else if (feeAmount <= 0) {
+    } else if (fee <= 0) {
       Left(ValidationError.InsufficientFee())
     } else {
-      val tx = DataTransaction(version, sender, data, feeAmount, timestamp, proofs)
+      val tx = DataTransaction(version, sender, data, fee, timestamp, proofs)
       Either.cond(tx.bytes().length <= MaxBytes, tx, ValidationError.TooBigArray)
     }
   }
@@ -92,10 +92,10 @@ object DataTransaction extends TransactionParserFor[DataTransaction] with Transa
   def signed(version: Byte,
              sender: PublicKeyAccount,
              data: List[DataEntry[_]],
-             feeAmount: Long,
+             fee: Long,
              timestamp: Long,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    create(version, sender, data, feeAmount, timestamp, Proofs.empty).right.map { unsigned =>
+    create(version, sender, data, fee, timestamp, Proofs.empty).right.map { unsigned =>
       unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes())))).explicitGet())
     }
   }
@@ -103,8 +103,8 @@ object DataTransaction extends TransactionParserFor[DataTransaction] with Transa
   def selfSigned(version: Byte,
                  sender: PrivateKeyAccount,
                  data: List[DataEntry[_]],
-                 feeAmount: Long,
+                 fee: Long,
                  timestamp: Long): Either[ValidationError, TransactionT] = {
-    signed(version, sender, data, feeAmount, timestamp, sender)
+    signed(version, sender, data, fee, timestamp, sender)
   }
 }

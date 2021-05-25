@@ -83,19 +83,19 @@ object SponsorshipTransactionBase {
         recipientEnd = p0 + 1 + Address.AddressLength
         s1           = recipientEnd
         timestamp    = Longs.fromByteArray(bytes.drop(s1))
-        feeAmount    = Longs.fromByteArray(bytes.drop(s1 + 8))
+        fee    = Longs.fromByteArray(bytes.drop(s1 + 8))
         proofs <- Proofs.fromBytes(bytes.drop(s1 + 16))
         _      <- Either.cond(chainId == networkByte, (), GenericError(s"Wrong chainId ${chainId.toInt}"))
-        _      <- validate(version, sender, recipient, feeAmount)
-        tx = create(version, chainId, sender, recipient, feeAmount, timestamp, proofs)
+        _      <- validate(version, sender, recipient, fee)
+        tx = create(version, chainId, sender, recipient, fee, timestamp, proofs)
       } yield tx
       txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
-  def validate(version: Byte, sender: PublicKeyAccount, party: Address, feeAmount: Long): Either[ValidationError, Unit] = {
+  def validate(version: Byte, sender: PublicKeyAccount, party: Address, fee: Long): Either[ValidationError, Unit] = {
     if (!supportedVersions.contains(version)) {
       Left(ValidationError.UnsupportedVersion(version))
-    } else if (feeAmount <= 0) {
+    } else if (fee <= 0) {
       Left(ValidationError.InsufficientFee())
     } else if (sender.address == party.address) {
       Left(GenericError("Can't sponsor oneself"))
@@ -114,11 +114,11 @@ object SponsorshipTransaction extends TransactionParserFor[SponsorshipTransactio
   def signed(version: Byte,
              sender: PublicKeyAccount,
              recipient: Address,
-             feeAmount: Long,
+             fee: Long,
              timestamp: Long,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    SponsorshipTransactionBase.validate(version, sender, recipient, feeAmount).map { _ =>
-      val uns = SponsorshipTransaction(version, SponsorshipTransactionBase.networkByte, sender, recipient, feeAmount, timestamp, Proofs.empty)
+    SponsorshipTransactionBase.validate(version, sender, recipient, fee).map { _ =>
+      val uns = SponsorshipTransaction(version, SponsorshipTransactionBase.networkByte, sender, recipient, fee, timestamp, Proofs.empty)
       uns.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, uns.bodyBytes())))).explicitGet())
     }
   }
@@ -126,20 +126,20 @@ object SponsorshipTransaction extends TransactionParserFor[SponsorshipTransactio
   def selfSigned(version: Byte,
                  sender: PrivateKeyAccount,
                  recipient: Address,
-                 feeAmount: Long,
+                 fee: Long,
                  timestamp: Long): Either[ValidationError, TransactionT] = {
-    signed(version, sender, recipient, feeAmount, timestamp, sender)
+    signed(version, sender, recipient, fee, timestamp, sender)
   }
 
   def create(version: Byte,
              sender: PublicKeyAccount,
              recipient: Address,
-             feeAmount: Long,
+             fee: Long,
              timestamp: Long,
              proofs: Proofs): Either[ValidationError, SponsorshipTransaction] =
     SponsorshipTransactionBase
-      .validate(version, sender, recipient, feeAmount)
-      .map(_ => SponsorshipTransaction(version, SponsorshipTransactionBase.networkByte, sender, recipient, feeAmount, timestamp, proofs))
+      .validate(version, sender, recipient, fee)
+      .map(_ => SponsorshipTransaction(version, SponsorshipTransactionBase.networkByte, sender, recipient, fee, timestamp, proofs))
 }
 
 object SponsorshipCancelTransaction extends TransactionParserFor[SponsorshipCancelTransaction] with TransactionParser.MultipleVersions {
@@ -151,11 +151,11 @@ object SponsorshipCancelTransaction extends TransactionParserFor[SponsorshipCanc
   def signed(version: Byte,
              sender: PublicKeyAccount,
              recipient: Address,
-             feeAmount: Long,
+             fee: Long,
              timestamp: Long,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    SponsorshipTransactionBase.validate(version, sender, recipient, feeAmount).map { _ =>
-      val uns = SponsorshipCancelTransaction(version, SponsorshipTransactionBase.networkByte, sender, recipient, feeAmount, timestamp, Proofs.empty)
+    SponsorshipTransactionBase.validate(version, sender, recipient, fee).map { _ =>
+      val uns = SponsorshipCancelTransaction(version, SponsorshipTransactionBase.networkByte, sender, recipient, fee, timestamp, Proofs.empty)
       uns.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, uns.bodyBytes())))).explicitGet())
     }
   }
@@ -163,17 +163,17 @@ object SponsorshipCancelTransaction extends TransactionParserFor[SponsorshipCanc
   def selfSigned(version: Byte,
                  sender: PrivateKeyAccount,
                  recipient: Address,
-                 feeAmount: Long,
+                 fee: Long,
                  timestamp: Long): Either[ValidationError, TransactionT] = {
-    signed(version, sender, recipient, feeAmount, timestamp, sender)
+    signed(version, sender, recipient, fee, timestamp, sender)
   }
   def create(version: Byte,
              sender: PublicKeyAccount,
              recipient: Address,
-             feeAmount: Long,
+             fee: Long,
              timestamp: Long,
              proofs: Proofs): Either[ValidationError, SponsorshipCancelTransaction] =
     SponsorshipTransactionBase
-      .validate(version, sender, recipient, feeAmount)
-      .map(_ => SponsorshipCancelTransaction(version, SponsorshipTransactionBase.networkByte, sender, recipient, feeAmount, timestamp, proofs))
+      .validate(version, sender, recipient, fee)
+      .map(_ => SponsorshipCancelTransaction(version, SponsorshipTransactionBase.networkByte, sender, recipient, fee, timestamp, proofs))
 }
