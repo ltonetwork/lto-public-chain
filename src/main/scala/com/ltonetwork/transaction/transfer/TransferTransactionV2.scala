@@ -27,7 +27,7 @@ case class TransferTransactionV2 private (version: Byte,
 
 }
 
-object TransferTransactionV2 extends TransactionParserFor[TransferTransactionV2] with TransactionBuilder.MultipleVersions {
+object TransferTransactionV2 extends TransactionBuilder.For[TransferTransactionV2] with TransactionBuilder.MultipleVersions {
 
   override val typeId: Byte                 = 4
   override val supportedVersions: Set[Byte] = Set(2)

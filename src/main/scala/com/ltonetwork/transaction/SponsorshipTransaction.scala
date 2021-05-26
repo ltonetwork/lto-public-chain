@@ -105,7 +105,7 @@ object SponsorshipTransactionBase {
   }
 }
 
-object SponsorshipTransaction extends TransactionParserFor[SponsorshipTransaction] with TransactionBuilder.MultipleVersions {
+object SponsorshipTransaction extends TransactionBuilder.For[SponsorshipTransaction] with TransactionBuilder.MultipleVersions {
   override def typeId: Byte                 = 18
   override def supportedVersions: Set[Byte] = Set(1: Byte)
   override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[SponsorshipTransaction] =
@@ -142,7 +142,7 @@ object SponsorshipTransaction extends TransactionParserFor[SponsorshipTransactio
       .map(_ => SponsorshipTransaction(version, SponsorshipTransactionBase.networkByte, sender, recipient, fee, timestamp, proofs))
 }
 
-object SponsorshipCancelTransaction extends TransactionParserFor[SponsorshipCancelTransaction] with TransactionBuilder.MultipleVersions {
+object SponsorshipCancelTransaction extends TransactionBuilder.For[SponsorshipCancelTransaction] with TransactionBuilder.MultipleVersions {
   override def typeId: Byte                 = 19
   override def supportedVersions: Set[Byte] = Set(1: Byte)
   override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[SponsorshipCancelTransaction] =

@@ -131,7 +131,7 @@ object AssociationTransaction {
   }
 }
 
-object IssueAssociationTransaction extends TransactionParserFor[IssueAssociationTransaction] with TransactionBuilder.MultipleVersions {
+object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociationTransaction] with TransactionBuilder.MultipleVersions {
   override def typeId: Byte                 = 16
   override def supportedVersions: Set[Byte] = Set(1: Byte)
   override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[IssueAssociationTransaction] =
@@ -183,7 +183,7 @@ object IssueAssociationTransaction extends TransactionParserFor[IssueAssociation
         IssueAssociationTransaction(version, AssociationTransaction.networkByte, sender, Assoc(party, assocType, hash), fee, timestamp, proofs))
 }
 
-object RevokeAssociationTransaction extends TransactionParserFor[RevokeAssociationTransaction] with TransactionBuilder.MultipleVersions {
+object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssociationTransaction] with TransactionBuilder.MultipleVersions {
   override def typeId: Byte                 = 17
   override def supportedVersions: Set[Byte] = Set(1: Byte)
   override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[RevokeAssociationTransaction] =

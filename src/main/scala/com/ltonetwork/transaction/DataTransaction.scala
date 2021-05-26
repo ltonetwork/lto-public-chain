@@ -38,7 +38,7 @@ case class DataTransaction private (version: Byte, sender: PublicKeyAccount, dat
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(0: Byte), bodyBytes(), proofs.bytes()))
 }
 
-object DataTransaction extends TransactionParserFor[DataTransaction] with TransactionBuilder.MultipleVersions {
+object DataTransaction extends TransactionBuilder.For[DataTransaction] with TransactionBuilder.MultipleVersions {
 
   override val typeId: Byte                 = 12
   override val supportedVersions: Set[Byte] = Set(1)

@@ -13,7 +13,7 @@ trait TransactionSerializer {
   def bodyBytes(tx: TransactionT): Coeval[Array[Byte]]
   def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT]
 
-  def json(tx: TransactionT): Coeval[JsObject]
+  def toJson(tx: TransactionT): Coeval[JsObject]
 
   protected def jsonBase(tx: Transaction, txJson: JsObject): JsObject = {
     import tx._
@@ -31,8 +31,7 @@ trait TransactionSerializer {
         "sponsor" -> sponsor.get.address,
         "sponsorKeyType" -> sponsor.get.keyType.id,
         "sponsorPublicKey" -> Base58.encode(sponsor.get.publicKey)
-      )
-      else Json.obj()
+      ) else Json.obj()
     } ++ txJson ++ (tx match {
       case s: SigProofsSwitch if s.usesLegacySignature => Json.obj("signature" -> s.signature.toString)
       case _ if proofs.proofs.nonEmpty                 => Json.obj("proofs" -> JsArray(proofs.proofs.map(p => JsString(p.toString))))
@@ -50,7 +49,7 @@ object TransactionSerializer {
     override type TransactionT = T
 
     def bodyBytes(tx: TransactionT): Coeval[Array[Byte]] = Coeval.raiseError(UnsupportedVersion(tx.version))
-    def json(tx: TransactionT): Coeval[JsObject] = Coeval.raiseError(UnsupportedVersion(tx.version))
+    def toJson(tx: TransactionT): Coeval[JsObject] = Coeval.raiseError(UnsupportedVersion(tx.version))
 
     def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Failure(UnsupportedVersion(version))
   }

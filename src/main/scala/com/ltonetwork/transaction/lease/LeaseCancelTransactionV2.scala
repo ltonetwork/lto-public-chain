@@ -31,7 +31,7 @@ case class LeaseCancelTransactionV2 private (version: Byte,
 
 }
 
-object LeaseCancelTransactionV2 extends TransactionParserFor[LeaseCancelTransactionV2] with TransactionBuilder.MultipleVersions {
+object LeaseCancelTransactionV2 extends TransactionBuilder.For[LeaseCancelTransactionV2] with TransactionBuilder.MultipleVersions {
 
   override val typeId: Byte                 = 9
   override def supportedVersions: Set[Byte] = Set(2)

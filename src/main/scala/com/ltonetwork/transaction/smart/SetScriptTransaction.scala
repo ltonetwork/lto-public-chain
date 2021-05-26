@@ -41,7 +41,7 @@ case class SetScriptTransaction private (version: Byte,
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(0: Byte), bodyBytes(), proofs.bytes()))
 }
 
-object SetScriptTransaction extends TransactionParserFor[SetScriptTransaction] with TransactionBuilder.MultipleVersions {
+object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction] with TransactionBuilder.MultipleVersions {
 
   override val typeId: Byte                 = 13
   override val supportedVersions: Set[Byte] = Set(1)

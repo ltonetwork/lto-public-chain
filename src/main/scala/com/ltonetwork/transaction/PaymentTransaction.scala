@@ -41,7 +41,7 @@ case class PaymentTransaction private (sender: PublicKeyAccount, recipient: Addr
 
 }
 
-object PaymentTransaction extends TransactionParserFor[PaymentTransaction] with TransactionBuilder.HardcodedVersion1 {
+object PaymentTransaction extends TransactionBuilder.For[PaymentTransaction] with TransactionBuilder.HardcodedVersion1 {
 
   override val typeId: Byte = 2
 

@@ -41,7 +41,7 @@ case class GenesisTransaction private (recipient: Address, amount: Long, timesta
   }
 }
 
-object GenesisTransaction extends TransactionParserFor[GenesisTransaction] with TransactionBuilder.HardcodedVersion1 {
+object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] with TransactionBuilder.HardcodedVersion1 {
 
   override val typeId: Byte = 1
 

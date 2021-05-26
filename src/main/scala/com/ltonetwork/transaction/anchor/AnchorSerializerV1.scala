@@ -44,7 +44,7 @@ object AnchorSerializerV1 extends TransactionSerializer.For[AnchorTransaction] {
       txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
-  override def json(tx: AnchorTransaction): Coeval[JsObject] = Coeval.evalOnce {
+  override def toJson(tx: AnchorTransaction): Coeval[JsObject] = Coeval.evalOnce {
     jsonBase(
       tx,
       Json.obj("anchors" -> Json.toJson(tx.anchors))

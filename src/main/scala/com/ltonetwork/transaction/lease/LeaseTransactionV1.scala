@@ -25,7 +25,7 @@ case class LeaseTransactionV1 private (sender: PublicKeyAccount,
   override def version: Byte              = 1
 }
 
-object LeaseTransactionV1 extends TransactionParserFor[LeaseTransactionV1] with TransactionBuilder.HardcodedVersion1 {
+object LeaseTransactionV1 extends TransactionBuilder.For[LeaseTransactionV1] with TransactionBuilder.HardcodedVersion1 {
 
   override val typeId: Byte = 8
 

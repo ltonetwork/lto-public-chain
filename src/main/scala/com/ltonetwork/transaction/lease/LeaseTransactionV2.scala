@@ -29,7 +29,7 @@ case class LeaseTransactionV2 private (version: Byte,
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(0: Byte), bodyBytes(), proofs.bytes()))
 }
 
-object LeaseTransactionV2 extends TransactionParserFor[LeaseTransactionV2] with TransactionBuilder.MultipleVersions {
+object LeaseTransactionV2 extends TransactionBuilder.For[LeaseTransactionV2] with TransactionBuilder.MultipleVersions {
 
   override val typeId: Byte                 = 8
   override def supportedVersions: Set[Byte] = Set(2)
