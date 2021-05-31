@@ -3,6 +3,7 @@ package com.ltonetwork.transaction
 import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.GenericError
+import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.transfer._
 
 class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {

@@ -1,12 +1,13 @@
-package com.ltonetwork.transaction
+package com.ltonetwork.transaction.genesis
 
 import com.google.common.primitives.{Bytes, Ints, Longs}
+import com.ltonetwork.account.Address
 import com.ltonetwork.crypto
 import com.ltonetwork.state.{ByteStr, _}
+import com.ltonetwork.transaction.TransactionBuilders._
+import com.ltonetwork.transaction.{AssetId, Transaction, TransactionBuilder, ValidationError}
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
-import com.ltonetwork.account.Address
-import com.ltonetwork.transaction.TransactionBuilders._
 
 import scala.util.{Failure, Success, Try}
 

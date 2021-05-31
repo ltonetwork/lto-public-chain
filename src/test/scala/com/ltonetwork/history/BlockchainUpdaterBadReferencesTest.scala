@@ -6,9 +6,9 @@ import com.ltonetwork.state.diffs._
 import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
-import com.ltonetwork.transaction.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.features.BlockchainFeatures
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 
 class BlockchainUpdaterBadReferencesTest
     extends PropSpec

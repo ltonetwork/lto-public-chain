@@ -14,6 +14,7 @@ import com.ltonetwork.state.reader.{CompositeBlockchain, LeaseDetails}
 import com.ltonetwork.transaction.Transaction.Type
 import com.ltonetwork.transaction.ValidationError.{BlockAppendError, GenericError, MicroBlockAppendError}
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.association.{AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.utils.{ScorexLogging, Time, UnsupportedFeature, forceStopApplication}

@@ -1,12 +1,14 @@
-package com.ltonetwork.transaction
+package com.ltonetwork.transaction.data
 
 import com.google.common.primitives.{Bytes, Longs, Shorts}
+import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
+import com.ltonetwork.transaction.{FastHashId, Proofs, ProvenTransaction, TransactionBuilder, ValidationError, VersionedTransaction}
 import monix.eval.Coeval
 import play.api.libs.json._
-import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import scorex.crypto.signatures.Curve25519._
+
 import scala.util.{Failure, Success, Try}
 
 case class DataTransaction private (version: Byte, sender: PublicKeyAccount, data: List[DataEntry[_]], fee: Long, timestamp: Long, proofs: Proofs)

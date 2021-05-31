@@ -12,6 +12,7 @@ import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransactionV1
+import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction}
 import com.ltonetwork.{NoShrink, TestTime, TransactionGen, history}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks

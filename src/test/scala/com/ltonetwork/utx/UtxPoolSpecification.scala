@@ -18,7 +18,7 @@ import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
 import com.ltonetwork.transaction.transfer._
-import com.ltonetwork.transaction.{FeeCalculator, GenesisTransaction, Transaction}
+import com.ltonetwork.transaction.{FeeCalculator, Transaction}
 import com.ltonetwork.utils.Time
 import com.ltonetwork._
 import org.scalacheck.Gen

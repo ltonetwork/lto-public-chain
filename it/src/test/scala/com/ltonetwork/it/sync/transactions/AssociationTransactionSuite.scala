@@ -7,8 +7,9 @@ import com.ltonetwork.it.api.SyncHttpApi._
 import com.ltonetwork.it.transactions.BaseTransactionSuite
 import com.ltonetwork.it.util._
 import com.ltonetwork.state.EitherExt2
-import com.ltonetwork.transaction.AssociationTransaction.ActionType
-import com.ltonetwork.transaction.{AssociationTransaction, AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.association.AssociationTransaction.ActionType
+import com.ltonetwork.transaction.AssociationTransaction
+import com.ltonetwork.transaction.association.{AssociationTransaction, AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
 import org.scalatest.CancelAfterFailure
 class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
   val fee   = 1.lto

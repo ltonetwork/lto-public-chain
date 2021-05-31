@@ -9,7 +9,7 @@ import com.ltonetwork.it.api.SyncHttpApi._
 import com.ltonetwork.it.transactions.BaseTransactionSuite
 import com.ltonetwork.it.util._
 import com.ltonetwork.state.EitherExt2
-import com.ltonetwork.transaction.SponsorshipTransaction
+import com.ltonetwork.transaction.sponsorship.SponsorshipTransaction
 import com.ltonetwork.transaction.transfer.TransferTransactionV2
 import org.scalatest.CancelAfterFailure
 

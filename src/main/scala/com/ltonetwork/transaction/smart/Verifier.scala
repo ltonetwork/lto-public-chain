@@ -5,6 +5,7 @@ import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.{GenericError, ScriptExecutionError, TransactionNotAllowedByScript}
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.smart.script.{Script, ScriptRunner}
 
 object Verifier {

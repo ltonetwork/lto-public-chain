@@ -5,7 +5,8 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
 import com.ltonetwork.settings.Constants
 import com.ltonetwork.state.{Blockchain, ByteStr, EitherExt2}
-import com.ltonetwork.transaction.{AssociationTransaction, GenesisTransaction, IssueAssociationTransaction}
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction}
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks

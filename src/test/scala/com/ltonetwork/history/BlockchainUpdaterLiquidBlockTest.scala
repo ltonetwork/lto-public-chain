@@ -12,7 +12,7 @@ import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.transfer._
-import com.ltonetwork.transaction.{GenesisTransaction, Transaction}
+import com.ltonetwork.transaction.Transaction
 
 class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with DomainScenarioDrivenPropertyCheck with Matchers with TransactionGen {
 

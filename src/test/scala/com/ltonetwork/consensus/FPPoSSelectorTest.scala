@@ -9,7 +9,7 @@ import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.settings.{LtoSettings, _}
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.{ENOUGH_AMT, ProduceError}
-import com.ltonetwork.transaction.{BlockchainUpdater, GenesisTransaction}
+import com.ltonetwork.transaction.BlockchainUpdater
 import com.ltonetwork.utils.{Time, TimeImpl}
 import com.ltonetwork.{TransactionGen, WithDB}
 import org.scalacheck.{Arbitrary, Gen}

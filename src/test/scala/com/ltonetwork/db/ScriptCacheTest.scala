@@ -13,7 +13,7 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.{Script, ScriptCompiler}
-import com.ltonetwork.transaction.{BlockchainUpdater, GenesisTransaction}
+import com.ltonetwork.transaction.BlockchainUpdater
 
 class ScriptCacheTest extends FreeSpec with Matchers with WithDB with TransactionGen {
 

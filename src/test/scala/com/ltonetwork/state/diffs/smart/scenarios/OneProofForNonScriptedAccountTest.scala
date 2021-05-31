@@ -11,7 +11,7 @@ import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.transfer._
-import com.ltonetwork.transaction.{GenesisTransaction, Proofs}
+import com.ltonetwork.transaction.Proofs
 
 class OneProofForNonScriptedAccountTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
 

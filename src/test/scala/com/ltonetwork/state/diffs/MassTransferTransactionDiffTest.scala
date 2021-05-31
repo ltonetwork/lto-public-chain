@@ -9,7 +9,7 @@ import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.account.{Address, PrivateKeyAccount}
 import com.ltonetwork.settings.TestFunctionalitySettings
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
 
 class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {

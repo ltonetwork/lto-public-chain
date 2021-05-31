@@ -2,7 +2,6 @@ package com.ltonetwork.state
 
 import java.io.{File, PrintWriter}
 import java.util.concurrent.ThreadLocalRandom
-
 import com.typesafe.config.ConfigFactory
 import com.ltonetwork.account.AddressScheme
 import com.ltonetwork.block.Block
@@ -11,7 +10,8 @@ import com.ltonetwork.db.LevelDBFactory
 import com.ltonetwork.lang.v1.traits.DataType
 import com.ltonetwork.settings.{LtoSettings, loadConfig}
 import com.ltonetwork.state.bench.DataTestData
-import com.ltonetwork.transaction.{Authorized, DataTransaction, Transaction}
+import com.ltonetwork.transaction.data.DataTransaction
+import com.ltonetwork.transaction.{Authorized, Transaction}
 import com.ltonetwork.utils.ScorexLogging
 import org.iq80.leveldb.{DB, Options}
 import scodec.bits.{BitVector, ByteVector}

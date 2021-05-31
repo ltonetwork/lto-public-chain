@@ -2,7 +2,8 @@ package com.ltonetwork.state.diffs
 
 import com.ltonetwork.state.{Blockchain, Diff}
 import com.ltonetwork.transaction.ValidationError.GenericError
-import com.ltonetwork.transaction.{SponsorshipCancelTransaction, SponsorshipTransaction, ValidationError}
+import com.ltonetwork.transaction.ValidationError
+import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction}
 
 object SponsorshipTransactionDiff {
   def sponsor(blockchain: Blockchain, height: Int)(tx: SponsorshipTransaction): Either[ValidationError, Diff] = {

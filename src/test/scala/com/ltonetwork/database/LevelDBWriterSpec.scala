@@ -12,7 +12,7 @@ import com.ltonetwork.state.{BlockchainUpdaterImpl, EitherExt2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.transfer.{TransferTransaction, TransferTransaction}
-import com.ltonetwork.transaction.{GenesisTransaction, Transaction}
+import com.ltonetwork.transaction.Transaction
 import com.ltonetwork.utils.{Time, TimeImpl}
 import com.ltonetwork.{RequestGen, WithDB}
 import org.scalacheck.Gen

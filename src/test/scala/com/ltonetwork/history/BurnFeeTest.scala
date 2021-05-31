@@ -6,7 +6,7 @@ import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.{BlockDiffer, ENOUGH_AMT}
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer.TransferTransaction
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks

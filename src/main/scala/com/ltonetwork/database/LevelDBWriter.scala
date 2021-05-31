@@ -8,9 +8,13 @@ import com.ltonetwork.state._
 import com.ltonetwork.state.reader.LeaseDetails
 import com.ltonetwork.transaction.Transaction.Type
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.association.AssociationTransactionBase
+import com.ltonetwork.transaction.data.DataTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
+import com.ltonetwork.transaction.sponsorship.SponsorshipTransactionBase
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.ScorexLogging
 import org.iq80.leveldb.{DB, ReadOptions}

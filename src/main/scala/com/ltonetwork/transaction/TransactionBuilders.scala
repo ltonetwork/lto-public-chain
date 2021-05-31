@@ -1,8 +1,10 @@
 package com.ltonetwork.transaction
 
 import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
+import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.base58Length
 import scorex.crypto.signatures.Curve25519

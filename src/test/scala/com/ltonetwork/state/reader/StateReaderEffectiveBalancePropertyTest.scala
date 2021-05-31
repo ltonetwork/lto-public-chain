@@ -1,7 +1,7 @@
 package com.ltonetwork.state.reader
 
 import com.ltonetwork.consensus.GeneratingBalanceProvider
-import com.ltonetwork.features.BlockchainFeatures.{SmartAccounts}
+import com.ltonetwork.features.BlockchainFeatures.SmartAccounts
 import com.ltonetwork.state.{EitherExt2, LeaseBalance}
 import com.ltonetwork.state.diffs._
 import com.ltonetwork.{NoShrink, TransactionGen}
@@ -10,7 +10,7 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.settings.TestFunctionalitySettings.Enabled
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.LeaseTransactionV2
 
 class StateReaderEffectiveBalancePropertyTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {

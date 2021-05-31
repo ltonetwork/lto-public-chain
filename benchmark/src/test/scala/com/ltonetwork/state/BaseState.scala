@@ -15,7 +15,7 @@ import org.scalacheck.Gen
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.block.Block
 import com.ltonetwork.lagonaki.mocks.TestBlock
-import com.ltonetwork.transaction.{GenesisTransaction, Transaction}
+import com.ltonetwork.transaction.Transaction
 
 trait BaseState extends TransactionGenBase {
   import BaseState._

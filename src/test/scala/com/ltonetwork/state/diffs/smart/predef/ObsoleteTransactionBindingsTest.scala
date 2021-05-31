@@ -12,7 +12,8 @@ import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
-import com.ltonetwork.transaction.{GenesisTransaction, PaymentTransaction}
+import com.ltonetwork.transaction.PaymentTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 
 class ObsoleteTransactionBindingsTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
 

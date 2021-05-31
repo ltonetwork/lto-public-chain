@@ -1,7 +1,6 @@
 package com.ltonetwork.block
 
 import java.nio.ByteBuffer
-
 import cats._
 import com.google.common.primitives.{Bytes, Ints, Longs}
 import com.ltonetwork.crypto
@@ -15,6 +14,7 @@ import com.ltonetwork.consensus.nxt.{NxtConsensusBlockField, NxtLikeConsensusBlo
 import com.ltonetwork.utils.ScorexLogging
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import scorex.crypto.signatures.Curve25519._
 
 import scala.util.{Failure, Try}

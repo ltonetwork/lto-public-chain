@@ -14,6 +14,7 @@ import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.transfer._

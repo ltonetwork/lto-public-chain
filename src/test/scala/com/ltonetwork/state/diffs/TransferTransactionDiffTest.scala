@@ -3,7 +3,7 @@ package com.ltonetwork.state.diffs
 import com.ltonetwork.account.Address
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.state.{EitherExt2, LeaseBalance, Portfolio}
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen

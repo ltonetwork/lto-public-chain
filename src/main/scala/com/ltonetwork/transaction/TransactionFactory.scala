@@ -7,9 +7,12 @@ import com.ltonetwork.crypto.SignatureLength
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.transaction.anchor.AnchorTransactionV1
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
+import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.{Base58, Time}
 import com.ltonetwork.wallet.Wallet

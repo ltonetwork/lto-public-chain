@@ -9,6 +9,7 @@ import org.scalatest.prop.PropertyChecks
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.block.{Block, MicroBlock}
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 
 class BlockchainUpdaterBlockMicroblockSequencesSameTransactionsTest

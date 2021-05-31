@@ -4,6 +4,7 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.signed.SignedSponsorshipRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
+import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
 import com.ltonetwork.utils.Base58
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks

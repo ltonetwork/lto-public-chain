@@ -9,7 +9,8 @@ import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.settings.TestFunctionalitySettings
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
-import com.ltonetwork.transaction.{DataTransaction, GenesisTransaction}
+import com.ltonetwork.transaction.data.DataTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 
 class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
 

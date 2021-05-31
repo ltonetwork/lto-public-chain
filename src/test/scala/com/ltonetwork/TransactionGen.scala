@@ -12,10 +12,14 @@ import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.ENOUGH_AMT
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransactionV1
+import com.ltonetwork.transaction.association.{AssociationTransaction, AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.data.DataTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
+import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.{MaxTransferCount, ParsedTransfer}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.TimeImpl

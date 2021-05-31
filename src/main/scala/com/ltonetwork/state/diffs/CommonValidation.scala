@@ -8,8 +8,12 @@ import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.association.AssociationTransactionBase
+import com.ltonetwork.transaction.data.DataTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.SetScriptTransaction
+import com.ltonetwork.transaction.sponsorship.SponsorshipTransactionBase
 import com.ltonetwork.transaction.transfer._
 
 import scala.concurrent.duration._

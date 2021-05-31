@@ -5,8 +5,10 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
 import com.ltonetwork.state.EitherExt2
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer.TransferTransactionV2
-import com.ltonetwork.transaction.{GenesisTransaction, SponsorshipCancelTransaction, SponsorshipTransaction}
+import com.ltonetwork.transaction.SponsorshipCancelTransaction
+import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction}
 import com.ltonetwork.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks

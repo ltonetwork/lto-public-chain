@@ -5,8 +5,10 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.Address
 import com.ltonetwork.settings.FeesSettings
 import com.ltonetwork.state.{ByteStr, _}
+import com.ltonetwork.transaction.association.AssociationTransactionBase
 import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.smart.script.Script
+import com.ltonetwork.transaction.sponsorship.SponsorshipTransactionBase
 import com.ltonetwork.transaction.transfer._
 import org.scalacheck.Gen
 import org.scalamock.scalatest.MockFactory

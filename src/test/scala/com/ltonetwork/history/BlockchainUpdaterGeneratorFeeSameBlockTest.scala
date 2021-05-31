@@ -4,10 +4,10 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs._
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
-import com.ltonetwork.transaction.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 
 class BlockchainUpdaterGeneratorFeeSameBlockTest

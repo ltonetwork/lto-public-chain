@@ -3,7 +3,8 @@ package com.ltonetwork.api.http.requests.signed
 import cats.implicits._
 import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.BroadcastRequest
-import com.ltonetwork.transaction.{AssociationTransaction, Proofs, TransactionFactory, ValidationError}
+import com.ltonetwork.transaction.association.AssociationTransaction
+import com.ltonetwork.transaction.{Proofs, TransactionFactory, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
 
 @ApiModel(value = "Signed Association transaction")

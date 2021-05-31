@@ -13,12 +13,14 @@ import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.diffs.CommonValidation
 import com.ltonetwork.state.{Blockchain, ByteStr}
-import com.ltonetwork.transaction.AssociationTransaction.ActionType
+import com.ltonetwork.transaction.association.AssociationTransaction.ActionType
 import com.ltonetwork.transaction.ValidationError.{ActivationError, GenericError}
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor._
+import com.ltonetwork.transaction.association.{AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.SetScriptTransaction
+import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.Time
 import com.ltonetwork.utx.UtxPool

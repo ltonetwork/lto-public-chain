@@ -4,7 +4,8 @@ import cats.implicits._
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.state.DataEntry
-import com.ltonetwork.transaction.{DataTransaction, Proofs, ValidationError}
+import com.ltonetwork.transaction.data.DataTransaction
+import com.ltonetwork.transaction.{Proofs, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
 
 @ApiModel(value = "Signed Data transaction")

@@ -8,7 +8,7 @@ import org.scalatest.{Assertions, Matchers, PropSpec}
 import scodec.bits.ByteVector
 import com.ltonetwork.account.{Address, Alias}
 import org.scalacheck.Gen
-import com.ltonetwork.transaction.{DataTransaction, Proofs}
+import com.ltonetwork.transaction.Proofs
 
 class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
 

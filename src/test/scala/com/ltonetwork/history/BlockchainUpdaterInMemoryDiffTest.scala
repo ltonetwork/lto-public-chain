@@ -8,6 +8,7 @@ import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 
 class BlockchainUpdaterInMemoryDiffTest

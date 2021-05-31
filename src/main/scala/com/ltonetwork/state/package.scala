@@ -5,6 +5,7 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.association.AssociationTransactionBase
 import com.ltonetwork.transaction.lease.{LeaseTransaction, LeaseTransactionV1}
 import com.ltonetwork.utils.ScorexLogging
 

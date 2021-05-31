@@ -6,14 +6,16 @@ import com.ltonetwork.account.Address
 import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.state.{Blockchain, ByteStr}
-import com.ltonetwork.transaction.AssociationTransaction.ActionType.{Issue, Revoke}
-import com.ltonetwork.transaction.AssociationTransaction.Assoc
-import com.ltonetwork.transaction.{AssociationTransactionBase, TransactionFactory}
+import com.ltonetwork.transaction.association.AssociationTransaction.ActionType.{Issue, Revoke}
+import com.ltonetwork.transaction.association.AssociationTransaction.Assoc
+import com.ltonetwork.transaction.TransactionFactory
+import com.ltonetwork.transaction.association.AssociationTransactionBase
 import com.ltonetwork.utils.Time
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
+
 import javax.ws.rs.Path
 import play.api.libs.json._
 

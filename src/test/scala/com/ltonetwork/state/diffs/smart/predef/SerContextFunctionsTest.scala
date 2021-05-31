@@ -9,7 +9,7 @@ import com.ltonetwork.utils.{Base58, dummyCompilerContext}
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.account.{Address, PublicKeyAccount}
-import com.ltonetwork.transaction.{DataTransaction, Proofs}
+import com.ltonetwork.transaction.Proofs
 import com.ltonetwork.transaction.transfer.TransferTransactionV2
 import scorex.crypto.encode.Base64
 

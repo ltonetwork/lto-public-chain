@@ -7,7 +7,8 @@ import com.ltonetwork.block.{Block, BlockHeader}
 import com.ltonetwork.state.reader.LeaseDetails
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.smart.script.Script
-import com.ltonetwork.transaction.{AssociationTransaction, AssociationTransactionBase, Transaction}
+import com.ltonetwork.transaction.Transaction
+import com.ltonetwork.transaction.association.AssociationTransactionBase
 
 trait Blockchain {
 

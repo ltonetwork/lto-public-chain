@@ -1,12 +1,13 @@
-package com.ltonetwork.transaction
+package com.ltonetwork.transaction.association
 
 import com.google.common.primitives.{Bytes, Ints, Longs}
 import com.ltonetwork.account.{Address, AddressScheme, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.serialization.Deser
 import com.ltonetwork.state._
-import com.ltonetwork.transaction.AssociationTransaction.{ActionType, Assoc}
 import com.ltonetwork.transaction.ValidationError.GenericError
+import com.ltonetwork.transaction.association.AssociationTransaction.{ActionType, Assoc}
+import com.ltonetwork.transaction.{FastHashId, Proofs, ProvenTransaction, TransactionBuilder, ValidationError, VersionedTransaction}
 import monix.eval.Coeval
 import play.api.libs.json._
 import scorex.crypto.signatures.Curve25519.KeyLength

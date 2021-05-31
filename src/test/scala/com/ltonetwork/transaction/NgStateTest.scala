@@ -3,6 +3,7 @@ package com.ltonetwork.transaction
 import com.ltonetwork.history._
 import com.ltonetwork.state.diffs._
 import com.ltonetwork.state.{Diff, EitherExt2, NgState}
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks

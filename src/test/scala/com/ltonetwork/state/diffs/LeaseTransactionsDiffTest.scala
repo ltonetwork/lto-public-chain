@@ -9,7 +9,7 @@ import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.account.Address
 import com.ltonetwork.settings.TestFunctionalitySettings
 import com.ltonetwork.lagonaki.mocks.TestBlock
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.transfer._
 

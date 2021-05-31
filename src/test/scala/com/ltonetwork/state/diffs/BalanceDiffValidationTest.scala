@@ -7,7 +7,7 @@ import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.lagonaki.mocks.TestBlock
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.transfer._
 

@@ -1,7 +1,7 @@
 package com.ltonetwork.transaction
 
 import com.google.common.primitives.Shorts
-import com.ltonetwork.TransactionGen
+import com.ltonetwork.{TransactionGen, transaction}
 import com.ltonetwork.state.DataEntry._
 import com.ltonetwork.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, DataEntry, EitherExt2, IntegerDataEntry, StringDataEntry}
 import com.ltonetwork.utils.Base58
@@ -11,6 +11,7 @@ import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.{Format, Json}
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.api.http.requests.signed.SignedDataRequest
+import com.ltonetwork.transaction.data.DataTransaction
 import scorex.crypto.encode.Base64
 
 class DataTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
@@ -92,7 +93,7 @@ class DataTransactionSpecification extends PropSpec with PropertyChecks with Mat
       case (DataTransaction(version, sender, data, fee, timestamp, proofs), entry) =>
         def check(data: List[DataEntry[_]]): Assertion = {
           val txEi = DataTransaction.create(version, sender, data, fee, timestamp, proofs)
-          txEi shouldBe Right(DataTransaction(version, sender, data, fee, timestamp, proofs))
+          txEi shouldBe Right(transaction.data.DataTransaction(version, sender, data, fee, timestamp, proofs))
           checkSerialization(txEi.explicitGet())
         }
 

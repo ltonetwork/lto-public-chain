@@ -1,16 +1,15 @@
 package com.ltonetwork.it
 
 import java.net.{InetSocketAddress, URL}
-
 import com.typesafe.config.Config
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.it.util.GlobalTimer
 import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state.EitherExt2
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV2, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransactionV2}
-import com.ltonetwork.transaction.GenesisTransaction
 import com.ltonetwork.utils.{Base58, LoggerFacade}
 import org.asynchttpclient.Dsl.{config => clientConfig, _}
 import org.asynchttpclient._

@@ -6,9 +6,10 @@ import com.ltonetwork.lang.v1.evaluator.EvaluatorV1
 import com.ltonetwork.lang.v1.parser.Parser
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs._
+import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.transfer._
-import com.ltonetwork.transaction.{DataTransaction, GenesisTransaction}
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.utils._
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen

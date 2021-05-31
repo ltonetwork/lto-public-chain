@@ -7,6 +7,7 @@ import com.ltonetwork.block.{Block, BlockHeader}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.Transaction.Type
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.association.{AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.smart.script.Script
 

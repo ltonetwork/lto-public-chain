@@ -5,6 +5,7 @@ import com.ltonetwork.account.{Address, AddressOrAlias, PrivateKeyAccount}
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs._
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 import org.scalacheck.Gen
 import org.scalatest._

@@ -1,7 +1,8 @@
 package com.ltonetwork.state.diffs
 
 import com.ltonetwork.state._
-import com.ltonetwork.transaction.{DataTransaction, ValidationError}
+import com.ltonetwork.transaction.ValidationError
+import com.ltonetwork.transaction.data.DataTransaction
 
 object DataTransactionDiff {
 

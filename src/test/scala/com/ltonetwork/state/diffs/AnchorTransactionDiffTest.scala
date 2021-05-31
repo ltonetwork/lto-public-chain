@@ -4,7 +4,8 @@ import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.anchor.AnchorTransactionV1
-import com.ltonetwork.transaction.{DataTransaction, GenesisTransaction}
+import com.ltonetwork.transaction.data.DataTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
