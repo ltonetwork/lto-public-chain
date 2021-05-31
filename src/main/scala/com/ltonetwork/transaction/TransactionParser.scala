@@ -8,8 +8,6 @@ import com.ltonetwork.transaction.ValidationError.InvalidPublicKey
 import scala.util.Try
 
 object TransactionParser {
-  private def longLength = 8
-
   case class HardcodedVersion1(typeId: Byte) {
     def parseHeader(bytes: Array[Byte]): Try[(Byte, Int)] = Try {
       if (bytes.length < 1) throw new IllegalArgumentException(s"The buffer is too small, it has ${bytes.length} elements")
@@ -69,15 +67,15 @@ object TransactionParser {
   // Base structure for transactions v3 and up
   def parseBase(bytes: Array[Byte]): Either[ValidationError, (Byte, Long, PublicKeyAccount, Long, Int)] = {
     val chainId = bytes.head
-    val timestamp = Longs.fromByteArray(bytes.slice(1, 1 + longLength))
+    val timestamp = Longs.fromByteArray(bytes.slice(1, 1 + Longs.BYTES))
 
-    parsePublicKeyAccount(bytes, 1 + longLength)
+    parsePublicKeyAccount(bytes, 1 + Longs.BYTES)
       .toRight(InvalidPublicKey("Invalid sender key type"))
       .map(sender => {
-        val s1 = 1 + longLength + 2 + sender.keyType.length
-        val fee = Longs.fromByteArray(bytes.slice(s1, s1 + longLength))
+        val s1 = 1 + Longs.BYTES + 1 + sender.keyType.length
+        val fee = Longs.fromByteArray(bytes.slice(s1, s1 + Longs.BYTES))
 
-        (chainId, timestamp, sender, fee, s1 + longLength)
+        (chainId, timestamp, sender, fee, s1 + Longs.BYTES)
       })
   }
 }

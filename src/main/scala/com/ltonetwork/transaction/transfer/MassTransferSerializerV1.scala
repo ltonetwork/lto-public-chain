@@ -4,7 +4,7 @@ import cats.implicits._
 import com.google.common.primitives.{Bytes, Longs, Shorts}
 import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
 import com.ltonetwork.serialization.Deser
-import com.ltonetwork.transaction.{Proofs, TransactionSerializer, ValidationError}
+import com.ltonetwork.transaction.{Proofs, TransactionParser, TransactionSerializer, ValidationError}
 import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.{ParsedTransfer, Transfer}
 import com.ltonetwork.utils.Base58
@@ -37,32 +37,31 @@ object MassTransferSerializerV1 extends TransactionSerializer.For[MassTransferTr
 
   override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
     Try {
-      val sender        = PublicKeyAccount(bytes.slice(0, KeyLength))
-      val s0            = KeyLength
-      val transferCount = Shorts.fromByteArray(bytes.slice(s0, s0 + 2))
+      val sender        = PublicKeyAccount(bytes.take(KeyLength))
+      val transferCount = Shorts.fromByteArray(bytes.slice(KeyLength, KeyLength + Shorts.BYTES))
 
       def readTransfer(offset: Int): (Validation[ParsedTransfer], Int) = {
         AddressOrAlias.fromBytes(bytes, offset) match {
           case Right((addr, ofs)) =>
-            val amount = Longs.fromByteArray(bytes.slice(ofs, ofs + 8))
-            (Right[ValidationError, ParsedTransfer](ParsedTransfer(addr, amount)), ofs + 8)
+            val amount = Longs.fromByteArray(bytes.slice(ofs, ofs + Longs.BYTES))
+            (Right[ValidationError, ParsedTransfer](ParsedTransfer(addr, amount)), ofs + Longs.BYTES)
           case Left(e) => (Left(e), offset)
         }
       }
 
+      def s0 = KeyLength + Shorts.BYTES
       val transfersList: List[(Validation[ParsedTransfer], Int)] =
-        List.iterate(readTransfer(s0 + 2), transferCount) { case (_, offset) => readTransfer(offset) }
+        List.iterate(readTransfer(s0), transferCount) { case (_, offset) => readTransfer(offset) }
 
-      val s1 = transfersList.lastOption.map(_._2).getOrElse(s0 + 2)
-      val tx: Validation[MassTransferTransaction] = for {
+      val s1 = transfersList.lastOption.map(_._2).getOrElse(s0)
+      (for {
         transfers <- transfersList.map { case (ei, _) => ei }.sequence
-        timestamp               = Longs.fromByteArray(bytes.slice(s1, s1 + 8))
-        fee               = Longs.fromByteArray(bytes.slice(s1 + 8, s1 + 16))
-        (attachment, attachEnd) = Deser.parseArraySize(bytes, s1 + 16)
+        timestamp               = Longs.fromByteArray(bytes.slice(s1, s1 + Longs.BYTES))
+        fee                     = Longs.fromByteArray(bytes.slice(s1 + Longs.BYTES, s1 + 2 * Longs.BYTES))
+        (attachment, attachEnd) = Deser.parseArraySize(bytes, s1 + 2 * Longs.BYTES)
         proofs <- Proofs.fromBytes(bytes.drop(attachEnd))
-        mtt    <- MassTransferTransaction.create(version, sender, transfers, timestamp, fee, attachment, proofs)
-      } yield mtt
-      tx.fold(left => Failure(new Exception(left.toString)), right => Success(right))
+        tx     <- MassTransferTransaction.create(version, timestamp, sender, fee, transfers, attachment, None, proofs)
+      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
   override def toJson(tx: MassTransferTransaction): Coeval[JsObject] = Coeval.evalOnce {

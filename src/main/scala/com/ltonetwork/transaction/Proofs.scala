@@ -24,10 +24,9 @@ object Proofs {
 
   val MaxProofStringSize: Int = base58Length(MaxProofSize)
 
-  // TODO: has nothing to do with proofs
-  val MaxAnchorStringSize: Int = base58Length(AnchorTransactionV1.EntryLength.last)
-
   lazy val empty = new Proofs(Nil)
+
+  def fromSignature(signature: ByteStr): Proofs = new Proofs(Seq(signature))
 
   def create(proofs: Seq[ByteStr]): Either[ValidationError, Proofs] =
     for {

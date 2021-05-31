@@ -28,20 +28,18 @@ object AnchorSerializerV1 extends TransactionSerializer.For[AnchorTransaction] {
 
   override protected def parseBytes(version: Byte, bytes: Array[Byte]): Try[AnchorTransaction] =
     Try {
-      val p0     = KeyLength
-      val sender = PublicKeyAccount(bytes.slice(0, p0))
+      val sender = PublicKeyAccount(bytes.take(KeyLength))
 
-      val txEi = for {
-        r <- Try(Deser.parseArraysPos(bytes.drop(p0))).toEither.left.map(x => GenericError(x.toString))
+      (for {
+        r <- Try(Deser.parseArraysPos(bytes.drop(KeyLength))).toEither.left.map(x => GenericError(x.toString))
         arrays    = r._1
         pos       = r._2
-        timestamp = Longs.fromByteArray(bytes.drop(p0 + pos))
-        fee = Longs.fromByteArray(bytes.drop(p0 + pos + 8))
+        timestamp = Longs.fromByteArray(bytes.drop(KeyLength + pos))
+        fee = Longs.fromByteArray(bytes.drop(KeyLength + pos + Longs.BYTES))
 
-        proofs <- Proofs.fromBytes(bytes.drop(p0 + pos + 16))
+        proofs <- Proofs.fromBytes(bytes.drop(KeyLength + pos + Longs.BYTES + Longs.BYTES))
         tx     <- create(version, timestamp, sender, fee, arrays.map(ByteStr(_)).toList, None, proofs)
-      } yield tx
-      txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
+      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
   override def toJson(tx: AnchorTransaction): Coeval[JsObject] = Coeval.evalOnce {

@@ -33,6 +33,7 @@ case class MassTransferTransaction private (version: Byte,
 }
 
 object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransaction] {
+  import TransactionParser._
 
   override val typeId: Byte  = 11
   override val supportedVersions: Set[Byte] = Set(1)
@@ -75,15 +76,10 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
     case _ => UnknownSerializer
   }
 
-  override protected def parseBytes(bytes: Array[Byte]): Try[TransactionT] = {
-    Try {
-      val txEi = for {
-        (version, end) <- TransactionParser.MultipleVersions(typeId, supportedVersions).parseHeader(bytes)
-        tx             <- serializer(version).parseBytes(version, bytes.drop(end))
-      } yield tx
-      txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
-  }
+  override protected def parseBytes(bytes: Array[Byte]): Try[TransactionT] = (for {
+    (version, end) <- OneVersion(typeId, 1).parseHeader(bytes)
+    tx             <- serializer(version).parseBytes(version, bytes.drop(end))
+  } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
 
   def create(version: Byte,
              timestamp: Long,
