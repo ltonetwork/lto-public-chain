@@ -81,7 +81,7 @@ object CommonValidation {
 
     tx match {
       case _: GenesisTransaction       => Right(tx)
-      case _: TransferTransactionV1    => Right(tx)
+      case _: TransferTransaction    => Right(tx)
       case _: TransferTransactionV2    => activationBarrier(BlockchainFeatures.SmartAccounts)
       case _: LeaseTransactionV1       => Right(tx)
       case _: LeaseTransactionV2       => activationBarrier(BlockchainFeatures.SmartAccounts)

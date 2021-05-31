@@ -256,7 +256,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case SponsorshipTransaction => TransactionFactory.sponsorship(txJson.as[SponsorshipRequest], wallet, signerAddress, time)
               case SponsorshipCancelTransaction =>
                 TransactionFactory.cancelSponsorship(txJson.as[SponsorshipRequest], wallet, signerAddress, time)
-              case TransferTransactionV1    => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], wallet, signerAddress, time)
+              case TransferTransaction    => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], wallet, signerAddress, time)
               case TransferTransactionV2    => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], wallet, signerAddress, time)
               case MassTransferTransaction  => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], wallet, signerAddress, time)
               case LeaseTransactionV1       => TransactionFactory.leaseV1(txJson.as[LeaseV1Request], wallet, signerAddress, time)
@@ -297,7 +297,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
                       .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
                   case SponsorshipTransaction       => TransactionFactory.sponsorship(txJson.as[SponsorshipRequest], senderPk)
                   case SponsorshipCancelTransaction => TransactionFactory.cancelSponsorship(txJson.as[SponsorshipRequest], senderPk)
-                  case TransferTransactionV1        => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], senderPk)
+                  case TransferTransaction        => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], senderPk)
                   case TransferTransactionV2        => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], senderPk)
                   case MassTransferTransaction      => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], senderPk)
                   case LeaseTransactionV1           => TransactionFactory.leaseV1(txJson.as[LeaseV1Request], senderPk)
@@ -350,7 +350,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
                   .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
               case SponsorshipTransaction       => jsv.as[SignedSponsorshipRequest].toTx(SponsorshipTransaction.create)
               case SponsorshipCancelTransaction => jsv.as[SignedSponsorshipRequest].toTx(SponsorshipCancelTransaction.create)
-              case TransferTransactionV1        => jsv.as[SignedTransferV1Request].toTx
+              case TransferTransaction        => jsv.as[SignedTransferV1Request].toTx
               case TransferTransactionV2        => jsv.as[SignedTransferV2Request].toTx
               case MassTransferTransaction      => jsv.as[SignedMassTransferRequest].toTx
               case LeaseTransactionV1           => jsv.as[SignedLeaseV1Request].toTx

@@ -11,7 +11,6 @@ import play.api.libs.json.JsObject
 trait Transaction extends BytesSerializable with JsonSerializable {
   def builder: TransactionBuilder
 
-  val bytes: Coeval[Array[Byte]]
   val bodyBytes: Coeval[Array[Byte]]
   val json: Coeval[JsObject]
 
@@ -24,10 +23,12 @@ trait Transaction extends BytesSerializable with JsonSerializable {
   def sponsor: Option[PublicKeyAccount]
   def proofs: Proofs
 
+  protected val prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(Array(0: Byte))
   val footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(
     sponsor.map(account => Bytes.concat(Array(account.keyType.id), account.publicKey)).getOrElse(Array(0: Byte)),
     proofs.bytes()
   ))
+  val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(prefixByte(), bodyBytes(), footerBytes()))
 
   override def toString: String = json().toString()
 
@@ -37,4 +38,13 @@ trait Transaction extends BytesSerializable with JsonSerializable {
   }
 
   override def hashCode(): Int = id().hashCode()
+}
+
+object Transaction {
+  trait NoBytePrefixV1 extends Transaction {
+    override val prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(
+      if (this.version == 1) Array()
+      else Array(0: Byte)
+    )
+  }
 }

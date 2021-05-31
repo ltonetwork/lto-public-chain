@@ -22,11 +22,11 @@ class SigVerifyPerformanceTest extends PropSpec with PropertyChecks with Matcher
 
   private val AmtOfTxs = 10000
 
-  private def simpleSendGen(from: PrivateKeyAccount, to: PublicKeyAccount, ts: Long): Gen[TransferTransactionV1] =
+  private def simpleSendGen(from: PrivateKeyAccount, to: PublicKeyAccount, ts: Long): Gen[TransferTransaction] =
     for {
       amt <- smallFeeGen
       fee <- smallFeeGen
-    } yield TransferTransactionV1.selfSigned(from, to.toAddress, amt, ts, fee, Array.emptyByteArray).explicitGet()
+    } yield TransferTransaction.selfSigned(from, to.toAddress, amt, ts, fee, Array.emptyByteArray).explicitGet()
 
   private def scriptedSendGen(from: PrivateKeyAccount, to: PublicKeyAccount, ts: Long): Gen[TransferTransactionV2] =
     for {

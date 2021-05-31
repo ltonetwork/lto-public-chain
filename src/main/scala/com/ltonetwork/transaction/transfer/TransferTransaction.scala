@@ -1,75 +1,98 @@
 package com.ltonetwork.transaction.transfer
 
 import cats.implicits._
-import com.google.common.primitives.{Bytes, Longs}
-import com.ltonetwork.account.{AddressOrAlias, KeyType, PublicKeyAccount}
+import cats.data.{Validated, ValidatedNel}
+import com.google.common.primitives.Bytes
+import com.ltonetwork.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.crypto
 import com.ltonetwork.serialization.Deser
+import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.validation._
-import com.ltonetwork.utils.{Base58, base58Length}
+import com.ltonetwork.transaction.validation.{validateAmount, validateAttachment, validateFee, validateSum}
+import com.ltonetwork.utils.base58Length
 import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.JsObject
 import scorex.crypto.signatures.Curve25519._
 
-trait TransferTransaction extends ProvenTransaction with VersionedTransaction {
-  def recipient: AddressOrAlias
-  def amount: Long
-  def fee: Long
-  def attachment: Array[Byte]
-  def version: Byte
+import scala.util.{Failure, Success, Try}
 
-  override final val json: Coeval[JsObject] = Coeval.evalOnce(
-    jsonBase() ++ Json.obj(
-      "version"    -> version,
-      "recipient"  -> recipient.stringRepr,
-      "amount"     -> amount,
-      "attachment" -> Base58.encode(attachment)
-    ))
+case class TransferTransaction private(version: Byte,
+                                       timestamp: Long,
+                                       sender: PublicKeyAccount,
+                                       fee: Long,
+                                       recipient: AddressOrAlias,
+                                       amount: Long,
+                                       attachment: Array[Byte],
+                                       sponsor: Option[PublicKeyAccount],
+                                       proofs: Proofs)
+    extends Transaction
+    with Transaction.NoBytePrefixV1 {
 
-  final protected val bytesBase: Coeval[Array[Byte]] = Coeval.evalOnce {
-    val timestampBytes = Longs.toByteArray(timestamp)
-    val amountBytes    = Longs.toByteArray(amount)
-    val feeBytes       = Longs.toByteArray(fee)
+  override val builder: TransactionBuilder.For[TransferTransaction] = TransferTransaction
+  private val serializer: TransactionSerializer.For[TransferTransaction] = builder.serializer(version)
 
-    Bytes.concat(
-      sender.publicKey,
-      timestampBytes,
-      amountBytes,
-      feeBytes,
-      recipient.bytes.arr,
-      Deser.serializeArray(attachment)
-    )
-  }
+  override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
+  override val json: Coeval[JsObject] = serializer.toJson(this)
 }
 
-object TransferTransaction {
+object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
 
-  val MaxAttachmentSize            = 140
+  override val typeId: Byte = 4
+  override val supportedVersions: Set[Byte] = Set(1, 2)
+
+  val MaxAttachmentSize: Int       = 140
   val MaxAttachmentStringSize: Int = base58Length(MaxAttachmentSize)
 
-  def validate(amount: Long, fee: Long, attachment: Array[Byte]): Either[ValidationError, Unit] = {
-    (
-      validateAmount(amount, "lto"),
-      validateFee(fee),
-      validateAttachment(attachment),
-      validateSum(Seq(amount, fee))
-    ).mapN { case _ => () }
-      .toEither
-      .leftMap(_.head)
+  implicit object Validator extends TxValidator[TransactionT] {
+    private def validateSum(amounts: Seq[Long]): ValidatedNel[ValidationError, None.type] =
+      Try(amounts.tail.fold(amounts.head)(Math.addExact))
+        .fold (
+          _ => ValidationError.OverflowError.invalidNel,
+          _ => None.validNel
+        )
+
+    def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
+      import tx._
+      seq(tx)(
+        Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(attachment.length > TransferTransaction.MaxAttachmentSize, None, ValidationError.TooBigArray),
+        Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
+        validateSum(Seq(amount, fee)),
+        Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.SponsoredTxNotSupported(s"Sponsored transaction not supported for tx v$version")),
+      )
+    }
   }
 
-  def parseBase(bytes: Array[Byte], start: Int) = {
-    val sender    = PublicKeyAccount(bytes.slice(start, start + KeyLength))
-    val s1        = start + KeyLength
-    val timestamp = Longs.fromByteArray(bytes.slice(s1, s1 + 8))
-    val amount    = Longs.fromByteArray(bytes.slice(s1 + 8, s1 + 16))
-    val fee = Longs.fromByteArray(bytes.slice(s1 + 16, s1 + 24))
-    for {
-      recRes <- AddressOrAlias.fromBytes(bytes, s1 + 24)
-      (recipient, recipientEnd) = recRes
-      (attachment, end)         = Deser.parseArraySize(bytes, recipientEnd)
-    } yield (sender, timestamp, amount, fee, recipient, attachment, end)
-
+  def create(sender: PublicKeyAccount,
+             recipient: AddressOrAlias,
+             amount: Long,
+             timestamp: Long,
+             fee: Long,
+             attachment: Array[Byte],
+             signature: ByteStr): Either[ValidationError, TransactionT] = {
+    TransferTransaction
+      .validate(amount, fee, attachment)
+      .map(_ => TransferTransaction(sender, recipient, amount, timestamp, fee, attachment, signature))
   }
 
+  def signed(sender: PublicKeyAccount,
+             recipient: AddressOrAlias,
+             amount: Long,
+             timestamp: Long,
+             fee: Long,
+             attachment: Array[Byte],
+             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
+    create(sender, recipient, amount, timestamp, fee, attachment, ByteStr.empty).right.map { unsigned =>
+      unsigned.copy(signature = ByteStr(crypto.sign(signer, unsigned.bodyBytes())))
+    }
+  }
+
+  def selfSigned(sender: PrivateKeyAccount,
+                 recipient: AddressOrAlias,
+                 amount: Long,
+                 timestamp: Long,
+                 fee: Long,
+                 attachment: Array[Byte]): Either[ValidationError, TransactionT] = {
+    signed(sender, recipient, amount, timestamp, fee, attachment, sender)
+  }
 }

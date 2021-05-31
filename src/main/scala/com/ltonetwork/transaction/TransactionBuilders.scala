@@ -18,7 +18,7 @@ object TransactionBuilders {
 
   private val old: Map[Byte, TransactionBuilder] = Seq[TransactionBuilder](
     GenesisTransaction,
-    TransferTransactionV1,
+    TransferTransaction,
     LeaseTransactionV1,
     LeaseCancelTransactionV1,
     MassTransferTransaction

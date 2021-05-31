@@ -2,7 +2,6 @@ package com.ltonetwork.transaction.transfer
 
 import cats.implicits._
 import cats.data.{Validated, ValidatedNel}
-import com.google.common.primitives.Bytes
 import com.ltonetwork.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
@@ -15,6 +14,7 @@ import play.api.libs.json.{JsObject, Json, OFormat}
 import scala.util.{Either, Failure, Success, Try}
 
 case class MassTransferTransaction private (version: Byte,
+                                            chainId: Byte,
                                             timestamp: Long,
                                             sender: PublicKeyAccount,
                                             fee: Long,
@@ -22,18 +22,14 @@ case class MassTransferTransaction private (version: Byte,
                                             attachment: Array[Byte],
                                             sponsor: Option[PublicKeyAccount],
                                             proofs: Proofs)
-    extends Transaction {
+    extends Transaction
+    with Transaction.NoBytePrefixV1 {
 
   override val builder: TransactionBuilder.For[MassTransferTransaction] = MassTransferTransaction
   private val serializer: TransactionSerializer.For[MassTransferTransaction] = builder.serializer(version)
 
-  private def prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(
-    if (this.version == 0) Array(0: Byte)
-    else Array()
-  )
   override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
-  override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(prefixByte(), bodyBytes(), footerBytes()))
-  override val json: Coeval[JsObject] = serializer.json(this)
+  override val json: Coeval[JsObject] = serializer.toJson(this)
 }
 
 object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransaction] {
@@ -55,14 +51,15 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
       Try {
         tx.transfers.map(_.amount).fold(tx.fee)(Math.addExact)
       }.fold (
-        _ => Validated.invalidNel(ValidationError.OverflowError),
-        _ => Validated.validNel(None)
+        _ => ValidationError.OverflowError.invalidNel,
+        _ => None.validNel
       )
 
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
       import tx._
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(chainId != networkByte, None, ValidationError.WrongChainId(chainId)),
         Validated.condNel(transfers.lengthCompare(MaxTransferCount) > 0, None, ValidationError.GenericError(s"Number of transfers is greater than $MaxTransferCount")),
         Validated.condNel(transfers.exists(_.amount < 0), None, ValidationError.GenericError("One of the transfers has negative amount")),
         validateTotalAmount(tx),
@@ -96,7 +93,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
              attachment: Array[Byte],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    MassTransferTransaction(version, timestamp, sender, fee, transfers, attachment, sponsor, proofs).validatedEither
+    MassTransferTransaction(version, networkByte, timestamp, sender, fee, transfers, attachment, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,

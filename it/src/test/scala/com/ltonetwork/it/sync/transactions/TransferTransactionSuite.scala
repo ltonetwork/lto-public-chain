@@ -14,7 +14,7 @@ import play.api.libs.json._
 
 import scala.concurrent.duration._
 
-class TransferTransactionV1Suite extends BaseTransactionSuite with CancelAfterFailure {
+class TransferTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
 
   test("lto transfer changes lto balances and eff.b.") {
     val (firstBalance, firstEffBalance)   = notMiner.accountBalances(firstAddress)
@@ -30,12 +30,12 @@ class TransferTransactionV1Suite extends BaseTransactionSuite with CancelAfterFa
 
   test("invalid signed lto transfer should not be in UTX or blockchain") {
     def invalidTx(timestamp: Long = System.currentTimeMillis, fee: Long = com.ltonetwork.it.STD_FEE) =
-      TransferTransactionV1
+      TransferTransaction
         .selfSigned(sender.privateKey, AddressOrAlias.fromString(sender.address).explicitGet(), 1, timestamp, fee, Array.emptyByteArray)
         .right
         .get
 
-    def request(tx: TransferTransactionV1): SignedTransferV1Request =
+    def request(tx: TransferTransaction): SignedTransferV1Request =
       SignedTransferV1Request(
         Base58.encode(tx.sender.publicKey),
         tx.recipient.stringRepr,
@@ -47,7 +47,7 @@ class TransferTransactionV1Suite extends BaseTransactionSuite with CancelAfterFa
       )
 
     implicit val w =
-      Json.writes[SignedTransferV1Request].transform((jsobj: JsObject) => jsobj + ("type" -> JsNumber(TransferTransactionV1.typeId.toInt)))
+      Json.writes[SignedTransferV1Request].transform((jsobj: JsObject) => jsobj + ("type" -> JsNumber(TransferTransaction.typeId.toInt)))
 
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
 

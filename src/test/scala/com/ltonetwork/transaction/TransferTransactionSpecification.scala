@@ -10,11 +10,11 @@ import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.state.diffs._
 import com.ltonetwork.utils.Base58
 
-class TransferTransactionV1Specification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class TransferTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
   property("Transfer serialization roundtrip") {
-    forAll(transferV1Gen) { transfer: TransferTransactionV1 =>
-      val recovered = TransferTransactionV1.parseBytes(transfer.bytes()).get
+    forAll(transferV1Gen) { transfer: TransferTransaction =>
+      val recovered = TransferTransaction.parseBytes(transfer.bytes()).get
 
       recovered.sender.address shouldEqual transfer.sender.address
       recovered.timestamp shouldEqual transfer.timestamp
@@ -27,7 +27,7 @@ class TransferTransactionV1Specification extends PropSpec with PropertyChecks wi
   }
 
   property("Transfer serialization from TypedTransaction") {
-    forAll(transferV1Gen) { tx: TransferTransactionV1 =>
+    forAll(transferV1Gen) { tx: TransferTransaction =>
       val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
     }
@@ -49,7 +49,7 @@ class TransferTransactionV1Specification extends PropSpec with PropertyChecks wi
                         }
     """)
 
-    val tx = TransferTransactionV1
+    val tx = TransferTransaction
       .create(
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet(),
@@ -69,6 +69,6 @@ class TransferTransactionV1Specification extends PropSpec with PropertyChecks wi
     for {
       (sender, recipient, amount, timestamp, feeAmount, attachment) <- transferParamGen
       sender                                                        <- accountGen
-    } yield TransferTransactionV1.selfSigned(sender, recipient, amount, timestamp, feeAmount, attachment) should produce("insufficient fee")
+    } yield TransferTransaction.selfSigned(sender, recipient, amount, timestamp, feeAmount, attachment) should produce("insufficient fee")
   }
 }

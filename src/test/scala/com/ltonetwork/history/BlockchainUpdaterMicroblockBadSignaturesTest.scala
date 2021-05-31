@@ -20,13 +20,13 @@ class BlockchainUpdaterMicroblockBadSignaturesTest
     with Matchers
     with TransactionGen {
 
-  val preconditionsAndPayments: Gen[(GenesisTransaction, TransferTransactionV1, TransferTransactionV1)] = for {
+  val preconditionsAndPayments: Gen[(GenesisTransaction, TransferTransaction, TransferTransaction)] = for {
     master    <- accountGen
     recipient <- accountGen
     ts        <- positiveIntGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    payment: TransferTransactionV1  <- ltoTransferGeneratorP(master, recipient)
-    payment2: TransferTransactionV1 <- ltoTransferGeneratorP(master, recipient)
+    payment: TransferTransaction  <- ltoTransferGeneratorP(master, recipient)
+    payment2: TransferTransaction <- ltoTransferGeneratorP(master, recipient)
   } yield (genesis, payment, payment2)
 
   property("bad total resulting block signature") {

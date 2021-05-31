@@ -40,7 +40,7 @@ class BlockSpecification extends PropSpec with PropertyChecks with TransactionGe
       assetId = Some(ByteStr(assetBytes))
       sender                                    <- accountGen
       recipient                                 <- accountGen
-      paymentTransaction: TransferTransactionV1 <- ltoTransferGeneratorP(time, sender, recipient)
+      paymentTransaction: TransferTransaction <- ltoTransferGeneratorP(time, sender, recipient)
     } yield
       Block
         .buildAndSign(3,

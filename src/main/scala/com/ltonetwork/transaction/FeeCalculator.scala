@@ -42,7 +42,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
       txMinBaseFee * sizeInKb
     case tx: MassTransferTransaction =>
       val transferFeeSpec =
-        map.getOrElse(TransferTransactionV1.typeId.toString, throw new IllegalStateException("Can't find spec for TransferTransaction"))
+        map.getOrElse(TransferTransaction.typeId.toString, throw new IllegalStateException("Can't find spec for TransferTransaction"))
       transferFeeSpec + txMinBaseFee * tx.transfers.size
     case _ => txMinBaseFee
   }

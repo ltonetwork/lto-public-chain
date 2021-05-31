@@ -1,5 +1,6 @@
 package com.ltonetwork.transaction
 
+import com.ltonetwork.account.AddressScheme
 import scala.util.Try
 
 trait TransactionBuilder {
@@ -7,6 +8,7 @@ trait TransactionBuilder {
 
   def typeId: Byte
   def supportedVersions: Set[Byte]
+  def networkByte: Byte = AddressScheme.current.chainId
 
   def serializer(version: Byte): TransactionSerializer.For[TransactionT]
   def parseBytes(bytes: Array[Byte]): Try[TransactionT]

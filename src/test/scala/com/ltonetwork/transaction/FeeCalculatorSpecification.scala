@@ -66,7 +66,7 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
 
   property("Transfer transaction ") {
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(transferV1Gen) { tx: TransferTransactionV1 =>
+    forAll(transferV1Gen) { tx: TransferTransaction =>
       feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 100000)
     }
   }

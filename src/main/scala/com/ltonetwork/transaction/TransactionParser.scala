@@ -51,7 +51,7 @@ object TransactionParser {
     val keyTypeId = bytes(start)
 
     keyType(keyTypeId) map {
-      kt => PublicKeyAccount(kt, bytes.slice(start + 1, start + 1 + kt.length))
+      kt => PublicKeyAccount(kt, bytes.slice(1, 1 + kt.length))
     }
   }
 
@@ -62,25 +62,22 @@ object TransactionParser {
       Right(None)
     else
       parsePublicKeyAccount(bytes, start)
-        .toRight(InvalidPublicKey("Invalid sender key type"))
-        .right.map(sponsor => Some(sponsor))
+        .toRight(InvalidPublicKey("Invalid sponsor key type"))
+        .map(sponsor => Some(sponsor))
   }
 
   // Base structure for transactions v3 and up
-  def parseBase(bytes: Array[Byte], start: Int): Either[ValidationError, (Long, PublicKeyAccount, Long, Int)] = {
-    val timestamp = Longs.fromByteArray(bytes.slice(start, start + longLength))
+  def parseBase(bytes: Array[Byte]): Either[ValidationError, (Byte, Long, PublicKeyAccount, Long, Int)] = {
+    val chainId = bytes.head
+    val timestamp = Longs.fromByteArray(bytes.slice(1, 1 + longLength))
 
-    val senderMaybe = parsePublicKeyAccount(bytes, start + longLength)
+    parsePublicKeyAccount(bytes, 1 + longLength)
+      .toRight(InvalidPublicKey("Invalid sender key type"))
+      .map(sender => {
+        val s1 = 1 + longLength + 2 + sender.keyType.length
+        val fee = Longs.fromByteArray(bytes.slice(s1, s1 + longLength))
 
-    if (senderMaybe.isEmpty)
-      Left(InvalidPublicKey("Invalid sender key type"))
-    else {
-      val sender = senderMaybe.get
-
-      val s1 = start + longLength + 2 + sender.keyType.length
-      val fee = Longs.fromByteArray(bytes.slice(s1, s1 + longLength))
-
-      Right(timestamp, sender, fee, s1 + longLength)
-    }
+        (chainId, timestamp, sender, fee, s1 + longLength)
+      })
   }
 }

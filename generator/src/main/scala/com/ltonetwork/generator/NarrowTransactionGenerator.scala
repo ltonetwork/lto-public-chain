@@ -41,7 +41,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
 
     val tradeAssetDistribution = {
       accounts.map(acc => {
-        TransferTransactionV1
+        TransferTransaction
           .selfSigned(issueTransactionSender, acc, 5, System.currentTimeMillis(), 100000, Array.fill(r.nextInt(100))(r.nextInt().toByte))
           .right
           .get
@@ -60,7 +60,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
 
         val tx = typeGen.getRandom match {
 
-          case TransferTransactionV1 =>
+          case TransferTransaction =>
             val useAlias          = r.nextBoolean()
             val recipient         = randomFrom(accounts).get.toAddress
             val sendAsset         = r.nextBoolean()
@@ -68,7 +68,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
             senderAndAssetOpt.flatMap {
               case (sender, asset) =>
                 logOption(
-                  TransferTransactionV1
+                  TransferTransaction
                     .selfSigned(sender, recipient, r.nextInt(500000), ts, moreThatStandartFee, Array.fill(r.nextInt(100))(r.nextInt().toByte)))
             }
 

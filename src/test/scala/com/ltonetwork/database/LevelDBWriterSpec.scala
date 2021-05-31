@@ -11,7 +11,7 @@ import com.ltonetwork.state.diffs.ENOUGH_AMT
 import com.ltonetwork.state.{BlockchainUpdaterImpl, EitherExt2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
-import com.ltonetwork.transaction.transfer.{TransferTransaction, TransferTransactionV1}
+import com.ltonetwork.transaction.transfer.{TransferTransaction, TransferTransaction}
 import com.ltonetwork.transaction.{GenesisTransaction, Transaction}
 import com.ltonetwork.utils.{Time, TimeImpl}
 import com.ltonetwork.{RequestGen, WithDB}
@@ -146,7 +146,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
 
       baseTest(time => preconditions(time.correctedTime())) { (writer, account) =>
         val txs = writer
-          .addressTransactions(account.toAddress, Set(TransferTransactionV1.typeId), 3, 0)
+          .addressTransactions(account.toAddress, Set(TransferTransaction.typeId), 3, 0)
 
         val ordering = Ordering
           .by[(Int, Transaction), (Int, Long)]({ case (h, t) => (-h, -t.timestamp) })
@@ -158,7 +158,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
     }
 
     def createTransfer(master: PrivateKeyAccount, recipient: Address, ts: Long): TransferTransaction = {
-      TransferTransactionV1
+      TransferTransaction
         .selfSigned(master, recipient, ENOUGH_AMT / 5, ts, 100 * 1000 * 1000L, Array.emptyByteArray)
         .explicitGet()
     }

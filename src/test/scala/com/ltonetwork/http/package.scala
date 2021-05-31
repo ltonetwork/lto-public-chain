@@ -87,7 +87,7 @@ package object http {
     Writes(x => JsString(x.bytes.base58))
   )
 
-  implicit val transferTransactionFormat: Format[TransferTransactionV1] = (
+  implicit val transferTransactionFormat: Format[TransferTransaction] = (
     (JsPath \ "sender").format[PublicKeyAccount] and
       (JsPath \ "recipient").format[AddressOrAlias] and
       (JsPath \ "amount").format[Long] and
@@ -100,7 +100,7 @@ package object http {
           xs => new String(xs, StandardCharsets.UTF_8)
         ) and
       (JsPath \ "signature").format[ByteStr]
-  )(TransferTransactionV1.apply, unlift(TransferTransactionV1.unapply))
+  )(TransferTransaction.apply, unlift(TransferTransaction.unapply))
 
   implicit val versionedTransferTransactionFormat: Format[TransferTransactionV2] = (
     (JsPath \ "version").format[Byte] and
@@ -118,7 +118,7 @@ package object http {
       (JsPath \ "proofs").format[Proofs]
   )(TransferTransactionV2.apply, unlift(TransferTransactionV2.unapply))
 
-  type TransferTransactions = TransferTransactionV1 :+: TransferTransactionV2 :+: CNil
+  type TransferTransactions = TransferTransaction :+: TransferTransactionV2 :+: CNil
   implicit val autoTransferTransactionsReads: Reads[TransferTransactions] = Reads { json =>
     (json \ "version").asOpt[Int] match {
       case None | Some(1) => transferTransactionFormat.reads(json).map(Coproduct[TransferTransactions](_))

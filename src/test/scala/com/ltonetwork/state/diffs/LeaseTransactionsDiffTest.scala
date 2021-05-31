@@ -50,7 +50,7 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
     }
   }
 
-  val cancelLeaseTwice: Gen[(GenesisTransaction, TransferTransactionV1, LeaseTransaction, LeaseCancelTransaction, LeaseCancelTransaction)] = for {
+  val cancelLeaseTwice: Gen[(GenesisTransaction, TransferTransaction, LeaseTransaction, LeaseCancelTransaction, LeaseCancelTransaction)] = for {
     master   <- accountGen
     recpient <- accountGen suchThat (_ != master)
     ts       <- timestampGen

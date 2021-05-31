@@ -15,7 +15,7 @@ object AnchorSerializerV3 extends TransactionSerializer.For[AnchorTransaction] {
     import tx._
 
     Bytes.concat(
-      Array(AnchorTransaction.typeId, version),
+      Array(AnchorTransaction.typeId, version, chainId),
       Longs.toByteArray(timestamp),
       sender.publicKey,
       Longs.toByteArray(fee),
@@ -26,8 +26,8 @@ object AnchorSerializerV3 extends TransactionSerializer.For[AnchorTransaction] {
   override def parseBytes(version: Byte, bytes: Array[Byte]): Try[AnchorTransaction] =
     Try {
       val txEi = for {
-        parsed  <- TransactionParser.parseBase(bytes, 0)
-        (timestamp, sender, fee, end) = parsed
+        parsed  <- TransactionParser.parseBase(bytes)
+        (chainId, timestamp, sender, fee, end) = parsed
         r <- Try(Deser.parseArraysPos(bytes.drop(end))).toEither.left.map(x => GenericError(x.toString))
         anchors = r._1
         pos     = r._2
@@ -35,6 +35,7 @@ object AnchorSerializerV3 extends TransactionSerializer.For[AnchorTransaction] {
         sponsorKeyLength: Short = sponsor.map(account => account.keyType.length).getOrElse(0)
         proofs  <- Proofs.fromBytes(bytes.drop(end + pos + 1 + sponsorKeyLength))
         tx      <- AnchorTransaction.create(version, timestamp, sender, fee, anchors.map(ByteStr(_)).toList, sponsor, proofs)
+        tx.chainId = chainId
       } yield tx
       txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten

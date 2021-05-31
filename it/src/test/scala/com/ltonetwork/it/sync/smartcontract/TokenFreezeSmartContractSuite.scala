@@ -27,7 +27,7 @@ class TokenFreezeSmartContractSuite extends BaseTransactionSuite with CancelAfte
 
   test("setup contract account with lto") {
     val tx =
-      TransferTransactionV1
+      TransferTransaction
         .selfSigned(
           sender = sender.privateKey,
           recipient = contract,

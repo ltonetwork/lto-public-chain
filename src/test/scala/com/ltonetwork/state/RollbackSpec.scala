@@ -33,7 +33,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
 
   private val enoughFee = 100000000L
   private def transfer(sender: PrivateKeyAccount, recipient: Address, amount: Long) =
-    TransferTransactionV1.selfSigned(sender, recipient, amount, nextTs, enoughFee, Array.empty[Byte]).explicitGet()
+    TransferTransaction.selfSigned(sender, recipient, amount, nextTs, enoughFee, Array.empty[Byte]).explicitGet()
 
   private def randomOp(sender: PrivateKeyAccount, recipient: Address, amount: Long, op: Int) = {
     import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
@@ -46,7 +46,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
           MassTransferTransaction
             .selfSigned(1, sender, List(ParsedTransfer(recipient, amount), ParsedTransfer(recipient, amount)), nextTs, enoughFee, Array.empty[Byte])
             .explicitGet())
-      case _ => List(TransferTransactionV1.selfSigned(sender, recipient, amount, nextTs, enoughFee, Array.empty[Byte]).explicitGet())
+      case _ => List(TransferTransaction.selfSigned(sender, recipient, amount, nextTs, enoughFee, Array.empty[Byte]).explicitGet())
     }
   }
 

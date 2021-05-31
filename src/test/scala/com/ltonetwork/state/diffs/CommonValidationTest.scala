@@ -21,12 +21,12 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
 //  } yield (genesis, funding)
 
   property("disallows double spending") {
-    val preconditionsAndPayment: Gen[(GenesisTransaction, TransferTransactionV1)] = for {
+    val preconditionsAndPayment: Gen[(GenesisTransaction, TransferTransaction)] = for {
       master    <- accountGen
       recipient <- otherAccountGen(candidate = master)
       ts        <- positiveIntGen
       genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-      transfer: TransferTransactionV1 <- ltoTransferGeneratorP(master, recipient)
+      transfer: TransferTransaction <- ltoTransferGeneratorP(master, recipient)
     } yield (genesis, transfer)
 
     forAll(preconditionsAndPayment) {

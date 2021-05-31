@@ -207,7 +207,7 @@ object AsyncHttpApi extends Assertions {
     def transfer(sourceAddress: String, recipient: String, amount: Long, fee: Long): Future[Transaction] = {
       val value    = toJson(TransferV1Request(None, None, amount, fee, sourceAddress, None, recipient))
       val jsObject = value.as[JsObject]
-      val r        = jsObject + ("type" -> JsNumber(TransferTransactionV1.typeId.toInt))
+      val r        = jsObject + ("type" -> JsNumber(TransferTransaction.typeId.toInt))
       signAndBroadcast(r)
     }
 

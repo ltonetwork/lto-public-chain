@@ -34,7 +34,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
   private val calculatorSettings = FeesSettings(
     Seq(
       GenesisTransaction,
-      TransferTransactionV1,
+      TransferTransaction,
       MassTransferTransaction,
       SetScriptTransaction
     ).map(_.typeId.toInt -> List(FeeSettings("LTO", 0))).toMap
@@ -68,14 +68,14 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
       amount    <- chooseNum(1, (maxAmount * 0.9).toLong)
       recipient <- accountGen
       fee       <- chooseNum(extraFee, (maxAmount * 0.1).toLong)
-    } yield TransferTransactionV1.selfSigned(sender, recipient, amount, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet())
+    } yield TransferTransaction.selfSigned(sender, recipient, amount, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet())
       .label("transferTransaction")
 
   private def transferWithRecipient(sender: PrivateKeyAccount, recipient: PublicKeyAccount, maxAmount: Long, time: Time) =
     (for {
       amount <- chooseNum(1, (maxAmount * 0.9).toLong)
       fee    <- chooseNum(extraFee, (maxAmount * 0.1).toLong)
-    } yield TransferTransactionV1.selfSigned(sender, recipient, amount, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet())
+    } yield TransferTransaction.selfSigned(sender, recipient, amount, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet())
       .label("transferWithRecipient")
 
   private def massTransferWithRecipients(sender: PrivateKeyAccount, recipients: List[PublicKeyAccount], maxAmount: Long, time: Time) = {
@@ -185,7 +185,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
     }).label("massTransferWithBlacklisted")
 
   private def utxTest(utxSettings: UtxSettings = UtxSettings(20, 5.seconds, Set.empty, Set.empty, 5.minutes), txCount: Int = 10)(
-      f: (Seq[TransferTransactionV1], UtxPool, TestTime) => Unit): Unit = forAll(stateGen, chooseNum(2, txCount).label("txCount")) {
+      f: (Seq[TransferTransaction], UtxPool, TestTime) => Unit): Unit = forAll(stateGen, chooseNum(2, txCount).label("txCount")) {
     case ((sender, senderBalance, bcu), count) =>
       val time = new TestTime()
 

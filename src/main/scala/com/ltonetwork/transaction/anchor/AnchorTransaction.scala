@@ -1,7 +1,6 @@
 package com.ltonetwork.transaction.anchor
 
 import cats.data.{Validated, ValidatedNel}
-import com.google.common.primitives.Bytes
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
@@ -12,6 +11,7 @@ import play.api.libs.json._
 import scala.util.{Failure, Success, Try}
 
 case class AnchorTransaction private(version: Byte,
+                                     chainId: Byte,
                                      timestamp: Long,
                                      sender: PublicKeyAccount,
                                      fee: Long,
@@ -24,8 +24,7 @@ case class AnchorTransaction private(version: Byte,
   private val serializer: TransactionSerializer.For[AnchorTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
-  override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(0: Byte), bodyBytes(), footerBytes()))
-  override val json: Coeval[JsObject] = serializer.json(this)
+  override val json: Coeval[JsObject] = serializer.toJson(this)
 }
 
 object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
@@ -43,6 +42,7 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
       import tx._
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(chainId != networkByte, None, ValidationError.WrongChainId(chainId)),
         Validated.condNel(anchors.lengthCompare(MaxEntryCount) > 0, None, ValidationError.TooBigArray),
         Validated.condNel(anchors.exists(a => !EntryLength.contains(a.arr.length)), None, ValidationError.GenericError(s"Anchor can only be of length $EntryLength Bytes")),
         Validated.condNel(anchors.distinct.lengthCompare(anchors.size) < 0, None, ValidationError.GenericError("Duplicate anchor in one tx found")),
@@ -75,7 +75,7 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
              anchors: List[ByteStr],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    AnchorTransaction(version, timestamp, sender, fee, anchors, sponsor, proofs).validatedEither
+    AnchorTransaction(version, networkByte, timestamp, sender, fee, anchors, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,

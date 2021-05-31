@@ -18,15 +18,15 @@ object TransactionFactory extends BroadcastRequest {
 
   private val EmptySignature = ByteStr(Array.fill(SignatureLength)(0: Byte))
 
-  def transferAssetV1(request: TransferV1Request, wallet: Wallet, time: Time): Either[ValidationError, TransferTransactionV1] =
+  def transferAssetV1(request: TransferV1Request, wallet: Wallet, time: Time): Either[ValidationError, TransferTransaction] =
     transferAssetV1(request, wallet, request.sender, time)
 
-  def transferAssetV1(request: TransferV1Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransferTransactionV1] =
+  def transferAssetV1(request: TransferV1Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransferTransaction] =
     for {
       sender       <- wallet.findPrivateKey(request.sender)
       signer       <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
-      tx <- TransferTransactionV1.signed(
+      tx <- TransferTransaction.signed(
         sender,
         recipientAcc,
         request.amount,
@@ -37,10 +37,10 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def transferAssetV1(request: TransferV1Request, sender: PublicKeyAccount): Either[ValidationError, TransferTransactionV1] =
+  def transferAssetV1(request: TransferV1Request, sender: PublicKeyAccount): Either[ValidationError, TransferTransaction] =
     for {
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
-      tx <- TransferTransactionV1.create(
+      tx <- TransferTransaction.create(
         sender,
         recipientAcc,
         request.amount,

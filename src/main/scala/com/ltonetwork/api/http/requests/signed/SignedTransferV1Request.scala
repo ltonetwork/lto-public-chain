@@ -39,12 +39,12 @@ case class SignedTransferV1Request(@ApiModelProperty(value = "Base58 encoded sen
                                    @ApiModelProperty(required = true)
                                    signature: String)
     extends BroadcastRequest {
-  def toTx: Either[ValidationError, TransferTransactionV1] =
+  def toTx: Either[ValidationError, TransferTransaction] =
     for {
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _signature  <- parseBase58(signature, "invalid.signature", SignatureStringLength)
       _attachment <- parseBase58(attachment.filter(_.length > 0), "invalid.attachment", TransferTransaction.MaxAttachmentStringSize)
       _account    <- AddressOrAlias.fromString(recipient)
-      t           <- TransferTransactionV1.create(_sender, _account, amount, timestamp, fee, _attachment.arr, _signature)
+      t           <- TransferTransaction.create(_sender, _account, amount, timestamp, fee, _attachment.arr, _signature)
     } yield t
 }

@@ -16,7 +16,7 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 
 class NotaryControlledTransferScenartioTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
-  val preconditions: Gen[(Seq[GenesisTransaction], DataTransaction, TransferTransactionV1, DataTransaction, DataTransaction, TransferTransactionV1)] =
+  val preconditions: Gen[(Seq[GenesisTransaction], DataTransaction, TransferTransaction, DataTransaction, DataTransaction, TransferTransaction)] =
     for {
       company  <- accountGen
       king     <- accountGen
@@ -62,11 +62,11 @@ class NotaryControlledTransferScenartioTest extends PropSpec with PropertyChecks
         .selfSigned(1, king, List(BinaryDataEntry("notary1PK", ByteStr(notary.publicKey))), 1000, ts + 1)
         .explicitGet()
 
-      transferFromCompanyToA = TransferTransactionV1
+      transferFromCompanyToA = TransferTransaction
         .selfSigned(company, accountA, 1, ts + 20, 1000, Array.empty)
         .explicitGet()
 
-      transferFromAToB = TransferTransactionV1
+      transferFromAToB = TransferTransaction
         .selfSigned(accountA, accountB, 1, ts + 30, 1000, Array.empty)
         .explicitGet()
 

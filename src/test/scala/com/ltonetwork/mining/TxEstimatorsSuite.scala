@@ -7,7 +7,7 @@ import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.{FreeSpec, Matchers}
 import com.ltonetwork.account.{Address, PrivateKeyAccount}
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
-import com.ltonetwork.transaction.transfer.TransferTransactionV1
+import com.ltonetwork.transaction.transfer.TransferTransaction
 
 class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with TransactionGen {
   "scriptRunNumber" - {
@@ -32,7 +32,7 @@ class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with
   private val assetId = ByteStr("coin_id".getBytes())
   private val script  = ScriptV1(Terms.TRUE, checkSize = false).explicitGet()
 
-  private val transferLtoTx = TransferTransactionV1
+  private val transferLtoTx = TransferTransaction
     .selfSigned(
       sender = PrivateKeyAccount("sender".getBytes()),
       recipient = PrivateKeyAccount("recipient".getBytes()),
@@ -43,7 +43,7 @@ class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with
     )
     .explicitGet()
 
-  private val transferAssetsTx = TransferTransactionV1
+  private val transferAssetsTx = TransferTransaction
     .selfSigned(
       sender = PrivateKeyAccount("sender".getBytes()),
       recipient = PrivateKeyAccount("recipient".getBytes()),
