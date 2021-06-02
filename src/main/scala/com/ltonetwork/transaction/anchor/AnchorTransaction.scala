@@ -8,8 +8,6 @@ import com.ltonetwork.transaction._
 import monix.eval.Coeval
 import play.api.libs.json._
 
-import scala.util.{Failure, Success, Try}
-
 case class AnchorTransaction private(version: Byte,
                                      chainId: Byte,
                                      timestamp: Long,
@@ -36,6 +34,9 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
   val NewMaxEntryLength: Int = 64
   val MaxBytes: Int          = 150 * 1024
   val MaxEntryCount: Int     = 100
+
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
+    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
@@ -73,9 +74,7 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
              fee: Long,
              data: List[ByteStr],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, timestamp, sender, fee, data, None, Proofs.empty).right.map { unsigned =>
-      unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes())))).explicitGet())
-    }
+    create(version, timestamp, sender, fee, data, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,

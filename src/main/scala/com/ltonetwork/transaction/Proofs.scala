@@ -6,7 +6,6 @@ import monix.eval.Coeval
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.serialization.Deser
 import com.ltonetwork.transaction.ValidationError.GenericError
-import com.ltonetwork.transaction.anchor.AnchorTransactionV1
 
 import scala.util.Try
 
@@ -40,4 +39,8 @@ object Proofs {
       arrs <- Try(Deser.parseArrays(ab.tail)).toEither.left.map(er => GenericError(er.toString))
       r    <- create(arrs.map(ByteStr(_)))
     } yield r
+
+  def apply(proof1: ByteStr, proofs: ByteStr*): Proofs = new Proofs(proof1 +: proofs)
+  def apply(proof1: Array[Byte]): Proofs               = new Proofs(Seq(ByteStr(proof1)))
+  def apply(proofs: Seq[ByteStr]): Proofs              = new Proofs(proofs)
 }

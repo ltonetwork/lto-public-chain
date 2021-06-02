@@ -6,9 +6,11 @@ import com.ltonetwork.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccou
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.transfer.MassTransferTransaction.TransactionT
 import com.ltonetwork.utils.base58Length
 import monix.eval.Coeval
 import play.api.libs.json.JsObject
+
 import scala.util.Try
 
 case class TransferTransaction private(version: Byte,
@@ -39,6 +41,9 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
   val MaxAttachmentSize: Int       = 140
   val MaxAttachmentStringSize: Int = base58Length(MaxAttachmentSize)
 
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
+    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => TransferSerializerV1
     case 2 => TransferSerializerV2
@@ -46,7 +51,7 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
   }
 
   implicit object Validator extends TxValidator[TransactionT] {
-    private def validateSum(amounts: Seq[Long]): ValidatedNel[ValidationError, None.type] =
+    private def validateSum(amounts: Long*): ValidatedNel[ValidationError, None.type] =
       Try(amounts.tail.fold(amounts.head)(Math.addExact))
         .fold (
           _ => ValidationError.OverflowError.invalidNel,
@@ -60,7 +65,7 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
         Validated.condNel(chainId != networkByte, None, ValidationError.WrongChainId(chainId)),
         Validated.condNel(attachment.length > TransferTransaction.MaxAttachmentSize, None, ValidationError.TooBigArray),
         Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
-        validateSum(Seq(amount, fee)),
+        validateSum(amount, fee),
         Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.SponsoredTxNotSupported(s"Sponsored transaction not supported for tx v$version")),
       )
     }
@@ -89,9 +94,7 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
              amount: Long,
              attachment: Array[Byte],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.empty).right.map { unsigned =>
-      unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes())))).explicitGet())
-    }
+    create(version, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
