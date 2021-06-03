@@ -4,9 +4,7 @@ import cats.implicits._
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
-import com.ltonetwork.state._
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.transfer.MassTransferTransaction.TransactionT
 import com.ltonetwork.utils.base58Length
 import monix.eval.Coeval
 import play.api.libs.json.JsObject
@@ -66,7 +64,7 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
         Validated.condNel(attachment.length > TransferTransaction.MaxAttachmentSize, None, ValidationError.TooBigArray),
         Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
         validateSum(amount, fee),
-        Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.SponsoredTxNotSupported(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
   }

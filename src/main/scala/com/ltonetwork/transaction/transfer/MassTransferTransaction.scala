@@ -69,7 +69,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
         validateTotalAmount(tx),
         Validated.condNel(attachment.length > TransferTransaction.MaxAttachmentSize, None, ValidationError.TooBigArray),
         Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.SponsoredTxNotSupported(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
   }

@@ -48,7 +48,7 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
         Validated.condNel(anchors.exists(a => !EntryLength.contains(a.arr.length)), None, ValidationError.GenericError(s"Anchor can only be of length $EntryLength Bytes")),
         Validated.condNel(anchors.distinct.lengthCompare(anchors.size) < 0, None, ValidationError.GenericError("Duplicate anchor in one tx found")),
         Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.SponsoredTxNotSupported(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
   }

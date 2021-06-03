@@ -36,7 +36,7 @@ object ValidationError {
   case class UnsupportedVersion(version: Int)                  extends ValidationError
   case class GenericError(err: String)                         extends ValidationError
   case class InvalidPublicKey(err: String)                     extends ValidationError
-  case class SponsoredTxNotSupported(err: String)              extends ValidationError
+  case class UnsupportedFeature(err: String)                   extends ValidationError
   case class WrongChainId(chainId: Byte)                       extends ValidationError
 
   object GenericError {
