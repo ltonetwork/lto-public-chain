@@ -1,112 +1,85 @@
 package com.ltonetwork.transaction.data
 
-import com.google.common.primitives.{Bytes, Longs, Shorts}
+import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
-import com.ltonetwork.transaction.{FastHashId, Proofs, ProvenTransaction, TransactionBuilder, ValidationError, VersionedTransaction}
+import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import monix.eval.Coeval
 import play.api.libs.json._
-import scorex.crypto.signatures.Curve25519._
 
-import scala.util.{Failure, Success, Try}
+case class DataTransaction private (version: Byte,
+                                    chainId: Byte,
+                                    timestamp: Long,
+                                    sender: PublicKeyAccount,
+                                    fee: Long,
+                                    data: List[DataEntry[_]],
+                                    sponsor: Option[PublicKeyAccount],
+                                    proofs: Proofs)
+    extends Transaction {
 
-case class DataTransaction private (version: Byte, sender: PublicKeyAccount, data: List[DataEntry[_]], fee: Long, timestamp: Long, proofs: Proofs)
-    extends ProvenTransaction
-    with VersionedTransaction
-    with FastHashId {
+  override val builder: TransactionBuilder.For[DataTransaction] = DataTransaction
+  private val serializer: TransactionSerializer.For[DataTransaction] = builder.serializer(version)
 
-  override val builder: TransactionBuilder = DataTransaction
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce {
-    Bytes.concat(
-      Array(builder.typeId, version),
-      sender.publicKey,
-      Shorts.toByteArray(data.size.toShort),
-      data.flatMap(_.toBytes).toArray,
-      Longs.toByteArray(timestamp),
-      Longs.toByteArray(fee)
-    )
-  }
+  override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
+  override val json: Coeval[JsObject] = serializer.toJson(this)
 
   implicit val dataItemFormat: Format[DataEntry[_]] = DataEntry.Format
-
-  override val json: Coeval[JsObject] = Coeval.evalOnce {
-    jsonBase() ++ Json.obj(
-      "version" -> version,
-      "data"    -> Json.toJson(data)
-    )
-  }
-
-  override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(0: Byte), bodyBytes(), proofs.bytes()))
 }
 
-object DataTransaction extends TransactionBuilder.For[DataTransaction] with TransactionBuilder.MultipleVersions {
+object DataTransaction extends TransactionBuilder.For[DataTransaction] {
 
   override val typeId: Byte                 = 12
   override val supportedVersions: Set[Byte] = Set(1)
 
-  val MaxBytes      = 150 * 1024
-  val MaxEntryCount = 100
+  val MaxBytes: Int      = 150 * 1024
+  val MaxEntryCount: Int = 100
 
-  override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
-    Try {
-      val p0     = KeyLength
-      val sender = PublicKeyAccount(bytes.slice(0, p0))
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
+    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
 
-      val entryCount = Shorts.fromByteArray(bytes.drop(p0))
-      val (entries, p1) =
-        if (entryCount > 0) {
-          val parsed = List.iterate(DataEntry.parse(bytes, p0 + 2), entryCount) { case (e, p) => DataEntry.parse(bytes, p) }
-          (parsed.map(_._1), parsed.last._2)
-        } else (List.empty, p0 + 2)
+  implicit object Validator extends TxValidator[TransactionT] {
+    def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
+      import tx._
+      seq(tx)(
+        Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(chainId != networkByte, None, ValidationError.WrongChainId(chainId)),
+        Validated.condNel(data.lengthCompare(MaxEntryCount) < 0 && data.forall(_.valid), None, ValidationError.TooBigArray),
+        Validated.condNel(!data.exists(_.key.isEmpty), None, ValidationError.GenericError("Empty key found")),
+        Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, None, ValidationError.GenericError("Duplicate keys found")),
+        Validated.condNel(bytes().length <= MaxBytes, tx, ValidationError.TooBigArray),
+        Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+      )
+    }
+  }
 
-      val timestamp = Longs.fromByteArray(bytes.drop(p1))
-      val fee = Longs.fromByteArray(bytes.drop(p1 + 8))
-      val txEi = for {
-        proofs <- Proofs.fromBytes(bytes.drop(p1 + 16))
-        tx     <- create(version, sender, entries, fee, timestamp, proofs)
-      } yield tx
-      txEi.fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
+  override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
+    case 1 => DataSerializerV1
+    case _ => UnknownSerializer
+  }
 
   def create(version: Byte,
-             sender: PublicKeyAccount,
-             data: List[DataEntry[_]],
-             fee: Long,
              timestamp: Long,
-             proofs: Proofs): Either[ValidationError, TransactionT] = {
-    if (!supportedVersions.contains(version)) {
-      Left(ValidationError.UnsupportedVersion(version))
-    } else if (data.lengthCompare(MaxEntryCount) > 0 || data.exists(!_.valid)) {
-      Left(ValidationError.TooBigArray)
-    } else if (data.exists(_.key.isEmpty)) {
-      Left(ValidationError.GenericError("Empty key found"))
-    } else if (data.map(_.key).distinct.lengthCompare(data.size) < 0) {
-      Left(ValidationError.GenericError("Duplicate keys found"))
-    } else if (fee <= 0) {
-      Left(ValidationError.InsufficientFee())
-    } else {
-      val tx = DataTransaction(version, sender, data, fee, timestamp, proofs)
-      Either.cond(tx.bytes().length <= MaxBytes, tx, ValidationError.TooBigArray)
-    }
-  }
+             sender: PublicKeyAccount,
+             fee: Long,
+             data: List[DataEntry[_]],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs): Either[ValidationError, TransactionT] =
+    DataTransaction(version, networkByte, timestamp, sender, fee, data, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
+             timestamp: Long,
+             fee: Long,
              sender: PublicKeyAccount,
              data: List[DataEntry[_]],
-             fee: Long,
-             timestamp: Long,
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    create(version, sender, data, fee, timestamp, Proofs.empty).right.map { unsigned =>
-      unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes())))).explicitGet())
-    }
-  }
+             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
+    create(version, timestamp, sender, fee, data, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
-                 sender: PrivateKeyAccount,
-                 data: List[DataEntry[_]],
+                 timestamp: Long,
                  fee: Long,
-                 timestamp: Long): Either[ValidationError, TransactionT] = {
+                 sender: PrivateKeyAccount,
+                 data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
     signed(version, sender, data, fee, timestamp, sender)
-  }
 }
