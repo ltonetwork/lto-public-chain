@@ -11,7 +11,7 @@ import scorex.crypto.signatures.Curve25519.KeyLength
 import scala.util.{Failure, Success, Try}
 
 object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
-  override def bodyBytes(tx: DataTransaction): Coeval[Array[Byte]] = Coeval.evalOnce {
+  override def bodyBytes(tx: TransactionT): Coeval[Array[Byte]] = Coeval.evalOnce {
     import tx._
 
     Bytes.concat(
@@ -24,7 +24,7 @@ object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
     )
   }
 
-  override protected def parseBytes(version: Byte, bytes: Array[Byte]): Try[DataTransaction] =
+  override protected def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
     Try {
       val p0     = KeyLength
       val sender = PublicKeyAccount(bytes.slice(0, p0))
@@ -44,7 +44,7 @@ object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
-  override def toJson(tx: DataTransaction): Coeval[JsObject] = Coeval.evalOnce {
+  override def toJson(tx: TransactionT): Coeval[JsObject] = Coeval.evalOnce {
     jsonBase(
       tx,
       Json.obj("data" -> Json.toJson(tx.data))

@@ -8,7 +8,7 @@ import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.association.AssociationTransactionBase
+import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
@@ -98,7 +98,7 @@ object CommonValidation {
         } yield tx
       case _: SetScriptTransaction       => Right(tx)
       case _: AnchorTransaction          => Right(tx)
-      case _: AssociationTransactionBase => activationBarrier(BlockchainFeatures.AssociationTransaction)
+      case _: AssociationTransaction => activationBarrier(BlockchainFeatures.AssociationTransaction)
       case _: SponsorshipTransactionBase => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
       case _: PaymentTransaction         => disabled
       case _                             => Left(GenericError("Unknown transaction must be explicitly activated"))
@@ -141,7 +141,7 @@ object CommonValidation {
     case _: LeaseCancelTransaction     => Right(1000)
     case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
     case _: AnchorTransaction          => Right(100)
-    case _: AssociationTransactionBase => Right(1000)
+    case _: AssociationTransaction => Right(1000)
     case _: SponsorshipTransactionBase => Right(5000)
     case _                             => Left(UnsupportedTransactionType)
   }
@@ -154,7 +154,7 @@ object CommonValidation {
     case _: LeaseCancelTransaction     => Right(1000)
     case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
     case _: AnchorTransaction          => Right(350)
-    case _: AssociationTransactionBase => Right(1000)
+    case _: AssociationTransaction => Right(1000)
     case _: SponsorshipTransactionBase => Right(5000)
     case _                             => Left(UnsupportedTransactionType)
   }

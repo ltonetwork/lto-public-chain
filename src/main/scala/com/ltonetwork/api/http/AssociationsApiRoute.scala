@@ -9,7 +9,7 @@ import com.ltonetwork.state.{Blockchain, ByteStr}
 import com.ltonetwork.transaction.association.AssociationTransaction.ActionType.{Issue, Revoke}
 import com.ltonetwork.transaction.association.AssociationTransaction.Assoc
 import com.ltonetwork.transaction.TransactionFactory
-import com.ltonetwork.transaction.association.AssociationTransactionBase
+import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.utils.Time
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
@@ -56,9 +56,9 @@ case class AssociationsApiRoute(settings: RestAPISettings,
   }
 
   private def associationsJson(address: Address, a: Blockchain.Associations): AssociationsInfo = {
-    def f(l: List[(Int, AssociationTransactionBase)]) = {
+    def f(l: List[(Int, AssociationTransaction)]) = {
       l.foldLeft(Map.empty[Assoc, (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
-          case (acc, (height, as: AssociationTransactionBase)) =>
+          case (acc, (height, as: AssociationTransaction)) =>
             val cp = if (address == as.sender.toAddress) as.assoc.party else as.sender.toAddress
             (as.actionType, acc.get(as.assoc)) match {
               case (Issue, None)                    => acc + (as.assoc -> (height, cp, as.id(), None))

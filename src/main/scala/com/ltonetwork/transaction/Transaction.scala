@@ -24,7 +24,7 @@ trait Transaction extends BytesSerializable with JsonSerializable {
   def proofs: Proofs
 
   protected val prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(Array(0: Byte))
-  val footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(
+  protected val footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(
     sponsor.map(account => Bytes.concat(Array(account.keyType.id), account.publicKey)).getOrElse(Array(0: Byte)),
     proofs.bytes()
   ))

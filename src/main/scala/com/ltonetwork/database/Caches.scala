@@ -7,7 +7,7 @@ import com.ltonetwork.account.Address
 import com.ltonetwork.block.Block
 import com.ltonetwork.state._
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.association.{AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.smart.script.Script
 
 import scala.collection.JavaConverters._
@@ -90,7 +90,7 @@ trait Caches extends Blockchain {
                          addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
                          scripts: Map[BigInt, Option[Script]],
                          data: Map[BigInt, AccountDataInfo],
-                         assocs: List[(Int, AssociationTransactionBase)],
+                         assocs: List[(Int, AssociationTransaction)],
                          sponsorship: Map[BigInt, List[Address]]): Unit
 
   override def append(diff: Diff, carryFee: Long, block: Block): Unit = {
@@ -135,12 +135,12 @@ trait Caches extends Blockchain {
       newTransactions += id -> ((tx, addresses.map(addressId)))
     }
 
-    val newAssociations: List[(Int, AssociationTransactionBase)] = diff.transactions.values
+    val newAssociations: List[(Int, AssociationTransaction)] = diff.transactions.values
       .filter(x => {
         val tpid = x._2.builder.typeId
         tpid == IssueAssociationTransaction.typeId || tpid == RevokeAssociationTransaction.typeId
       })
-      .map(x => (x._1, x._2.asInstanceOf[AssociationTransactionBase]))
+      .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
       .toList
 
     doAppend(

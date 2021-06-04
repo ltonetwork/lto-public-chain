@@ -5,7 +5,7 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.association.AssociationTransactionBase
+import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.transaction.lease.{LeaseTransaction, LeaseTransactionV1}
 import com.ltonetwork.utils.ScorexLogging
 
@@ -38,8 +38,10 @@ package object state {
   }
 
   implicit class BlockchainExt(blockchain: Blockchain) extends ScorexLogging {
-    def assocExists(as: AssociationTransactionBase) =
-      blockchain.associations(as.sender).outgoing.map(_._2).exists(_.assoc == as.assoc)
+    def assocExists(tx: AssociationTransaction): Boolean =
+      blockchain.associations(tx.sender).outgoing.map(_._2).exists(as =>
+        tx.recipient == as.recipient && tx.assocType == as.assocType && tx.hash == as.hash
+      )
 
     def isEmpty: Boolean = blockchain.height == 0
 

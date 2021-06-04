@@ -6,7 +6,7 @@ import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.UnsupportedTransactionType
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.association.AssociationTransactionBase
+import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
@@ -41,7 +41,7 @@ object TransactionDiffer {
             case dtx: DataTransaction               => DataTransactionDiff(blockchain, currentBlockHeight)(dtx)
             case sstx: SetScriptTransaction         => SetScriptTransactionDiff(currentBlockHeight)(sstx)
             case at: AnchorTransaction              => AnchorTransactionDiff(blockchain, currentBlockHeight)(at)
-            case as: AssociationTransactionBase     => AssociationTransactionDiff(currentBlockHeight)(as)
+            case as: AssociationTransaction     => AssociationTransactionDiff(currentBlockHeight)(as)
             case stx: SponsorshipTransaction        => SponsorshipTransactionDiff.sponsor(blockchain, currentBlockHeight)(stx)
             case sctx: SponsorshipCancelTransaction => SponsorshipTransactionDiff.cancel(blockchain, currentBlockHeight)(sctx)
             case _                                  => Left(UnsupportedTransactionType)

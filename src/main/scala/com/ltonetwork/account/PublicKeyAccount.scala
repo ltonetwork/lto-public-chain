@@ -32,6 +32,11 @@ object PublicKeyAccount {
     def toAddress: Address = PublicKeyAccount.toAddress(pk)
   }
 
+  object Dummy extends PublicKeyAccount {
+    def keyType: KeyType = ED25519
+    def publicKey: Array[Byte] = Array[Byte](0)
+  }
+
   def fromBase58String(keyType: KeyType, s: String): Either[InvalidAddress, PublicKeyAccount] =
     (for {
       _     <- Either.cond(s.length <= base58Length(keyType.length), (), "Bad public key string length")

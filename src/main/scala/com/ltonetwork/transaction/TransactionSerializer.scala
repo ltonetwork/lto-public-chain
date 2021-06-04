@@ -22,14 +22,14 @@ trait TransactionSerializer {
       "version"         -> tx.version,
       "id"              -> id().toString,
       "sender"          -> sender.toAddress,
-      "senderKeyType"   -> sender.keyType.id,
+      "senderKeyType"   -> sender.keyType.reference,
       "senderPublicKey" -> sender,
       "fee"             -> fee,
       "timestamp"       -> timestamp,
     ) ++ {
       if (sponsor.isDefined) Json.obj(
         "sponsor" -> sponsor.get.address,
-        "sponsorKeyType" -> sponsor.get.keyType.id,
+        "sponsorKeyType" -> sponsor.get.keyType.reference,
         "sponsorPublicKey" -> Base58.encode(sponsor.get.publicKey)
       ) else Json.obj()
     } ++ txJson ++ (tx match {

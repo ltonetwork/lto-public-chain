@@ -1,53 +1,49 @@
 package com.ltonetwork.transaction.genesis
 
 import com.google.common.primitives.{Bytes, Ints, Longs}
-import com.ltonetwork.account.Address
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state.{ByteStr, _}
 import com.ltonetwork.transaction.TransactionBuilders._
-import com.ltonetwork.transaction.{AssetId, Transaction, TransactionBuilder, ValidationError}
+import com.ltonetwork.transaction.{Proofs, SigProofsSwitch, Transaction, TransactionBuilder, TransactionSerializer, ValidationError}
 import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.JsObject
 
-import scala.util.{Failure, Success, Try}
+case class GenesisTransaction private (recipient: Address,
+                                      amount: Long,
+                                      timestamp: Long,
+                                      proofs: Proofs
+  ) extends Transaction with SigProofsSwitch {
 
-case class GenesisTransaction private (recipient: Address, amount: Long, timestamp: Long, signature: ByteStr) extends Transaction {
-
-  import GenesisTransaction._
-
-  override val builder: TransactionBuilder = GenesisTransaction
   override val fee                        = 0
-  override val id: Coeval[AssetId]        = Coeval.evalOnce(signature)
+  override val id: Coeval[ByteStr]        = Coeval.evalOnce(signature)
 
-  override val json: Coeval[JsObject] = Coeval.evalOnce(
-    Json.obj(
-      "type"      -> builder.typeId,
-      "id"        -> id().base58,
-      "fee"       -> 0,
-      "timestamp" -> timestamp,
-      "signature" -> this.signature.base58,
-      "recipient" -> recipient.address,
-      "amount"    -> amount
-    ))
+  override def version: Byte = 1
+  override def sender: PublicKeyAccount = PublicKeyAccount.Dummy
+  override def sponsor: Option[PublicKeyAccount] = None
 
-  override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce {
-    val typeBytes      = Array(builder.typeId)
-    val timestampBytes = Bytes.ensureCapacity(Longs.toByteArray(timestamp), TimestampLength, 0)
-    val amountBytes    = Bytes.ensureCapacity(Longs.toByteArray(amount), AmountLength, 0)
-    val rcpBytes       = recipient.bytes.arr
-    require(rcpBytes.length == Address.AddressLength)
-    val res = Bytes.concat(typeBytes, timestampBytes, rcpBytes, amountBytes)
-    require(res.length == TypeLength + BASE_LENGTH)
-    res
-  }
+  override val builder: TransactionBuilder.For[GenesisTransaction] = GenesisTransaction
+  private val serializer: TransactionSerializer.For[GenesisTransaction] = builder.serializer(version)
+
+  override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
+  override val json: Coeval[JsObject] = serializer.toJson(this)
+
+  override protected val prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(Array[Byte]())
+  override protected val footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Array[Byte]())
 }
 
-object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] with TransactionBuilder.HardcodedVersion1 {
+object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] {
 
   override val typeId: Byte = 1
+  override val supportedVersions: Set[Byte] = Set(1)
 
-  private val RECIPIENT_LENGTH = Address.AddressLength
-  private val BASE_LENGTH      = TimestampLength + RECIPIENT_LENGTH + AmountLength
+  val RECIPIENT_LENGTH: Int = Address.AddressLength
+  val BASE_LENGTH: Int      = TimestampLength + RECIPIENT_LENGTH + AmountLength
+
+  override implicit def sign(tx: GenesisTransaction, signer: PrivateKeyAccount): GenesisTransaction =
+    throw new Exception("Genesis transactions have a generated signature")
+
+  override def serializer(version: Byte): TransactionSerializer.For[GenesisTransaction] = GenesisSerializer
 
   def generateSignature(recipient: Address, amount: Long, timestamp: Long): Array[Byte] = {
     val typeBytes      = Bytes.ensureCapacity(Ints.toByteArray(typeId), TypeLength, 0)
@@ -61,32 +57,12 @@ object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] wit
     Bytes.concat(h, h)
   }
 
-  override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
-    Try {
-      require(bytes.length >= BASE_LENGTH, "Data does not match base length")
-
-      var position = 0
-
-      val timestampBytes = java.util.Arrays.copyOfRange(bytes, position, position + TimestampLength)
-      val timestamp      = Longs.fromByteArray(timestampBytes)
-      position += TimestampLength
-
-      val recipientBytes = java.util.Arrays.copyOfRange(bytes, position, position + RECIPIENT_LENGTH)
-      val recipient      = Address.fromBytes(recipientBytes).explicitGet()
-      position += RECIPIENT_LENGTH
-
-      val amountBytes = java.util.Arrays.copyOfRange(bytes, position, position + AmountLength)
-      val amount      = Longs.fromByteArray(amountBytes)
-
-      GenesisTransaction.create(recipient, amount, timestamp).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
-
   def create(recipient: Address, amount: Long, timestamp: Long): Either[ValidationError, GenesisTransaction] = {
     if (amount < 0) {
       Left(ValidationError.NegativeAmount(amount, "lto"))
     } else {
       val signature = ByteStr(GenesisTransaction.generateSignature(recipient, amount, timestamp))
-      Right(GenesisTransaction(recipient, amount, timestamp, signature))
+      Right(GenesisTransaction(recipient, amount, timestamp, Proofs.fromSignature(signature)))
     }
   }
 }
