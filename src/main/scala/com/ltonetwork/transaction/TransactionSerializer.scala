@@ -1,6 +1,8 @@
 package com.ltonetwork.transaction
 
+import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.transaction.ValidationError.UnsupportedVersion
+import com.ltonetwork.transaction.Transaction.SigProofsSwitch
 import com.ltonetwork.utils.Base58
 import monix.eval.Coeval
 import play.api.libs.json.{JsArray, JsObject, JsString, Json}
@@ -15,6 +17,14 @@ trait TransactionSerializer {
 
   def toJson(tx: TransactionT): Coeval[JsObject]
 
+  private def jsonSponsor(sponsor: Option[PublicKeyAccount]): JsObject = {
+    if (sponsor.isDefined) Json.obj(
+      "sponsor" -> sponsor.get.address,
+      "sponsorKeyType" -> sponsor.get.keyType.reference,
+      "sponsorPublicKey" -> Base58.encode(sponsor.get.publicKey)
+    ) else Json.obj()
+  }
+
   protected def jsonBase(tx: Transaction, txJson: JsObject): JsObject = {
     import tx._
     Json.obj(
@@ -26,17 +36,14 @@ trait TransactionSerializer {
       "senderPublicKey" -> sender,
       "fee"             -> fee,
       "timestamp"       -> timestamp,
-    ) ++ {
-      if (sponsor.isDefined) Json.obj(
-        "sponsor" -> sponsor.get.address,
-        "sponsorKeyType" -> sponsor.get.keyType.reference,
-        "sponsorPublicKey" -> Base58.encode(sponsor.get.publicKey)
-      ) else Json.obj()
-    } ++ txJson ++ (tx match {
-      case s: SigProofsSwitch if s.usesLegacySignature => Json.obj("signature" -> s.signature.toString)
-      case _ if proofs.proofs.nonEmpty                 => Json.obj("proofs" -> JsArray(proofs.proofs.map(p => JsString(p.toString))))
-      case _                                           => Json.obj()
-    })
+    ) ++
+      jsonSponsor(sponsor) ++
+      txJson ++
+      (tx match {
+        case s: SigProofsSwitch if s.usesLegacySignature => Json.obj("signature" -> s.signature.toString)
+        case _ if proofs.proofs.nonEmpty                 => Json.obj("proofs" -> JsArray(proofs.proofs.map(p => JsString(p.toString))))
+        case _                                           => Json.obj()
+      })
   }
 }
 

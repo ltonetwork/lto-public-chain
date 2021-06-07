@@ -16,6 +16,7 @@ trait Transaction extends BytesSerializable with JsonSerializable {
 
   val id: Coeval[ByteStr] = Coeval.evalOnce(ByteStr(crypto.fastHash(bodyBytes())))
   def typeId: Byte = builder.typeId
+  def chainId: Byte
   def version: Byte
   def sender: PublicKeyAccount
   def fee: Long
@@ -41,10 +42,20 @@ trait Transaction extends BytesSerializable with JsonSerializable {
 }
 
 object Transaction {
-  trait NoBytePrefixV1 extends Transaction {
+  trait HardcodedV1 extends Transaction {
     override val prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(
       if (this.version == 1) Array()
       else Array(0: Byte)
+    )
+  }
+
+  trait SigProofsSwitch extends Transaction {
+    def usesLegacySignature: Boolean = version == 1
+    def signature: ByteStr = proofs.toSignature
+
+    override protected val footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
+      if (this.version == 1) proofs.toSignature.arr
+      else super.footerBytes()
     )
   }
 }

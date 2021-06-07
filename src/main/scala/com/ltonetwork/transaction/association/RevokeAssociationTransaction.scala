@@ -8,8 +8,6 @@ import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, Tran
 import monix.eval.Coeval
 import play.api.libs.json.JsObject
 
-import scala.util.Try
-
 case class RevokeAssociationTransaction private (version: Byte,
                                                  chainId: Byte,
                                                  timestamp: Long,
@@ -20,7 +18,7 @@ case class RevokeAssociationTransaction private (version: Byte,
                                                  hash: Option[ByteStr],
                                                  sponsor: Option[PublicKeyAccount],
                                                  proofs: Proofs)
-  extends Transaction {
+    extends Transaction {
 
   override val builder: TransactionBuilder.For[RevokeAssociationTransaction] = RevokeAssociationTransaction
   private val serializer: TransactionSerializer.For[RevokeAssociationTransaction] = builder.serializer(version)
@@ -48,7 +46,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
           None,
           ValidationError.GenericError(s"Hash length must be <= ${AssociationTransaction.MaxHashLength} bytes")
         ),
-        Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
@@ -60,6 +58,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
   }
 
   def create(version: Byte,
+             chainId: Option[Byte],
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
@@ -68,7 +67,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
              hash: Option[ByteStr],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    RevokeAssociationTransaction(version, networkByte, timestamp, sender, fee, assocType, recipient, hash, sponsor, proofs).validatedEither
+    RevokeAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, assocType, recipient, hash, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,

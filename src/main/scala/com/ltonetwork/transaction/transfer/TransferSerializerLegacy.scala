@@ -4,7 +4,6 @@ import com.google.common.primitives.{Bytes, Longs}
 import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
 import com.ltonetwork.serialization.Deser
 import com.ltonetwork.transaction.{TransactionSerializer, ValidationError}
-import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.utils.Base58
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}

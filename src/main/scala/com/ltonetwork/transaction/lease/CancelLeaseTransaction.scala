@@ -1,52 +1,46 @@
 package com.ltonetwork.transaction.lease
 
 import cats.data.{Validated, ValidatedNel}
-import com.ltonetwork.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
-import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
+import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
 import com.ltonetwork.transaction.TransactionParser.{HardcodedVersion1, MultipleVersions}
+import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import monix.eval.Coeval
 import play.api.libs.json.JsObject
 
-import scala.util.{Either, Try}
+import scala.util.Try
 
-case class LeaseTransaction private (version: Byte,
-                                     chainId: Byte,
-                                     timestamp: Long,
-                                     sender: PublicKeyAccount,
-                                     fee: Long,
-                                     recipient: AddressOrAlias,
-                                     amount: Long,
-                                     sponsor: Option[PublicKeyAccount],
-                                     proofs: Proofs)
+case class CancelLeaseTransaction private(version: Byte,
+                                          chainId: Byte,
+                                          timestamp: Long,
+                                          sender: PublicKeyAccount,
+                                          fee: Long,
+                                          leaseId: ByteStr,
+                                          sponsor: Option[PublicKeyAccount],
+                                          proofs: Proofs)
     extends Transaction
     with HardcodedV1
     with SigProofsSwitch {
 
-  override val builder: TransactionBuilder.For[LeaseTransaction] = LeaseTransaction
-  private val serializer: TransactionSerializer.For[LeaseTransaction] = builder.serializer(version)
+  override val builder: TransactionBuilder.For[CancelLeaseTransaction] = CancelLeaseTransaction
+  private val serializer: TransactionSerializer.For[CancelLeaseTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
   override val json: Coeval[JsObject] = serializer.toJson(this)
 }
 
-object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
-
-  override val typeId: Byte                 = 8
+object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransaction] {
+  override val typeId: Byte                 = 9
   override def supportedVersions: Set[Byte] = Set(1, 2)
-
-  object Status {
-    val Active   = "active"
-    val Canceled = "canceled"
-  }
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
     tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
-    case 1 => LeaseSerializerV1
-    case 2 => LeaseSerializerV2
+    case 1 => CancelLeaseSerializerV1
+    case 2 => CancelLeaseSerializerV2
     case _ => UnknownSerializer
   }
 
@@ -56,9 +50,7 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId != networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(amount > 0, None, ValidationError.NegativeAmount(amount, "lto")),
-        Validated.condNel(Try(Math.addExact(amount, fee)).isSuccess, None, ValidationError.OverflowError),
-        Validated.condNel(sender.stringRepr != recipient.stringRepr, None, ValidationError.ToSelf),
+        Validated.condNel(leaseId.arr.length == crypto.DigestSize, None, ValidationError.GenericError("Lease transaction id is invalid")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
@@ -74,26 +66,23 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             recipient: AddressOrAlias,
-             amount: Long,
+             leaseId: ByteStr,
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    LeaseTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, amount, sponsor, proofs).validatedEither
+    CancelLeaseTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, leaseId, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             recipient: AddressOrAlias,
-             amount: Long,
+             leaseId: ByteStr,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, amount, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, leaseId, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
-                 sender: PrivateKeyAccount,
-                 amount: Long,
-                 fee: Long,
                  timestamp: Long,
-                 recipient: AddressOrAlias): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, recipient, amount, sender)
+                 sender: PrivateKeyAccount,
+                 fee: Long,
+                 leaseId: ByteStr): Either[ValidationError, TransactionT] =
+    signed(version, timestamp, sender, fee, leaseId, sender)
 }

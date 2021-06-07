@@ -33,8 +33,7 @@ object RevokeAssociationSerializerV1 extends TransactionSerializer.For[RevokeAss
       (for {
         parsed <- AssociationSerializerV1.parse(version, bytes)
         (version, timestamp, sender, fee, assocType, recipient, hashOpt, proofs) = parsed
-        tx     <- create(version, timestamp, sender, fee, assocType, recipient, hashOpt, None, proofs)
-        tx.chainId = chainId
+        tx     <- create(version, Some(chainId), timestamp, sender, fee, assocType, recipient, hashOpt, None, proofs)
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 

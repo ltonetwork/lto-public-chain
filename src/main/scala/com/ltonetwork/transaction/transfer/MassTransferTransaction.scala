@@ -1,17 +1,16 @@
 package com.ltonetwork.transaction.transfer
 
-import cats.implicits._
 import cats.data.{Validated, ValidatedNel}
+import cats.implicits._
 import com.ltonetwork.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
-import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json, OFormat}
 
-import scala.util.{Either, Failure, Success, Try}
+import scala.util.{Either, Try}
 
 case class MassTransferTransaction private (version: Byte,
                                             chainId: Byte,
@@ -23,7 +22,7 @@ case class MassTransferTransaction private (version: Byte,
                                             sponsor: Option[PublicKeyAccount],
                                             proofs: Proofs)
     extends Transaction
-    with Transaction.NoBytePrefixV1 {
+    with Transaction.HardcodedV1 {
 
   override val builder: TransactionBuilder.For[MassTransferTransaction] = MassTransferTransaction
   private val serializer: TransactionSerializer.For[MassTransferTransaction] = builder.serializer(version)
@@ -68,7 +67,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
         Validated.condNel(transfers.exists(_.amount < 0), None, ValidationError.GenericError("One of the transfers has negative amount")),
         validateTotalAmount(tx),
         Validated.condNel(attachment.length > TransferTransaction.MaxAttachmentSize, None, ValidationError.TooBigArray),
-        Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
@@ -79,12 +78,12 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
     case _ => UnknownSerializer
   }
 
-  override protected def parseBytes(bytes: Array[Byte]): Try[TransactionT] = (for {
-    (version, end) <- OneVersion(typeId, 1).parseHeader(bytes)
-    tx             <- serializer(version).parseBytes(version, bytes.drop(end))
-  } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
+  override def parseHeader(bytes: Array[Byte]): Try[(Byte, Int)] =
+    if (bytes(0) != 0) OneVersion(typeId, 1).parseHeader(bytes)
+    else MultipleVersions(typeId, supportedVersions).parseHeader(bytes)
 
   def create(version: Byte,
+             chainId: Option[Byte],
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
@@ -92,7 +91,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
              attachment: Array[Byte],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    MassTransferTransaction(version, networkByte, timestamp, sender, fee, transfers, attachment, sponsor, proofs).validatedEither
+    MassTransferTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, transfers, attachment, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
@@ -101,7 +100,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
              transfers: List[ParsedTransfer],
              attachment: Array[Byte],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, timestamp, sender, fee, transfers, attachment, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, transfers, attachment, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,

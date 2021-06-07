@@ -40,7 +40,7 @@ object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
       val fee = Longs.fromByteArray(bytes.drop(p1 + 8))
       (for {
         proofs <- Proofs.fromBytes(bytes.drop(p1 + 16))
-        tx     <- create(version, timestamp, sender, fee, entries, None, proofs)
+        tx     <- create(version, None, timestamp, sender, fee, entries, None, proofs)
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 

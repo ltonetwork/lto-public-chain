@@ -89,8 +89,8 @@ object CommonValidation {
       case _: TransferTransactionV2    => activationBarrier(BlockchainFeatures.SmartAccounts)
       case _: LeaseTransactionV1       => Right(tx)
       case _: LeaseTransactionV2       => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case _: LeaseCancelTransactionV1 => Right(tx)
-      case _: LeaseCancelTransactionV2 => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case _: CancelLeaseTransactionV1 => Right(tx)
+      case _: CancelLeaseTransactionV2 => activationBarrier(BlockchainFeatures.SmartAccounts)
       case _: MassTransferTransaction  => Right(tx)
       case _: DataTransaction =>
         for {
@@ -124,7 +124,7 @@ object CommonValidation {
     case _: TransferTransaction      => Right(1)
     case tx: MassTransferTransaction => Right(1 + (tx.transfers.size + 1) / 2)
     case _: LeaseTransaction         => Right(1)
-    case _: LeaseCancelTransaction   => Right(1)
+    case _: CancelLeaseTransaction   => Right(1)
     case tx: DataTransaction =>
       val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
       Right(1 + (base.length - 1) / 1024)
@@ -138,7 +138,7 @@ object CommonValidation {
     case _: TransferTransaction        => Right(1000)
     case _: LeaseTransaction           => Right(1000)
     case _: SetScriptTransaction       => Right(1000)
-    case _: LeaseCancelTransaction     => Right(1000)
+    case _: CancelLeaseTransaction     => Right(1000)
     case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
     case _: AnchorTransaction          => Right(100)
     case _: AssociationTransaction => Right(1000)
@@ -151,7 +151,7 @@ object CommonValidation {
     case _: TransferTransaction        => Right(1000)
     case _: LeaseTransaction           => Right(1000)
     case _: SetScriptTransaction       => Right(1000)
-    case _: LeaseCancelTransaction     => Right(1000)
+    case _: CancelLeaseTransaction     => Right(1000)
     case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
     case _: AnchorTransaction          => Right(350)
     case _: AssociationTransaction => Right(1000)

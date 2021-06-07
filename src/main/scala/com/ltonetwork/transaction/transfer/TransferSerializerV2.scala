@@ -10,7 +10,7 @@ object TransferSerializerV2 extends TransferSerializerLegacy {
         parsed <- parseBase(bytes, 0)
         (sender, timestamp, amount, fee, recipient, attachment, end) = parsed
         proofs <- Proofs.fromBytes(bytes.drop(end))
-        tx     <- TransferTransaction.create(version, timestamp, sender, fee, recipient, amount, attachment, None, proofs)
+        tx     <- TransferTransaction.create(version, None, timestamp, sender, fee, recipient, amount, attachment, None, proofs)
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 }

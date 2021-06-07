@@ -20,7 +20,7 @@ case class AssociationTransaction private (version: Byte,
                                            hash: Option[ByteStr],
                                            sponsor: Option[PublicKeyAccount],
                                            proofs: Proofs)
-  extends Transaction {
+    extends Transaction {
 
   override val builder: TransactionBuilder.For[AssociationTransaction] = AssociationTransaction
   private val serializer: TransactionSerializer.For[AssociationTransaction] = builder.serializer(version)
@@ -47,7 +47,7 @@ object AssociationTransaction extends TransactionBuilder.For[AssociationTransact
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId != networkByte, None, ValidationError.WrongChainId(chainId)),
         Validated.condNel(hash.exists(_.arr.length > MaxHashLength), None, ValidationError.GenericError(s"Hash length must be <= $MaxHashLength bytes")),
-        Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(expires.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Association expiry is not supported for tx v$version")),
         Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
@@ -60,6 +60,7 @@ object AssociationTransaction extends TransactionBuilder.For[AssociationTransact
   }
 
   def create(version: Byte,
+             chainId: Option[Byte],
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
@@ -69,7 +70,7 @@ object AssociationTransaction extends TransactionBuilder.For[AssociationTransact
              hash: Option[ByteStr],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    AssociationTransaction(version, networkByte, timestamp, sender, fee, assocType, recipient, expires, hash, sponsor, proofs).validatedEither
+    AssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, assocType, recipient, expires, hash, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
@@ -80,7 +81,7 @@ object AssociationTransaction extends TransactionBuilder.For[AssociationTransact
              expires: Option[Long],
              hash: Option[ByteStr],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, timestamp, sender, fee, assocType, recipient, expires, hash, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, assocType, recipient, expires, hash, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,

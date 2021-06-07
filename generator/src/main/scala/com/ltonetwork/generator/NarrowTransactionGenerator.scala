@@ -8,7 +8,7 @@ import com.ltonetwork.generator.NarrowTransactionGenerator.Settings
 import com.ltonetwork.state.DataEntry.{MaxValueSize, Type}
 import com.ltonetwork.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, IntegerDataEntry, StringDataEntry}
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseCancelTransactionV1, LeaseTransactionV1}
+import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, CancelLeaseTransactionV1, LeaseTransactionV1}
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.LoggerFacade
@@ -77,10 +77,10 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
             val useAlias     = r.nextBoolean()
             val recipientOpt = randomFrom(accounts.filter(_ != sender).map(_.toAddress))
             recipientOpt.flatMap(recipient => logOption(LeaseTransactionV1.selfSigned(sender, 1, moreThatStandartFee * 3, ts, recipient)))
-          case LeaseCancelTransactionV1 =>
+          case CancelLeaseTransactionV1 =>
             randomFrom(activeLeaseTransactions).flatMap(lease => {
               val sender = accounts.find(_.address == lease.sender.address).get
-              logOption(LeaseCancelTransactionV1.selfSigned(sender, lease.id(), moreThatStandartFee * 3, ts))
+              logOption(CancelLeaseTransactionV1.selfSigned(sender, lease.id(), moreThatStandartFee * 3, ts))
             })
           case MassTransferTransaction =>
             val transferCount = r.nextInt(MassTransferTransaction.MaxTransferCount)
@@ -129,7 +129,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
 
         (tx.map(tx => allTxsWithValid :+ tx).getOrElse(allTxsWithValid), tx match {
           case Some(tx: LeaseTransactionV1)     => activeLeaseTransactions :+ tx
-          case Some(tx: LeaseCancelTransaction) => activeLeaseTransactions.filter(_.id != tx.leaseId)
+          case Some(tx: CancelLeaseTransaction) => activeLeaseTransactions.filter(_.id != tx.leaseId)
           case _                                => activeLeaseTransactions
         })
     }

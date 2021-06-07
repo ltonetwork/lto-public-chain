@@ -7,7 +7,7 @@ import com.ltonetwork.features._
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.settings.{FunctionalitySettings, TestFunctionalitySettings}
 import com.ltonetwork.state.reader.LeaseDetails
-import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV1, LeaseTransactionV1}
+import com.ltonetwork.transaction.lease.{CancelLeaseTransactionV1, LeaseTransactionV1}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.transaction._
@@ -41,7 +41,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
     op match {
       case 1 =>
         val lease = LeaseTransactionV1.selfSigned(sender, amount, enoughFee, nextTs, recipient).explicitGet()
-        List(lease, LeaseCancelTransactionV1.selfSigned(sender, lease.id(), enoughFee, nextTs).explicitGet())
+        List(lease, CancelLeaseTransactionV1.selfSigned(sender, lease.id(), enoughFee, nextTs).explicitGet())
       case 2 =>
         List(
           MassTransferTransaction
@@ -168,7 +168,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
             TestBlock.create(
               nextTs,
               blockWithLeaseId,
-              Seq(LeaseCancelTransactionV1.selfSigned(sender, lt.id(), enoughFee, nextTs).explicitGet())
+              Seq(CancelLeaseTransactionV1.selfSigned(sender, lt.id(), enoughFee, nextTs).explicitGet())
             ))
           d.blockchainUpdater.leaseDetails(lt.id()) should contain(LeaseDetails(sender, recipient, 2, leaseAmount, false))
           d.portfolio(sender).lease.out shouldEqual 0

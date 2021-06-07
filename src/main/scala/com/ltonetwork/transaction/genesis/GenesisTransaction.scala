@@ -5,20 +5,26 @@ import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state.{ByteStr, _}
 import com.ltonetwork.transaction.TransactionBuilders._
-import com.ltonetwork.transaction.{Proofs, SigProofsSwitch, Transaction, TransactionBuilder, TransactionSerializer, ValidationError}
+import com.ltonetwork.transaction.TransactionParser.HardcodedVersion1
+import com.ltonetwork.transaction.Transaction.SigProofsSwitch
+import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, ValidationError}
 import monix.eval.Coeval
 import play.api.libs.json.JsObject
 
-case class GenesisTransaction private (recipient: Address,
-                                      amount: Long,
-                                      timestamp: Long,
-                                      proofs: Proofs
-  ) extends Transaction with SigProofsSwitch {
+import scala.util.Try
+
+case class GenesisTransaction private (version: Byte,
+                                       chainId: Byte,
+                                       timestamp: Long,
+                                       recipient: Address,
+                                       amount: Long,
+                                       proofs: Proofs)
+    extends Transaction
+    with SigProofsSwitch {
 
   override val fee                        = 0
   override val id: Coeval[ByteStr]        = Coeval.evalOnce(signature)
 
-  override def version: Byte = 1
   override def sender: PublicKeyAccount = PublicKeyAccount.Dummy
   override def sponsor: Option[PublicKeyAccount] = None
 
@@ -45,6 +51,8 @@ object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] {
 
   override def serializer(version: Byte): TransactionSerializer.For[GenesisTransaction] = GenesisSerializer
 
+  override def parseHeader(bytes: Array[Byte]): Try[(Byte, Int)] = HardcodedVersion1(typeId).parseHeader(bytes)
+
   def generateSignature(recipient: Address, amount: Long, timestamp: Long): Array[Byte] = {
     val typeBytes      = Bytes.ensureCapacity(Ints.toByteArray(typeId), TypeLength, 0)
     val timestampBytes = Bytes.ensureCapacity(Longs.toByteArray(timestamp), TimestampLength, 0)
@@ -61,8 +69,8 @@ object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] {
     if (amount < 0) {
       Left(ValidationError.NegativeAmount(amount, "lto"))
     } else {
-      val signature = ByteStr(GenesisTransaction.generateSignature(recipient, amount, timestamp))
-      Right(GenesisTransaction(recipient, amount, timestamp, Proofs.fromSignature(signature)))
+      val signature = ByteStr(generateSignature(recipient, amount, timestamp))
+      Right(GenesisTransaction(1, networkByte, timestamp, recipient, amount, Proofs.fromSignature(signature)))
     }
   }
 }

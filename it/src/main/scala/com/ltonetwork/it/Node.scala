@@ -7,7 +7,7 @@ import com.ltonetwork.it.util.GlobalTimer
 import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.transaction.genesis.GenesisTransaction
-import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV2, LeaseTransactionV2}
+import com.ltonetwork.transaction.lease.{CancelLeaseTransactionV2, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransactionV2}
 import com.ltonetwork.utils.{Base58, LoggerFacade}
@@ -52,7 +52,7 @@ object Node {
         case TransferTransactionV2.typeId    => 1000
         case LeaseTransactionV2.typeId       => 1000
         case SetScriptTransaction.typeId     => 1000
-        case LeaseCancelTransactionV2.typeId => 1000
+        case CancelLeaseTransactionV2.typeId => 1000
         case MassTransferTransaction.typeId  => 1000
         case AnchorTransaction.typeId        => 100
         case _                               => throw new Exception("it: tx not supported")

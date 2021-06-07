@@ -6,7 +6,7 @@ import scodec.bits.ByteVector
 import com.ltonetwork.account.{Address, AddressOrAlias}
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.genesis.GenesisTransaction
-import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.transfer._
 
 object RealTransactionWrapper {
@@ -46,7 +46,7 @@ object RealTransactionWrapper {
         )
 
       case b: LeaseTransaction       => Tx.Lease(proven(b), b.amount, b.recipient)
-      case b: LeaseCancelTransaction => Tx.LeaseCancel(proven(b), b.leaseId)
+      case b: CancelLeaseTransaction => Tx.LeaseCancel(proven(b), b.leaseId)
       case ms: MassTransferTransaction =>
         Tx.MassTransfer(
           proven(ms),

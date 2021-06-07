@@ -16,7 +16,7 @@ case class AnchorTransaction private(version: Byte,
                                      anchors: List[ByteStr],
                                      sponsor: Option[PublicKeyAccount],
                                      proofs: Proofs)
-  extends Transaction {
+    extends Transaction {
 
   override val builder: TransactionBuilder.For[AnchorTransaction] = AnchorTransaction
   private val serializer: TransactionSerializer.For[AnchorTransaction] = builder.serializer(version)
@@ -47,7 +47,7 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
         Validated.condNel(anchors.lengthCompare(MaxEntryCount) > 0, None, ValidationError.TooBigArray),
         Validated.condNel(anchors.exists(a => !EntryLength.contains(a.arr.length)), None, ValidationError.GenericError(s"Anchor can only be of length $EntryLength Bytes")),
         Validated.condNel(anchors.distinct.lengthCompare(anchors.size) < 0, None, ValidationError.GenericError("Duplicate anchor in one tx found")),
-        Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
@@ -60,13 +60,14 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
   }
 
   def create(version: Byte,
+             chainId: Option[Byte],
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
              anchors: List[ByteStr],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    AnchorTransaction(version, networkByte, timestamp, sender, fee, anchors, sponsor, proofs).validatedEither
+    AnchorTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, anchors, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
@@ -74,7 +75,7 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
              fee: Long,
              data: List[ByteStr],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, timestamp, sender, fee, data, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, data, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,

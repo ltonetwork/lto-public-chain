@@ -1,9 +1,11 @@
 package com.ltonetwork.transaction.transfer
 
-import cats.implicits._
 import cats.data.{Validated, ValidatedNel}
+import com.google.common.primitives.Bytes
 import com.ltonetwork.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
+import com.ltonetwork.transaction.TransactionParser.{HardcodedVersion1, MultipleVersions}
+import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
 import com.ltonetwork.transaction._
 import com.ltonetwork.utils.base58Length
 import monix.eval.Coeval
@@ -22,13 +24,25 @@ case class TransferTransaction private(version: Byte,
                                        sponsor: Option[PublicKeyAccount],
                                        proofs: Proofs)
     extends Transaction
-    with Transaction.NoBytePrefixV1 {
+    with HardcodedV1
+    with SigProofsSwitch {
 
   override val builder: TransactionBuilder.For[TransferTransaction] = TransferTransaction
   private val serializer: TransactionSerializer.For[TransferTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
   override val json: Coeval[JsObject] = serializer.toJson(this)
+
+  // Special case for transfer tx v1: signature is prepended (after type) instead of appended
+  override protected val footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
+    if (this.version == 1) Array()
+    else super.footerBytes()
+  )
+
+  override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(
+    if (this.version == 1) Bytes.concat(Array(builder.typeId), proofs.toSignature.arr, bodyBytes())
+    else super.bytes()
+  )
 }
 
 object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
@@ -49,31 +63,25 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
   }
 
   implicit object Validator extends TxValidator[TransactionT] {
-    private def validateSum(amounts: Long*): ValidatedNel[ValidationError, None.type] =
-      Try(amounts.tail.fold(amounts.head)(Math.addExact))
-        .fold (
-          _ => ValidationError.OverflowError.invalidNel,
-          _ => None.validNel
-        )
-
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
       import tx._
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId != networkByte, None, ValidationError.WrongChainId(chainId)),
         Validated.condNel(attachment.length > TransferTransaction.MaxAttachmentSize, None, ValidationError.TooBigArray),
-        Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
-        validateSum(amount, fee),
+        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(Try(Math.addExact(amount, fee)).isSuccess, None, ValidationError.OverflowError),
         Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
   }
 
-  override def parseBytes(bytes: Array[Byte]): Try[TransferTransaction] =
-    if (bytes(0) != 0) serializer(1).parseBytes(1, bytes)
-    else super.parseBytes(bytes)
+  override def parseHeader(bytes: Array[Byte]): Try[(Byte, Int)] =
+    if (bytes(0) != 0) HardcodedVersion1(typeId).parseHeader(bytes)
+    else MultipleVersions(typeId, supportedVersions).parseHeader(bytes)
 
   def create(version: Byte,
+             chainId: Option[Byte],
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
@@ -82,7 +90,7 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
              attachment: Array[Byte],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    TransferTransaction(version, networkByte, timestamp, sender, fee, recipient, amount, attachment, sponsor, proofs).validatedEither
+    TransferTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, amount, attachment, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
@@ -92,7 +100,7 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
              amount: Long,
              attachment: Array[Byte],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,

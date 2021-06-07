@@ -1,9 +1,11 @@
 package com.ltonetwork.transaction
 
+import cats.implicits._
 import cats.data.{Validated, ValidatedNel}
 import cats.data.Validated.{Invalid, Valid}
 
 import scala.annotation.implicitNotFound
+import scala.util.Try
 
 @implicitNotFound("No impllicit transaction validator found for transaction ${T}")
 trait TxValidator[T <: Transaction] {

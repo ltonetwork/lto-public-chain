@@ -11,7 +11,7 @@ import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
-import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.sponsorship.SponsorshipTransactionBase
@@ -380,7 +380,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
                 case tx: LeaseTransaction =>
                   rollbackLeaseStatus(rw, tx.id(), currentHeight)
-                case tx: LeaseCancelTransaction =>
+                case tx: CancelLeaseTransaction =>
                   rollbackLeaseStatus(rw, tx.leaseId, currentHeight)
 
                 case tx: SponsorshipTransactionBase =>

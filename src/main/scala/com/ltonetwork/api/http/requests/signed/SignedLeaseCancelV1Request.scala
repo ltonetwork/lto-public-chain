@@ -4,7 +4,7 @@ import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.transaction.TransactionBuilders.SignatureStringLength
 import com.ltonetwork.transaction.ValidationError
-import com.ltonetwork.transaction.lease.LeaseCancelTransactionV1
+import com.ltonetwork.transaction.lease.CancelLeaseTransactionV1
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -21,12 +21,12 @@ case class SignedLeaseCancelV1Request(@ApiModelProperty(value = "Base58 encoded 
                                       @ApiModelProperty(required = true)
                                       fee: Long)
     extends BroadcastRequest {
-  def toTx: Either[ValidationError, LeaseCancelTransactionV1] =
+  def toTx: Either[ValidationError, CancelLeaseTransactionV1] =
     for {
       _sender    <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _signature <- parseBase58(signature, "invalid.signature", SignatureStringLength)
       _leaseTx   <- parseBase58(txId, "invalid.leaseTx", SignatureStringLength)
-      _t         <- LeaseCancelTransactionV1.create(_sender, _leaseTx, fee, timestamp, _signature)
+      _t         <- CancelLeaseTransactionV1.create(_sender, _leaseTx, fee, timestamp, _signature)
     } yield _t
 }
 

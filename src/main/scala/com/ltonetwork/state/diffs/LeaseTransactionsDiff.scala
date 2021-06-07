@@ -33,7 +33,7 @@ object LeaseTransactionsDiff {
   }
 
   def leaseCancel(blockchain: Blockchain, settings: FunctionalitySettings, time: Long, height: Int)(
-      tx: LeaseCancelTransaction): Either[ValidationError, Diff] = {
+      tx: CancelLeaseTransaction): Either[ValidationError, Diff] = {
     val leaseEi = blockchain.leaseDetails(tx.leaseId) match {
       case None    => Left(GenericError(s"Related LeaseTransaction not found"))
       case Some(l) => Right(l)

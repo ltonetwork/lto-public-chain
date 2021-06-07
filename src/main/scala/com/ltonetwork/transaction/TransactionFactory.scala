@@ -7,9 +7,9 @@ import com.ltonetwork.crypto.SignatureLength
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.transaction.anchor.AnchorTransactionV1
-import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.association.{AssociationTransaction, AssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
-import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
+import com.ltonetwork.transaction.lease.{CancelLeaseTransactionV1, CancelLeaseTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
@@ -226,17 +226,17 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def leaseCancelV1(request: LeaseCancelV1Request, wallet: Wallet, time: Time): Either[ValidationError, LeaseCancelTransactionV1] =
+  def leaseCancelV1(request: LeaseCancelV1Request, wallet: Wallet, time: Time): Either[ValidationError, CancelLeaseTransactionV1] =
     leaseCancelV1(request, wallet, request.sender, time)
 
   def leaseCancelV1(request: LeaseCancelV1Request,
                     wallet: Wallet,
                     signerAddress: String,
-                    time: Time): Either[ValidationError, LeaseCancelTransactionV1] =
+                    time: Time): Either[ValidationError, CancelLeaseTransactionV1] =
     for {
       sender <- wallet.findPrivateKey(request.sender)
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      tx <- LeaseCancelTransactionV1.signed(
+      tx <- CancelLeaseTransactionV1.signed(
         sender,
         ByteStr.decodeBase58(request.txId).get,
         request.fee,
@@ -245,8 +245,8 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def leaseCancelV1(request: LeaseCancelV1Request, sender: PublicKeyAccount): Either[ValidationError, LeaseCancelTransactionV1] =
-    LeaseCancelTransactionV1.create(
+  def leaseCancelV1(request: LeaseCancelV1Request, sender: PublicKeyAccount): Either[ValidationError, CancelLeaseTransactionV1] =
+    CancelLeaseTransactionV1.create(
       sender,
       ByteStr.decodeBase58(request.txId).get,
       request.fee,
@@ -254,17 +254,17 @@ object TransactionFactory extends BroadcastRequest {
       EmptySignature
     )
 
-  def leaseCancelV2(request: LeaseCancelV2Request, wallet: Wallet, time: Time): Either[ValidationError, LeaseCancelTransactionV2] =
+  def leaseCancelV2(request: LeaseCancelV2Request, wallet: Wallet, time: Time): Either[ValidationError, CancelLeaseTransactionV2] =
     leaseCancelV2(request, wallet, request.sender, time)
 
   def leaseCancelV2(request: LeaseCancelV2Request,
                     wallet: Wallet,
                     signerAddress: String,
-                    time: Time): Either[ValidationError, LeaseCancelTransactionV2] =
+                    time: Time): Either[ValidationError, CancelLeaseTransactionV2] =
     for {
       sender <- wallet.findPrivateKey(request.sender)
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      tx <- LeaseCancelTransactionV2.signed(
+      tx <- CancelLeaseTransactionV2.signed(
         request.version,
         AddressScheme.current.chainId,
         sender,
@@ -275,8 +275,8 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def leaseCancelV2(request: LeaseCancelV2Request, sender: PublicKeyAccount): Either[ValidationError, LeaseCancelTransactionV2] =
-    LeaseCancelTransactionV2.create(
+  def leaseCancelV2(request: LeaseCancelV2Request, sender: PublicKeyAccount): Either[ValidationError, CancelLeaseTransactionV2] =
+    CancelLeaseTransactionV2.create(
       request.version,
       AddressScheme.current.chainId,
       sender,
@@ -397,13 +397,13 @@ object TransactionFactory extends BroadcastRequest {
   def issueAssociation(request: AssociationRequest,
                        wallet: Wallet,
                        signerAddress: String,
-                       time: Time): Either[ValidationError, IssueAssociationTransaction] =
-    association(IssueAssociationTransaction.signed _)(request, wallet, request.sender, time)
+                       time: Time): Either[ValidationError, AssociationTransaction] =
+    association(AssociationTransaction.signed _)(request, wallet, request.sender, time)
 
-  def issueAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
-    association(IssueAssociationTransaction.create _)(request, sender)
+  def issueAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, AssociationTransaction] =
+    association(AssociationTransaction.create _)(request, sender)
 
-  def issueAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, IssueAssociationTransaction] =
+  def issueAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, AssociationTransaction] =
     issueAssociation(request, wallet, request.sender, time)
 
   def revokeAssociation(request: AssociationRequest,

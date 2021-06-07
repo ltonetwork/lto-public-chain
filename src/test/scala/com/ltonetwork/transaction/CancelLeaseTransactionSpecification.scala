@@ -6,25 +6,25 @@ import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.Json
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseCancelTransactionV1, LeaseCancelTransactionV2}
+import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, CancelLeaseTransactionV1, CancelLeaseTransactionV2}
 
-class LeaseCancelTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class CancelLeaseTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
   property("Lease cancel serialization roundtrip") {
-    forAll(leaseCancelGen) { tx: LeaseCancelTransaction =>
-      val recovered = tx.builder.parseBytes(tx.bytes()).get.asInstanceOf[LeaseCancelTransaction]
+    forAll(leaseCancelGen) { tx: CancelLeaseTransaction =>
+      val recovered = tx.builder.parseBytes(tx.bytes()).get.asInstanceOf[CancelLeaseTransaction]
       assertTxs(recovered, tx)
     }
   }
 
   property("Lease cancel serialization from TypedTransaction") {
-    forAll(leaseCancelGen) { tx: LeaseCancelTransaction =>
+    forAll(leaseCancelGen) { tx: CancelLeaseTransaction =>
       val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
-      assertTxs(recovered.asInstanceOf[LeaseCancelTransaction], tx)
+      assertTxs(recovered.asInstanceOf[CancelLeaseTransaction], tx)
     }
   }
 
-  private def assertTxs(first: LeaseCancelTransaction, second: LeaseCancelTransaction): Unit = {
+  private def assertTxs(first: CancelLeaseTransaction, second: CancelLeaseTransaction): Unit = {
     first.leaseId shouldEqual second.leaseId
     first.fee shouldEqual second.fee
     first.proofs shouldEqual second.proofs
@@ -46,7 +46,7 @@ class LeaseCancelTransactionSpecification extends PropSpec with PropertyChecks w
                        }
     """)
 
-    val tx = LeaseCancelTransactionV1
+    val tx = CancelLeaseTransactionV1
       .create(
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         ByteStr.decodeBase58("EXhjYjy8a1dURbttrGzfcft7cddDnPnoa3vqaBLCTFVY").get,
@@ -77,7 +77,7 @@ class LeaseCancelTransactionSpecification extends PropSpec with PropertyChecks w
                        }
     """)
 
-    val tx = LeaseCancelTransactionV2
+    val tx = CancelLeaseTransactionV2
       .create(
         2,
         'T',

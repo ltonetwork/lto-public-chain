@@ -60,7 +60,7 @@ object MassTransferSerializerV1 extends TransactionSerializer.For[MassTransferTr
         fee                     = Longs.fromByteArray(bytes.slice(s1 + Longs.BYTES, s1 + 2 * Longs.BYTES))
         (attachment, attachEnd) = Deser.parseArraySize(bytes, s1 + 2 * Longs.BYTES)
         proofs <- Proofs.fromBytes(bytes.drop(attachEnd))
-        tx     <- MassTransferTransaction.create(version, timestamp, sender, fee, transfers, attachment, None, proofs)
+        tx     <- MassTransferTransaction.create(version, None, timestamp, sender, fee, transfers, attachment, None, proofs)
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 

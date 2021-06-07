@@ -48,7 +48,7 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
         Validated.condNel(!data.exists(_.key.isEmpty), None, ValidationError.GenericError("Empty key found")),
         Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, None, ValidationError.GenericError("Duplicate keys found")),
         Validated.condNel(bytes().length <= MaxBytes, tx, ValidationError.TooBigArray),
-        Validated.condNel(fee <= 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
@@ -60,26 +60,27 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
   }
 
   def create(version: Byte,
+             chainId: Option[Byte],
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
              data: List[DataEntry[_]],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    DataTransaction(version, networkByte, timestamp, sender, fee, data, sponsor, proofs).validatedEither
+    DataTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, data, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
-             fee: Long,
              sender: PublicKeyAccount,
+             fee: Long,
              data: List[DataEntry[_]],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, timestamp, sender, fee, data, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, data, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
                  fee: Long,
                  sender: PrivateKeyAccount,
                  data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
-    signed(version, sender, data, fee, timestamp, sender)
+    signed(version, timestamp, sender, fee, data, sender)
 }

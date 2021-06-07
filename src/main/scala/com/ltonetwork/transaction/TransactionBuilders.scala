@@ -1,8 +1,10 @@
 package com.ltonetwork.transaction
 
 import com.ltonetwork.transaction.anchor.AnchorTransaction
-import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
-import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
+import com.ltonetwork.transaction.association.{AssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.data.DataTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
+import com.ltonetwork.transaction.lease.{CancelLeaseTransactionV1, CancelLeaseTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer._
@@ -22,7 +24,7 @@ object TransactionBuilders {
     GenesisTransaction,
     TransferTransaction,
     LeaseTransactionV1,
-    LeaseCancelTransactionV1,
+    CancelLeaseTransactionV1,
     MassTransferTransaction
   ).map { x =>
     x.typeId -> x
@@ -31,11 +33,11 @@ object TransactionBuilders {
   private val modern: Map[(Byte, Byte), TransactionBuilder] = Seq[TransactionBuilder](
     AnchorTransaction,
     DataTransaction,
-    TransferTransactionV2,
+    TransferTransaction,
     SetScriptTransaction,
     LeaseTransactionV2,
-    LeaseCancelTransactionV2,
-    IssueAssociationTransaction,
+    CancelLeaseTransactionV2,
+    AssociationTransaction,
     RevokeAssociationTransaction,
     SponsorshipTransaction,
     SponsorshipCancelTransaction

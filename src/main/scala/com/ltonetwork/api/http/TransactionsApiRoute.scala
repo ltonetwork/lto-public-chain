@@ -263,8 +263,8 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case MassTransferTransaction  => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], wallet, signerAddress, time)
               case LeaseTransactionV1       => TransactionFactory.leaseV1(txJson.as[LeaseV1Request], wallet, signerAddress, time)
               case LeaseTransactionV2       => TransactionFactory.leaseV2(txJson.as[LeaseV2Request], wallet, signerAddress, time)
-              case LeaseCancelTransactionV1 => TransactionFactory.leaseCancelV1(txJson.as[LeaseCancelV1Request], wallet, signerAddress, time)
-              case LeaseCancelTransactionV2 => TransactionFactory.leaseCancelV2(txJson.as[LeaseCancelV2Request], wallet, signerAddress, time)
+              case CancelLeaseTransactionV1 => TransactionFactory.leaseCancelV1(txJson.as[LeaseCancelV1Request], wallet, signerAddress, time)
+              case CancelLeaseTransactionV2 => TransactionFactory.leaseCancelV2(txJson.as[LeaseCancelV2Request], wallet, signerAddress, time)
               case DataTransaction          => TransactionFactory.data(txJson.as[DataRequest], wallet, signerAddress, time)
               case SetScriptTransaction     => TransactionFactory.setScript(txJson.as[SetScriptRequest], wallet, signerAddress, time)
             }
@@ -303,9 +303,9 @@ case class TransactionsApiRoute(settings: RestAPISettings,
                   case TransferTransactionV2        => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], senderPk)
                   case MassTransferTransaction      => TransactionFactory.massTransferAsset(txJson.as[MassTransferRequest], senderPk)
                   case LeaseTransactionV1           => TransactionFactory.leaseV1(txJson.as[LeaseV1Request], senderPk)
-                  case LeaseCancelTransactionV1     => TransactionFactory.leaseCancelV1(txJson.as[LeaseCancelV1Request], senderPk)
+                  case CancelLeaseTransactionV1     => TransactionFactory.leaseCancelV1(txJson.as[LeaseCancelV1Request], senderPk)
                   case LeaseTransactionV2           => TransactionFactory.leaseV2(txJson.as[LeaseV2Request], senderPk)
-                  case LeaseCancelTransactionV2     => TransactionFactory.leaseCancelV2(txJson.as[LeaseCancelV2Request], senderPk)
+                  case CancelLeaseTransactionV2     => TransactionFactory.leaseCancelV2(txJson.as[LeaseCancelV2Request], senderPk)
                   case DataTransaction              => TransactionFactory.data(txJson.as[DataRequest], senderPk)
                   case SetScriptTransaction         => TransactionFactory.setScript(txJson.as[SetScriptRequest], senderPk)
                 }
@@ -357,8 +357,8 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case MassTransferTransaction      => jsv.as[SignedMassTransferRequest].toTx
               case LeaseTransactionV1           => jsv.as[SignedLeaseV1Request].toTx
               case LeaseTransactionV2           => jsv.as[SignedLeaseV2Request].toTx
-              case LeaseCancelTransactionV1     => jsv.as[SignedLeaseCancelV1Request].toTx
-              case LeaseCancelTransactionV2     => jsv.as[SignedLeaseCancelV2Request].toTx
+              case CancelLeaseTransactionV1     => jsv.as[SignedLeaseCancelV1Request].toTx
+              case CancelLeaseTransactionV2     => jsv.as[SignedLeaseCancelV2Request].toTx
               case DataTransaction              => jsv.as[SignedDataRequest].toTx
               case SetScriptTransaction         => jsv.as[SignedSetScriptRequest].toTx
             }
@@ -382,7 +382,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
       case lease: LeaseTransaction =>
         import com.ltonetwork.transaction.lease.LeaseTransaction.Status._
         lease.json() ++ Json.obj("status" -> (if (blockchain.leaseDetails(lease.id()).exists(_.isActive)) Active else Canceled))
-      case leaseCancel: LeaseCancelTransaction =>
+      case leaseCancel: CancelLeaseTransaction =>
         leaseCancel.json() ++ Json.obj("lease" -> blockchain.transactionInfo(leaseCancel.leaseId).map(_._2.json()).getOrElse[JsValue](JsNull))
       case t => t.json()
     }

@@ -33,8 +33,7 @@ object AssociationSerializerV1 extends TransactionSerializer.For[AssociationTran
       (for {
         parsed <- parse(version, bytes)
         (version, timestamp, sender, fee, assocType, recipient, hashOpt, proofs) = parsed
-        tx     <- create(version, timestamp, sender, fee, assocType, recipient, None, hashOpt, None, proofs)
-        tx.chainId = chainId
+        tx     <- create(version, Some(chainId), timestamp, sender, fee, assocType, recipient, None, hashOpt, None, proofs)
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
