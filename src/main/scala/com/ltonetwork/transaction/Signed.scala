@@ -9,7 +9,7 @@ import io.swagger.annotations.ApiModelProperty
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-trait Signed extends Authorized {
+trait Signed extends Transaction {
   protected val signatureValid: Coeval[Boolean]
   @ApiModelProperty(hidden = true)
   protected val signedDescendants: Coeval[Seq[Signed]] = Coeval.evalOnce(Seq.empty)

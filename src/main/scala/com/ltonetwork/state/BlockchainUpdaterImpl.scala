@@ -14,7 +14,7 @@ import com.ltonetwork.state.reader.{CompositeBlockchain, LeaseDetails}
 import com.ltonetwork.transaction.Transaction.Type
 import com.ltonetwork.transaction.ValidationError.{BlockAppendError, GenericError, MicroBlockAppendError}
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.association.{IssueAssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.utils.{ScorexLogging, Time, UnsupportedFeature, forceStopApplication}
@@ -544,7 +544,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
             val tpid = x._2.builder.typeId
             tpid == IssueAssociationTransaction.typeId || tpid == RevokeAssociationTransaction.typeId
           })
-          .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
+          .map(x => (x._1, x._2.asInstanceOf[IssueAssociationTransaction]))
           .toList
         Blockchain.Associations(outgoing = a.filter(_._2.sender.toAddress == address), incoming = a.filter(_._2.assoc.party == address))
       }

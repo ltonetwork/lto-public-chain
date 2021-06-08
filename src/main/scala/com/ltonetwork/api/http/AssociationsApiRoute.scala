@@ -2,13 +2,10 @@ package com.ltonetwork.api.http
 
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Route
-import com.ltonetwork.account.Address
+import com.ltonetwork.account.{Address, AddressOrAlias}
 import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.state.{Blockchain, ByteStr}
-import com.ltonetwork.transaction.association.AssociationTransaction.ActionType.{Issue, Revoke}
-import com.ltonetwork.transaction.association.AssociationTransaction.Assoc
-import com.ltonetwork.transaction.TransactionFactory
 import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.utils.Time
 import com.ltonetwork.utx.UtxPool
@@ -55,13 +52,13 @@ case class AssociationsApiRoute(settings: RestAPISettings,
     )
   }
 
-  private def associationsJson(address: Address, a: Blockchain.Associations): AssociationsInfo = {
-    def f(l: List[(Int, AssociationTransaction)]) = {
-      l.foldLeft(Map.empty[Assoc, (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
+  private def associationsJson(address: Address, associations: Blockchain.Associations): AssociationsInfo = {
+    def fold(list: List[(Int, AssociationTransaction)]) = {
+      list.foldLeft(Map.empty[(Int, AddressOrAlias, Option[ByteStr]), (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
           case (acc, (height, as: AssociationTransaction)) =>
-            val cp = if (address == as.sender.toAddress) as.assoc.party else as.sender.toAddress
-            (as.actionType, acc.get(as.assoc)) match {
-              case (Issue, None)                    => acc + (as.assoc -> (height, cp, as.id(), None))
+            val cp = if (address == as.sender.toAddress) as.recipient else as.sender.toAddress
+            (as, acc.get(as.assoc)) match {
+              case (Issue, None)                    => acc + (() -> (height, cp, as.id(), None))
               case (Revoke, Some((h, _, bs, None))) => acc + (as.assoc -> (h, cp, bs, Some((height, as.id()))))
               case _                                => acc
             }
@@ -82,7 +79,7 @@ case class AssociationsApiRoute(settings: RestAPISettings,
         }
     }
 
-    AssociationsInfo(address.stringRepr, f(a.outgoing), f(a.incoming))
+    AssociationsInfo(address.stringRepr, fold(associations.outgoing), fold(associations.incoming))
 
   }
 }
@@ -99,7 +96,7 @@ object AssociationsApiRoute {
 
   case class AssociationsInfo(address: String, outgoing: List[AssociationInfo], incoming: List[AssociationInfo])
 
-  implicit val associactionInfoFormat: Format[AssociationInfo]   = Json.format
-  implicit val associactionsInfoFormat: Format[AssociationsInfo] = Json.format
+  implicit val associationInfoFormat: Format[AssociationInfo]   = Json.format
+  implicit val associationsInfoFormat: Format[AssociationsInfo] = Json.format
 
 }

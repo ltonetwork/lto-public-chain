@@ -12,7 +12,7 @@ import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.ENOUGH_AMT
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransactionV1
-import com.ltonetwork.transaction.association.{AssociationTransaction, AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.association.{IssueAssociationTransaction, AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
@@ -432,17 +432,17 @@ trait TransactionGenBase extends ScriptGen {
   val assocTransactionGen: Gen[AssociationTransactionBase] = for {
     sender    <- accountGen
     timestamp <- timestampGen
-    version   <- Gen.oneOf(AssociationTransaction.supportedVersions.toSeq)
+    version   <- Gen.oneOf(IssueAssociationTransaction.supportedVersions.toSeq)
     party     <- accountGen
     assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
-    action    <- Gen.oneOf(AssociationTransaction.ActionType.Issue, AssociationTransaction.ActionType.Revoke)
+    action    <- Gen.oneOf(IssueAssociationTransaction.ActionType.Issue, IssueAssociationTransaction.ActionType.Revoke)
     fee       <- smallFeeGen
-    hashOpt   <- Gen.option(genBoundedBytes(0, AssociationTransaction.MaxHashLength).map(ByteStr(_)))
+    hashOpt   <- Gen.option(genBoundedBytes(0, IssueAssociationTransaction.MaxHashLength).map(ByteStr(_)))
   } yield {
     action match {
-      case AssociationTransaction.ActionType.Issue =>
+      case IssueAssociationTransaction.ActionType.Issue =>
         IssueAssociationTransaction.selfSigned(version, sender, party, assocType, hashOpt, fee, timestamp).explicitGet()
-      case AssociationTransaction.ActionType.Revoke =>
+      case IssueAssociationTransaction.ActionType.Revoke =>
         RevokeAssociationTransaction.selfSigned(version, sender, party, assocType, hashOpt, fee, timestamp).explicitGet()
     }
   }

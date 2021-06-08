@@ -7,7 +7,7 @@ import com.ltonetwork.crypto.SignatureLength
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.transaction.anchor.AnchorTransactionV1
-import com.ltonetwork.transaction.association.{AssociationTransaction, AssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.association.{IssueAssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransactionV1, CancelLeaseTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
@@ -354,16 +354,16 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
   val IncorectHashMessage = "Incorrect hash length, should be <= 64 bytes"
-  private def association[T](signedCtor: AssociationTransaction.SignedCtor[T])(request: AssociationRequest,
-                                                                               wallet: Wallet,
-                                                                               signerAddress: String,
-                                                                               time: Time): Either[ValidationError, T] =
+  private def association[T](signedCtor: IssueAssociationTransaction.SignedCtor[T])(request: AssociationRequest,
+                                                                                    wallet: Wallet,
+                                                                                    signerAddress: String,
+                                                                                    time: Time): Either[ValidationError, T] =
     for {
       sender <- wallet.findPrivateKey(request.sender)
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       party  <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
-      else parseBase58(request.hash, IncorectHashMessage, AssociationTransaction.StringHashLength).map(Some(_))
+      else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
       tx <- signedCtor(
         request.version,
         sender,
@@ -376,12 +376,12 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  private def association[T](createCtor: AssociationTransaction.CreateCtor[T])(request: AssociationRequest,
-                                                                               sender: PublicKeyAccount): Either[ValidationError, T] =
+  private def association[T](createCtor: IssueAssociationTransaction.CreateCtor[T])(request: AssociationRequest,
+                                                                                    sender: PublicKeyAccount): Either[ValidationError, T] =
     for {
       party <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
-      else parseBase58(request.hash, IncorectHashMessage, AssociationTransaction.StringHashLength).map(Some(_))
+      else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
       tx <- createCtor(
         request.version,
         sender,
@@ -397,13 +397,13 @@ object TransactionFactory extends BroadcastRequest {
   def issueAssociation(request: AssociationRequest,
                        wallet: Wallet,
                        signerAddress: String,
-                       time: Time): Either[ValidationError, AssociationTransaction] =
-    association(AssociationTransaction.signed _)(request, wallet, request.sender, time)
+                       time: Time): Either[ValidationError, IssueAssociationTransaction] =
+    association(IssueAssociationTransaction.signed _)(request, wallet, request.sender, time)
 
-  def issueAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, AssociationTransaction] =
-    association(AssociationTransaction.create _)(request, sender)
+  def issueAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
+    association(IssueAssociationTransaction.create _)(request, sender)
 
-  def issueAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, AssociationTransaction] =
+  def issueAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, IssueAssociationTransaction] =
     issueAssociation(request, wallet, request.sender, time)
 
   def revokeAssociation(request: AssociationRequest,

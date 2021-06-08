@@ -8,7 +8,7 @@ import com.ltonetwork.state.reader.LeaseDetails
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.Transaction
-import com.ltonetwork.transaction.association.AssociationTransaction
+import com.ltonetwork.transaction.association.IssueAssociationTransaction
 
 trait Blockchain {
 
@@ -81,5 +81,5 @@ trait Blockchain {
   def rollbackTo(targetBlockId: ByteStr): Seq[Block]
 }
 object Blockchain {
-  case class Associations(outgoing: List[(Int, AssociationTransaction)], incoming: List[(Int, AssociationTransaction)])
+  case class Associations(outgoing: List[(Int, IssueAssociationTransaction)], incoming: List[(Int, IssueAssociationTransaction)])
 }

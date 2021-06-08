@@ -1,7 +1,7 @@
 package com.ltonetwork.transaction
 
 import com.ltonetwork.transaction.anchor.AnchorTransaction
-import com.ltonetwork.transaction.association.{AssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransactionV1, CancelLeaseTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
@@ -37,7 +37,7 @@ object TransactionBuilders {
     SetScriptTransaction,
     LeaseTransactionV2,
     CancelLeaseTransactionV2,
-    AssociationTransaction,
+    IssueAssociationTransaction,
     RevokeAssociationTransaction,
     SponsorshipTransaction,
     CancelSponsorshipTransaction

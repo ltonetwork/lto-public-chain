@@ -1,23 +1,20 @@
 package com.ltonetwork.transaction.association
 
 import com.google.common.primitives.{Bytes, Ints, Longs}
-import com.ltonetwork.account.{Address, AddressOrAlias, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.serialization.Deser
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.{Proofs, TransactionSerializer, ValidationError}
-import com.ltonetwork.transaction.association.AssociationTransaction.create
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
 import scorex.crypto.signatures.Curve25519.KeyLength
 
-import scala.util.{Failure, Success, Try}
-
-object AssociationSerializerV1 extends TransactionSerializer.For[AssociationTransaction] {
-  override def bodyBytes(tx: AssociationTransaction): Coeval[Array[Byte]] = Coeval.evalOnce {
+abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction] extends TransactionSerializer.For[AssociationTransactionT] {
+  override def bodyBytes(tx: AssociationTransactionT): Coeval[Array[Byte]] = Coeval.evalOnce {
     import tx._
 
     Bytes.concat(
-      Array(AssociationTransaction.typeId, version, chainId),
+      Array(IssueAssociationTransaction.typeId, version, chainId),
       sender.publicKey,
       recipient.bytes.arr,
       Ints.toByteArray(assocType),
@@ -26,16 +23,6 @@ object AssociationSerializerV1 extends TransactionSerializer.For[AssociationTran
       Longs.toByteArray(fee)
     )
   }
-
-  override protected def parseBytes(version: Byte, bytes: Array[Byte]): Try[AssociationTransaction] =
-    Try {
-      val chainId = bytes(0)
-      (for {
-        parsed <- parse(version, bytes)
-        (version, timestamp, sender, fee, assocType, recipient, hashOpt, proofs) = parsed
-        tx     <- create(version, Some(chainId), timestamp, sender, fee, assocType, recipient, None, hashOpt, None, proofs)
-      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
 
   def parse(version: Byte, bytes: Array[Byte]): Either[ValidationError, (Byte, Long, PublicKeyAccount, Long, Int, Address, Option[ByteStr], Proofs)] = {
     val p0      = KeyLength
@@ -54,7 +41,7 @@ object AssociationSerializerV1 extends TransactionSerializer.For[AssociationTran
     } yield result
   }
 
-  override def toJson(tx: AssociationTransaction): Coeval[JsObject] = Coeval.evalOnce {
+  override def toJson(tx: AssociationTransactionT): Coeval[JsObject] = Coeval.evalOnce {
     jsonBase(
       tx,
       Json.obj(

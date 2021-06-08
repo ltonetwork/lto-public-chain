@@ -7,7 +7,7 @@ import com.ltonetwork.block.{Block, BlockHeader}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.Transaction.Type
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.association.{IssueAssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.smart.script.Script
 
@@ -173,7 +173,7 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
 
   override def associations(address: Address): Blockchain.Associations = {
     val a0 = inner.associations(address)
-    val diffAssociations: Seq[(Int, AssociationTransaction)] = maybeDiff
+    val diffAssociations: Seq[(Int, IssueAssociationTransaction)] = maybeDiff
       .map(
         d =>
           d.transactions.values
@@ -183,7 +183,7 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
               tpid == IssueAssociationTransaction.typeId || tpid == RevokeAssociationTransaction.typeId
             })
             .toList
-            .map(_.asInstanceOf[(Int, AssociationTransaction)]))
+            .map(_.asInstanceOf[(Int, IssueAssociationTransaction)]))
       .getOrElse(List.empty)
     val outgoing = diffAssociations.filter(_._2.sender.toAddress == address)
     val incoming = diffAssociations.filter(_._2.assoc.party == address)

@@ -12,7 +12,7 @@ import play.api.libs.json.{Format, Json}
 
 import scala.util.Try
 
-class AssociationTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class IssueAssociationTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
   private def checkSerialization(tx: AssociationTransactionBase, parser: Array[Byte] => Try[AssociationTransactionBase]): Assertion = {
     val parsed = parser(tx.bytes()).get

@@ -13,11 +13,11 @@ import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.diffs.CommonValidation
 import com.ltonetwork.state.{Blockchain, ByteStr}
-import com.ltonetwork.transaction.association.AssociationTransaction.ActionType
+import com.ltonetwork.transaction.association.IssueAssociationTransaction.ActionType
 import com.ltonetwork.transaction.ValidationError.{ActivationError, GenericError}
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor._
-import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.association.{IssueAssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction}
@@ -409,7 +409,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
 
 object TransactionsApiRoute {
   val MaxTransactionsPerRequest = 10000
-  def ifPossible(bc: Blockchain, tx: AssociationTransaction) = {
+  def ifPossible(bc: Blockchain, tx: IssueAssociationTransaction) = {
     tx.actionType match {
       case ActionType.Issue =>
         if (bc.assocExists(tx)) Left(GenericError("The exact same association already exists")) else Right(tx)

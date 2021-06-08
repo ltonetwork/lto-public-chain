@@ -5,14 +5,14 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
 import com.ltonetwork.settings.Constants
 import com.ltonetwork.state.{Blockchain, ByteStr, EitherExt2}
-import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction}
+import com.ltonetwork.transaction.association.{IssueAssociationTransaction, IssueAssociationTransaction}
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 
-class AssociationTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
+class IssueAssociationTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
 
   val baseSetup: Gen[(GenesisTransaction, PrivateKeyAccount, Long)] = for {
     master <- accountGen
@@ -25,7 +25,7 @@ class AssociationTransactionDiffTest extends PropSpec with PropertyChecks with M
       (genesis, master, ts) <- baseSetup
       party                 <- accountGen
       feeOverhead           <- Gen.choose[Long](0, ENOUGH_AMT)
-      version               <- Gen.oneOf(AssociationTransaction.supportedVersions.toSeq)
+      version               <- Gen.oneOf(IssueAssociationTransaction.supportedVersions.toSeq)
       tx = IssueAssociationTransaction
         .selfSigned(version, master, party, 42, None, Constants.UnitsInLTO + feeOverhead, ts + 10000)
         .explicitGet()
@@ -47,7 +47,7 @@ class AssociationTransactionDiffTest extends PropSpec with PropertyChecks with M
       master2 <- accountGen
       party   <- accountGen
       ts      <- positiveLongGen
-      version <- Gen.oneOf(AssociationTransaction.supportedVersions.toSeq)
+      version <- Gen.oneOf(IssueAssociationTransaction.supportedVersions.toSeq)
       genesis1 = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
       genesis2 = GenesisTransaction.create(master2, ENOUGH_AMT, ts).explicitGet()
       feeOverhead <- Gen.choose[Long](0, 100)

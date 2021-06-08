@@ -8,7 +8,7 @@ import com.ltonetwork.state._
 import com.ltonetwork.state.reader.LeaseDetails
 import com.ltonetwork.transaction.Transaction.Type
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.association.AssociationTransaction
+import com.ltonetwork.transaction.association.IssueAssociationTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
@@ -191,7 +191,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
                                   scripts: Map[BigInt, Option[Script]],
                                   data: Map[BigInt, AccountDataInfo],
-                                  assocs: List[(Int, AssociationTransaction)],
+                                  assocs: List[(Int, IssueAssociationTransaction)],
                                   sponsorship: Map[BigInt, List[Address]]): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
@@ -277,7 +277,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(kk, nextSeqNr)
     }
 
-    def f(addr: Address, txs: Seq[AssociationTransaction], seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]]) = {
+    def f(addr: Address, txs: Seq[IssueAssociationTransaction], seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]]) = {
       val curSeq: Key[Int] = seqNrKey(addr.bytes)
       val last             = rw.get(curSeq)
       txs.zipWithIndex
@@ -584,7 +584,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
         }
         .distinct
         .flatMap(txId => transactionInfo(ByteStr(txId)))
-        .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
+        .map(x => (x._1, x._2.asInstanceOf[IssueAssociationTransaction]))
         .toList
 
     Blockchain.Associations(
