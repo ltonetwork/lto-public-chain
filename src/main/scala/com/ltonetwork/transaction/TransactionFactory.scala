@@ -3,24 +3,20 @@ package com.ltonetwork.transaction
 import com.ltonetwork.account._
 import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.api.http.requests.unsigned._
-import com.ltonetwork.crypto.SignatureLength
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError.Validation
-import com.ltonetwork.transaction.anchor.AnchorTransactionV1
-import com.ltonetwork.transaction.association.{IssueAssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
-import com.ltonetwork.transaction.lease.{CancelLeaseTransactionV1, CancelLeaseTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
+import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
-import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
+import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.{Base58, Time}
 import com.ltonetwork.wallet.Wallet
 
 object TransactionFactory extends BroadcastRequest {
-
-  private val EmptySignature = ByteStr(Array.fill(SignatureLength)(0: Byte))
-
   def transferAssetV1(request: TransferV1Request, wallet: Wallet, time: Time): Either[ValidationError, TransferTransaction] =
     transferAssetV1(request, wallet, request.sender, time)
 
@@ -30,11 +26,12 @@ object TransactionFactory extends BroadcastRequest {
       signer       <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
       tx <- TransferTransaction.signed(
+        1,
+        request.timestamp.getOrElse(time.getTimestamp()),
         sender,
+        request.fee,
         recipientAcc,
         request.amount,
-        request.timestamp.getOrElse(time.getTimestamp()),
-        request.fee,
         request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray),
         signer
       )
@@ -44,47 +41,52 @@ object TransactionFactory extends BroadcastRequest {
     for {
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
       tx <- TransferTransaction.create(
+        1,
+        None,
+        0,
         sender,
+        request.fee,
         recipientAcc,
         request.amount,
-        0,
-        request.fee,
         request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray),
-        EmptySignature
+        None,
+        Proofs.empty
       )
     } yield tx
 
-  def transferAssetV2(request: TransferV2Request, wallet: Wallet, time: Time): Either[ValidationError, TransferTransactionV2] =
+  def transferAssetV2(request: TransferV2Request, wallet: Wallet, time: Time): Either[ValidationError, TransferTransaction] =
     transferAssetV2(request, wallet, request.sender, time)
 
-  def transferAssetV2(request: TransferV2Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransferTransactionV2] =
+  def transferAssetV2(request: TransferV2Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransferTransaction] =
     for {
       sender       <- wallet.findPrivateKey(request.sender)
       signer       <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
-      tx <- TransferTransactionV2.signed(
+      tx <- TransferTransaction.signed(
         request.version,
+        request.timestamp.getOrElse(time.getTimestamp()),
         sender,
+        request.fee,
         recipientAcc,
         request.amount,
-        request.timestamp.getOrElse(time.getTimestamp()),
-        request.fee,
         request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray),
         signer
       )
     } yield tx
 
-  def transferAssetV2(request: TransferV2Request, sender: PublicKeyAccount): Either[ValidationError, TransferTransactionV2] =
+  def transferAssetV2(request: TransferV2Request, sender: PublicKeyAccount): Either[ValidationError, TransferTransaction] =
     for {
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
-      tx <- TransferTransactionV2.create(
+      tx <- TransferTransaction.create(
         request.version,
+        None,
+        0,
         sender,
+        request.fee,
         recipientAcc,
         request.amount,
-        0,
-        request.fee,
         request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray),
+        None,
         Proofs.empty
       )
     } yield tx
@@ -102,10 +104,10 @@ object TransactionFactory extends BroadcastRequest {
       transfers <- MassTransferTransaction.parseTransfersList(request.transfers)
       tx <- MassTransferTransaction.signed(
         request.version,
-        sender,
-        transfers,
         request.timestamp.getOrElse(time.getTimestamp()),
+        sender,
         request.fee,
+        transfers,
         request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray),
         signer
       )
@@ -116,11 +118,13 @@ object TransactionFactory extends BroadcastRequest {
       transfers <- MassTransferTransaction.parseTransfersList(request.transfers)
       tx <- MassTransferTransaction.create(
         request.version,
-        sender,
-        transfers,
+        None,
         0,
+        sender,
         request.fee,
+        transfers,
         request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray),
+        None,
         Proofs.empty
       )
     } yield tx
@@ -138,10 +142,10 @@ object TransactionFactory extends BroadcastRequest {
       }
       tx <- SetScriptTransaction.signed(
         request.version,
-        sender,
-        script,
-        request.fee,
         request.timestamp.getOrElse(time.getTimestamp()),
+        sender,
+        request.fee,
+        script,
         signer
       )
     } yield tx
@@ -154,135 +158,147 @@ object TransactionFactory extends BroadcastRequest {
       }
       tx <- SetScriptTransaction.create(
         request.version,
-        sender,
-        script,
-        request.fee,
+        None,
         0,
+        sender,
+        request.fee,
+        script,
+        None,
         Proofs.empty
       )
     } yield tx
 
-  def leaseV1(request: LeaseV1Request, wallet: Wallet, time: Time): Either[ValidationError, LeaseTransactionV1] =
+  def leaseV1(request: LeaseV1Request, wallet: Wallet, time: Time): Either[ValidationError, LeaseTransaction] =
     leaseV1(request, wallet, request.sender, time)
 
-  def leaseV1(request: LeaseV1Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, LeaseTransactionV1] =
+  def leaseV1(request: LeaseV1Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, LeaseTransaction] =
     for {
       sender       <- wallet.findPrivateKey(request.sender)
       signer       <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
-      tx <- LeaseTransactionV1.signed(
-        sender,
-        request.amount,
-        request.fee,
+      tx <- LeaseTransaction.signed(
+        1,
         request.timestamp.getOrElse(time.getTimestamp()),
+        sender,
+        request.fee,
         recipientAcc,
+        request.amount,
         signer
       )
     } yield tx
 
-  def leaseV1(request: LeaseV1Request, sender: PublicKeyAccount): Either[ValidationError, LeaseTransactionV1] =
+  def leaseV1(request: LeaseV1Request, sender: PublicKeyAccount): Either[ValidationError, LeaseTransaction] =
     for {
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
-      tx <- LeaseTransactionV1.create(
-        sender,
-        request.amount,
-        request.fee,
+      tx <- LeaseTransaction.create(
+        1,
+        None,
         0,
-        recipientAcc,
-        EmptySignature
-      )
-    } yield tx
-
-  def leaseV2(request: LeaseV2Request, wallet: Wallet, time: Time): Either[ValidationError, LeaseTransactionV2] =
-    leaseV2(request, wallet, request.sender, time)
-
-  def leaseV2(request: LeaseV2Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, LeaseTransactionV2] =
-    for {
-      sender       <- wallet.findPrivateKey(request.sender)
-      signer       <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      recipientAcc <- AddressOrAlias.fromString(request.recipient)
-      tx <- LeaseTransactionV2.signed(
-        request.version,
         sender,
-        request.amount,
         request.fee,
-        request.timestamp.getOrElse(time.getTimestamp()),
         recipientAcc,
-        signer
-      )
-    } yield tx
-
-  def leaseV2(request: LeaseV2Request, sender: PublicKeyAccount): Either[ValidationError, LeaseTransactionV2] =
-    for {
-      recipientAcc <- AddressOrAlias.fromString(request.recipient)
-      tx <- LeaseTransactionV2.create(
-        request.version,
-        sender,
         request.amount,
-        request.fee,
-        0,
-        recipientAcc,
+        None,
         Proofs.empty
       )
     } yield tx
 
-  def leaseCancelV1(request: LeaseCancelV1Request, wallet: Wallet, time: Time): Either[ValidationError, CancelLeaseTransactionV1] =
+  def leaseV2(request: LeaseV2Request, wallet: Wallet, time: Time): Either[ValidationError, LeaseTransaction] =
+    leaseV2(request, wallet, request.sender, time)
+
+  def leaseV2(request: LeaseV2Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, LeaseTransaction] =
+    for {
+      sender       <- wallet.findPrivateKey(request.sender)
+      signer       <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
+      recipientAcc <- AddressOrAlias.fromString(request.recipient)
+      tx <- LeaseTransaction.signed(
+        request.version,
+        request.timestamp.getOrElse(time.getTimestamp()),
+        sender,
+        request.fee,
+        recipientAcc,
+        request.amount,
+        signer
+      )
+    } yield tx
+
+  def leaseV2(request: LeaseV2Request, sender: PublicKeyAccount): Either[ValidationError, LeaseTransaction] =
+    for {
+      recipientAcc <- AddressOrAlias.fromString(request.recipient)
+      tx <- LeaseTransaction.create(
+        request.version,
+        None,
+        0,
+        sender,
+        request.fee,
+        recipientAcc,
+        request.amount,
+        None,
+        Proofs.empty
+      )
+    } yield tx
+
+  def leaseCancelV1(request: LeaseCancelV1Request, wallet: Wallet, time: Time): Either[ValidationError, CancelLeaseTransaction] =
     leaseCancelV1(request, wallet, request.sender, time)
 
   def leaseCancelV1(request: LeaseCancelV1Request,
                     wallet: Wallet,
                     signerAddress: String,
-                    time: Time): Either[ValidationError, CancelLeaseTransactionV1] =
+                    time: Time): Either[ValidationError, CancelLeaseTransaction] =
     for {
       sender <- wallet.findPrivateKey(request.sender)
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      tx <- CancelLeaseTransactionV1.signed(
-        sender,
-        ByteStr.decodeBase58(request.txId).get,
-        request.fee,
+      tx <- CancelLeaseTransaction.signed(
+        1,
         request.timestamp.getOrElse(time.getTimestamp()),
+        sender,
+        request.fee,
+        ByteStr.decodeBase58(request.txId).get,
         signer
       )
     } yield tx
 
-  def leaseCancelV1(request: LeaseCancelV1Request, sender: PublicKeyAccount): Either[ValidationError, CancelLeaseTransactionV1] =
-    CancelLeaseTransactionV1.create(
-      sender,
-      ByteStr.decodeBase58(request.txId).get,
-      request.fee,
+  def leaseCancelV1(request: LeaseCancelV1Request, sender: PublicKeyAccount): Either[ValidationError, CancelLeaseTransaction] =
+    CancelLeaseTransaction.create(
+      1,
+      None,
       0,
-      EmptySignature
+      sender,
+      request.fee,
+      ByteStr.decodeBase58(request.txId).get,
+      None,
+      Proofs.empty
     )
 
-  def leaseCancelV2(request: LeaseCancelV2Request, wallet: Wallet, time: Time): Either[ValidationError, CancelLeaseTransactionV2] =
+  def leaseCancelV2(request: LeaseCancelV2Request, wallet: Wallet, time: Time): Either[ValidationError, CancelLeaseTransaction] =
     leaseCancelV2(request, wallet, request.sender, time)
 
   def leaseCancelV2(request: LeaseCancelV2Request,
                     wallet: Wallet,
                     signerAddress: String,
-                    time: Time): Either[ValidationError, CancelLeaseTransactionV2] =
+                    time: Time): Either[ValidationError, CancelLeaseTransaction] =
     for {
       sender <- wallet.findPrivateKey(request.sender)
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      tx <- CancelLeaseTransactionV2.signed(
+      tx <- CancelLeaseTransaction.signed(
         request.version,
-        AddressScheme.current.chainId,
-        sender,
-        ByteStr.decodeBase58(request.txId).get,
-        request.fee,
         request.timestamp.getOrElse(time.getTimestamp()),
+        sender,
+        request.fee,
+        ByteStr.decodeBase58(request.txId).get,
         signer
       )
     } yield tx
 
-  def leaseCancelV2(request: LeaseCancelV2Request, sender: PublicKeyAccount): Either[ValidationError, CancelLeaseTransactionV2] =
-    CancelLeaseTransactionV2.create(
+  def leaseCancelV2(request: LeaseCancelV2Request, sender: PublicKeyAccount): Either[ValidationError, CancelLeaseTransaction] =
+    CancelLeaseTransaction.create(
       request.version,
-      AddressScheme.current.chainId,
-      sender,
-      ByteStr.decodeBase58(request.txId).get,
-      request.fee,
+      None,
       0,
+      sender,
+      request.fee,
+      ByteStr.decodeBase58(request.txId).get,
+      None,
       Proofs.empty
     )
 
@@ -295,10 +311,10 @@ object TransactionFactory extends BroadcastRequest {
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       tx <- DataTransaction.signed(
         request.version,
-        sender,
-        request.data,
-        request.fee,
         request.timestamp.getOrElse(time.getTimestamp()),
+        sender,
+        request.fee,
+        request.data,
         signer
       )
     } yield tx
@@ -306,169 +322,216 @@ object TransactionFactory extends BroadcastRequest {
   def data(request: DataRequest, sender: PublicKeyAccount): Either[ValidationError, DataTransaction] =
     DataTransaction.create(
       request.version,
-      sender,
-      request.data,
-      request.fee,
+      None,
       0,
+      sender,
+      request.fee,
+      request.data,
+      None,
       Proofs.empty
     )
 
   def parseAnchors(l: List[String]): Validation[List[ByteStr]] = {
     import cats.implicits._
     l.traverse(s => {
-      BroadcastRequest.parseBase58(s,
-                                   s"invalid base58 string or anchor too long: max anchor string size = ${Proofs.MaxAnchorStringSize}",
-                                   Proofs.MaxAnchorStringSize)
+      BroadcastRequest.parseBase58(
+        s,
+        s"invalid base58 string or anchor too long: max anchor string size = ${AnchorTransaction.MaxAnchorStringSize}",
+        AnchorTransaction.MaxAnchorStringSize)
     })
   }
-  import com.ltonetwork.api.http._
 
-  def anchor(request: AnchorRequest, wallet: Wallet, time: Time): Either[ValidationError, AnchorTransactionV1] =
+  def anchor(request: AnchorRequest, wallet: Wallet, time: Time): Either[ValidationError, AnchorTransaction] =
     anchor(request, wallet, request.sender, time)
 
-  def anchor(request: AnchorRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AnchorTransactionV1] =
+  def anchor(request: AnchorRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AnchorTransaction] =
     for {
       sender  <- wallet.findPrivateKey(request.sender)
       signer  <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
       anchors <- parseAnchors(request.anchors)
-      tx <- AnchorTransactionV1.signed(
+      tx <- AnchorTransaction.signed(
         request.version,
-        sender,
-        anchors,
-        request.fee,
         request.timestamp.getOrElse(time.getTimestamp()),
+        sender,
+        request.fee,
+        anchors,
         signer
       )
     } yield tx
 
-  def anchor(request: AnchorRequest, sender: PublicKeyAccount): Either[ValidationError, AnchorTransactionV1] =
+  def anchor(request: AnchorRequest, sender: PublicKeyAccount): Either[ValidationError, AnchorTransaction] =
     for {
       anchors <- parseAnchors(request.anchors)
-      tx <- AnchorTransactionV1.create(
+      tx <- AnchorTransaction.create(
         request.version,
+        None,
+        0,
         sender,
+        request.fee,
         anchors,
-        request.fee,
-        0,
+        None,
         Proofs.empty
       )
     } yield tx
+  
   val IncorectHashMessage = "Incorrect hash length, should be <= 64 bytes"
-  private def association[T](signedCtor: IssueAssociationTransaction.SignedCtor[T])(request: AssociationRequest,
-                                                                                    wallet: Wallet,
-                                                                                    signerAddress: String,
-                                                                                    time: Time): Either[ValidationError, T] =
-    for {
-      sender <- wallet.findPrivateKey(request.sender)
-      signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      party  <- Address.fromString(request.party)
-      hash <- if (request.hash == "") Right(None)
-      else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
-      tx <- signedCtor(
-        request.version,
-        sender,
-        party,
-        request.associationType,
-        hash,
-        request.fee,
-        request.timestamp.getOrElse(time.getTimestamp()),
-        signer
-      )
-    } yield tx
 
-  private def association[T](createCtor: IssueAssociationTransaction.CreateCtor[T])(request: AssociationRequest,
-                                                                                    sender: PublicKeyAccount): Either[ValidationError, T] =
-    for {
-      party <- Address.fromString(request.party)
-      hash <- if (request.hash == "") Right(None)
-      else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
-      tx <- createCtor(
-        request.version,
-        sender,
-        party,
-        request.associationType,
-        hash,
-        request.fee,
-        0,
-        Proofs.empty
-      )
-    } yield tx
+  def issueAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, IssueAssociationTransaction] =
+    issueAssociation(request, wallet, request.sender, time)
 
   def issueAssociation(request: AssociationRequest,
                        wallet: Wallet,
                        signerAddress: String,
                        time: Time): Either[ValidationError, IssueAssociationTransaction] =
-    association(IssueAssociationTransaction.signed _)(request, wallet, request.sender, time)
+    for {
+      sender <- wallet.findPrivateKey(request.sender)
+      signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
+      recipient  <- Address.fromString(request.party)
+      hash <- if (request.hash == "") Right(None)
+              else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
+      tx <- IssueAssociationTransaction.signed(
+        request.version,
+        request.timestamp.getOrElse(time.getTimestamp()),
+        sender,
+        request.fee,
+        request.associationType,
+        recipient,
+        None,
+        hash,
+        signer
+      )
+    } yield tx
 
   def issueAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
-    association(IssueAssociationTransaction.create _)(request, sender)
+    for {
+      recipient <- Address.fromString(request.party)
+      hash <- if (request.hash == "") Right(None)
+              else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
+      tx <- IssueAssociationTransaction.create(
+        request.version,
+        None,
+        0,
+        sender,
+        request.fee,
+        request.associationType,
+        recipient,
+        None,
+        hash,
+        None,
+        Proofs.empty
+      )
+    } yield tx
 
-  def issueAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, IssueAssociationTransaction] =
-    issueAssociation(request, wallet, request.sender, time)
+  def revokeAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, RevokeAssociationTransaction] =
+    revokeAssociation(request, wallet, request.sender, time)
 
   def revokeAssociation(request: AssociationRequest,
                         wallet: Wallet,
                         signerAddress: String,
                         time: Time): Either[ValidationError, RevokeAssociationTransaction] =
-    association(RevokeAssociationTransaction.signed _)(request, wallet, request.sender, time)
-
-  def revokeAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
-    association(RevokeAssociationTransaction.create _)(request, sender)
-
-  def revokeAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, RevokeAssociationTransaction] =
-    revokeAssociation(request, wallet, request.sender, time)
-
-  private def sponsorship[T](signedCtor: SponsorshipTransactionBase.SignedCtor[T])(request: SponsorshipRequest,
-                                                                                   wallet: Wallet,
-                                                                                   signerAddress: String,
-                                                                                   time: Time): Either[ValidationError, T] =
     for {
-      sender    <- wallet.findPrivateKey(request.sender)
-      signer    <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      recipient <- Address.fromString(request.recipient)
-      tx <- signedCtor(
+      sender <- wallet.findPrivateKey(request.sender)
+      signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
+      recipient  <- Address.fromString(request.party)
+      hash <- if (request.hash == "") Right(None)
+              else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
+      tx <- RevokeAssociationTransaction.signed(
         request.version,
-        sender,
-        recipient,
-        request.fee,
         request.timestamp.getOrElse(time.getTimestamp()),
+        sender,
+        request.fee,
+        request.associationType,
+        recipient,
+        hash,
         signer
       )
     } yield tx
 
-  private def sponsorship[T](createCtor: SponsorshipTransactionBase.CreateCtor[T])(request: SponsorshipRequest,
-                                                                                   sender: PublicKeyAccount): Either[ValidationError, T] =
+  def revokeAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
     for {
-      recipient <- Address.fromString(request.recipient)
-      tx <- createCtor(
+      recipient <- Address.fromString(request.party)
+      hash <- if (request.hash == "") Right(None)
+              else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
+      tx <- RevokeAssociationTransaction.create(
         request.version,
-        sender,
-        recipient,
-        request.fee,
+        None,
         0,
+        sender,
+        request.fee,
+        request.associationType,
+        recipient,
+        hash,
+        None,
         Proofs.empty
       )
     } yield tx
 
-  def sponsorship(request: SponsorshipRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, SponsorshipTransaction] =
-    sponsorship(SponsorshipTransaction.signed _)(request, wallet, request.sender, time)
-
-  def sponsorship(request: SponsorshipRequest, sender: PublicKeyAccount): Either[ValidationError, SponsorshipTransaction] =
-    sponsorship(SponsorshipTransaction.create _)(request, sender)
-
   def sponsorship(request: SponsorshipRequest, wallet: Wallet, time: Time): Either[ValidationError, SponsorshipTransaction] =
     sponsorship(request, wallet, request.sender, time)
+
+  def sponsorship(request: SponsorshipRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, SponsorshipTransaction] =
+    for {
+      sender    <- wallet.findPrivateKey(request.sender)
+      signer    <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
+      recipient <- Address.fromString(request.recipient)
+      tx <- SponsorshipTransaction.signed(
+        request.version,
+        request.timestamp.getOrElse(time.getTimestamp()),
+        sender,
+        request.fee,
+        recipient,
+        signer
+      )
+    } yield tx
+
+  def sponsorship(request: SponsorshipRequest, sender: PublicKeyAccount): Either[ValidationError, SponsorshipTransaction] =
+    for {
+      recipient <- Address.fromString(request.recipient)
+      tx <- SponsorshipTransaction.create(
+        request.version,
+        None,
+        0,
+        sender,
+        request.fee,
+        recipient,
+        None,
+        Proofs.empty
+      )
+    } yield tx
+
+  def cancelSponsorship(request: SponsorshipRequest, wallet: Wallet, time: Time): Either[ValidationError, CancelSponsorshipTransaction] =
+    cancelSponsorship(request, wallet, request.sender, time)
 
   def cancelSponsorship(request: SponsorshipRequest,
                         wallet: Wallet,
                         signerAddress: String,
                         time: Time): Either[ValidationError, CancelSponsorshipTransaction] =
-    sponsorship(CancelSponsorshipTransaction.signed _)(request, wallet, request.sender, time)
+    for {
+      sender    <- wallet.findPrivateKey(request.sender)
+      signer    <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
+      recipient <- Address.fromString(request.recipient)
+      tx <- CancelSponsorshipTransaction.signed(
+        request.version,
+        request.timestamp.getOrElse(time.getTimestamp()),
+        sender,
+        request.fee,
+        recipient,
+        signer
+      )
+    } yield tx
 
   def cancelSponsorship(request: SponsorshipRequest, sender: PublicKeyAccount): Either[ValidationError, CancelSponsorshipTransaction] =
-    sponsorship(CancelSponsorshipTransaction.create _)(request, sender)
-
-  def cancelSponsorship(request: SponsorshipRequest, wallet: Wallet, time: Time): Either[ValidationError, CancelSponsorshipTransaction] =
-    cancelSponsorship(request, wallet, request.sender, time)
-
+    for {
+      recipient <- Address.fromString(request.recipient)
+      tx <- CancelSponsorshipTransaction.create(
+        request.version,
+        None,
+        0,
+        sender,
+        request.fee,
+        recipient,
+        None,
+        Proofs.empty
+      )
+    } yield tx
 }

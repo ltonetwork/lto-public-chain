@@ -4,6 +4,7 @@ import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
+import com.ltonetwork.utils.base58Length
 import com.ltonetwork.transaction._
 import monix.eval.Coeval
 import play.api.libs.json._
@@ -34,6 +35,8 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
   val NewMaxEntryLength: Int = 64
   val MaxBytes: Int          = 150 * 1024
   val MaxEntryCount: Int     = 100
+
+  val MaxAnchorStringSize: Int = base58Length(EntryLength.last)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
     tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))

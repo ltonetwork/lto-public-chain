@@ -68,19 +68,17 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
     SetScriptTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, script, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
-             sender: PublicKeyAccount,
-             script: Option[Script],
-             fee: Long,
              timestamp: Long,
+             sender: PublicKeyAccount,
+             fee: Long,
+             script: Option[Script],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, sender, script, fee, timestamp, Proofs.empty).right.map { unsigned =>
-      unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes())))).explicitGet())
-    }
+    create(version, None, timestamp, sender, fee, script, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
+                 timestamp: Long,
                  sender: PrivateKeyAccount,
-                 script: Option[Script],
                  fee: Long,
-                 timestamp: Long): Either[ValidationError, TransactionT] =
-    signed(version, sender, script, fee, timestamp, sender)
+                 script: Option[Script]): Either[ValidationError, TransactionT] =
+    signed(version, timestamp, sender, fee, script, sender)
 }
