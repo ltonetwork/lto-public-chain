@@ -61,8 +61,7 @@ object AssociationSerializerV1 extends TransactionSerializer.For[AssociationTran
         "version"         -> tx.version,
         "associationType" -> tx.assocType,
         "party"           -> tx.recipient.stringRepr,
-      )
-        ++ tx.hash.map(hash => Json.obj("hash" -> hash.base58)).getOrElse(Json.obj())
+      ) ++ tx.hash.map(hash => Json.obj("hash" -> hash.base58)).getOrElse(Json.obj())
     )
   }
 }

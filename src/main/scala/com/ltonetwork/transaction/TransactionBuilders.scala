@@ -6,7 +6,7 @@ import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransactionV1, CancelLeaseTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
-import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction}
+import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.base58Length
 import scorex.crypto.signatures.Curve25519
@@ -40,7 +40,7 @@ object TransactionBuilders {
     AssociationTransaction,
     RevokeAssociationTransaction,
     SponsorshipTransaction,
-    SponsorshipCancelTransaction
+    CancelSponsorshipTransaction
   ).flatMap { x =>
     x.supportedVersions.map { version =>
       ((x.typeId, version), x)

@@ -4,36 +4,37 @@ import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.transaction.{Proofs, TransactionBuilder, TransactionSerializer, ValidationError}
 import monix.eval.Coeval
-import play.api.libs.json._
+import play.api.libs.json.JsObject
+import scorex.crypto.signatures.Curve25519.SignatureLength
 
 import scala.util.{Failure, Success, Try}
 
-case class SponsorshipTransaction private (version: Byte,
-                                           chainId: Byte,
-                                           timestamp: Long,
-                                           sender: PublicKeyAccount,
-                                           fee: Long,
-                                           recipient: Address,
-                                           sponsor: Option[PublicKeyAccount],
-                                           proofs: Proofs)
+case class CancelSponsorshipTransaction private (version: Byte,
+                                                 chainId: Byte,
+                                                 timestamp: Long,
+                                                 sender: PublicKeyAccount,
+                                                 fee: Long,
+                                                 recipient: Address,
+                                                 sponsor: Option[PublicKeyAccount],
+                                                 proofs: Proofs)
     extends SponsorshipTransactionBase {
 
-  override val builder: TransactionBuilder.For[SponsorshipTransaction] = SponsorshipTransaction
-  private val serializer: TransactionSerializer.For[SponsorshipTransaction] = builder.serializer(version)
+  override val builder: TransactionBuilder.For[CancelSponsorshipTransaction] = CancelSponsorshipTransaction
+  private val serializer: TransactionSerializer.For[CancelSponsorshipTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
   override val json: Coeval[JsObject] = serializer.toJson(this)
 }
 
-object SponsorshipTransaction extends TransactionBuilder.For[SponsorshipTransaction] {
+object CancelSponsorshipTransaction extends TransactionBuilder.For[CancelSponsorshipTransaction] {
 
-  override def typeId: Byte                 = 18
+  override def typeId: Byte                 = 19
   override def supportedVersions: Set[Byte] = SponsorshipTransactionBase.supportedVersions
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
     tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
 
-  object SerializerV1 extends SponsorshipSerializerV1[TransactionT] {
+  object SerializerV1 extends SponsorshipSerializerV1[CancelSponsorshipTransaction] {
     def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
       (for {
         parsed <- parseBase(bytes)
@@ -43,12 +44,12 @@ object SponsorshipTransaction extends TransactionBuilder.For[SponsorshipTransact
     }.flatten
   }
 
-  implicit object Validator extends SponsorshipTransactionBase.Validator[TransactionT]
-
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => SerializerV1
     case _ => UnknownSerializer
   }
+
+  implicit object Validator extends SponsorshipTransactionBase.Validator[TransactionT]
 
   def create(version: Byte,
              chainId: Option[Byte],
@@ -58,7 +59,7 @@ object SponsorshipTransaction extends TransactionBuilder.For[SponsorshipTransact
              recipient: Address,
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    SponsorshipTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, sponsor, proofs).validatedEither
+    CancelSponsorshipTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,

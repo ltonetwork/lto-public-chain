@@ -12,7 +12,7 @@ import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransactionV1, CancelLeaseTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
-import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
+import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.{Base58, Time}
 import com.ltonetwork.wallet.Wallet
@@ -462,13 +462,13 @@ object TransactionFactory extends BroadcastRequest {
   def cancelSponsorship(request: SponsorshipRequest,
                         wallet: Wallet,
                         signerAddress: String,
-                        time: Time): Either[ValidationError, SponsorshipCancelTransaction] =
-    sponsorship(SponsorshipCancelTransaction.signed _)(request, wallet, request.sender, time)
+                        time: Time): Either[ValidationError, CancelSponsorshipTransaction] =
+    sponsorship(CancelSponsorshipTransaction.signed _)(request, wallet, request.sender, time)
 
-  def cancelSponsorship(request: SponsorshipRequest, sender: PublicKeyAccount): Either[ValidationError, SponsorshipCancelTransaction] =
-    sponsorship(SponsorshipCancelTransaction.create _)(request, sender)
+  def cancelSponsorship(request: SponsorshipRequest, sender: PublicKeyAccount): Either[ValidationError, CancelSponsorshipTransaction] =
+    sponsorship(CancelSponsorshipTransaction.create _)(request, sender)
 
-  def cancelSponsorship(request: SponsorshipRequest, wallet: Wallet, time: Time): Either[ValidationError, SponsorshipCancelTransaction] =
+  def cancelSponsorship(request: SponsorshipRequest, wallet: Wallet, time: Time): Either[ValidationError, CancelSponsorshipTransaction] =
     cancelSponsorship(request, wallet, request.sender, time)
 
 }
