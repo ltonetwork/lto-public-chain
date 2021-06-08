@@ -4,7 +4,7 @@ import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
-import com.ltonetwork.transaction.lease.{CancelLeaseTransactionV1, CancelLeaseTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
+import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer._
@@ -23,8 +23,8 @@ object TransactionBuilders {
   private val old: Map[Byte, TransactionBuilder] = Seq[TransactionBuilder](
     GenesisTransaction,
     TransferTransaction,
-    LeaseTransactionV1,
-    CancelLeaseTransactionV1,
+    LeaseTransaction,
+    CancelLeaseTransaction,
     MassTransferTransaction
   ).map { x =>
     x.typeId -> x
@@ -35,8 +35,8 @@ object TransactionBuilders {
     DataTransaction,
     TransferTransaction,
     SetScriptTransaction,
-    LeaseTransactionV2,
-    CancelLeaseTransactionV2,
+    LeaseTransaction,
+    CancelLeaseTransaction,
     IssueAssociationTransaction,
     RevokeAssociationTransaction,
     SponsorshipTransaction,
@@ -54,11 +54,6 @@ object TransactionBuilders {
       }
   } ++ modern
 
-  val byName: Map[String, TransactionBuilder] = (old ++ modern).map {
-    case (_, builder) => builder.classTag.runtimeClass.getSimpleName -> builder
-  }
-
-  def by(name: String): Option[TransactionBuilder]                = byName.get(name)
   def by(typeId: Byte, version: Byte): Option[TransactionBuilder] = all.get((typeId, version))
 
   def parseBytes(data: Array[Byte]): Try[Transaction] =
@@ -87,5 +82,4 @@ object TransactionBuilders {
         .flatMap(_.parseBytes(data))
     }
   }
-
 }
