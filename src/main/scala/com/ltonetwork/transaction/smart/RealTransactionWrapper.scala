@@ -5,6 +5,7 @@ import com.ltonetwork.state._
 import scodec.bits.ByteVector
 import com.ltonetwork.account.{Address, AddressOrAlias}
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.transfer._
@@ -18,7 +19,8 @@ object RealTransactionWrapper {
     }
     Header(ByteVector(tx.id().arr), tx.fee, tx.timestamp, v)
   }
-  private def proven(tx: ProvenTransaction): Proven =
+
+  private def proven(tx: Transaction): Proven =
     Proven(
       header(tx),
       LangAddress(ByteVector(tx.sender.bytes.arr)),
