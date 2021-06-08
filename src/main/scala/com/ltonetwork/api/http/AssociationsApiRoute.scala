@@ -6,7 +6,7 @@ import com.ltonetwork.account.{Address, AddressOrAlias}
 import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.state.{Blockchain, ByteStr}
-import com.ltonetwork.transaction.association.AssociationTransaction
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
@@ -29,7 +29,7 @@ case class AssociationsApiRoute(settings: RestAPISettings,
 
   import AssociationsApiRoute._
 
-  override lazy val route =
+  override lazy val route: Route =
     pathPrefix("associations") {
       associations
     }
@@ -54,12 +54,12 @@ case class AssociationsApiRoute(settings: RestAPISettings,
 
   private def associationsJson(address: Address, associations: Blockchain.Associations): AssociationsInfo = {
     def fold(list: List[(Int, AssociationTransaction)]) = {
-      list.foldLeft(Map.empty[(Int, AddressOrAlias, Option[ByteStr]), (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
-          case (acc, (height, as: AssociationTransaction)) =>
-            val cp = if (address == as.sender.toAddress) as.recipient else as.sender.toAddress
-            (as, acc.get(as.assoc)) match {
-              case (Issue, None)                    => acc + (() -> (height, cp, as.id(), None))
-              case (Revoke, Some((h, _, bs, None))) => acc + (as.assoc -> (h, cp, bs, Some((height, as.id()))))
+      list.foldLeft(Map.empty[(Int, Address, Option[ByteStr]), (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
+          case (acc, (height, tx: AssociationTransaction)) =>
+            val cp = if (address == tx.sender.toAddress) tx.recipient else tx.sender.toAddress
+            (tx, acc.get(tx.assoc)) match {
+              case (_: IssueAssociationTransaction, None)                    => acc + (tx.assoc -> (height, cp, tx.id(), None))
+              case (_: RevokeAssociationTransaction, Some((h, _, bs, None))) => acc + (tx.assoc -> (h, cp, bs, Some((height, tx.id()))))
               case _                                => acc
             }
         }
@@ -67,10 +67,11 @@ case class AssociationsApiRoute(settings: RestAPISettings,
         .sortBy(_._2._1)
         .map {
           case (assoc, (h, cp, id, r)) =>
+            val (assocType, _, hash) = assoc
             AssociationInfo(
               party = cp.stringRepr,
-              hash = assoc.hashStr,
-              associationType = assoc.assocType,
+              hash = hash.map(_.base58).getOrElse(""),
+              associationType = assocType,
               issueHeight = h,
               issueTransactionId = id.toString,
               revokeHeight = r.map(_._1),
@@ -80,7 +81,6 @@ case class AssociationsApiRoute(settings: RestAPISettings,
     }
 
     AssociationsInfo(address.stringRepr, fold(associations.outgoing), fold(associations.incoming))
-
   }
 }
 

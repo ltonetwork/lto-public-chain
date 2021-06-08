@@ -16,7 +16,7 @@ case class RevokeAssociationTransaction private (version: Byte,
                                                  sender: PublicKeyAccount,
                                                  fee: Long,
                                                  assocType: Int,
-                                                 recipient: AddressOrAlias,
+                                                 recipient: Address,
                                                  hash: Option[ByteStr],
                                                  sponsor: Option[PublicKeyAccount],
                                                  proofs: Proofs)
