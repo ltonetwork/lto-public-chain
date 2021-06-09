@@ -1,30 +1,19 @@
-package com.ltonetwork.api.http.requests.signed
+package com.ltonetwork.api.http.requests.transfer
 
+import cats.implicits._
 import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.BroadcastRequest
-import com.ltonetwork.transaction.TransactionBuilders.SignatureStringLength
-import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.transaction.transfer._
+import com.ltonetwork.transaction.{Proofs, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import play.api.libs.json.{Json, OFormat}
 
-object SignedTransferV1Request {
-  implicit val reads: Reads[SignedTransferV1Request] = (
-    (JsPath \ "senderPublicKey").read[String] and
-      (JsPath \ "recipient").read[String] and
-      (JsPath \ "amount").read[Long] and
-      (JsPath \ "fee").read[Long] and
-      (JsPath \ "timestamp").read[Long] and
-      (JsPath \ "attachment").readNullable[String] and
-      (JsPath \ "signature").read[String]
-  )(SignedTransferV1Request.apply _)
-
-  implicit val writes: Writes[SignedTransferV1Request] = Json.writes[SignedTransferV1Request]
+object SignedTransferV2Request {
+  implicit val format: OFormat[SignedTransferV2Request] = Json.format
 }
 
 @ApiModel(value = "Signed Transfer transaction")
-case class SignedTransferV1Request(@ApiModelProperty(value = "Base58 encoded sender public key", required = true)
+case class SignedTransferV2Request(@ApiModelProperty(value = "Base58 encoded sender public key", required = true)
                                    senderPublicKey: String,
                                    @ApiModelProperty(value = "Recipient address", required = true)
                                    recipient: String,
@@ -34,17 +23,20 @@ case class SignedTransferV1Request(@ApiModelProperty(value = "Base58 encoded sen
                                    fee: Long,
                                    @ApiModelProperty(required = true)
                                    timestamp: Long,
+                                   @ApiModelProperty(required = true)
+                                   version: Byte,
                                    @ApiModelProperty(value = "Base58 encoded attachment")
                                    attachment: Option[String],
                                    @ApiModelProperty(required = true)
-                                   signature: String)
+                                   proofs: List[String])
     extends BroadcastRequest {
   def toTx: Either[ValidationError, TransferTransaction] =
     for {
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
-      _signature  <- parseBase58(signature, "invalid.signature", SignatureStringLength)
+      _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
+      _proofs     <- Proofs.create(_proofBytes)
+      _recipient  <- AddressOrAlias.fromString(recipient)
       _attachment <- parseBase58(attachment.filter(_.length > 0), "invalid.attachment", TransferTransaction.MaxAttachmentStringSize)
-      _account    <- AddressOrAlias.fromString(recipient)
-      t           <- TransferTransaction.create(_sender, _account, amount, timestamp, fee, _attachment.arr, _signature)
+      t           <- TransferTransaction.create(version, None, timestamp, _sender, fee, _recipient, amount, _attachment.arr, None, _proofs)
     } yield t
 }

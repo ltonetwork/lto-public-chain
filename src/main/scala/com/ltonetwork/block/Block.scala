@@ -26,12 +26,12 @@ class BlockHeader(val timestamp: Long,
                   val consensusData: NxtLikeConsensusBlockData,
                   val transactionCount: Int,
                   val featureVotes: Set[Short]) {
-  protected val versionField: ByteBlockField      = ByteBlockField("version", version)
-  protected val timestampField: LongBlockField    = LongBlockField("timestamp", timestamp)
-  protected val referenceField: BlockIdField      = BlockIdField("reference", reference.arr)
-  protected val signerField: SignerDataBlockField = SignerDataBlockField("signature", signerData)
-  protected val consensusField                    = NxtConsensusBlockField(consensusData)
-  protected val supportedFeaturesField            = FeaturesBlockField(version, featureVotes)
+  protected val versionField: ByteBlockField               = ByteBlockField("version", version)
+  protected val timestampField: LongBlockField             = LongBlockField("timestamp", timestamp)
+  protected val referenceField: BlockIdField               = BlockIdField("reference", reference.arr)
+  protected val signerField: SignerDataBlockField          = SignerDataBlockField("signature", signerData)
+  protected val consensusField: NxtConsensusBlockField     = NxtConsensusBlockField(consensusData)
+  protected val supportedFeaturesField: FeaturesBlockField = FeaturesBlockField(version, featureVotes)
 
   val headerJson: Coeval[JsObject] = Coeval.evalOnce(
     versionField.json() ++
@@ -272,7 +272,7 @@ object Block extends ScorexLogging {
     val genesisSigner = PrivateKeyAccount(Array.empty)
 
     val transactionGenesisData      = genesisTransactions(genesisSettings)
-    val transactionGenesisDataField = TransactionsBlockFieldVersion1or2(transactionGenesisData)
+    val transactionGenesisDataField = TransactionsBlockField.Version1or2(transactionGenesisData)
     val consensusGenesisData        = NxtLikeConsensusBlockData(genesisSettings.initialBaseTarget, ByteStr(Array.fill(crypto.DigestSize)(0: Byte)))
     val consensusGenesisDataField   = NxtConsensusBlockField(consensusGenesisData)
     val txBytesSize                 = transactionGenesisDataField.bytes().length

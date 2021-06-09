@@ -6,8 +6,9 @@ import java.util.concurrent.TimeoutException
 import com.ltonetwork.api.http.AddressApiRoute._
 import com.ltonetwork.api.http.AssociationsApiRoute.AssociationsInfo
 import com.ltonetwork.api.http.PeersApiRoute.{ConnectReq, connectFormat}
-import com.ltonetwork.api.http.requests.signed._
-import com.ltonetwork.api.http.requests.unsigned._
+import com.ltonetwork.api.http.requests.data.DataV1Request
+import com.ltonetwork.api.http.requests.lease.{CancelLeaseV1Request, LeaseV1Request, SignedCancelLeaseV1Request, SignedLeaseV1Request}
+import com.ltonetwork.api.http.requests.transfer.{MassTransferV1Request, SignedTransferV1Request, SignedTransferV2Request, TransferV1Request}
 import com.ltonetwork.api.http.{AddressApiRoute, SponsorshipApiRoute}
 import com.ltonetwork.features.api.ActivationStatus
 import com.ltonetwork.http.DebugApiRoute._
@@ -189,7 +190,7 @@ object AsyncHttpApi extends Assertions {
       postJson("/leasing/lease", LeaseV1Request(sourceAddress, amount, fee, recipient)).as[Transaction]
 
     def cancelLease(sourceAddress: String, leaseId: String, fee: Long): Future[Transaction] =
-      postJson("/leasing/cancel", LeaseCancelV1Request(sourceAddress, leaseId, fee)).as[Transaction]
+      postJson("/leasing/cancel", CancelLeaseV1Request(sourceAddress, leaseId, fee)).as[Transaction]
 
     def activeLeases(sourceAddress: String) = get(s"/leasing/active/$sourceAddress").as[Seq[Transaction]]
 
@@ -212,16 +213,16 @@ object AsyncHttpApi extends Assertions {
     }
 
     def massTransfer(sourceAddress: String, transfers: List[Transfer], fee: Long, assetId: Option[String] = None): Future[Transaction] = {
-      implicit val w: Writes[MassTransferRequest] = Json.writes[MassTransferRequest]
-      val value                                   = toJson(MassTransferRequest(MassTransferTransaction.version, sourceAddress, transfers, fee, None))
+      implicit val w: Writes[MassTransferV1Request] = Json.writes[MassTransferV1Request]
+      val value                                   = toJson(MassTransferV1Request(MassTransferTransaction.version, sourceAddress, transfers, fee, None))
       val jsObject                                = value.as[JsObject]
       val r                                       = jsObject + ("type" -> JsNumber(MassTransferTransaction.typeId.toInt))
       signAndBroadcast(r)
     }
 
     def putData(sourceAddress: String, data: List[DataEntry[_]], fee: Long): Future[Transaction] = {
-      implicit val w: Writes[DataRequest] = Json.writes[DataRequest]
-      postJson("/addresses/data", DataRequest(1, sourceAddress, data, fee)).as[Transaction]
+      implicit val w: Writes[DataV1Request] = Json.writes[DataV1Request]
+      postJson("/addresses/data", DataV1Request(1, sourceAddress, data, fee)).as[Transaction]
     }
 
     def getData(address: String): Future[List[DataEntry[_]]] = get(s"/addresses/data/$address").as[List[DataEntry[_]]]
@@ -239,7 +240,7 @@ object AsyncHttpApi extends Assertions {
     def signedLease(lease: SignedLeaseV1Request): Future[Transaction] =
       postJson("/leasing/broadcast/lease", lease).as[Transaction]
 
-    def signedLeaseCancel(leaseCancel: SignedLeaseCancelV1Request): Future[Transaction] =
+    def signedLeaseCancel(leaseCancel: SignedCancelLeaseV1Request): Future[Transaction] =
       postJson("/leasing/broadcast/cancel", leaseCancel).as[Transaction]
 
     def broadcastRequest[A: Writes](req: A): Future[Transaction] = postJson("/transactions/broadcast", req).as[Transaction]

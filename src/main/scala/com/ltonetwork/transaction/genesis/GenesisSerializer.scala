@@ -26,7 +26,7 @@ object GenesisSerializer extends TransactionSerializer.For[GenesisTransaction] {
     res
   }
 
-  override protected def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
     Try {
       require(bytes.length >= GenesisTransaction.BASE_LENGTH, "Data does not match base length")
 

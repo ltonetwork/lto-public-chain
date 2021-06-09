@@ -119,23 +119,6 @@ trait TransactionGenBase extends ScriptGen {
       fee     <- smallFeeGen
     } yield SetScriptTransaction.selfSigned(version, sender, Some(s), fee, ts).explicitGet()
 
-  val paymentGen: Gen[PaymentTransaction] = for {
-    sender: PrivateKeyAccount    <- accountGen
-    recipient: PrivateKeyAccount <- accountGen
-    tx                           <- paymentGeneratorP(sender, recipient)
-  } yield tx
-
-  val selfPaymentGen: Gen[PaymentTransaction] = accountGen.flatMap(acc => paymentGeneratorP(acc, acc))
-
-  def paymentGeneratorP(sender: PrivateKeyAccount, recipient: PrivateKeyAccount): Gen[PaymentTransaction] =
-    timestampGen.flatMap(ts => paymentGeneratorP(ts, sender, recipient))
-
-  def paymentGeneratorP(timestamp: Long, sender: PrivateKeyAccount, recipient: PrivateKeyAccount): Gen[PaymentTransaction] =
-    for {
-      amount: Long <- positiveLongGen
-      fee: Long    <- smallFeeGen
-    } yield PaymentTransaction.create(sender, recipient, amount, fee, timestamp).explicitGet()
-
   private val leaseParamGen = for {
     sender    <- accountGen
     amount    <- positiveLongGen
@@ -322,11 +305,11 @@ trait TransactionGenBase extends ScriptGen {
   def versionGen(builder: TransactionBuilder): Gen[Byte] = {
     Gen.oneOf(builder.supportedVersions.toSeq)
   }
-  val randomTransactionGen: Gen[SignedTransaction] = (for {
+  val randomTransactionGen: Gen[Transaction] = (for {
     tr <- transferV1Gen
   } yield tr).label("random transaction")
 
-  def randomTransactionsGen(count: Int): Gen[Seq[SignedTransaction]] =
+  def randomTransactionsGen(count: Int): Gen[Seq[Transaction]] =
     for {
       transactions <- Gen.listOfN(count, randomTransactionGen)
     } yield transactions

@@ -34,15 +34,10 @@ case class TransferTransaction private(version: Byte,
   override val json: Coeval[JsObject] = serializer.toJson(this)
 
   // Special case for transfer tx v1: signature is prepended (after type) instead of appended
-  override protected val footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
-    if (this.version == 1) Array()
-    else super.footerBytes()
-  )
-
-  override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(
-    if (this.version == 1) Bytes.concat(Array(builder.typeId), proofs.toSignature.arr, bodyBytes())
-    else super.bytes()
-  )
+  override protected def prefixByte: Array[Byte] =
+    if (this.version == 1) Bytes.concat(Array(builder.typeId), proofs.toSignature.arr)
+    else super.prefixByte
+  override protected def footerBytes: Array[Byte] = if (this.version == 1) Array() else super.footerBytes
 }
 
 object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {

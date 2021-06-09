@@ -2,7 +2,7 @@ package com.ltonetwork.state.patch
 
 import com.ltonetwork.state.{Blockchain, Diff, LeaseBalance, Portfolio}
 import com.ltonetwork.utils.ScorexLogging
-import com.ltonetwork.transaction.lease.{LeaseTransaction, LeaseTransactionV1}
+import com.ltonetwork.transaction.lease.LeaseTransaction
 
 object CancelLeaseOverflow extends ScorexLogging {
   def apply(blockchain: Blockchain): Diff = {
@@ -14,7 +14,7 @@ object CancelLeaseOverflow extends ScorexLogging {
     addressesWithLeaseOverflow.keys.foreach(addr => log.info(s"Resetting lease overflow for $addr"))
 
     val leasesToCancel = addressesWithLeaseOverflow.keys.flatMap { a =>
-      blockchain.addressTransactions(a, Set(LeaseTransactionV1.typeId), Int.MaxValue, 0).collect {
+      blockchain.addressTransactions(a, Set(LeaseTransaction.typeId), Int.MaxValue, 0).collect {
         case (_, lt: LeaseTransaction) if lt.sender.toAddress == a => lt.id()
       }
     }

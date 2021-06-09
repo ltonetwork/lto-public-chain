@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.requests.signed.SignedAnchorRequest
+import com.ltonetwork.api.http.requests.anchor.SignedAnchorV1Request
 import com.ltonetwork.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, EitherExt2, IntegerDataEntry}
 import com.ltonetwork.transaction.anchor.AnchorTransactionV1
 import com.ltonetwork.utils.Base58
@@ -40,13 +40,13 @@ class AnchorTransactionV1Specification extends PropSpec with PropertyChecks with
   }
 
   property("JSON roundtrip") {
-    implicit val signedFormat: Format[SignedAnchorRequest] = Json.format[SignedAnchorRequest]
+    implicit val signedFormat: Format[SignedAnchorV1Request] = Json.format[SignedAnchorV1Request]
 
     forAll(anchorTransactionGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
-      val req = json.as[SignedAnchorRequest]
+      val req = json.as[SignedAnchorV1Request]
       req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
       req.timestamp shouldEqual tx.timestamp

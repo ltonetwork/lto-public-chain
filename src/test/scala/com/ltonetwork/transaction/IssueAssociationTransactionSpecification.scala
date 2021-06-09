@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.api.http.requests.signed.SignedAssociationRequest
+import com.ltonetwork.api.http.requests.association.SignedIssueAssociationV1Request
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.association.{AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.utils.Base58
@@ -45,13 +45,13 @@ class IssueAssociationTransactionSpecification extends PropSpec with PropertyChe
   }
 
   property("JSON roundtrip") {
-    implicit val signedFormat: Format[SignedAssociationRequest] = Json.format[SignedAssociationRequest]
+    implicit val signedFormat: Format[SignedIssueAssociationV1Request] = Json.format[SignedIssueAssociationV1Request]
 
     forAll(assocTransactionGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
-      val req = json.as[SignedAssociationRequest]
+      val req = json.as[SignedIssueAssociationV1Request]
       req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
       req.timestamp shouldEqual tx.timestamp

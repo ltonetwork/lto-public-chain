@@ -34,6 +34,9 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
   override def typeId: Byte                 = 17
   override def supportedVersions: Set[Byte] = Set(1: Byte)
 
+  val MaxHashLength: Int = IssueAssociationTransaction.MaxHashLength
+  val StringHashLength: Int = IssueAssociationTransaction.StringHashLength
+
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
     tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
 
@@ -43,11 +46,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId != networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(
-          hash.exists(_.arr.length > IssueAssociationTransaction.MaxHashLength),
-          None,
-          ValidationError.GenericError(s"Hash length must be <= ${IssueAssociationTransaction.MaxHashLength} bytes")
-        ),
+        Validated.condNel(hash.exists(_.arr.length > MaxHashLength), None, ValidationError.GenericError(s"Hash length must be <= ${MaxHashLength} bytes")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
@@ -55,7 +54,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
   }
 
   object SerializerV1 extends AssociationSerializerV1[RevokeAssociationTransaction] {
-    override protected def parseBytes(version: Byte, bytes: Array[Byte]): Try[RevokeAssociationTransaction] =
+    override def parseBytes(version: Byte, bytes: Array[Byte]): Try[RevokeAssociationTransaction] =
       Try {
         val chainId = bytes(0)
         (for {
@@ -91,7 +90,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
              recipient: Address,
              hash: Option[ByteStr],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, timestamp, sender, fee, assocType, recipient, hash, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, assocType, recipient, hash, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,

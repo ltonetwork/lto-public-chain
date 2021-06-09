@@ -2,7 +2,7 @@ package com.ltonetwork.it.async
 
 import com.typesafe.config.Config
 import com.ltonetwork.account.PrivateKeyAccount
-import com.ltonetwork.api.http.requests.signed.SignedSetScriptRequest
+import com.ltonetwork.api.http.requests.smart.SignedSetScriptV1Request
 import com.ltonetwork.it.api.AsyncHttpApi._
 import com.ltonetwork.it.transactions.NodesFromDocker
 import com.ltonetwork.it.{NodeConfigs, TransferSending}
@@ -96,7 +96,7 @@ class SmartTransactionsConstraintsSuite extends FreeSpec with Matchers with Tran
       )
       .explicitGet()
 
-  private def toRequest(tx: SetScriptTransaction): SignedSetScriptRequest = SignedSetScriptRequest(
+  private def toRequest(tx: SetScriptTransaction): SignedSetScriptV1Request = SignedSetScriptV1Request(
     version = tx.version,
     senderPublicKey = Base58.encode(tx.sender.publicKey),
     script = tx.script.map(_.bytes().base64),

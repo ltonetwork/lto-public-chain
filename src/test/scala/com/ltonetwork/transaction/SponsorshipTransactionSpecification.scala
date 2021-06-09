@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.api.http.requests.signed.SignedSponsorshipRequest
+import com.ltonetwork.api.http.requests.sponsorship.SignedSponsorshipV1Request
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
 import com.ltonetwork.utils.Base58
@@ -43,13 +43,13 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
   }
 
   property("JSON roundtrip") {
-    implicit val signedFormat: Format[SignedSponsorshipRequest] = Json.format[SignedSponsorshipRequest]
+    implicit val signedFormat: Format[SignedSponsorshipV1Request] = Json.format[SignedSponsorshipV1Request]
 
     forAll(sponsorshipGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
-      val req = json.as[SignedSponsorshipRequest]
+      val req = json.as[SignedSponsorshipV1Request]
       req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
       req.timestamp shouldEqual tx.timestamp

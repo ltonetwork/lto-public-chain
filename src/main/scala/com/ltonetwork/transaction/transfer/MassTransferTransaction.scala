@@ -8,7 +8,7 @@ import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
 import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json, OFormat}
+import play.api.libs.json.{JsObject, JsValue, Json, OFormat}
 
 import scala.util.{Either, Try}
 
@@ -29,6 +29,9 @@ case class MassTransferTransaction private (version: Byte,
 
   override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
   override val json: Coeval[JsObject] = serializer.toJson(this)
+
+  def compactJson(recipients: Set[AddressOrAlias]): JsObject =
+    json() ++ Json.obj("transfers" -> MassTransferTransaction.toJson(transfers.filter(t => recipients.contains(t.address))))
 }
 
 object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransaction] {
@@ -116,4 +119,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
         AddressOrAlias.fromString(recipient).map(ParsedTransfer(_, amount))
     }
   }
+
+  def toJson(transfers: List[ParsedTransfer]): JsValue =
+    Json.toJson(transfers.map { case ParsedTransfer(address, amount) => Transfer(address.stringRepr, amount) })
 }

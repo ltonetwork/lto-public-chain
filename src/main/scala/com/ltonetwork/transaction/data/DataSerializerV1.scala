@@ -24,7 +24,7 @@ object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
     )
   }
 
-  override protected def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
     Try {
       val p0     = KeyLength
       val sender = PublicKeyAccount(bytes.slice(0, p0))

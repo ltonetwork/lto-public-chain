@@ -2,12 +2,10 @@ package com.ltonetwork.api.http
 
 import akka.http.scaladsl.server.Route
 import com.ltonetwork.account.Address
-import com.ltonetwork.api.http.requests.unsigned.{LeaseCancelV1Request, LeaseV1Request}
 import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.state.Blockchain
-import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.lease.{LeaseTransaction, LeaseTransactionV1}
+import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.utils.Time
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
@@ -23,7 +21,7 @@ case class LeaseApiRoute(settings: RestAPISettings, wallet: Wallet, blockchain: 
     extends ApiRoute
     with BroadcastRoute {
 
-  override val route = pathPrefix("leasing") {
+  override val route: Route = pathPrefix("leasing") {
     active
   }
 
@@ -39,7 +37,7 @@ case class LeaseApiRoute(settings: RestAPISettings, wallet: Wallet, blockchain: 
         case Left(e) => ApiError.fromValidationError(e)
         case Right(a) =>
           blockchain
-            .addressTransactions(a, Set(LeaseTransactionV1.typeId), Int.MaxValue, 0)
+            .addressTransactions(a, Set(LeaseTransaction.typeId), Int.MaxValue, 0)
             .collect {
               case (h, lt: LeaseTransaction) if blockchain.leaseDetails(lt.id()).exists(_.isActive) =>
                 lt.json() + ("height" -> JsNumber(h))

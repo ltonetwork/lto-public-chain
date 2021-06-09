@@ -1,6 +1,6 @@
 package com.ltonetwork.transaction
 
-import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings}
+import com.ltonetwork.settings.{Constants, FeesSettings, FunctionalitySettings}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.data.DataTransaction
@@ -22,6 +22,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
   def enoughFee[T <: Transaction](tx: T, blockchain: Blockchain, fs: FunctionalitySettings): Either[ValidationError, T] = enoughFee(tx)
 
   def enoughFee[T <: Transaction](tx: T): Either[ValidationError, T] = {
+    val txName      = Constants.TransactionNames(tx.typeId)
     val txFeeValue    = tx.fee
     val txAssetFeeKey = tx.builder.typeId.toString
     for {
@@ -31,7 +32,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
         txFeeValue >= minTxFee,
         (),
         GenericError {
-          s"Fee in LTO for ${tx.builder.classTag} transaction($txFeeValue) does not exceed minimal value of $minTxFee"
+          s"Fee for ${txName} transaction ($txFeeValue LTO) does not exceed minimal value of $minTxFee LTO"
         }
       )
     } yield tx

@@ -1,7 +1,7 @@
 package com.ltonetwork.it.sync.transactions
 
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.requests.signed.SignedTransferV1Request
+import com.ltonetwork.api.http.requests.transfer.SignedTransferV1Request
 import com.ltonetwork.crypto
 import com.ltonetwork.it.api.SyncHttpApi._
 import com.ltonetwork.it.sync._

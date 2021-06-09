@@ -34,8 +34,8 @@ case class GenesisTransaction private (version: Byte,
   override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
   override val json: Coeval[JsObject] = serializer.toJson(this)
 
-  override protected val prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(Array[Byte]())
-  override protected val footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Array[Byte]())
+  override protected def prefixByte: Array[Byte] = Array[Byte]()
+  override protected def footerBytes: Array[Byte] = Array[Byte]()
 }
 
 object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] {

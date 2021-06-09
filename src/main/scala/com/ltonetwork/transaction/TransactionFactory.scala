@@ -2,7 +2,13 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.account._
 import com.ltonetwork.api.http.requests.BroadcastRequest
-import com.ltonetwork.api.http.requests.unsigned._
+import com.ltonetwork.api.http.requests.anchor.AnchorV1Request
+import com.ltonetwork.api.http.requests.association.IssueAssociationV1Request
+import com.ltonetwork.api.http.requests.data.DataV1Request
+import com.ltonetwork.api.http.requests.lease.{CancelLeaseV1Request, CancelLeaseV2Request, LeaseV1Request, LeaseV2Request}
+import com.ltonetwork.api.http.requests.smart.SetScriptV1Request
+import com.ltonetwork.api.http.requests.sponsorship.SponsorshipV1Request
+import com.ltonetwork.api.http.requests.transfer.{MassTransferV1Request, TransferV1Request, TransferV2Request}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.transaction.anchor.AnchorTransaction
@@ -16,6 +22,8 @@ import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.{Base58, Time}
 import com.ltonetwork.wallet.Wallet
 
+// TODO Rename all methods to apply and use overloading
+// TODO Do we really need a request class for each version?
 object TransactionFactory extends BroadcastRequest {
   def transferAssetV1(request: TransferV1Request, wallet: Wallet, time: Time): Either[ValidationError, TransferTransaction] =
     transferAssetV1(request, wallet, request.sender, time)
@@ -91,10 +99,10 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def massTransferAsset(request: MassTransferRequest, wallet: Wallet, time: Time): Either[ValidationError, MassTransferTransaction] =
+  def massTransferAsset(request: MassTransferV1Request, wallet: Wallet, time: Time): Either[ValidationError, MassTransferTransaction] =
     massTransferAsset(request, wallet, request.sender, time)
 
-  def massTransferAsset(request: MassTransferRequest,
+  def massTransferAsset(request: MassTransferV1Request,
                         wallet: Wallet,
                         signerAddress: String,
                         time: Time): Either[ValidationError, MassTransferTransaction] =
@@ -113,7 +121,7 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def massTransferAsset(request: MassTransferRequest, sender: PublicKeyAccount): Either[ValidationError, MassTransferTransaction] =
+  def massTransferAsset(request: MassTransferV1Request, sender: PublicKeyAccount): Either[ValidationError, MassTransferTransaction] =
     for {
       transfers <- MassTransferTransaction.parseTransfersList(request.transfers)
       tx <- MassTransferTransaction.create(
@@ -129,10 +137,10 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def setScript(request: SetScriptRequest, wallet: Wallet, time: Time): Either[ValidationError, SetScriptTransaction] =
+  def setScript(request: SetScriptV1Request, wallet: Wallet, time: Time): Either[ValidationError, SetScriptTransaction] =
     setScript(request, wallet, request.sender, time)
 
-  def setScript(request: SetScriptRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, SetScriptTransaction] =
+  def setScript(request: SetScriptV1Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, SetScriptTransaction] =
     for {
       sender <- wallet.findPrivateKey(request.sender)
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
@@ -150,7 +158,7 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def setScript(request: SetScriptRequest, sender: PublicKeyAccount): Either[ValidationError, SetScriptTransaction] =
+  def setScript(request: SetScriptV1Request, sender: PublicKeyAccount): Either[ValidationError, SetScriptTransaction] =
     for {
       script <- request.script match {
         case None    => Right(None)
@@ -238,10 +246,10 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def leaseCancelV1(request: LeaseCancelV1Request, wallet: Wallet, time: Time): Either[ValidationError, CancelLeaseTransaction] =
+  def leaseCancelV1(request: CancelLeaseV1Request, wallet: Wallet, time: Time): Either[ValidationError, CancelLeaseTransaction] =
     leaseCancelV1(request, wallet, request.sender, time)
 
-  def leaseCancelV1(request: LeaseCancelV1Request,
+  def leaseCancelV1(request: CancelLeaseV1Request,
                     wallet: Wallet,
                     signerAddress: String,
                     time: Time): Either[ValidationError, CancelLeaseTransaction] =
@@ -258,7 +266,7 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def leaseCancelV1(request: LeaseCancelV1Request, sender: PublicKeyAccount): Either[ValidationError, CancelLeaseTransaction] =
+  def leaseCancelV1(request: CancelLeaseV1Request, sender: PublicKeyAccount): Either[ValidationError, CancelLeaseTransaction] =
     CancelLeaseTransaction.create(
       1,
       None,
@@ -270,10 +278,10 @@ object TransactionFactory extends BroadcastRequest {
       Proofs.empty
     )
 
-  def leaseCancelV2(request: LeaseCancelV2Request, wallet: Wallet, time: Time): Either[ValidationError, CancelLeaseTransaction] =
+  def leaseCancelV2(request: CancelLeaseV2Request, wallet: Wallet, time: Time): Either[ValidationError, CancelLeaseTransaction] =
     leaseCancelV2(request, wallet, request.sender, time)
 
-  def leaseCancelV2(request: LeaseCancelV2Request,
+  def leaseCancelV2(request: CancelLeaseV2Request,
                     wallet: Wallet,
                     signerAddress: String,
                     time: Time): Either[ValidationError, CancelLeaseTransaction] =
@@ -290,7 +298,7 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def leaseCancelV2(request: LeaseCancelV2Request, sender: PublicKeyAccount): Either[ValidationError, CancelLeaseTransaction] =
+  def leaseCancelV2(request: CancelLeaseV2Request, sender: PublicKeyAccount): Either[ValidationError, CancelLeaseTransaction] =
     CancelLeaseTransaction.create(
       request.version,
       None,
@@ -302,10 +310,10 @@ object TransactionFactory extends BroadcastRequest {
       Proofs.empty
     )
 
-  def data(request: DataRequest, wallet: Wallet, time: Time): Either[ValidationError, DataTransaction] =
+  def data(request: DataV1Request, wallet: Wallet, time: Time): Either[ValidationError, DataTransaction] =
     data(request, wallet, request.sender, time)
 
-  def data(request: DataRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, DataTransaction] =
+  def data(request: DataV1Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, DataTransaction] =
     for {
       sender <- wallet.findPrivateKey(request.sender)
       signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
@@ -319,7 +327,7 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def data(request: DataRequest, sender: PublicKeyAccount): Either[ValidationError, DataTransaction] =
+  def data(request: DataV1Request, sender: PublicKeyAccount): Either[ValidationError, DataTransaction] =
     DataTransaction.create(
       request.version,
       None,
@@ -341,10 +349,10 @@ object TransactionFactory extends BroadcastRequest {
     })
   }
 
-  def anchor(request: AnchorRequest, wallet: Wallet, time: Time): Either[ValidationError, AnchorTransaction] =
+  def anchor(request: AnchorV1Request, wallet: Wallet, time: Time): Either[ValidationError, AnchorTransaction] =
     anchor(request, wallet, request.sender, time)
 
-  def anchor(request: AnchorRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AnchorTransaction] =
+  def anchor(request: AnchorV1Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AnchorTransaction] =
     for {
       sender  <- wallet.findPrivateKey(request.sender)
       signer  <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
@@ -359,7 +367,7 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def anchor(request: AnchorRequest, sender: PublicKeyAccount): Either[ValidationError, AnchorTransaction] =
+  def anchor(request: AnchorV1Request, sender: PublicKeyAccount): Either[ValidationError, AnchorTransaction] =
     for {
       anchors <- parseAnchors(request.anchors)
       tx <- AnchorTransaction.create(
@@ -376,10 +384,10 @@ object TransactionFactory extends BroadcastRequest {
   
   val IncorectHashMessage = "Incorrect hash length, should be <= 64 bytes"
 
-  def issueAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, IssueAssociationTransaction] =
+  def issueAssociation(request: IssueAssociationV1Request, wallet: Wallet, time: Time): Either[ValidationError, IssueAssociationTransaction] =
     issueAssociation(request, wallet, request.sender, time)
 
-  def issueAssociation(request: AssociationRequest,
+  def issueAssociation(request: IssueAssociationV1Request,
                        wallet: Wallet,
                        signerAddress: String,
                        time: Time): Either[ValidationError, IssueAssociationTransaction] =
@@ -402,7 +410,7 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def issueAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
+  def issueAssociation(request: IssueAssociationV1Request, sender: PublicKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
     for {
       recipient <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
@@ -422,10 +430,10 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def revokeAssociation(request: AssociationRequest, wallet: Wallet, time: Time): Either[ValidationError, RevokeAssociationTransaction] =
+  def revokeAssociation(request: IssueAssociationV1Request, wallet: Wallet, time: Time): Either[ValidationError, RevokeAssociationTransaction] =
     revokeAssociation(request, wallet, request.sender, time)
 
-  def revokeAssociation(request: AssociationRequest,
+  def revokeAssociation(request: IssueAssociationV1Request,
                         wallet: Wallet,
                         signerAddress: String,
                         time: Time): Either[ValidationError, RevokeAssociationTransaction] =
@@ -447,7 +455,7 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def revokeAssociation(request: AssociationRequest, sender: PublicKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
+  def revokeAssociation(request: IssueAssociationV1Request, sender: PublicKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
     for {
       recipient <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
@@ -466,10 +474,10 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def sponsorship(request: SponsorshipRequest, wallet: Wallet, time: Time): Either[ValidationError, SponsorshipTransaction] =
+  def sponsorship(request: SponsorshipV1Request, wallet: Wallet, time: Time): Either[ValidationError, SponsorshipTransaction] =
     sponsorship(request, wallet, request.sender, time)
 
-  def sponsorship(request: SponsorshipRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, SponsorshipTransaction] =
+  def sponsorship(request: SponsorshipV1Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, SponsorshipTransaction] =
     for {
       sender    <- wallet.findPrivateKey(request.sender)
       signer    <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
@@ -484,7 +492,7 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def sponsorship(request: SponsorshipRequest, sender: PublicKeyAccount): Either[ValidationError, SponsorshipTransaction] =
+  def sponsorship(request: SponsorshipV1Request, sender: PublicKeyAccount): Either[ValidationError, SponsorshipTransaction] =
     for {
       recipient <- Address.fromString(request.recipient)
       tx <- SponsorshipTransaction.create(
@@ -499,10 +507,10 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def cancelSponsorship(request: SponsorshipRequest, wallet: Wallet, time: Time): Either[ValidationError, CancelSponsorshipTransaction] =
+  def cancelSponsorship(request: SponsorshipV1Request, wallet: Wallet, time: Time): Either[ValidationError, CancelSponsorshipTransaction] =
     cancelSponsorship(request, wallet, request.sender, time)
 
-  def cancelSponsorship(request: SponsorshipRequest,
+  def cancelSponsorship(request: SponsorshipV1Request,
                         wallet: Wallet,
                         signerAddress: String,
                         time: Time): Either[ValidationError, CancelSponsorshipTransaction] =
@@ -520,7 +528,7 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def cancelSponsorship(request: SponsorshipRequest, sender: PublicKeyAccount): Either[ValidationError, CancelSponsorshipTransaction] =
+  def cancelSponsorship(request: SponsorshipV1Request, sender: PublicKeyAccount): Either[ValidationError, CancelSponsorshipTransaction] =
     for {
       recipient <- Address.fromString(request.recipient)
       tx <- CancelSponsorshipTransaction.create(

@@ -1,7 +1,8 @@
 package com.ltonetwork.mining
 
 import com.ltonetwork.state.Blockchain
-import com.ltonetwork.transaction.{Authorized, Transaction}
+import com.ltonetwork.transaction.Transaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 
 object TxEstimators {
   abstract class Fn extends ((Blockchain, Transaction) => Long) {
@@ -13,7 +14,7 @@ object TxEstimators {
 
     override def toString(): String = "sizeInBytes"
 
-    override val minEstimate = 109l
+    override val minEstimate = 109L
   }
 
   object one extends Fn {
@@ -21,14 +22,15 @@ object TxEstimators {
 
     override def toString(): String = "one"
 
-    override val minEstimate = 1l
+    override val minEstimate = 1L
   }
 
   object scriptRunNumber extends Fn {
     override def apply(blockchain: Blockchain, x: Transaction): Long = {
       val smartAccountRun = x match {
-        case x: Transaction with Authorized if blockchain.hasScript(x.sender) => 1
-        case _                                                                => 0
+        case _: GenesisTransaction               => 0
+        case _ if blockchain.hasScript(x.sender) => 1
+        case _                                   => 0
       }
 
       smartAccountRun
@@ -36,6 +38,6 @@ object TxEstimators {
 
     override def toString(): String = "scriptRunNumber"
 
-    override val minEstimate = 0l
+    override val minEstimate = 0L
   }
 }

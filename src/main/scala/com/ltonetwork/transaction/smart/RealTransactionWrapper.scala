@@ -13,11 +13,7 @@ import com.ltonetwork.transaction.transfer._
 object RealTransactionWrapper {
 
   private def header(tx: Transaction): Header = {
-    val v = tx match {
-      case vt: VersionedTransaction => vt.version
-      case _                        => 1
-    }
-    Header(ByteVector(tx.id().arr), tx.fee, tx.timestamp, v)
+    Header(ByteVector(tx.id().arr), tx.fee, tx.timestamp, tx.version)
   }
 
   private def proven(tx: Transaction): Proven =

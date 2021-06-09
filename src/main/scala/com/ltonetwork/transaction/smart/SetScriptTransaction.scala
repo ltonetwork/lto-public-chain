@@ -45,6 +45,9 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
     (scriptOpt, scriptEnd)
   }
 
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
+    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
       import tx._
@@ -55,6 +58,11 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
         Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
+  }
+
+  override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
+    case 1 => SetTransactionSerializerV1
+    case _ => UnknownSerializer
   }
 
   def create(version: Byte,

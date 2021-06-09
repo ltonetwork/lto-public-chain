@@ -10,7 +10,6 @@ import play.api.libs.json._
 
 import scala.util.{Failure, Success, Try}
 
-
 case class IssueAssociationTransaction private(version: Byte,
                                                chainId: Byte,
                                                timestamp: Long,
@@ -57,7 +56,7 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
   }
 
   object SerializerV1 extends AssociationSerializerV1[IssueAssociationTransaction] {
-    override protected def parseBytes(version: Byte, bytes: Array[Byte]): Try[IssueAssociationTransaction] =
+    override def parseBytes(version: Byte, bytes: Array[Byte]): Try[IssueAssociationTransaction] =
       Try {
         val chainId = bytes(0)
         (for {

@@ -26,7 +26,7 @@ object AnchorSerializerV1 extends TransactionSerializer.For[AnchorTransaction] {
     )
   }
 
-  override protected def parseBytes(version: Byte, bytes: Array[Byte]): Try[AnchorTransaction] =
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[AnchorTransaction] =
     Try {
       val sender = PublicKeyAccount(bytes.take(KeyLength))
 

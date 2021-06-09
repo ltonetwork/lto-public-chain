@@ -5,8 +5,8 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.association.IssueAssociationTransaction
-import com.ltonetwork.transaction.lease.{LeaseTransaction, LeaseTransactionV1}
+import com.ltonetwork.transaction.association.AssociationTransaction
+import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.utils.ScorexLogging
 
 import scala.reflect.ClassTag
@@ -38,10 +38,8 @@ package object state {
   }
 
   implicit class BlockchainExt(blockchain: Blockchain) extends ScorexLogging {
-    def assocExists(tx: IssueAssociationTransaction): Boolean =
-      blockchain.associations(tx.sender).outgoing.map(_._2).exists(as =>
-        tx.recipient == as.recipient && tx.assocType == as.assocType && tx.hash == as.hash
-      )
+    def assocExists(tx: AssociationTransaction): Boolean =
+      blockchain.associations(tx.sender).outgoing.map(_._2).exists(as => tx.assoc == as.assoc)
 
     def isEmpty: Boolean = blockchain.height == 0
 
@@ -77,7 +75,7 @@ package object state {
 
     def activeLeases(address: Address): Seq[(Int, LeaseTransaction)] =
       blockchain
-        .addressTransactions(address, Set(LeaseTransactionV1.typeId), Int.MaxValue, 0)
+        .addressTransactions(address, Set(LeaseTransaction.typeId), Int.MaxValue, 0)
         .collect { case (h, l: LeaseTransaction) if blockchain.leaseDetails(l.id()).exists(_.isActive) => h -> l }
 
     def unsafeHeightOf(id: ByteStr): Int =

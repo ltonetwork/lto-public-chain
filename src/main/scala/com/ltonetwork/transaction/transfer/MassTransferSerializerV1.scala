@@ -71,11 +71,8 @@ object MassTransferSerializerV1 extends TransactionSerializer.For[MassTransferTr
         "attachment" -> Base58.encode(tx.attachment),
         "transferCount" -> tx.transfers.size,
         "totalAmount" -> tx.transfers.map(_.amount).sum,
-        "transfers" -> toJson(tx.transfers)
+        "transfers" -> MassTransferTransaction.toJson(tx.transfers)
       )
     )
   }
-
-  private def toJson(transfers: List[ParsedTransfer]): JsValue =
-    Json.toJson(transfers.map { case ParsedTransfer(address, amount) => Transfer(address.stringRepr, amount) })
 }

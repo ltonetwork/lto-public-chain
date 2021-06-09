@@ -9,7 +9,7 @@ import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.utils.{Base58, ScorexLogging}
 import org.scalatest.Suite
 import com.ltonetwork.account.{Address, AddressOrAlias, AddressScheme, PrivateKeyAccount}
-import com.ltonetwork.api.http.requests.signed.SignedTransferV2Request
+import com.ltonetwork.api.http.requests.transfer.SignedTransferV2Request
 import com.ltonetwork.transaction.transfer._
 
 import scala.concurrent.Future

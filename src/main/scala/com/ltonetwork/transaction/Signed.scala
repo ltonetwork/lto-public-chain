@@ -1,5 +1,6 @@
 package com.ltonetwork.transaction
 
+import com.ltonetwork.account.PublicKeyAccount
 import monix.eval.{Coeval, Task}
 import monix.execution.Scheduler
 import monix.execution.schedulers.SchedulerService
@@ -9,7 +10,10 @@ import io.swagger.annotations.ApiModelProperty
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-trait Signed extends Transaction {
+// TODO this isn't used for transactions, as they use proofs. It's only used for blocks
+trait Signed {
+  val sender: PublicKeyAccount
+
   protected val signatureValid: Coeval[Boolean]
   @ApiModelProperty(hidden = true)
   protected val signedDescendants: Coeval[Seq[Signed]] = Coeval.evalOnce(Seq.empty)

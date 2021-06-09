@@ -6,9 +6,8 @@ import com.ltonetwork.block.{Block, BlockHeader}
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.state.reader.LeaseDetails
-import com.ltonetwork.transaction.Transaction.Type
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.association.IssueAssociationTransaction
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
@@ -191,7 +190,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
                                   scripts: Map[BigInt, Option[Script]],
                                   data: Map[BigInt, AccountDataInfo],
-                                  assocs: List[(Int, IssueAssociationTransaction)],
+                                  assocs: List[(Int, AssociationTransaction)],
                                   sponsorship: Map[BigInt, List[Address]]): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
@@ -277,7 +276,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(kk, nextSeqNr)
     }
 
-    def f(addr: Address, txs: Seq[IssueAssociationTransaction], seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]]) = {
+    def f(addr: Address, txs: Seq[AssociationTransaction], seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]]) = {
       val curSeq: Key[Int] = seqNrKey(addr.bytes)
       val last             = rw.get(curSeq)
       txs.zipWithIndex
@@ -294,7 +293,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       case (addr, txs) => f(addr, txs, Keys.outgoingAssociationsSeqNr, Keys.outgoingAssociationTransactionId)
     }
 
-    assocs.map(_._2).groupBy(_.assoc.party).foreach {
+    assocs.map(_._2).groupBy(_.recipient).foreach {
       case (addr, txs) => f(addr, txs, Keys.incomingAssociationsSeqNr, Keys.incomingAssociationTransactionId)
     }
 
@@ -375,8 +374,8 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
             for ((_, tx) <- rw.get(ktxId)) {
               tx match {
-                case _: GenesisTransaction                                                       => // genesis transaction can not be rolled back
-                case _: PaymentTransaction | _: TransferTransaction | _: MassTransferTransaction => // balances already restored
+                case _: GenesisTransaction                               => // genesis transaction can not be rolled back
+                case _: TransferTransaction | _: MassTransferTransaction => // balances already restored
 
                 case tx: LeaseTransaction =>
                   rollbackLeaseStatus(rw, tx.id(), currentHeight)
@@ -403,9 +402,11 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                       rw.filterHistory(Keys.dataHistory(addressId, e.key), currentHeight)
                     }
                   }
-                case a: AnchorTransaction => // do nothinhg specific
 
-                case _ => ???
+                case tx: IssueAssociationTransaction => // TODO
+                case tx: RevokeAssociationTransaction => // TODO
+
+                case _ => // do nothinhg specific
               }
             }
 
@@ -450,7 +451,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
   override def transactionHeight(id: ByteStr): Option[Int] = readOnly(db => db.get(Keys.transactionHeight(id)))
 
-  override def addressTransactions(address: Address, types: Set[Type], count: Int, from: Int): Seq[(Int, Transaction)] = readOnly { db =>
+  override def addressTransactions(address: Address, types: Set[Byte], count: Int, from: Int): Seq[(Int, Transaction)] = readOnly { db =>
     db.get(Keys.addressId(address)).fold(Seq.empty[(Int, Transaction)]) { addressId =>
       val txs = for {
         seqNr          <- (db.get(Keys.addressTransactionSeqNr(addressId)) to 1 by -1).view
@@ -584,7 +585,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
         }
         .distinct
         .flatMap(txId => transactionInfo(ByteStr(txId)))
-        .map(x => (x._1, x._2.asInstanceOf[IssueAssociationTransaction]))
+        .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
         .toList
 
     Blockchain.Associations(
