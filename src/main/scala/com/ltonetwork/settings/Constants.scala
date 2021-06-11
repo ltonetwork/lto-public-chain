@@ -25,7 +25,7 @@ object Constants extends ScorexLogging {
       (12: Byte) -> "data",
       (13: Byte) -> "set script",
       (15: Byte) -> "anchor",
-      (16: Byte) -> "association",
+      (16: Byte) -> "issue association",
       (17: Byte) -> "revoke association",
       (18: Byte) -> "sponsorship",
       (19: Byte) -> "cancel sponsorship",

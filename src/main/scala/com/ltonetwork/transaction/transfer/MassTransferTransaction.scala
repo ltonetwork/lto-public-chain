@@ -65,13 +65,13 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
       import tx._
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
-        Validated.condNel(chainId != networkByte, None, ValidationError.WrongChainId(chainId)),
+        Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
         Validated.condNel(transfers.lengthCompare(MaxTransferCount) > 0, None, ValidationError.GenericError(s"Number of transfers is greater than $MaxTransferCount")),
-        Validated.condNel(transfers.exists(_.amount < 0), None, ValidationError.GenericError("One of the transfers has negative amount")),
+        Validated.condNel(!transfers.exists(_.amount < 0), None, ValidationError.GenericError("One of the transfers has negative amount")),
         validateTotalAmount(tx),
-        Validated.condNel(attachment.length > TransferTransaction.MaxAttachmentSize, None, ValidationError.TooBigArray),
+        Validated.condNel(attachment.length <= TransferTransaction.MaxAttachmentSize, None, ValidationError.TooBigArray),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
   }

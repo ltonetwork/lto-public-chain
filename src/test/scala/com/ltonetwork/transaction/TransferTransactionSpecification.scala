@@ -34,7 +34,7 @@ class TransferTransactionSpecification extends PropSpec with PropertyChecks with
     }
   }
 
-  property("JSON format validation") {
+  property("JSON format validation V1") {
     val js = Json.parse("""{
                         "type": 4,
                         "id": "512j4tvEqhkuDh8tk9AwbUFUDUeRhyjkKvJTog3q9jtM",
@@ -113,7 +113,7 @@ class TransferTransactionSpecification extends PropSpec with PropertyChecks with
     first.bytes() shouldEqual second.bytes()
   }
 
-  property("JSON format validation") {
+  property("JSON format validation V2") {
     val js = Json.parse("""{
                        "type": 4,
                        "id": "2sYxwfjUWAcJuDThgdaMRk4z3vpmzs3qhhuNb6sBA8JX",

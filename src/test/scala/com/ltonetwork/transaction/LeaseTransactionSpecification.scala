@@ -33,7 +33,7 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
     first.bytes() shouldEqual second.bytes()
   }
 
-  property("JSON format validation for LeaseTransaction") {
+  property("JSON format validation for LeaseTransaction V1") {
     val js = Json.parse("""{
                           |  "type": 8,
                           |  "id": "7EyfHdDiassBQ5ZAyXKefW4743A4HqHSB6DHirVmCUkv",
@@ -66,7 +66,7 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
     js shouldEqual tx.json()
   }
 
-  property("JSON format validation for LeaseTransaction") {
+  property("JSON format validation for LeaseTransaction V2") {
     val js = Json.parse("""{
                         "type": 8,
                         "id": "3EuU5xQrkA6juSGHszb8TJgxbfmoz6Bdrcvu8HQuu2dT",

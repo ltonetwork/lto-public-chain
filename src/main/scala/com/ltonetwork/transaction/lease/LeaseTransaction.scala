@@ -55,12 +55,12 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
       import tx._
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
-        Validated.condNel(chainId != networkByte, None, ValidationError.WrongChainId(chainId)),
+        Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
         Validated.condNel(amount > 0, None, ValidationError.NegativeAmount(amount, "lto")),
         Validated.condNel(Try(Math.addExact(amount, fee)).isSuccess, None, ValidationError.OverflowError),
         Validated.condNel(sender.stringRepr != recipient.stringRepr, None, ValidationError.ToSelf),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(sponsor.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
   }
