@@ -47,9 +47,9 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(hash.exists(_.arr.length > MaxHashLength), None, ValidationError.GenericError(s"Hash length must be <= $MaxHashLength bytes")),
+        Validated.condNel(!hash.exists(_.arr.length > MaxHashLength), None, ValidationError.GenericError(s"Hash length must be <= $MaxHashLength bytes")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(expires.isDefined && version < 3, None, ValidationError.UnsupportedFeature(s"Association expiry is not supported for tx v$version")),
+        Validated.condNel(expires.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Association expiry is not supported for tx v$version")),
         Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }

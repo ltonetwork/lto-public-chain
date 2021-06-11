@@ -66,7 +66,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(transfers.lengthCompare(MaxTransferCount) > 0, None, ValidationError.GenericError(s"Number of transfers is greater than $MaxTransferCount")),
+        Validated.condNel(transfers.lengthCompare(MaxTransferCount) <= 0, None, ValidationError.GenericError(s"Number of transfers is greater than $MaxTransferCount")),
         Validated.condNel(!transfers.exists(_.amount < 0), None, ValidationError.GenericError("One of the transfers has negative amount")),
         validateTotalAmount(tx),
         Validated.condNel(attachment.length <= TransferTransaction.MaxAttachmentSize, None, ValidationError.TooBigArray),

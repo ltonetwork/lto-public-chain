@@ -46,7 +46,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(hash.exists(_.arr.length > MaxHashLength), None, ValidationError.GenericError(s"Hash length must be <= ${MaxHashLength} bytes")),
+        Validated.condNel(!hash.exists(_.arr.length > MaxHashLength), None, ValidationError.GenericError(s"Hash length must be <= ${MaxHashLength} bytes")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )

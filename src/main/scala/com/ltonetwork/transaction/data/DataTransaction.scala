@@ -44,7 +44,7 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(data.lengthCompare(MaxEntryCount) < 0 && data.forall(_.valid), None, ValidationError.TooBigArray),
+        Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), None, ValidationError.TooBigArray),
         Validated.condNel(!data.exists(_.key.isEmpty), None, ValidationError.GenericError("Empty key found")),
         Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, None, ValidationError.GenericError("Duplicate keys found")),
         Validated.condNel(bytes().length <= MaxBytes, tx, ValidationError.TooBigArray),

@@ -4,7 +4,6 @@ import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account._
 import com.ltonetwork.crypto
 import com.ltonetwork.serialization.Deser
-import com.ltonetwork.state._
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.smart.script.{Script, ScriptReader}
 import monix.eval.Coeval
