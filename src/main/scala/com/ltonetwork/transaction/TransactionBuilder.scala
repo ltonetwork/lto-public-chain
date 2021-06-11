@@ -24,7 +24,7 @@ trait TransactionBuilder {
     tx             <- serializer(version).parseBytes(version, bytes.drop(end))
   } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
 
-  protected object UnknownSerializer extends TransactionSerializer.Unknown[TransactionT]
+  protected object UnknownSerializer extends TransactionSerializer.Unknown[TransactionT](typeId)
 }
 
 object TransactionBuilder {

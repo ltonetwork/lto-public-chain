@@ -8,7 +8,7 @@ import com.ltonetwork.state.ByteStr
 
 import scala.util.Either
 
-trait ValidationError extends Throwable
+trait ValidationError
 
 object ValidationError {
   type Validation[T] = Either[ValidationError, T]

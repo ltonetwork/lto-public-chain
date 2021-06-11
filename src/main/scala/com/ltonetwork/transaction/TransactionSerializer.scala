@@ -1,12 +1,13 @@
 package com.ltonetwork.transaction
 
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.transaction.ValidationError.UnsupportedVersion
+import com.ltonetwork.settings.Constants.TransactionNames
 import com.ltonetwork.transaction.Transaction.SigProofsSwitch
 import com.ltonetwork.utils.Base58
 import monix.eval.Coeval
 import play.api.libs.json.{JsArray, JsObject, JsString, Json}
 
+import scala.util.control.NoStackTrace
 import scala.util.{Failure, Try}
 
 trait TransactionSerializer {
@@ -52,12 +53,19 @@ object TransactionSerializer {
     override type TransactionT = T
   }
 
-  abstract class Unknown[T <: Transaction] extends For[T] {
+  case class UnsupportedVersion(typeId: Byte, version: Byte) extends NoStackTrace {
+    override val getMessage: String = {
+      val typeName = TransactionNames(typeId)
+      s"Unsupported version ($version) for {$typeName} transaction"
+    }
+  }
+
+  abstract case class Unknown[T <: Transaction](typeId: Byte) extends For[T] {
     override type TransactionT = T
 
-    def bodyBytes(tx: TransactionT): Coeval[Array[Byte]] = Coeval.raiseError(UnsupportedVersion(tx.version))
-    def toJson(tx: TransactionT): Coeval[JsObject] = Coeval.raiseError(UnsupportedVersion(tx.version))
+    def bodyBytes(tx: TransactionT): Coeval[Array[Byte]] = Coeval.raiseError(UnsupportedVersion(typeId, tx.version))
+    def toJson(tx: TransactionT): Coeval[JsObject] = Coeval.raiseError(UnsupportedVersion(typeId, tx.version))
 
-    def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Failure(UnsupportedVersion(version))
+    def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Failure(UnsupportedVersion(typeId, version))
   }
 }
