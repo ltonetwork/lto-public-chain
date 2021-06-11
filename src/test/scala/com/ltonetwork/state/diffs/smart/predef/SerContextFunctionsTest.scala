@@ -14,7 +14,7 @@ import com.ltonetwork.transaction.transfer.TransferTransaction
 import scorex.crypto.encode.Base64
 
 class SerContextFunctionsTest extends PropSpec with PropertyChecks with Matchers with NoShrink with TransactionGen {
-  property("check serializion of script with all functions") {
+  ignore("check serializion of script with all functions") {
     val ttx = TransferTransaction
       .create(
         2,
