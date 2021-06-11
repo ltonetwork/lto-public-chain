@@ -29,17 +29,18 @@ class TokenFreezeSmartContractSuite extends BaseTransactionSuite with CancelAfte
     val tx =
       TransferTransaction
         .selfSigned(
+          version = 1,
           sender = sender.privateKey,
           recipient = contract,
           amount = 500000000,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee,
+          fee = minFee,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
 
     val transferId = sender
-      .signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt)))
+      .signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransaction.typeId.toInt)))
       .id
     nodes.waitForHeightAriseAndTxPresent(transferId)
   }
@@ -55,7 +56,7 @@ class TokenFreezeSmartContractSuite extends BaseTransactionSuite with CancelAfte
 
     val script = ScriptCompiler(scriptText).explicitGet()
     val setScriptTransaction = SetScriptTransaction
-      .selfSigned(SetScriptTransaction.supportedVersions.head, contract, Some(script._1), 100000000, System.currentTimeMillis())
+      .selfSigned(1, System.currentTimeMillis(), contract, 100000000, Some(script._1))
       .explicitGet()
 
     val setScriptId = sender
@@ -76,14 +77,14 @@ class TokenFreezeSmartContractSuite extends BaseTransactionSuite with CancelAfte
 
   test("step3: can't transfer early") {
     val tx =
-      TransferTransactionV2
+      TransferTransaction
         .selfSigned(
           version = 2,
           sender = contract,
           recipient = other,
           amount = 200000000,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee,
+          fee = minFee,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
@@ -99,19 +100,19 @@ class TokenFreezeSmartContractSuite extends BaseTransactionSuite with CancelAfte
   }
   test("step5: now ok") {
     val tx =
-      TransferTransactionV2
+      TransferTransaction
         .selfSigned(
           version = 2,
           sender = contract,
           recipient = other,
           amount = 200000000,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee + 300000,
+          fee = minFee + 300000,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
     val transferId = sender
-      .signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt)))
+      .signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransaction.typeId.toInt)))
       .id
     nodes.waitForHeightAriseAndTxPresent(transferId)
 

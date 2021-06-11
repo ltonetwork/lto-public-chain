@@ -99,8 +99,8 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
 
   def selfSigned(version: Byte,
                  timestamp: Long,
-                 fee: Long,
                  sender: PrivateKeyAccount,
+                 fee: Long,
                  recipient: AddressOrAlias,
                  amount: Long,
                  attachment: Array[Byte]): Either[ValidationError, TransactionT] =

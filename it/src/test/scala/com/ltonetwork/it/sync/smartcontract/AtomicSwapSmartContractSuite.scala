@@ -102,39 +102,39 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
 
   test("step3: Alice makes transfer to swapBC1") {
     val txToSwapBC1 =
-      TransferTransactionV2
+      TransferTransaction
         .selfSigned(
           version = 2,
           sender = pkByAddress(AliceBC1),
           recipient = AddressOrAlias.fromString(swapBC1).explicitGet(),
           amount = transferAmount + minFee + smartFee,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee + smartFee,
+          fee = minFee + smartFee,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
 
     val transferId = sender
-      .signedBroadcast(txToSwapBC1.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt)))
+      .signedBroadcast(txToSwapBC1.json() + ("type" -> JsNumber(TransferTransaction.typeId.toInt)))
       .id
     node.waitForTransaction(transferId)
   }
 
   test("step4: Alice cannot make transfer from swapBC1 if height is incorrect") {
     val txToSwapBC1 =
-      TransferTransactionV2
+      TransferTransaction
         .selfSigned(
           version = 2,
           sender = pkByAddress(swapBC1),
           recipient = AddressOrAlias.fromString(AliceBC1).explicitGet(),
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee + smartFee,
+          fee = minFee + smartFee,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
 
-    assertBadRequest(sender.signedBroadcast(txToSwapBC1.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))))
+    assertBadRequest(sender.signedBroadcast(txToSwapBC1.json() + ("type" -> JsNumber(TransferTransaction.typeId.toInt))))
   }
 
   test("step5: Bob makes transfer; after revert Alice takes funds back") {
@@ -145,15 +145,17 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
     val (swapBalance, swapEffBalance)   = notMiner.accountBalances(swapBC1)
 
     val unsigned =
-      TransferTransactionV2
+      TransferTransaction
         .create(
           version = 2,
+          chainId = None,
           sender = pkByAddress(swapBC1),
           recipient = AddressOrAlias.fromString(BobBC1).explicitGet(),
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee + smartFee,
+          fee = minFee + smartFee,
           attachment = Array.emptyByteArray,
+          sponsor = None,
           proofs = Proofs.empty
         )
         .explicitGet()
@@ -163,7 +165,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
     val signed   = unsigned.copy(proofs = Proofs(Seq(proof, sigAlice)))
 
     nodes.waitForHeightArise()
-    val versionedTransferId = sender.signedBroadcast(signed.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))).id
+    val versionedTransferId = sender.signedBroadcast(signed.json() + ("type" -> JsNumber(TransferTransaction.typeId.toInt))).id
     node.waitForTransaction(versionedTransferId)
 
     notMiner.assertBalances(swapBC1, swapBalance - transferAmount - (minFee + smartFee), swapEffBalance - transferAmount - (minFee + smartFee))
@@ -177,20 +179,20 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
     notMiner.accountBalances(swapBC1)
     assertNotFoundAndMessage(notMiner.transactionInfo(versionedTransferId), "Transaction is not in blockchain")
 
-    val selfSignedToAlice = TransferTransactionV2
+    val selfSignedToAlice = TransferTransaction
       .selfSigned(
         version = 2,
         sender = pkByAddress(swapBC1),
         recipient = AddressOrAlias.fromString(AliceBC1).explicitGet(),
         amount = transferAmount,
         timestamp = System.currentTimeMillis(),
-        feeAmount = minFee + smartFee,
+        fee = minFee + smartFee,
         attachment = Array.emptyByteArray
       )
       .explicitGet()
 
     val transferToAlice =
-      sender.signedBroadcast(selfSignedToAlice.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))).id
+      sender.signedBroadcast(selfSignedToAlice.json() + ("type" -> JsNumber(TransferTransaction.typeId.toInt))).id
     node.waitForTransaction(transferToAlice)
 
     notMiner.assertBalances(swapBC1, swapBalance - transferAmount - (minFee + smartFee), swapEffBalance - transferAmount - (minFee + smartFee))

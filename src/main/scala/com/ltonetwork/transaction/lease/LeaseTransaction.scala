@@ -90,10 +90,10 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
     create(version, None, timestamp, sender, fee, recipient, amount, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
-                 sender: PrivateKeyAccount,
-                 amount: Long,
-                 fee: Long,
                  timestamp: Long,
-                 recipient: AddressOrAlias): Either[ValidationError, TransactionT] =
+                 sender: PrivateKeyAccount,
+                 fee: Long,
+                 recipient: AddressOrAlias,
+                 amount: Long): Either[ValidationError, TransactionT] =
     signed(version, timestamp, sender, fee, recipient, amount, sender)
 }

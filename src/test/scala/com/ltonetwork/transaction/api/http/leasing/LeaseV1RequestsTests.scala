@@ -3,8 +3,7 @@ package com.ltonetwork.transaction.api.http.leasing
 import com.ltonetwork.api.http.requests.lease.{CancelLeaseV1Request, LeaseV1Request, SignedCancelLeaseV1Request, SignedLeaseV1Request}
 import org.scalatest.{FunSuite, Matchers}
 import play.api.libs.json.Json
-import com.ltonetwork.api.http.requests.signed.SignedLeaseV1Request
-import com.ltonetwork.api.http.requests.unsigned.LeaseCancelV1Request
+import com.ltonetwork.api.http.requests.lease._
 
 class LeaseV1RequestsTests extends FunSuite with Matchers {
 

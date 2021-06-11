@@ -90,10 +90,10 @@ class DataTransactionSpecification extends PropSpec with PropertyChecks with Mat
     import DataTransaction.MaxEntryCount
     import com.ltonetwork.state._
     forAll(dataTransactionGen, dataEntryGen(500)) {
-      case (DataTransaction(version, sender, data, fee, timestamp, proofs), entry) =>
+      case (DataTransaction(version, chainId, timestamp, sender, fee, data, sponsor, proofs), entry) =>
         def check(data: List[DataEntry[_]]): Assertion = {
-          val txEi = DataTransaction.create(version, sender, data, fee, timestamp, proofs)
-          txEi shouldBe Right(transaction.data.DataTransaction(version, sender, data, fee, timestamp, proofs))
+          val txEi = DataTransaction.create(version, Some(chainId), timestamp, sender, fee, data, sponsor, proofs)
+          txEi shouldBe Right(transaction.data.DataTransaction(version, chainId, timestamp, sender, fee, data, sponsor, proofs))
           checkSerialization(txEi.explicitGet())
         }
 
@@ -111,35 +111,35 @@ class DataTransactionSpecification extends PropSpec with PropertyChecks with Mat
   property("negative validation cases") {
     val badVersionGen = Arbitrary.arbByte.arbitrary.filter(v => !DataTransaction.supportedVersions.contains(v))
     forAll(dataTransactionGen, badVersionGen) {
-      case (DataTransaction(version, sender, data, fee, timestamp, proofs), badVersion) =>
-        val badVersionEi = DataTransaction.create(badVersion, sender, data, fee, timestamp, proofs)
+      case (DataTransaction(version, chainId, timestamp, sender, fee, data, sponsor, proofs), badVersion) =>
+        val badVersionEi = DataTransaction.create(badVersion, Some(chainId), timestamp, sender, fee, data, sponsor, proofs)
         badVersionEi shouldBe Left(ValidationError.UnsupportedVersion(badVersion))
 
         val dataTooBig   = List.tabulate(100)(n => StringDataEntry((100 + n).toString, "a" * 1527))
-        val dataTooBigEi = DataTransaction.create(version, sender, dataTooBig, fee, timestamp, proofs)
+        val dataTooBigEi = DataTransaction.create(version, Some(chainId), timestamp, sender, fee, dataTooBig, sponsor, proofs)
         dataTooBigEi shouldBe Left(ValidationError.TooBigArray)
 
         val emptyKey   = List(IntegerDataEntry("", 2))
-        val emptyKeyEi = DataTransaction.create(version, sender, emptyKey, fee, timestamp, proofs)
+        val emptyKeyEi = DataTransaction.create(version, Some(chainId), timestamp, sender, fee, emptyKey, sponsor, proofs)
         emptyKeyEi shouldBe Left(ValidationError.GenericError("Empty key found"))
 
         val keyTooLong   = data :+ BinaryDataEntry("a" * (MaxKeySize + 1), ByteStr(Array(1, 2)))
-        val keyTooLongEi = DataTransaction.create(version, sender, keyTooLong, fee, timestamp, proofs)
+        val keyTooLongEi = DataTransaction.create(version, Some(chainId), timestamp, sender, fee, keyTooLong, sponsor, proofs)
         keyTooLongEi shouldBe Left(ValidationError.TooBigArray)
 
         val valueTooLong   = data :+ BinaryDataEntry("key", ByteStr(Array.fill(MaxValueSize + 1)(1: Byte)))
-        val valueTooLongEi = DataTransaction.create(version, sender, valueTooLong, fee, timestamp, proofs)
+        val valueTooLongEi = DataTransaction.create(version, Some(chainId), timestamp, sender, fee, valueTooLong, sponsor, proofs)
         valueTooLongEi shouldBe Left(ValidationError.TooBigArray)
 
         val e               = BooleanDataEntry("dupe", true)
         val duplicateKeys   = e +: data.drop(3) :+ e
-        val duplicateKeysEi = DataTransaction.create(version, sender, duplicateKeys, fee, timestamp, proofs)
+        val duplicateKeysEi = DataTransaction.create(version, Some(chainId), timestamp, sender, fee, duplicateKeys, sponsor, proofs)
         duplicateKeysEi shouldBe Left(ValidationError.GenericError("Duplicate keys found"))
 
-        val noFeeEi = DataTransaction.create(version, sender, data, 0, timestamp, proofs)
+        val noFeeEi = DataTransaction.create(version, Some(chainId), timestamp, sender, 0, data, sponsor, proofs)
         noFeeEi shouldBe Left(ValidationError.InsufficientFee())
 
-        val negativeFeeEi = DataTransaction.create(version, sender, data, -100, timestamp, proofs)
+        val negativeFeeEi = DataTransaction.create(version, Some(chainId), timestamp, sender, -100, data, sponsor, proofs)
         negativeFeeEi shouldBe Left(ValidationError.InsufficientFee())
     }
   }
@@ -182,10 +182,12 @@ class DataTransactionSpecification extends PropSpec with PropertyChecks with Mat
     val tx = DataTransaction
       .create(
         1,
-        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
-        List(entry1, entry2, entry3),
-        100000,
+        None,
         1526911531530L,
+        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
+        100000,
+        List(entry1, entry2, entry3),
+        None,
         Proofs(Seq(ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get))
       )
       .right

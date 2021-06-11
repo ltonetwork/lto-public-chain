@@ -5,7 +5,7 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.Address
 import com.ltonetwork.settings.FeesSettings
 import com.ltonetwork.state.{ByteStr, _}
-import com.ltonetwork.transaction.association.AssociationTransactionBase
+import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.sponsorship.SponsorshipTransactionBase
@@ -82,7 +82,7 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
 
   property("Association transaction") {
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(assocTransactionGen) { tx: AssociationTransactionBase =>
+    forAll(assocTransactionGen) { tx: AssociationTransaction =>
       feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 100000000)
     }
   }

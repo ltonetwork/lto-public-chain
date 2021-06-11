@@ -23,7 +23,7 @@ class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers
   } yield (genesis, master, ts)
 
   def data(version: Byte, sender: PrivateKeyAccount, data: List[DataEntry[_]], fee: Long, timestamp: Long): DataTransaction =
-    DataTransaction.selfSigned(version, sender, data, fee, timestamp).explicitGet()
+    DataTransaction.selfSigned(version, timestamp, sender, fee, data).explicitGet()
 
   property("state invariants hold") {
     val setup = for {

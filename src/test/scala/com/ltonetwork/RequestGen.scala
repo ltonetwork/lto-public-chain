@@ -2,9 +2,7 @@ package com.ltonetwork
 
 import com.ltonetwork.account.Alias
 import com.ltonetwork.api.http.requests.lease.{SignedCancelLeaseV1Request, SignedLeaseV1Request}
-import com.ltonetwork.api.http.requests.signed._
 import com.ltonetwork.api.http.requests.transfer.{SignedTransferV1Request, TransferV1Request}
-import com.ltonetwork.api.http.requests.unsigned._
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.Base58
 import org.scalacheck.Gen.{alphaNumChar, choose, listOfN, oneOf}

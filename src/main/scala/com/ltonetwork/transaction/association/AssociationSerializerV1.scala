@@ -24,7 +24,7 @@ abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTra
     )
   }
 
-  def parse(version: Byte, bytes: Array[Byte]): Either[ValidationError, (Byte, Long, PublicKeyAccount, Long, Int, Address, Option[ByteStr], Proofs)] = {
+  def parse(version: Byte, bytes: Array[Byte]): Either[ValidationError, (Byte, Long, PublicKeyAccount, Long, Address, Int, Option[ByteStr], Proofs)] = {
     val p0      = KeyLength
     val sender  = PublicKeyAccount(bytes.slice(1, p0 + 1))
 
@@ -37,7 +37,7 @@ abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTra
       timestamp     = Longs.fromByteArray(bytes.drop(s1))
       fee           = Longs.fromByteArray(bytes.drop(s1 + 8))
       proofs <- Proofs.fromBytes(bytes.drop(s1 + 16))
-      result = (version, timestamp, sender, fee, assocType, recipient, hashOpt, proofs)
+      result = (version, timestamp, sender, fee, recipient, assocType, hashOpt, proofs)
     } yield result
   }
 

@@ -33,6 +33,6 @@ case class SignedIssueAssociationV1Request(@ApiModelProperty(required = true)
       _hash       <- if (hash == "") Right(None)
                      else parseBase58(hash, TransactionFactory.IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
       _proofs     <- Proofs.create(_proofBytes)
-      t           <- IssueAssociationTransaction.create(version, None, timestamp, _sender, fee, associationType, _party, None, _hash, None, _proofs)
+      t           <- IssueAssociationTransaction.create(version, None, timestamp, _sender, fee, _party, associationType, None, _hash, None, _proofs)
     } yield t
 }

@@ -47,7 +47,7 @@ object TransactionBuilders {
     }
   }(collection.breakOut)
 
-  private val all: Map[(Byte, Byte), TransactionBuilder] = old.flatMap {
+  val all: Map[(Byte, Byte), TransactionBuilder] = old.flatMap {
     case (typeId, builder) =>
       builder.supportedVersions.map { version =>
         ((typeId, version), builder)

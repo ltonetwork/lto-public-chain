@@ -5,7 +5,7 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
 import com.ltonetwork.settings.Constants
 import com.ltonetwork.state.{Blockchain, ByteStr, EitherExt2}
-import com.ltonetwork.transaction.association.{IssueAssociationTransaction, IssueAssociationTransaction}
+import com.ltonetwork.transaction.association.IssueAssociationTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.Gen
@@ -27,7 +27,7 @@ class IssueAssociationTransactionDiffTest extends PropSpec with PropertyChecks w
       feeOverhead           <- Gen.choose[Long](0, ENOUGH_AMT)
       version               <- Gen.oneOf(IssueAssociationTransaction.supportedVersions.toSeq)
       tx = IssueAssociationTransaction
-        .selfSigned(version, master, party, 42, None, Constants.UnitsInLTO + feeOverhead, ts + 10000)
+        .selfSigned(version, ts + 10000, master, Constants.UnitsInLTO + feeOverhead, party, 42, None, None)
         .explicitGet()
     } yield (genesis, tx)
 
@@ -36,7 +36,7 @@ class IssueAssociationTransactionDiffTest extends PropSpec with PropertyChecks w
         assertDiffAndState(Seq(block(Seq(genesis))), block(Seq(assoc))) {
           case (d, b) =>
             b.associations(assoc.sender) shouldBe Blockchain.Associations(List((2, assoc)), List.empty)
-            b.associations(assoc.assoc.party) shouldBe Blockchain.Associations(List.empty, List((2, assoc)))
+            b.associations(assoc.recipient) shouldBe Blockchain.Associations(List.empty, List((2, assoc)))
         }
     }
   }
@@ -51,20 +51,21 @@ class IssueAssociationTransactionDiffTest extends PropSpec with PropertyChecks w
       genesis1 = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
       genesis2 = GenesisTransaction.create(master2, ENOUGH_AMT, ts).explicitGet()
       feeOverhead <- Gen.choose[Long](0, 100)
-      tx1 = IssueAssociationTransaction
-        .selfSigned(version,
-                    master,
-                    party,
-                    100,
-                    Some(ByteStr.decodeBase58("Fjn9ZkwYx1YuXDskEGDhLA8PdQGgewHRK9PGxYmzy61g").get),
-                    Constants.UnitsInLTO + feeOverhead,
-                    ts + 1)
-        .explicitGet()
+      tx1 = IssueAssociationTransaction.selfSigned(
+        version,
+        ts + 1,
+        master,
+        Constants.UnitsInLTO + feeOverhead,
+        party,
+        100,
+        None,
+        Some(ByteStr.decodeBase58("Fjn9ZkwYx1YuXDskEGDhLA8PdQGgewHRK9PGxYmzy61g").get)
+      ).explicitGet()
       tx2 = IssueAssociationTransaction
-        .selfSigned(version, master, party, 11, None, Constants.UnitsInLTO + feeOverhead, ts + 2)
+        .selfSigned(version, ts + 2, master, Constants.UnitsInLTO + feeOverhead, party, 11, None, None)
         .explicitGet()
       tx3 = IssueAssociationTransaction
-        .selfSigned(version, master2, party, 11, None, Constants.UnitsInLTO + feeOverhead, ts + 3)
+        .selfSigned(version, ts + 3, master2, Constants.UnitsInLTO + feeOverhead, party, 11, None, None)
         .explicitGet()
     } yield (genesis1, genesis2, tx1, tx2, tx3)
 
@@ -73,8 +74,8 @@ class IssueAssociationTransactionDiffTest extends PropSpec with PropertyChecks w
         def assert(s: Seq[Block]) = assertDiffAndState(block(Seq(genesis1, genesis2)) +: s.init, s.last) {
           case (d, b) =>
             withClue("for " + s.map(_.transactionData.size)) {
-              b.associations(tx1.assoc.party).outgoing shouldBe List.empty
-              val incoming = b.associations(tx1.assoc.party).incoming.map(_._2).toSet
+              b.associations(tx1.recipient).outgoing shouldBe List.empty
+              val incoming = b.associations(tx1.recipient).incoming.map(_._2).toSet
               incoming shouldBe Set(tx1, tx2, tx3)
 
               val outgoingMaster1 = b.associations(tx1.sender).outgoing.map(_._2).toSet

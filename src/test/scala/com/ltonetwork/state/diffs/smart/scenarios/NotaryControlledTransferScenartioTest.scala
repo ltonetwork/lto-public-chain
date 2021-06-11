@@ -60,23 +60,23 @@ class NotaryControlledTransferScenartioTest extends PropSpec with PropertyChecks
       typedScript = ScriptV1(CompilerV1(dummyCompilerContext, untypedScript).explicitGet()._1).explicitGet()
 
       kingDataTransaction = DataTransaction
-        .selfSigned(1, king, List(BinaryDataEntry("notary1PK", ByteStr(notary.publicKey))), 1000, ts + 1)
+        .selfSigned(1, ts + 1, king, 1000, List(BinaryDataEntry("notary1PK", ByteStr(notary.publicKey))))
         .explicitGet()
 
       transferFromCompanyToA = TransferTransaction
-        .selfSigned(company, accountA, 1, ts + 20, 1000, Array.empty)
+        .selfSigned(1, ts + 20, company, 1, accountA, 1000, Array.empty)
         .explicitGet()
 
       transferFromAToB = TransferTransaction
-        .selfSigned(accountA, accountB, 1, ts + 30, 1000, Array.empty)
+        .selfSigned(1, ts + 30, accountA, 1, accountB, 1000, Array.empty)
         .explicitGet()
 
       notaryDataTransaction = DataTransaction
-        .selfSigned(1, notary, List(BooleanDataEntry(transferFromAToB.id().base58, true)), 1000, ts + 4)
+        .selfSigned(1, ts + 4, notary, 1000, List(BooleanDataEntry(transferFromAToB.id().base58, true)))
         .explicitGet()
 
       accountBDataTransaction = DataTransaction
-        .selfSigned(1, accountB, List(BooleanDataEntry(transferFromAToB.id().base58, true)), 1000, ts + 5)
+        .selfSigned(1, ts + 5, accountB, 1000, List(BooleanDataEntry(transferFromAToB.id().base58, true)))
         .explicitGet()
     } yield
       (Seq(genesis1, genesis2, genesis3, genesis4, genesis5),

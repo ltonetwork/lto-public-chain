@@ -10,7 +10,7 @@ import com.ltonetwork.it.transactions.BaseTransactionSuite
 import com.ltonetwork.it.util._
 import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.transaction.sponsorship.SponsorshipTransaction
-import com.ltonetwork.transaction.transfer.TransferTransactionV2
+import com.ltonetwork.transaction.transfer.TransferTransaction
 import org.scalatest.CancelAfterFailure
 
 class SponsorshipTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
@@ -25,12 +25,12 @@ class SponsorshipTransactionSuite extends BaseTransactionSuite with CancelAfterF
   test("sponsor pays for sender") {
 
     val topUpPayer =
-      TransferTransactionV2.selfSigned(2, sender.privateKey, payer, 10.lto, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
+      TransferTransaction.selfSigned(2, System.currentTimeMillis(), sender.privateKey, fee, payer, 10.lto, Array.emptyByteArray).explicitGet()
     val topUpSponsor =
-      TransferTransactionV2.selfSigned(2, sender.privateKey, sponsor, 10.lto, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
-    val becomeSponsor = SponsorshipTransaction.selfSigned(1, sponsor, payer, 5 * fee, System.currentTimeMillis()).explicitGet()
+      TransferTransaction.selfSigned(2, System.currentTimeMillis(), sender.privateKey, fee, sponsor, 10.lto, Array.emptyByteArray).explicitGet()
+    val becomeSponsor = SponsorshipTransaction.selfSigned(1, System.currentTimeMillis(), sponsor, 5 * fee, payer).explicitGet()
     val makePayment =
-      TransferTransactionV2.selfSigned(2, payer, recipient, 4.lto, System.currentTimeMillis(), fee, Array.emptyByteArray).explicitGet()
+      TransferTransaction.selfSigned(2, System.currentTimeMillis(), payer, fee, recipient, 4.lto, Array.emptyByteArray).explicitGet()
 
     val topUpPayerId = sender.signedBroadcast(topUpPayer.json()).id
     nodes.waitForHeightAriseAndTxPresent(topUpPayerId)

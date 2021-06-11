@@ -41,7 +41,7 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
       val compilerScript = CompilerV1(dummyCompilerContext, untypedScript).explicitGet()._1
       ScriptV1(compilerScript).explicitGet()
     }
-    setScriptTransaction: SetScriptTransaction = SetScriptTransaction.selfSigned(1, recipient, Some(typedScript), 1000000000L, ts).explicitGet()
+    setScriptTransaction: SetScriptTransaction = SetScriptTransaction.selfSigned(1, ts, recipient, 1000000000L, Some(typedScript)).explicitGet()
 
   } yield (Seq(genesis1, genesis2), setScriptTransaction, transfer)
 

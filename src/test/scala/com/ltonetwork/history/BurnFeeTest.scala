@@ -30,7 +30,7 @@ class BurnFeeTest extends PropSpec with PropertyChecks with DomainScenarioDriven
     amount <- Gen.choose(1000000000L, 100000000000L)
     fee    <- Gen.choose(150000000L, 150000000L)
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    tx                          = TransferTransaction.selfSigned(master, alice, amount, ts, fee, ByteStr.empty.arr).explicitGet()
+    tx                          = TransferTransaction.selfSigned(1, ts, master, fee, alice, amount, ByteStr.empty.arr).explicitGet()
   } yield (genesis, tx)
 
   property("burns exactly 0.1 LTO for 1 transaction") {

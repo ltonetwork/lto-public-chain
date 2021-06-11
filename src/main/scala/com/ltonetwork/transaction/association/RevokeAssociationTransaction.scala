@@ -15,8 +15,8 @@ case class RevokeAssociationTransaction private (version: Byte,
                                                  timestamp: Long,
                                                  sender: PublicKeyAccount,
                                                  fee: Long,
-                                                 assocType: Int,
                                                  recipient: Address,
+                                                 assocType: Int,
                                                  hash: Option[ByteStr],
                                                  sponsor: Option[PublicKeyAccount],
                                                  proofs: Proofs)
@@ -59,8 +59,8 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
         val chainId = bytes(0)
         (for {
           parsed <- parse(version, bytes)
-          (version, timestamp, sender, fee, assocType, recipient, hashOpt, proofs) = parsed
-          tx     <- create(version, Some(chainId), timestamp, sender, fee, assocType, recipient, hashOpt, None, proofs)
+          (version, timestamp, sender, fee, recipient, assocType, hashOpt, proofs) = parsed
+          tx     <- create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, hashOpt, None, proofs)
         } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
       }.flatten
   }
@@ -75,29 +75,29 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             assocType: Int,
              recipient: Address,
+             assocType: Int,
              hash: Option[ByteStr],
              sponsor: Option[PublicKeyAccount],
-             proofs: Proofs): Either[ValidationError, TransactionT] =
-    RevokeAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, assocType, recipient, hash, sponsor, proofs).validatedEither
+             proofs: Proofs): Either[ValidationError, RevokeAssociationTransaction] =
+    RevokeAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, assocType, hash, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             assocType: Int,
              recipient: Address,
+             assocType: Int,
              hash: Option[ByteStr],
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, assocType, recipient, hash, None, Proofs.empty).signWith(signer)
+             signer: PrivateKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
+    create(version, None, timestamp, sender, fee, recipient, assocType, hash, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
                  sender: PrivateKeyAccount,
                  fee: Long,
-                 assocType: Int,
                  recipient: Address,
-                 hash: Option[ByteStr]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, assocType, recipient, hash, sender)
+                 assocType: Int,
+                 hash: Option[ByteStr]): Either[ValidationError, RevokeAssociationTransaction] =
+    signed(version, timestamp, sender, fee, recipient, assocType, hash, sender)
 }

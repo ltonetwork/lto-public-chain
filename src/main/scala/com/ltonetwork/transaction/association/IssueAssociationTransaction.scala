@@ -15,8 +15,8 @@ case class IssueAssociationTransaction private(version: Byte,
                                                timestamp: Long,
                                                sender: PublicKeyAccount,
                                                fee: Long,
-                                               assocType: Int,
                                                recipient: Address,
+                                               assocType: Int,
                                                expires: Option[Long],
                                                hash: Option[ByteStr],
                                                sponsor: Option[PublicKeyAccount],
@@ -61,8 +61,8 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
         val chainId = bytes(0)
         (for {
           parsed <- parse(version, bytes)
-          (version, timestamp, sender, fee, assocType, recipient, hashOpt, proofs) = parsed
-          tx     <- create(version, Some(chainId), timestamp, sender, fee, assocType, recipient, None, hashOpt, None, proofs)
+          (version, timestamp, sender, fee, recipient, assocType, hashOpt, proofs) = parsed
+          tx     <- create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, None, hashOpt, None, proofs)
         } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
       }.flatten
   }
@@ -77,32 +77,32 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             assocType: Int,
              recipient: Address,
+             assocType: Int,
              expires: Option[Long],
              hash: Option[ByteStr],
              sponsor: Option[PublicKeyAccount],
-             proofs: Proofs): Either[ValidationError, TransactionT] =
-    IssueAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, assocType, recipient, expires, hash, sponsor, proofs).validatedEither
+             proofs: Proofs): Either[ValidationError, IssueAssociationTransaction] =
+    IssueAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, assocType, expires, hash, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             assocType: Int,
              recipient: Address,
+             assocType: Int,
              expires: Option[Long],
              hash: Option[ByteStr],
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, assocType, recipient, expires, hash, None, Proofs.empty).signWith(signer)
+             signer: PrivateKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
+    create(version, None, timestamp, sender, fee, recipient, assocType, expires, hash, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
                  sender: PrivateKeyAccount,
                  fee: Long,
-                 assocType: Int,
                  recipient: Address,
+                 assocType: Int,
                  expires: Option[Long],
-                 hash: Option[ByteStr]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, assocType, recipient, expires, hash, sender)
+                 hash: Option[ByteStr]): Either[ValidationError, IssueAssociationTransaction] =
+    signed(version, timestamp, sender, fee, recipient, assocType, expires, hash, sender)
 }

@@ -33,6 +33,6 @@ case class SignedRevokeAssociationV1Request(@ApiModelProperty(required = true)
       _hash       <- if (hash == "") Right(None)
                      else parseBase58(hash, TransactionFactory.IncorectHashMessage, RevokeAssociationTransaction.StringHashLength).map(Some(_))
       _proofs     <- Proofs.create(_proofBytes)
-      t           <- RevokeAssociationTransaction.create(version, None, timestamp, _sender, fee, associationType, _party, _hash, None, _proofs)
+      t           <- RevokeAssociationTransaction.create(version, None, timestamp, _sender, fee, _party, associationType, _hash, None, _proofs)
     } yield t
 }

@@ -402,8 +402,8 @@ object TransactionFactory extends BroadcastRequest {
         request.timestamp.getOrElse(time.getTimestamp()),
         sender,
         request.fee,
-        request.associationType,
         recipient,
+        request.associationType,
         None,
         hash,
         signer
@@ -421,8 +421,8 @@ object TransactionFactory extends BroadcastRequest {
         0,
         sender,
         request.fee,
-        request.associationType,
         recipient,
+        request.associationType,
         None,
         hash,
         None,
@@ -448,8 +448,8 @@ object TransactionFactory extends BroadcastRequest {
         request.timestamp.getOrElse(time.getTimestamp()),
         sender,
         request.fee,
-        request.associationType,
         recipient,
+        request.associationType,
         hash,
         signer
       )
@@ -466,8 +466,8 @@ object TransactionFactory extends BroadcastRequest {
         0,
         sender,
         request.fee,
-        request.associationType,
         recipient,
+        request.associationType,
         hash,
         None,
         Proofs.empty

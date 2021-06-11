@@ -26,20 +26,20 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
 
   test("setup acc0 with 1 lto") {
     val tx =
-      TransferTransactionV2
+      TransferTransaction
         .selfSigned(
           version = 2,
           sender = sender.privateKey,
           recipient = acc0,
           amount = 3 * transferAmount + 3 * (0.00001.lto + 0.00002.lto), // Script fee
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee,
+          fee = minFee,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
 
     val transferId = sender
-      .signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt)))
+      .signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransaction.typeId.toInt)))
       .id
     nodes.waitForHeightAriseAndTxPresent(transferId)
   }
@@ -62,7 +62,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
 
     val script = ScriptV1(scriptText).explicitGet()
     val setScriptTransaction = SetScriptTransaction
-      .selfSigned(SetScriptTransaction.supportedVersions.head, acc0, Some(script), minFee, System.currentTimeMillis())
+      .selfSigned(1, System.currentTimeMillis(), acc0, minFee, Some(script))
       .explicitGet()
 
     val setScriptId = sender
@@ -83,31 +83,33 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
 
   test("can't send from acc0 using old pk") {
     val tx =
-      TransferTransactionV2
+      TransferTransaction
         .selfSigned(
           version = 2,
           sender = acc0,
           recipient = acc3,
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee + 0.00001.lto + 0.00002.lto,
+          fee = minFee + 0.00001.lto + 0.00002.lto,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
-    assertBadRequest(sender.signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))))
+    assertBadRequest(sender.signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransaction.typeId.toInt))))
   }
 
   test("can send from acc0 using multisig of acc1 and acc2") {
     val unsigned =
-      TransferTransactionV2
+      TransferTransaction
         .create(
           version = 2,
+          chainId = None,
           sender = acc0,
           recipient = acc3,
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee + 0.004.lto,
+          fee = minFee + 0.004.lto,
           attachment = Array.emptyByteArray,
+          sponsor = None,
           proofs = Proofs.empty
         )
         .explicitGet()
@@ -117,7 +119,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
     val signed = unsigned.copy(proofs = Proofs(Seq(sig1, sig2)))
 
     val versionedTransferId =
-      sender.signedBroadcast(signed.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))).id
+      sender.signedBroadcast(signed.json() + ("type" -> JsNumber(TransferTransaction.typeId.toInt))).id
 
     nodes.waitForHeightAriseAndTxPresent(versionedTransferId)
   }
@@ -126,10 +128,12 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
     val unsigned = SetScriptTransaction
       .create(
         version = SetScriptTransaction.supportedVersions.head,
+        chainId = None,
         sender = acc0,
         script = None,
         fee = minFee + 0.004.lto,
         timestamp = System.currentTimeMillis(),
+        sponsor = None,
         proofs = Proofs.empty
       )
       .explicitGet()
@@ -146,18 +150,18 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
 
   test("can send using old pk of acc0") {
     val tx =
-      TransferTransactionV2
+      TransferTransaction
         .selfSigned(
           version = 2,
           sender = acc0,
           recipient = acc3,
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
-          feeAmount = minFee + 0.004.lto,
+          fee = minFee + 0.004.lto,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
-    val txId = sender.signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))).id
+    val txId = sender.signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransaction.typeId.toInt))).id
     nodes.waitForHeightAriseAndTxPresent(txId)
   }
 }

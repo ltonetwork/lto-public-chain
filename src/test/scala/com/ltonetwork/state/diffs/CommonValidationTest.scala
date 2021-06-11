@@ -17,7 +17,7 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
 //    acc <- otherAccountGen(candidate = master)
 //    ts        <- positiveIntGen
 //    genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-//   funding  = TransferTransactionV2.selfSigned(2,master,acc, ENOUGH_AMT/2,ts, 100*1000*1000,Array.emptyByteArray )
+//   funding  = TransferTransaction.selfSigned(2,master,acc, ENOUGH_AMT/2,ts, 100*1000*1000,Array.emptyByteArray )
 //  } yield (genesis, funding)
 
   property("disallows double spending") {

@@ -34,22 +34,24 @@ class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with
 
   private val transferLtoTx = TransferTransaction
     .selfSigned(
+      version = 1,
       sender = PrivateKeyAccount("sender".getBytes()),
       recipient = PrivateKeyAccount("recipient".getBytes()),
       amount = 1,
       timestamp = System.currentTimeMillis(),
-      feeAmount = 100000,
+      fee = 100000,
       attachment = Array.emptyByteArray
     )
     .explicitGet()
 
   private val transferAssetsTx = TransferTransaction
     .selfSigned(
+      version = 1,
       sender = PrivateKeyAccount("sender".getBytes()),
       recipient = PrivateKeyAccount("recipient".getBytes()),
       amount = 1,
       timestamp = System.currentTimeMillis(),
-      feeAmount = 100000,
+      fee = 100000,
       attachment = Array.emptyByteArray
     )
     .explicitGet()

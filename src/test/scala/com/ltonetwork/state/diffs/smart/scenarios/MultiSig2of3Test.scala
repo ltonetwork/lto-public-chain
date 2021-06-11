@@ -41,8 +41,8 @@ class MultiSig2of3Test extends PropSpec with PropertyChecks with Matchers with T
     CompilerV1(dummyCompilerContext, untyped).explicitGet()._1
   }
 
-  val preconditionsAndTransfer: Gen[(GenesisTransaction, SetScriptTransaction, TransferTransactionV2, Seq[ByteStr])] = for {
-    version   <- Gen.oneOf(TransferTransactionV2.supportedVersions.toSeq)
+  val preconditionsAndTransfer: Gen[(GenesisTransaction, SetScriptTransaction, TransferTransaction, Seq[ByteStr])] = for {
+    version   <- Gen.oneOf(TransferTransaction.supportedVersions.toSeq)
     master    <- accountGen
     s0        <- accountGen
     s1        <- accountGen
@@ -56,8 +56,8 @@ class MultiSig2of3Test extends PropSpec with PropertyChecks with Matchers with T
     timestamp <- timestampGen
   } yield {
     val unsigned =
-      TransferTransactionV2
-        .create(version, master, recepient, amount, timestamp, fee, Array.emptyByteArray, proofs = Proofs.empty)
+      TransferTransaction
+        .create(version, None, timestamp, master, fee, recepient, amount, Array.emptyByteArray, None, Proofs.empty)
         .explicitGet()
     val sig0 = ByteStr(crypto.sign(s0, unsigned.bodyBytes()))
     val sig1 = ByteStr(crypto.sign(s1, unsigned.bodyBytes()))

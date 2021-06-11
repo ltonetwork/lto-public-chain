@@ -78,14 +78,14 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
   test("invalid transfer should not be in UTX or blockchain") {
     import com.ltonetwork.transaction.transfer._
 
-    def request(version: Byte = MassTransferTransaction.version,
+    def request(version: Byte = 1,
                 transfers: List[Transfer] = List(Transfer(secondAddress, transferAmount)),
                 fee: Long = calcMassTransferFee(1),
                 timestamp: Long = System.currentTimeMillis,
                 attachment: Array[Byte] = Array.emptyByteArray) = {
       val txEi = for {
         parsedTransfers <- MassTransferTransaction.parseTransfersList(transfers)
-        tx              <- MassTransferTransaction.selfSigned(version, sender.privateKey, parsedTransfers, timestamp, fee, attachment)
+        tx              <- MassTransferTransaction.selfSigned(version, timestamp, sender.privateKey, fee, parsedTransfers, attachment)
       } yield tx
 
       val (signature, idOpt) = txEi.fold(_ => (List(fakeSignature), None), tx => (tx.proofs.base58().toList, Some(tx.id())))
@@ -143,7 +143,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
       val rs = sender.postJsonWithApiKey(
         "/transactions/sign",
         Json.obj("type"      -> MassTransferTransaction.typeId,
-                 "version"   -> MassTransferTransaction.version,
+                 "version"   -> 1,
                  "sender"    -> firstAddress,
                  "transfers" -> transfers,
                  "fee"       -> fee)

@@ -6,11 +6,11 @@ import org.scalacheck.Gen
 import org.scalatest.{Matchers, PropSpec}
 import org.scalatest.prop.PropertyChecks
 import com.ltonetwork.account.{Address, Alias}
-import com.ltonetwork.transaction.{ProvenTransaction, VersionedTransaction}
+import com.ltonetwork.transaction.Transaction
 import play.api.libs.json.Json // For string escapes.
 
 class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
-  def provenPart(t: ProvenTransaction): String = {
+  def provenPart(t: Transaction): String = {
     def pg(i: Int) = s"let proof$i = t.proofs[$i] == base58'${t.proofs.proofs.applyOrElse(i, (_: Int) => ByteStr.empty).base58}'"
     s"""
        |   let id = t.id == base58'${t.id().base58}'
@@ -19,10 +19,7 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
        |   let bodyBytes = t.bodyBytes == base64'${ByteStr(t.bodyBytes.apply()).base64}'
        |   let sender = t.sender == addressFromPublicKey(base58'${ByteStr(t.sender.publicKey).base58}')
        |   let senderPublicKey = t.senderPublicKey == base58'${ByteStr(t.sender.publicKey).base58}'
-       |   let version = t.version == ${t match {
-         case v: VersionedTransaction => v.version
-         case _                       => 1
-       }}
+       |   let version = t.version == ${t.version}
        |   ${Range(0, 8).map(pg).mkString("\n")}
      """.stripMargin
   }

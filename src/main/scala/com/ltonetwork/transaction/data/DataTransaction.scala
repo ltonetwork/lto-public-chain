@@ -79,8 +79,8 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
 
   def selfSigned(version: Byte,
                  timestamp: Long,
-                 fee: Long,
                  sender: PrivateKeyAccount,
+                 fee: Long,
                  data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
     signed(version, timestamp, sender, fee, data, sender)
 }

@@ -62,7 +62,7 @@ class TransactionsRouteSpec
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
           (responseAs[JsObject] \ "feeAssetId").asOpt[String] shouldBe empty
-          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 100 * 1000 * 1000L
+          (responseAs[JsObject] \ "fee").as[Long] shouldEqual 100 * 1000 * 1000L
         }
       }
 
@@ -95,7 +95,7 @@ class TransactionsRouteSpec
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
           (responseAs[JsObject] \ "feeAssetId").asOpt[String] shouldBe empty
-          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual (100 * 1000 * 1000L + 2 * 10 * 1000 * 1000L)
+          (responseAs[JsObject] \ "fee").as[Long] shouldEqual (100 * 1000 * 1000L + 2 * 10 * 1000 * 1000L)
         }
       }
     }
@@ -166,7 +166,7 @@ class TransactionsRouteSpec
         Get(routePath("/unconfirmed")) ~> route ~> check {
           val resp = responseAs[Seq[JsValue]]
           for ((r, t) <- resp.zip(txs)) {
-            (r \ "signature").as[String] shouldEqual t.signature.base58
+            (r \ "signature").as[String] shouldEqual t.proofs.toSignature.base58 // Todo: also test with proofs
           }
         }
       }

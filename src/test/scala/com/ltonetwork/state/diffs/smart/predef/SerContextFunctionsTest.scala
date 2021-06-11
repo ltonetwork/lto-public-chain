@@ -10,20 +10,22 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.transaction.Proofs
-import com.ltonetwork.transaction.transfer.TransferTransactionV2
+import com.ltonetwork.transaction.transfer.TransferTransaction
 import scorex.crypto.encode.Base64
 
 class SerContextFunctionsTest extends PropSpec with PropertyChecks with Matchers with NoShrink with TransactionGen {
   property("check serializion of script with all functions") {
-    val ttx = TransferTransactionV2
+    val ttx = TransferTransaction
       .create(
         2,
+        None,
+        1526641218066L,
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").right.get,
+        100000000,
         Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").right.get,
         100000000,
-        1526641218066L,
-        100000000,
         Base58.decode("4t2Xazb2SX").get,
+        None,
         Proofs(Seq(ByteStr.decodeBase58("4bfDaqBcnK3hT8ywFEFndxtS1DTSYfncUqd4s5Vyaa66PZHawtC73rDswUur6QZu5RpqM7L9NFgBHT1vhCoox4vi").get))
       )
       .right

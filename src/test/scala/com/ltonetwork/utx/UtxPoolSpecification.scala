@@ -13,6 +13,7 @@ import com.ltonetwork.settings._
 import com.ltonetwork.state.diffs._
 import com.ltonetwork.state.{ByteStr, EitherExt2, _}
 import com.ltonetwork.transaction.ValidationError.SenderIsBlacklisted
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
@@ -68,14 +69,14 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
       amount    <- chooseNum(1, (maxAmount * 0.9).toLong)
       recipient <- accountGen
       fee       <- chooseNum(extraFee, (maxAmount * 0.1).toLong)
-    } yield TransferTransaction.selfSigned(sender, recipient, amount, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet())
+    } yield TransferTransaction.selfSigned(1, time.getTimestamp(), sender, fee, recipient, amount, Array.empty[Byte]).explicitGet())
       .label("transferTransaction")
 
   private def transferWithRecipient(sender: PrivateKeyAccount, recipient: PublicKeyAccount, maxAmount: Long, time: Time) =
     (for {
       amount <- chooseNum(1, (maxAmount * 0.9).toLong)
       fee    <- chooseNum(extraFee, (maxAmount * 0.1).toLong)
-    } yield TransferTransaction.selfSigned(sender, recipient, amount, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet())
+    } yield TransferTransaction.selfSigned(1, time.getTimestamp(), sender, fee, recipient, amount, Array.empty[Byte]).explicitGet())
       .label("transferWithRecipient")
 
   private def massTransferWithRecipients(sender: PrivateKeyAccount, recipients: List[PublicKeyAccount], maxAmount: Long, time: Time) = {
@@ -84,8 +85,8 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
     val txs = for {
       version <- Gen.oneOf(MassTransferTransaction.supportedVersions.toSeq)
       fee = extraFee + amount * extraFee / 10
-    } yield MassTransferTransaction.selfSigned(version, sender, transfers, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet()
-    txs.label("transferWithRecipient")
+    } yield MassTransferTransaction.selfSigned(version, time.getTimestamp(), sender, fee, transfers, Array.empty[Byte]).explicitGet()
+    txs.label("massTransferWithRecipients")
   }
 
   private def mkCalculator(blockchain: Blockchain) = new FeeCalculator(calculatorSettings, blockchain)
@@ -232,7 +233,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
       version <- Gen.oneOf(SetScriptTransaction.supportedVersions.toSeq)
       ts      <- timestampGen
     } yield {
-      val setScript = SetScriptTransaction.selfSigned(version, master, Some(script), 100000000, ts + 1).explicitGet()
+      val setScript = SetScriptTransaction.selfSigned(version, ts + 1, master, 100000000, Some(script)).explicitGet()
       Seq(TestBlock.create(ts + 1, lastBlockId, Seq(setScript)))
     }
 
@@ -253,20 +254,20 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
     (sender, senderBalance, utx, bcu.lastBlock.fold(0L)(_.timestamp))
   }
 
-  private def transactionGen(sender: PrivateKeyAccount, ts: Long, feeAmount: Long): Gen[TransferTransactionV2] = accountGen.map { recipient =>
-    TransferTransactionV2.selfSigned(2: Byte, sender, recipient, lto(1), ts, feeAmount, Array.emptyByteArray).explicitGet()
+  private def transactionGen(sender: PrivateKeyAccount, ts: Long, fee: Long): Gen[TransferTransaction] = accountGen.map { recipient =>
+    TransferTransaction.selfSigned(2: Byte, ts, sender, fee, recipient, lto(1), Array.emptyByteArray).explicitGet()
   }
 
   private val notEnoughFeeTxWithScriptedAccount = for {
     (sender, _, utx, ts) <- withScriptedAccount
-    feeAmount = 100 * 1000 * 1000 - 1
-    tx <- transactionGen(sender, ts + 1, feeAmount)
+    fee = 100 * 1000 * 1000 - 1
+    tx <- transactionGen(sender, ts + 1, fee)
   } yield (utx, tx)
 
   private val enoughFeeTxWithScriptedAccount = for {
     (sender, senderBalance, utx, ts) <- withScriptedAccount
-    feeAmount                        <- choose(100 * 1000 * 1000, 2 * 100 * 1000 * 1000)
-    tx                               <- transactionGen(sender, ts + 1, feeAmount)
+    fee                        <- choose(100 * 1000 * 1000, 2 * 100 * 1000 * 1000)
+    tx                               <- transactionGen(sender, ts + 1, fee)
   } yield (utx, tx)
 
   "UTX Pool" - {

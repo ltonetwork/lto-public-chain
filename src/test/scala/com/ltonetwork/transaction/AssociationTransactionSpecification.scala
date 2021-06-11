@@ -4,7 +4,7 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.association.SignedIssueAssociationV1Request
 import com.ltonetwork.state.{ByteStr, EitherExt2}
-import com.ltonetwork.transaction.association.{AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.utils.Base58
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
@@ -12,9 +12,9 @@ import play.api.libs.json.{Format, Json}
 
 import scala.util.Try
 
-class IssueAssociationTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class AssociationTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
-  private def checkSerialization(tx: AssociationTransactionBase, parser: Array[Byte] => Try[AssociationTransactionBase]): Assertion = {
+  private def checkSerialization(tx: AssociationTransaction, parser: Array[Byte] => Try[AssociationTransaction]): Assertion = {
     val parsed = parser(tx.bytes()).get
 
     parsed.sender.address shouldEqual tx.sender.address
@@ -33,12 +33,12 @@ class IssueAssociationTransactionSpecification extends PropSpec with PropertyChe
   }
 
   property("serialization from TypedTransaction") {
-    forAll(issueGen) { tx: AssociationTransactionBase =>
+    forAll(issueGen) { tx: AssociationTransaction =>
       val recovered = IssueAssociationTransaction.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
     }
 
-    forAll(revokeGen) { tx: AssociationTransactionBase =>
+    forAll(revokeGen) { tx: AssociationTransaction =>
       val recovered = RevokeAssociationTransaction.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
     }
@@ -55,10 +55,10 @@ class IssueAssociationTransactionSpecification extends PropSpec with PropertyChe
       req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
       req.timestamp shouldEqual tx.timestamp
-      req.associationType shouldEqual tx.assoc.assocType
-      req.party shouldEqual tx.assoc.party.toString
-      if (tx.assoc.hash.isDefined)
-        req.hash shouldEqual tx.assoc.hash.get.base58
+      req.associationType shouldEqual tx.assocType
+      req.party shouldEqual tx.recipient.toString
+      if (tx.hash.isDefined)
+        req.hash shouldEqual tx.hash.get.base58
     }
   }
 
@@ -85,12 +85,15 @@ class IssueAssociationTransactionSpecification extends PropSpec with PropertyChe
     val tx = IssueAssociationTransaction
       .create(
         version = 1,
+        chainId = None,
         sender = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
-        party = p,
+        recipient = p,
         assocType = 420,
         hash = None,
-        feeAmount = 100000,
+        fee = 100000,
         timestamp = 1526911531530L,
+        expires = None,
+        sponsor = None,
         proofs = Proofs(Seq(arr))
       )
       .explicitGet()

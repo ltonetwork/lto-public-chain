@@ -17,8 +17,8 @@ class TransferTransactionDiffTest extends PropSpec with PropertyChecks with Matc
     recepient <- otherAccountGen(candidate = master)
     ts        <- positiveIntGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    transferV1 <- transferGeneratorP(master, recepient, None, None)
-    transferV2 <- versionedTransferGeneratorP(master, recepient, None, None)
+    transferV1 <- transferGeneratorP(master, recepient)
+    transferV2 <- versionedTransferGeneratorP(master, recepient)
     transfer   <- Gen.oneOf(transferV1, transferV2)
   } yield (genesis, transfer)
 
@@ -42,8 +42,8 @@ class TransferTransactionDiffTest extends PropSpec with PropertyChecks with Matc
       recepient <- otherAccountGen(master)
       ts        <- positiveIntGen
       genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-      transferV1 <- transferGeneratorP(master, recepient, None, None)
-      transferV2 <- transferGeneratorP(master, recepient, None, None)
+      transferV1 <- transferGeneratorP(master, recepient)
+      transferV2 <- transferGeneratorP(master, recepient)
       transfer   <- Gen.oneOf(transferV1, transferV2)
     } yield (genesis, transfer)
   }

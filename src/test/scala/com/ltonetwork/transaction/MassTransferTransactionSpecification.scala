@@ -6,7 +6,7 @@ import org.scalacheck.Arbitrary
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.Json
-import com.ltonetwork.account.PublicKeyAccount
+import com.ltonetwork.account.{AddressScheme, PublicKeyAccount}
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.{MaxTransferCount, ParsedTransfer, Transfer}
 import com.ltonetwork.transaction.transfer._
@@ -45,35 +45,35 @@ class MassTransferTransactionSpecification extends PropSpec with PropertyChecks 
 
     val badVersionGen = Arbitrary.arbByte.arbitrary.filter(x => !MassTransferTransaction.supportedVersions.contains(x))
     forAll(massTransferGen, badVersionGen) {
-      case (MassTransferTransaction(version, sender, transfers, timestamp, fee, attachment, proofs), badVersion) =>
-        val badVersionEi = create(badVersion, sender, transfers, timestamp, fee, attachment, proofs)
+      case (MassTransferTransaction(version, networkByte, timestamp, sender, fee, transfers, attachment, sponsor, proofs), badVersion) =>
+        val badVersionEi = create(badVersion, Some(networkByte), timestamp, sender, fee, transfers, attachment, sponsor, proofs)
         badVersionEi shouldBe Left(ValidationError.UnsupportedVersion(badVersion))
 
         val tooManyTransfers   = List.fill(MaxTransferCount + 1)(ParsedTransfer(sender.toAddress, 1L))
-        val tooManyTransfersEi = create(version, sender, tooManyTransfers, timestamp, fee, attachment, proofs)
+        val tooManyTransfersEi = create(version, Some(networkByte), timestamp, sender, fee, tooManyTransfers, attachment, sponsor, proofs)
         tooManyTransfersEi shouldBe Left(GenericError(s"Number of transfers is greater than $MaxTransferCount"))
 
         val negativeTransfer   = List(ParsedTransfer(sender.toAddress, -1L))
-        val negativeTransferEi = create(version, sender, negativeTransfer, timestamp, fee, attachment, proofs)
+        val negativeTransferEi = create(version, Some(networkByte), timestamp, sender, fee, negativeTransfer, attachment, sponsor, proofs)
         negativeTransferEi shouldBe Left(GenericError("One of the transfers has negative amount"))
 
         val oneHalf    = Long.MaxValue / 2 + 1
         val overflow   = List.fill(2)(ParsedTransfer(sender.toAddress, oneHalf))
-        val overflowEi = create(version, sender, overflow, timestamp, fee, attachment, proofs)
+        val overflowEi = create(version, Some(networkByte), timestamp, sender, fee, overflow, attachment, sponsor, proofs)
         overflowEi shouldBe Left(ValidationError.OverflowError)
 
         val feeOverflow   = List(ParsedTransfer(sender.toAddress, oneHalf))
-        val feeOverflowEi = create(version, sender, feeOverflow, timestamp, oneHalf, attachment, proofs)
+        val feeOverflowEi = create(version, Some(networkByte), timestamp, sender, oneHalf, feeOverflow, attachment, sponsor, proofs)
         feeOverflowEi shouldBe Left(ValidationError.OverflowError)
 
         val longAttachment   = Array.fill(TransferTransaction.MaxAttachmentSize + 1)(1: Byte)
-        val longAttachmentEi = create(version, sender, transfers, timestamp, fee, longAttachment, proofs)
+        val longAttachmentEi = create(version, Some(networkByte), timestamp, sender, fee, transfers, longAttachment, sponsor, proofs)
         longAttachmentEi shouldBe Left(ValidationError.TooBigArray)
 
-        val noFeeEi = create(version, sender, feeOverflow, timestamp, 0, attachment, proofs)
+        val noFeeEi = create(version, Some(networkByte), timestamp, sender, 0, transfers, attachment, sponsor, proofs)
         noFeeEi shouldBe Left(ValidationError.InsufficientFee())
 
-        val negativeFeeEi = create(version, sender, feeOverflow, timestamp, -100, attachment, proofs)
+        val negativeFeeEi = create(version, Some(networkByte), timestamp, sender, -100, transfers, attachment, sponsor, proofs)
         negativeFeeEi shouldBe Left(ValidationError.InsufficientFee())
     }
   }
@@ -114,11 +114,13 @@ class MassTransferTransactionSpecification extends PropSpec with PropertyChecks 
     val tx = MassTransferTransaction
       .create(
         1,
-        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
-        transfers,
+        None,
         1518091313964L,
+        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         200000,
+        transfers,
         Base58.decode("59QuUcqP6p").get,
+        None,
         Proofs(Seq(ByteStr.decodeBase58("FXMNu3ecy5zBjn9b69VtpuYRwxjCbxdkZ3xZpLzB8ZeFDvcgTkmEDrD29wtGYRPtyLS3LPYrL2d5UM6TpFBMUGQ").get))
       )
       .right

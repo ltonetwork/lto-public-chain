@@ -4,7 +4,7 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.sponsorship.SignedSponsorshipV1Request
 import com.ltonetwork.state.{ByteStr, EitherExt2}
-import com.ltonetwork.transaction.sponsorship.{SponsorshipCancelTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
+import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
 import com.ltonetwork.utils.Base58
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
@@ -27,7 +27,7 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
 
   property("serialization roundtrip") {
     forAll(sponsorshipGen)(tx => checkSerialization(tx, SponsorshipTransaction.parseBytes))
-    forAll(sponsorshipCancelGen)(tx => checkSerialization(tx, SponsorshipCancelTransaction.parseBytes))
+    forAll(sponsorshipCancelGen)(tx => checkSerialization(tx, CancelSponsorshipTransaction.parseBytes))
   }
 
   property("serialization from TypedTransaction") {
@@ -37,7 +37,7 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
     }
 
     forAll(sponsorshipCancelGen) { tx: SponsorshipTransactionBase =>
-      val recovered = SponsorshipCancelTransaction.parseBytes(tx.bytes()).get
+      val recovered = CancelSponsorshipTransaction.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
     }
   }
@@ -78,10 +78,12 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
     val tx = SponsorshipTransaction
       .create(
         version = 1,
+        chainId = None,
         sender = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         recipient = p,
-        feeAmount = 100000,
+        fee = 100000,
         timestamp = 1526911531530L,
+        sponsor = None,
         proofs = Proofs(Seq(arr))
       )
       .explicitGet()

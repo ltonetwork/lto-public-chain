@@ -39,7 +39,7 @@ object StateSyntheticBenchmark {
       for {
         amount    <- Gen.choose(1, lto(1))
         recipient <- accountGen
-      } yield TransferTransaction.selfSigned(sender, recipient, amount, ts, 100000, Array.emptyByteArray).explicitGet()
+      } yield TransferTransaction.selfSigned(1, ts, sender, 100000, recipient, amount, Array.emptyByteArray).explicitGet()
   }
 
   @State(Scope.Benchmark)
@@ -54,14 +54,14 @@ object StateSyntheticBenchmark {
         recipient: PrivateKeyAccount <- accountGen
         amount                       <- Gen.choose(1, lto(1))
       } yield
-        TransferTransactionV2
+        TransferTransaction
           .selfSigned(
-            TransferTransactionV2.supportedVersions.head,
+            2,
+            ts,
             sender,
+            1000000,
             recipient.toAddress,
             amount,
-            ts,
-            1000000,
             Array.emptyByteArray
           )
           .explicitGet()
@@ -78,11 +78,11 @@ object StateSyntheticBenchmark {
         Seq(
           SetScriptTransaction
             .selfSigned(
-              SetScriptTransaction.supportedVersions.head,
+              1,
+              System.currentTimeMillis(),
               richAccount,
-              Some(ScriptV1(typedScript).explicitGet()),
               1000000,
-              System.currentTimeMillis()
+              Some(ScriptV1(typedScript).explicitGet())
             )
             .explicitGet()
         )
