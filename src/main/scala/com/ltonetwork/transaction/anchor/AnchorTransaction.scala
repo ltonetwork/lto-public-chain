@@ -29,7 +29,7 @@ case class AnchorTransaction private(version: Byte,
 object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
 
   override val typeId: Byte                 = 15
-  override val supportedVersions: Set[Byte] = Set(1, 3)
+  override val supportedVersions: Set[Byte] = Set(1)
 
   val EntryLength: List[Int] = List(16, 20, 32, 48, 64)
   val NewMaxEntryLength: Int = 64

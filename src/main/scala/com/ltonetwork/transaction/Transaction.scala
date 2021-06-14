@@ -25,10 +25,10 @@ trait Transaction extends BytesSerializable with JsonSerializable {
   def proofs: Proofs
 
   protected def prefixByte: Array[Byte] = Array(0: Byte)
-  protected def footerBytes: Array[Byte] = Bytes.concat(
-    sponsor.map(account => Bytes.concat(Array(account.keyType.id), account.publicKey)).getOrElse(Array(0: Byte)),
-    proofs.bytes()
-  )
+  private def sponsorBytes: Array[Byte] =
+    if (version >= 3) sponsor.map(account => Bytes.concat(Array(account.keyType.id), account.publicKey)).getOrElse(Array(0: Byte))
+    else Array.emptyByteArray
+  protected def footerBytes: Array[Byte] = Bytes.concat(sponsorBytes, proofs.bytes())
   val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(prefixByte, bodyBytes(), footerBytes))
 
   override def toString: String = json().toString()
@@ -43,7 +43,7 @@ trait Transaction extends BytesSerializable with JsonSerializable {
 
 object Transaction {
   trait HardcodedV1 extends Transaction {
-    override protected def prefixByte: Array[Byte] = if (this.version == 1) Array() else Array(0: Byte)
+    override protected def prefixByte: Array[Byte] = if (this.version == 1) Array.emptyByteArray else Array(0: Byte)
   }
 
   trait SigProofsSwitch extends Transaction {
