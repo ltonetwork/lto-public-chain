@@ -58,7 +58,7 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => AnchorSerializerV1
-    case 3 => AnchorSerializerV3
+    //case 3 => AnchorSerializerV3
     case _ => UnknownSerializer
   }
 

@@ -391,9 +391,7 @@ trait TransactionGenBase extends ScriptGen {
     version   <- Gen.oneOf(AnchorTransaction.supportedVersions.toSeq)
     fee = 15000000
     anchors = data.map(ByteStr(_))
-  } yield {
-    AnchorTransaction.selfSigned(version, timestamp, sender, fee, anchors).explicitGet()
-  }
+  } yield AnchorTransaction.selfSigned(version, timestamp, sender, fee, anchors).explicitGet()
 
   val assocTransactionGen: Gen[AssociationTransaction] = for {
     sender    <- accountGen
@@ -421,7 +419,7 @@ trait TransactionGenBase extends ScriptGen {
     fee       <- smallFeeGen
   } yield SponsorshipTransaction.selfSigned(version, timestamp, sender, fee, recipient).explicitGet()
 
-  val sponsorshipCancelGen: Gen[CancelSponsorshipTransaction] = for {
+  val cancelSponsorshipGen: Gen[CancelSponsorshipTransaction] = for {
     sender    <- accountGen
     timestamp <- timestampGen
     version   <- Gen.oneOf(CancelSponsorshipTransaction.supportedVersions.toSeq)

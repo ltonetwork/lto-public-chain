@@ -27,7 +27,7 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
 
   property("serialization roundtrip") {
     forAll(sponsorshipGen)(tx => checkSerialization(tx, SponsorshipTransaction.parseBytes))
-    forAll(sponsorshipCancelGen)(tx => checkSerialization(tx, CancelSponsorshipTransaction.parseBytes))
+    forAll(cancelSponsorshipGen)(tx => checkSerialization(tx, CancelSponsorshipTransaction.parseBytes))
   }
 
   property("serialization from TypedTransaction") {
@@ -36,7 +36,7 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
       recovered.bytes() shouldEqual tx.bytes()
     }
 
-    forAll(sponsorshipCancelGen) { tx: SponsorshipTransactionBase =>
+    forAll(cancelSponsorshipGen) { tx: SponsorshipTransactionBase =>
       val recovered = CancelSponsorshipTransaction.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
     }

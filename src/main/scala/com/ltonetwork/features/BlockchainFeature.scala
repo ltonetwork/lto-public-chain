@@ -6,19 +6,19 @@ object BlockchainFeatures {
 
   val UnknownFeature = "Unknown feature"
 
-  val DUMMY_FOR_TESTS_SmallerMinimalGeneratingBalance = BlockchainFeature(1, "Minimum Generating Balance of 1000 LTO")
-  val SmartAccounts                                   = BlockchainFeature(4, "Smart Accounts")
-  val AssociationTransaction                          = BlockchainFeature(10, "Association Transaction")
-  val SponsorshipTransaction                          = BlockchainFeature(11, "Sponsorship Transaction")
-  val BurnFeeture                                     = BlockchainFeature(12, "Partial Fee Burn")
-  val TransactionsV3                                  = BlockchainFeature(13, "Transactions v3")
+  val SmallerMinimalGeneratingBalance: BlockchainFeature = BlockchainFeature(1, "Minimum Generating Balance of 1000 LTO")
+  val SmartAccounts: BlockchainFeature                   = BlockchainFeature(4, "Smart Accounts")
+  val AssociationTransaction: BlockchainFeature          = BlockchainFeature(10, "Association Transaction")
+  val SponsorshipTransaction: BlockchainFeature          = BlockchainFeature(11, "Sponsorship Transaction")
+  val BurnFeeture: BlockchainFeature                     = BlockchainFeature(12, "Partial Fee Burn")
+  val TransactionsV3: BlockchainFeature                  = BlockchainFeature(13, "Transactions v3")
 
   private val dict = Seq(
     SmartAccounts,
     AssociationTransaction,
     SponsorshipTransaction,
     BurnFeeture,
-    TransactionsV3,
+    //TransactionsV3,
   ).map(f => f.id -> f).toMap
 
   private val preActivated: Set[Short] = Set(1, 2, 3, 5, 8).map(_.toShort) // consensus logic hardcoded
