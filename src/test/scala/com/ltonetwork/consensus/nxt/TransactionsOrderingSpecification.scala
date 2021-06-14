@@ -43,8 +43,8 @@ class TransactionsOrderingSpecification extends PropSpec with Assertions with Ma
 
   property("TransactionsOrdering.InUTXPool should sort txs by ascending block timestamp") {
     val correctSeq = Seq(
-      TransferTransaction.selfSigned(1, 1, sender, 100000, recipient, 123L, Array()).right.get,
       TransferTransaction.selfSigned(1, 1, sender, 100000, recipient, 124L, Array()).right.get,
+      TransferTransaction.selfSigned(1, 1, sender, 100000, recipient, 123L, Array()).right.get,
     )
     Random.shuffle(correctSeq).sorted(TransactionsOrdering.InUTXPool) shouldBe correctSeq
   }

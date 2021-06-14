@@ -21,7 +21,7 @@ trait TransactionSerializer {
   private def jsonSponsor(sponsor: Option[PublicKeyAccount]): JsObject = {
     if (sponsor.isDefined) Json.obj(
       "sponsor" -> sponsor.get.address,
-      "sponsorKeyType" -> sponsor.get.keyType.reference,
+      //"sponsorKeyType" -> sponsor.get.keyType.reference,
       "sponsorPublicKey" -> Base58.encode(sponsor.get.publicKey)
     ) else Json.obj()
   }
@@ -33,7 +33,7 @@ trait TransactionSerializer {
       "version"         -> tx.version,
       "id"              -> id().toString,
       "sender"          -> sender.toAddress,
-      "senderKeyType"   -> sender.keyType.reference,
+      //"senderKeyType"   -> sender.keyType.reference,
       "senderPublicKey" -> sender,
       "fee"             -> fee,
       "timestamp"       -> timestamp,
