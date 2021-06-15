@@ -8,11 +8,19 @@ import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.transaction.ValidationError.InvalidAddress
 import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Reads, Writes}
 
-sealed trait Address extends AddressOrAlias {
+sealed trait Address {
   val bytes: ByteStr
   lazy val address: String    = bytes.base58
   lazy val stringRepr: String = address
 
+  override def toString: String = stringRepr
+
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case a: Address => bytes == a.bytes
+    case _          => false
+  }
+
+  override def hashCode(): Int = java.util.Arrays.hashCode(bytes.arr)
 }
 
 object Address extends ScorexLogging {
@@ -49,6 +57,16 @@ object Address extends ScorexLogging {
       checkSumGenerated = calcCheckSum(addressBytes.dropRight(ChecksumLength))
       _ <- Either.cond(checkSum.sameElements(checkSumGenerated), (), s"Bad address checksum")
     } yield new AddressImpl(ByteStr(addressBytes))).left.map(InvalidAddress)
+  }
+
+  def fromBytes(bytes: Array[Byte], position: Int): Either[InvalidAddress, (Address, Int)] = {
+    bytes(position) match {
+      case Address.AddressVersion =>
+        val addressEnd   = position + Address.AddressLength
+        val addressBytes = bytes.slice(position, addressEnd)
+        Address.fromBytes(addressBytes).map((_, addressEnd))
+      case _ => Left(ValidationError.InvalidAddress("Unknown address version"))
+    }
   }
 
   def fromString(addressStr: String): Either[ValidationError, Address] = {

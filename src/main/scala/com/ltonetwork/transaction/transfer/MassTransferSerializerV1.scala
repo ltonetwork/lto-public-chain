@@ -2,7 +2,7 @@ package com.ltonetwork.transaction.transfer
 
 import cats.implicits._
 import com.google.common.primitives.{Bytes, Longs, Shorts}
-import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.serialization.Deser
 import com.ltonetwork.transaction.{Proofs, TransactionParser, TransactionSerializer, ValidationError}
 import com.ltonetwork.transaction.ValidationError.Validation
@@ -41,7 +41,7 @@ object MassTransferSerializerV1 extends TransactionSerializer.For[MassTransferTr
       val transferCount = Shorts.fromByteArray(bytes.slice(KeyLength, KeyLength + Shorts.BYTES))
 
       def readTransfer(offset: Int): (Validation[ParsedTransfer], Int) = {
-        AddressOrAlias.fromBytes(bytes, offset) match {
+        Address.fromBytes(bytes, offset) match {
           case Right((addr, ofs)) =>
             val amount = Longs.fromByteArray(bytes.slice(ofs, ofs + Longs.BYTES))
             (Right[ValidationError, ParsedTransfer](ParsedTransfer(addr, amount)), ofs + Longs.BYTES)

@@ -2,7 +2,7 @@ package com.ltonetwork.transaction.transfer
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import com.ltonetwork.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.transaction._
@@ -30,7 +30,7 @@ case class MassTransferTransaction private (version: Byte,
   override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
   override val json: Coeval[JsObject] = serializer.toJson(this)
 
-  def compactJson(recipients: Set[AddressOrAlias]): JsObject =
+  def compactJson(recipients: Set[Address]): JsObject =
     json() ++ Json.obj("transfers" -> MassTransferTransaction.toJson(transfers.filter(t => recipients.contains(t.address))))
 }
 
@@ -47,7 +47,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
     implicit val jsonFormat: OFormat[Transfer] = Json.format[Transfer]
   }
 
-  case class ParsedTransfer(address: AddressOrAlias, amount: Long)
+  case class ParsedTransfer(address: Address, amount: Long)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
     tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
@@ -116,7 +116,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
   def parseTransfersList(transfers: List[Transfer]): Validation[List[ParsedTransfer]] = {
     transfers.traverse {
       case Transfer(recipient, amount) =>
-        AddressOrAlias.fromString(recipient).map(ParsedTransfer(_, amount))
+        Address.fromString(recipient).map(ParsedTransfer(_, amount))
     }
   }
 

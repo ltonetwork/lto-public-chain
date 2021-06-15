@@ -3,7 +3,7 @@ package com.ltonetwork.transaction.smart
 import com.ltonetwork.lang.v1.traits.{Proven, _}
 import com.ltonetwork.state._
 import scodec.bits.ByteVector
-import com.ltonetwork.account.{Address, AddressOrAlias}
+import com.ltonetwork.account.Address
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
@@ -27,10 +27,7 @@ object RealTransactionWrapper {
 
   implicit def toByteVector(s: ByteStr): ByteVector = ByteVector(s.arr)
 
-  implicit def aoaToRecipient(aoa: AddressOrAlias): LangAddress = aoa match {
-    case a: Address => LangAddress(ByteVector(a.bytes.arr))
-    case _          => throw new Exception("Aliases are deprecated")
-  }
+  implicit def aoaToRecipient(a: Address): LangAddress = LangAddress(ByteVector(a.bytes.arr))
 
   def apply(tx: Transaction): Tx = {
     tx match {

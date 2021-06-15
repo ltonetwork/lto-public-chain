@@ -9,7 +9,6 @@ import scala.util.{Failure, Success}
 
 sealed trait PrivateKeyAccount extends PublicKeyAccount {
   def seed: Array[Byte]
-
   def privateKey: Array[Byte]
 }
 

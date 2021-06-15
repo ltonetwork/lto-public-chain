@@ -32,7 +32,7 @@ object TransactionFactory extends BroadcastRequest {
     for {
       sender       <- wallet.findPrivateKey(request.sender)
       signer       <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      recipientAcc <- AddressOrAlias.fromString(request.recipient)
+      recipientAcc <- Address.fromString(request.recipient)
       tx <- TransferTransaction.signed(
         1,
         request.timestamp.getOrElse(time.getTimestamp()),
@@ -47,7 +47,7 @@ object TransactionFactory extends BroadcastRequest {
 
   def transferAssetV1(request: TransferV1Request, sender: PublicKeyAccount): Either[ValidationError, TransferTransaction] =
     for {
-      recipientAcc <- AddressOrAlias.fromString(request.recipient)
+      recipientAcc <- Address.fromString(request.recipient)
       tx <- TransferTransaction.create(
         1,
         None,
@@ -69,7 +69,7 @@ object TransactionFactory extends BroadcastRequest {
     for {
       sender       <- wallet.findPrivateKey(request.sender)
       signer       <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      recipientAcc <- AddressOrAlias.fromString(request.recipient)
+      recipientAcc <- Address.fromString(request.recipient)
       tx <- TransferTransaction.signed(
         request.version,
         request.timestamp.getOrElse(time.getTimestamp()),
@@ -84,7 +84,7 @@ object TransactionFactory extends BroadcastRequest {
 
   def transferAssetV2(request: TransferV2Request, sender: PublicKeyAccount): Either[ValidationError, TransferTransaction] =
     for {
-      recipientAcc <- AddressOrAlias.fromString(request.recipient)
+      recipientAcc <- Address.fromString(request.recipient)
       tx <- TransferTransaction.create(
         request.version,
         None,
@@ -183,7 +183,7 @@ object TransactionFactory extends BroadcastRequest {
     for {
       sender       <- wallet.findPrivateKey(request.sender)
       signer       <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      recipientAcc <- AddressOrAlias.fromString(request.recipient)
+      recipientAcc <- Address.fromString(request.recipient)
       tx <- LeaseTransaction.signed(
         1,
         request.timestamp.getOrElse(time.getTimestamp()),
@@ -197,7 +197,7 @@ object TransactionFactory extends BroadcastRequest {
 
   def leaseV1(request: LeaseV1Request, sender: PublicKeyAccount): Either[ValidationError, LeaseTransaction] =
     for {
-      recipientAcc <- AddressOrAlias.fromString(request.recipient)
+      recipientAcc <- Address.fromString(request.recipient)
       tx <- LeaseTransaction.create(
         1,
         None,
@@ -218,7 +218,7 @@ object TransactionFactory extends BroadcastRequest {
     for {
       sender       <- wallet.findPrivateKey(request.sender)
       signer       <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      recipientAcc <- AddressOrAlias.fromString(request.recipient)
+      recipientAcc <- Address.fromString(request.recipient)
       tx <- LeaseTransaction.signed(
         request.version,
         request.timestamp.getOrElse(time.getTimestamp()),
@@ -232,7 +232,7 @@ object TransactionFactory extends BroadcastRequest {
 
   def leaseV2(request: LeaseV2Request, sender: PublicKeyAccount): Either[ValidationError, LeaseTransaction] =
     for {
-      recipientAcc <- AddressOrAlias.fromString(request.recipient)
+      recipientAcc <- Address.fromString(request.recipient)
       tx <- LeaseTransaction.create(
         request.version,
         None,

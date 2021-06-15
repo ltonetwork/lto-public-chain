@@ -8,7 +8,7 @@ import com.ltonetwork.it.api.Transaction
 import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.utils.{Base58, ScorexLogging}
 import org.scalatest.Suite
-import com.ltonetwork.account.{Address, AddressOrAlias, AddressScheme, PrivateKeyAccount}
+import com.ltonetwork.account.{Address, AddressScheme, PrivateKeyAccount}
 import com.ltonetwork.api.http.requests.transfer.SignedTransferV2Request
 import com.ltonetwork.transaction.transfer._
 
@@ -112,7 +112,7 @@ trait TransferSending extends ScorexLogging {
             TransferTransaction
               .selfSigned(
                 sender = PrivateKeyAccount.fromSeed(x.senderSeed).explicitGet(),
-                recipient = AddressOrAlias.fromString(x.targetAddress).explicitGet(),
+                recipient = Address.fromString(x.targetAddress).explicitGet(),
                 amount = x.amount,
                 timestamp = start + i,
                 fee = x.fee,

@@ -61,20 +61,14 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
         val tx = typeGen.getRandom match {
 
           case TransferTransaction =>
-            val useAlias          = r.nextBoolean()
-            val recipient         = randomFrom(accounts).get.toAddress
-            val sendAsset         = r.nextBoolean()
-            val senderAndAssetOpt = Some((randomFrom(accounts).get, None))
-            senderAndAssetOpt.flatMap {
-              case (sender, asset) =>
-                logOption(
-                  TransferTransaction
-                    .selfSigned(1, ts, sender, moreThatStandardFee, recipient, r.nextInt(500000), Array.fill(r.nextInt(100))(r.nextInt().toByte)))
-            }
+            val recipient = randomFrom(accounts).get.toAddress
+            val sender = randomFrom(accounts).get
+            logOption(
+              TransferTransaction.selfSigned(1, ts, sender, moreThatStandardFee, recipient, r.nextInt(500000), Array.fill(r.nextInt(100))(r.nextInt().toByte))
+            )
 
           case LeaseTransaction =>
             val sender       = randomFrom(accounts).get
-            val useAlias     = r.nextBoolean()
             val recipientOpt = randomFrom(accounts.filter(_ != sender).map(_.toAddress))
             recipientOpt.flatMap(recipient => logOption(LeaseTransaction.selfSigned(1, ts, sender, moreThatStandardFee * 3, recipient, 1)))
           case CancelLeaseTransaction =>
@@ -85,23 +79,18 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
           case MassTransferTransaction =>
             val transferCount = r.nextInt(MassTransferTransaction.MaxTransferCount)
             val transfers = for (i <- 0 to transferCount) yield {
-              val useAlias  = r.nextBoolean()
               val recipient = randomFrom(accounts).get.toAddress
               val amount    = r.nextLong(500000)
               ParsedTransfer(recipient, amount)
             }
-            val sendAsset         = r.nextBoolean()
-            val senderAndAssetOpt = Some((randomFrom(accounts).get, None))
-            senderAndAssetOpt.flatMap {
-              case (sender, asset) =>
-                logOption(
-                  MassTransferTransaction.selfSigned(1,
-                                                     ts,
-                                                     sender,
-                                                     100000 + 50000 * transferCount,
-                                                     transfers.toList,
-                                                     Array.fill(r.nextInt(100))(r.nextInt().toByte)))
-            }
+            val sender = randomFrom(accounts).get
+            logOption(MassTransferTransaction.selfSigned(1,
+                                                         ts,
+                                                         sender,
+                                                         100000 + 50000 * transferCount,
+                                                         transfers.toList,
+                                                         Array.fill(r.nextInt(100))(r.nextInt().toByte))
+            )
           case DataTransaction =>
             val sender = randomFrom(accounts).get
             val count  = r.nextInt(10)
@@ -141,15 +130,6 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
 object NarrowTransactionGenerator {
 
   case class Settings(transactions: Int, probabilities: Map[TransactionBuilder, Double])
-
-  private val minAliasLength = 4
-  private val maxAliasLength = 30
-  private val aliasAlphabet  = "-.0123456789@_abcdefghijklmnopqrstuvwxyz".toVector
-
-  def generateAlias(): String = {
-    val len = Random.nextInt(maxAliasLength - minAliasLength) + minAliasLength
-    Random.shuffle(aliasAlphabet).take(len).mkString
-  }
 
   object Settings {
     implicit val toPrintable: Show[Settings] = { x =>

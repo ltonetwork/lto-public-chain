@@ -45,7 +45,7 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite {
   ignore("/transactions/sign should respect timestamp if specified") {
     val timestamp = 1500000000000L
     for (v <- supportedVersions) {
-      val json = Json.obj("type" -> 10, "sender" -> firstAddress, "alias" -> "alias", "fee" -> 100000, "timestamp" -> timestamp)
+      val json = Json.obj("type" -> 10, "sender" -> firstAddress, "fee" -> 100000, "timestamp" -> timestamp)
       val js   = if (Option(v).isDefined) json ++ Json.obj("version" -> v.toInt) else json
       val r    = sender.postJsonWithApiKey("/transactions/sign", js)
       assert(r.getStatusCode == HttpConstants.ResponseStatusCodes.OK_200)
@@ -61,7 +61,6 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite {
     val jsonV1 = Json.obj(
       "type"            -> 10,
       "senderPublicKey" -> "8LbAU5BSrGkpk5wbjLMNjrbc9VzN9KBBYv9X8wGpmAJT",
-      "alias"           -> "alias",
       "fee"             -> 100000,
       "timestamp"       -> timestamp,
       "signature"       -> "A" * 64
@@ -73,7 +72,6 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite {
       "type"            -> 10,
       "version"         -> 2,
       "senderPublicKey" -> "8LbAU5BSrGkpk5wbjLMNjrbc9VzN9KBBYv9X8wGpmAJT",
-      "alias"           -> "alias",
       "fee"             -> 100000,
       "timestamp"       -> timestamp,
       "proofs"          -> List("A" * 64)

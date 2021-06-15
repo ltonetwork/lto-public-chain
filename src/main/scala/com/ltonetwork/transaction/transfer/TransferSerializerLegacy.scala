@@ -1,7 +1,7 @@
 package com.ltonetwork.transaction.transfer
 
 import com.google.common.primitives.{Bytes, Longs}
-import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.serialization.Deser
 import com.ltonetwork.transaction.{TransactionSerializer, ValidationError}
 import com.ltonetwork.utils.Base58
@@ -25,7 +25,7 @@ trait TransferSerializerLegacy extends TransactionSerializer.For[TransferTransac
     )
   }
 
-  def parseBase(bytes: Array[Byte], start: Int): Either[ValidationError, (PublicKeyAccount, Long, Long, Long, AddressOrAlias, Array[Byte], Int)] = {
+  def parseBase(bytes: Array[Byte], start: Int): Either[ValidationError, (PublicKeyAccount, Long, Long, Long, Address, Array[Byte], Int)] = {
     val sender    = PublicKeyAccount(bytes.slice(start, start + KeyLength))
 
     val s1        = start + KeyLength
@@ -34,7 +34,7 @@ trait TransferSerializerLegacy extends TransactionSerializer.For[TransferTransac
     val feeAmount = Longs.fromByteArray(bytes.slice(s1 + 2 * Longs.BYTES, s1 + 3 * Longs.BYTES))
 
     for {
-      recRes <- AddressOrAlias.fromBytes(bytes, s1 + 3 * Longs.BYTES)
+      recRes <- Address.fromBytes(bytes, s1 + 3 * Longs.BYTES)
       (recipient, recipientEnd) = recRes
       (attachment, end)         = Deser.parseArraySize(bytes, recipientEnd)
     } yield (sender, timestamp, amount, feeAmount, recipient, attachment, end)

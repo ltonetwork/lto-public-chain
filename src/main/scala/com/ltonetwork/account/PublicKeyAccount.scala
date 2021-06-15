@@ -4,7 +4,6 @@ import com.ltonetwork.account.KeyTypes._
 import com.ltonetwork.utils.base58Length
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.transaction.ValidationError.InvalidAddress
-import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Reads, Writes}
 
 trait PublicKeyAccount {
   def keyType: KeyType
@@ -17,7 +16,7 @@ trait PublicKeyAccount {
 
   override def hashCode(): Int = publicKey.hashCode()
 
-  override lazy val toString: String = this.toAddress.address // TODO: Why the address?
+  override lazy val toString: String = this.toAddress.address
 }
 
 object PublicKeyAccount {
@@ -45,9 +44,4 @@ object PublicKeyAccount {
 
   def fromBase58String(s: String): Either[InvalidAddress, PublicKeyAccount] =
     fromBase58String(ED25519, s)
-
-  implicit lazy val jsonFormat: Format[PublicKeyAccount] = Format[PublicKeyAccount](
-    Reads(jsValue => fromBase58String(jsValue.as[String]).fold(err => JsError(err.toString), JsSuccess(_))),
-    Writes(addr => JsString(addr.stringRepr)) // TODO: this is probably incorrect
-  )
 }

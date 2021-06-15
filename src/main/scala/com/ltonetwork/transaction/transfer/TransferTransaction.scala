@@ -2,7 +2,7 @@ package com.ltonetwork.transaction.transfer
 
 import cats.data.{Validated, ValidatedNel}
 import com.google.common.primitives.Bytes
-import com.ltonetwork.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.transaction.TransactionParser.{HardcodedVersion1, MultipleVersions}
 import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
@@ -18,7 +18,7 @@ case class TransferTransaction private(version: Byte,
                                        timestamp: Long,
                                        sender: PublicKeyAccount,
                                        fee: Long,
-                                       recipient: AddressOrAlias,
+                                       recipient: Address,
                                        amount: Long,
                                        attachment: Array[Byte],
                                        sponsor: Option[PublicKeyAccount],
@@ -80,7 +80,7 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             recipient: AddressOrAlias,
+             recipient: Address,
              amount: Long,
              attachment: Array[Byte],
              sponsor: Option[PublicKeyAccount],
@@ -91,7 +91,7 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             recipient: AddressOrAlias,
+             recipient: Address,
              amount: Long,
              attachment: Array[Byte],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
@@ -101,7 +101,7 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
                  timestamp: Long,
                  sender: PrivateKeyAccount,
                  fee: Long,
-                 recipient: AddressOrAlias,
+                 recipient: Address,
                  amount: Long,
                  attachment: Array[Byte]): Either[ValidationError, TransactionT] =
     signed(version, timestamp, sender, fee, recipient, amount, attachment, sender)

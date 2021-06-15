@@ -4,7 +4,6 @@ import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import com.ltonetwork.lang.v1.evaluator.ctx.LazyVal
 import com.ltonetwork.state.diffs.TransactionDiffer.TransactionValidationError
 import play.api.libs.json._
-import com.ltonetwork.account.{Address, AddressOrAlias, Alias}
 import com.ltonetwork.lang.ExprEvaluator.Log
 import com.ltonetwork.transaction.{Transaction, ValidationError}
 
@@ -223,16 +222,6 @@ case object BlockDoesNotExist extends ApiError {
   override val id: Int         = 301
   override val code            = StatusCodes.NotFound
   override val message: String = "block does not exist"
-}
-
-case class AliasDoesNotExist(aoa: AddressOrAlias) extends ApiError {
-  override val id: Int = 302
-  override val code    = StatusCodes.NotFound
-  private lazy val msgReason = aoa match {
-    case a: Address => s"for address '${a.stringRepr}'"
-    case a: Alias   => s"'${a.stringRepr}'"
-  }
-  override val message: String = s"alias $msgReason doesn't exist"
 }
 
 case class Mistiming(errorMessage: String) extends ApiError {

@@ -1,6 +1,6 @@
 package com.ltonetwork.api.http.requests.lease
 
-import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.transaction.TransactionBuilders.SignatureStringLength
 import com.ltonetwork.transaction.lease.LeaseTransaction
@@ -26,7 +26,7 @@ case class SignedLeaseV1Request(@ApiModelProperty(value = "Base58 encoded sender
     for {
       _sender    <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _signature <- parseBase58(signature, "invalid.signature", SignatureStringLength)
-      _recipient <- AddressOrAlias.fromString(recipient)
+      _recipient <- Address.fromString(recipient)
       _t         <- LeaseTransaction.create(1, None, timestamp, _sender, fee, _recipient, amount, None, Proofs.fromSignature(_signature))
     } yield _t
 }

@@ -1,6 +1,6 @@
 package com.ltonetwork.it.sync.transactions
 
-import com.ltonetwork.account.AddressOrAlias
+import com.ltonetwork.account.Address
 import com.ltonetwork.api.http.requests.transfer.SignedTransferV1Request
 import com.ltonetwork.it.api.SyncHttpApi._
 import com.ltonetwork.it.sync._
@@ -31,7 +31,7 @@ class TransferTransactionSuite extends BaseTransactionSuite with CancelAfterFail
   test("invalid signed lto transfer should not be in UTX or blockchain") {
     def invalidTx(timestamp: Long = System.currentTimeMillis, fee: Long = com.ltonetwork.it.STD_FEE) =
       TransferTransaction
-        .selfSigned(1, timestamp, sender.privateKey, fee, AddressOrAlias.fromString(sender.address).explicitGet(), 1, Array.emptyByteArray)
+        .selfSigned(1, timestamp, sender.privateKey, fee, Address.fromString(sender.address).explicitGet(), 1, Array.emptyByteArray)
         .right
         .get
 

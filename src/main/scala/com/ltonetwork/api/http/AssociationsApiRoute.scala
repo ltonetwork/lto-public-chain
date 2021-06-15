@@ -2,7 +2,7 @@ package com.ltonetwork.api.http
 
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Route
-import com.ltonetwork.account.{Address, AddressOrAlias}
+import com.ltonetwork.account.Address
 import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.state.{Blockchain, ByteStr}

@@ -1,6 +1,5 @@
 package com.ltonetwork
 
-import com.ltonetwork.account.Alias
 import com.ltonetwork.api.http.requests.lease.{SignedCancelLeaseV1Request, SignedLeaseV1Request}
 import com.ltonetwork.api.http.requests.transfer.{SignedTransferV1Request, TransferV1Request}
 import com.ltonetwork.transaction.transfer._
@@ -23,27 +22,18 @@ trait RequestGen extends TransactionGen { _: Suite =>
     genBoundedString(140 + 1, 1000 + 50)
   ).map(new String(_))
 
-  val invalidAliasStringByLength: G[String] = oneOf(
-    G.choose(0, Alias.MinLength - 1) flatMap { sz =>
-      G.listOfN(sz, G.alphaNumChar)
-    },
-    G.choose(Alias.MaxLength + 1, Alias.MaxLength + 50) flatMap { sz =>
-      G.listOfN(sz, G.alphaNumChar)
-    }
-  ).map(_.mkString)
-
-  val addressGen: G[String] = listOfN(32, Arbitrary.arbByte.arbitrary).map(b => Base58.encode(b.toArray))
+  val addressValGen: G[String] = listOfN(32, Arbitrary.arbByte.arbitrary).map(b => Base58.encode(b.toArray))
   val signatureGen: G[String] = listOfN(SignatureLength, Arbitrary.arbByte.arbitrary)
     .map(b => Base58.encode(b.toArray))
 
   private val commonFields = for {
-    _account <- addressGen
+    _account <- addressValGen
     _fee     <- smallFeeGen
   } yield (_account, _fee)
 
   val transferReq: G[TransferV1Request] = for {
     (account, fee) <- commonFields
-    recipient      <- accountOrAliasGen.map(_.stringRepr)
+    recipient      <- addressValGen
     amount         <- positiveLongGen
     assetId    = None
     feeAssetId = None

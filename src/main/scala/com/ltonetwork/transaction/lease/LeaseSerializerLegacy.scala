@@ -1,7 +1,7 @@
 package com.ltonetwork.transaction.lease
 
 import com.google.common.primitives.{Bytes, Longs}
-import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.transaction.{TransactionSerializer, ValidationError}
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
@@ -20,10 +20,10 @@ trait LeaseSerializerLegacy extends TransactionSerializer.For[LeaseTransaction] 
     )
   }
 
-  def parseBase(bytes: Array[Byte], start: Int): Either[ValidationError, (PublicKeyAccount, AddressOrAlias, Long, Long, Long, Int)] = {
+  def parseBase(bytes: Array[Byte], start: Int): Either[ValidationError, (PublicKeyAccount, Address, Long, Long, Long, Int)] = {
     val sender = PublicKeyAccount(bytes.slice(start, start + KeyLength))
     for {
-      recRes <- AddressOrAlias.fromBytes(bytes, start + KeyLength)
+      recRes <- Address.fromBytes(bytes, start + KeyLength)
       (recipient, recipientEnd) = recRes
       amountStart               = recipientEnd
       amount                    = Longs.fromByteArray(bytes.slice(amountStart, amountStart + 8))

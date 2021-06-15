@@ -1,7 +1,7 @@
 package com.ltonetwork.transaction.lease
 
 import cats.data.{Validated, ValidatedNel}
-import com.ltonetwork.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
@@ -16,7 +16,7 @@ case class LeaseTransaction private (version: Byte,
                                      timestamp: Long,
                                      sender: PublicKeyAccount,
                                      fee: Long,
-                                     recipient: AddressOrAlias,
+                                     recipient: Address,
                                      amount: Long,
                                      sponsor: Option[PublicKeyAccount],
                                      proofs: Proofs)
@@ -74,7 +74,7 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             recipient: AddressOrAlias,
+             recipient: Address,
              amount: Long,
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
@@ -84,7 +84,7 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             recipient: AddressOrAlias,
+             recipient: Address,
              amount: Long,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
     create(version, None, timestamp, sender, fee, recipient, amount, None, Proofs.empty).signWith(signer)
@@ -93,7 +93,7 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
                  timestamp: Long,
                  sender: PrivateKeyAccount,
                  fee: Long,
-                 recipient: AddressOrAlias,
+                 recipient: Address,
                  amount: Long): Either[ValidationError, TransactionT] =
     signed(version, timestamp, sender, fee, recipient, amount, sender)
 }

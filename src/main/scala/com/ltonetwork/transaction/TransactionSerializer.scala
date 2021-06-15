@@ -18,23 +18,21 @@ trait TransactionSerializer {
 
   def toJson(tx: TransactionT): Coeval[JsObject]
 
-  private def jsonSponsor(sponsor: Option[PublicKeyAccount]): JsObject = {
-    if (sponsor.isDefined) Json.obj(
-      "sponsor" -> sponsor.get.address,
-      //"sponsorKeyType" -> sponsor.get.keyType.reference,
-      "sponsorPublicKey" -> Base58.encode(sponsor.get.publicKey)
-    ) else Json.obj()
-  }
+  private def jsonSponsor(sponsor: Option[PublicKeyAccount]): JsObject = sponsor.map(acc => Json.obj(
+    "sponsor" -> acc.address,
+    //"sponsorKeyType" -> acc.reference,
+    "sponsorPublicKey" -> Base58.encode(acc.publicKey)
+  )).getOrElse(Json.obj())
 
   protected def jsonBase(tx: Transaction, txJson: JsObject): JsObject = {
     import tx._
     Json.obj(
       "type"            -> typeId,
-      "version"         -> tx.version,
+      "version"         -> version,
       "id"              -> id().toString,
-      "sender"          -> sender.toAddress,
+      "sender"          -> sender.address,
       //"senderKeyType"   -> sender.keyType.reference,
-      "senderPublicKey" -> sender,
+      "senderPublicKey" -> Base58.encode(sender.publicKey),
       "fee"             -> fee,
       "timestamp"       -> timestamp,
     ) ++

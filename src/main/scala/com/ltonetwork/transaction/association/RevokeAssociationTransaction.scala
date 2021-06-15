@@ -1,7 +1,7 @@
 package com.ltonetwork.transaction.association
 
 import cats.data.{Validated, ValidatedNel}
-import com.ltonetwork.account.{Address, AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}

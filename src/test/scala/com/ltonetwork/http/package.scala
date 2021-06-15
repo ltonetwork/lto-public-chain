@@ -1,6 +1,6 @@
 package com.ltonetwork
 
-import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.Proofs
 import com.ltonetwork.transaction.transfer._
@@ -69,13 +69,13 @@ package object http {
     }
   )
 
-  implicit val addressOrAliasFormat: Format[AddressOrAlias] = Format[AddressOrAlias](
+  implicit val AddressFormat: Format[Address] = Format[Address](
     Reads {
       case JsString(str) =>
         Base58
           .decode(str)
           .toEither
-          .flatMap(AddressOrAlias.fromBytes(_, 0))
+          .flatMap(Address.fromBytes(_, 0))
           .map { case (x, _) => JsSuccess(x) }
           .getOrElse(JsError("Can't read PublicKeyAccount"))
 
@@ -88,7 +88,7 @@ package object http {
     (JsPath \ "version").readNullable[Byte] and
       (JsPath \ "chainId").readNullable[Byte] and
       (JsPath \ "senderPublicKey").read[PublicKeyAccount] and
-      (JsPath \ "recipient").read[AddressOrAlias] and
+      (JsPath \ "recipient").read[Address] and
       (JsPath \ "amount").read[Long] and
       (JsPath \ "timestamp").read[Long] and
       (JsPath \ "fee").read[Long] and

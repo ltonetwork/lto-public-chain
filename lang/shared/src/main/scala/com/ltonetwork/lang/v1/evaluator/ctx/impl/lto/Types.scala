@@ -3,6 +3,7 @@ package com.ltonetwork.lang.v1.evaluator.ctx.impl.lto
 import com.ltonetwork.lang.v1.compiler.Types._
 import com.ltonetwork.lang.v1.evaluator.ctx.CaseType
 
+// TODO Add missing types for: Association and Sponsorship
 object Types {
 
   val addressType = CaseType("Address", List("bytes" -> BYTEVECTOR))
@@ -55,60 +56,6 @@ object Types {
     List(
       "leaseId" -> BYTEVECTOR,
     ) ++ header ++ proven
-  )
-
-  val createAliasTransactionType = CaseType(
-    "CreateAliasTransaction",
-    List(
-      "alias" -> STRING,
-    ) ++ header ++ proven
-  )
-
-  val paymentTransactionType = CaseType(
-    "PaymentTransaction",
-    List(
-      "amount"    -> LONG,
-      "recipient" -> addressType.typeRef,
-    ) ++ header ++ proven
-  )
-
-  val sponsorFeeTransactionType = CaseType(
-    "SponsorFeeTransaction",
-    List(
-      "assetId"              -> BYTEVECTOR,
-      "minSponsoredAssetFee" -> optionLong
-    ) ++ header ++ proven
-  )
-
-  val buyType  = CaseType("Buy", List.empty)
-  val sellType = CaseType("Sell", List.empty)
-
-  val ordTypeType = UNION(buyType.typeRef, sellType.typeRef)
-
-  val assetPairType = CaseType("AssetPair", List("amountAsset" -> optionByteVector, "priceAsset" -> optionByteVector))
-  val orderType = CaseType(
-    "Order",
-    List(
-      "id"               -> BYTEVECTOR,
-      "matcherPublicKey" -> BYTEVECTOR,
-      "assetPair"        -> assetPairType.typeRef,
-      "orderType"        -> ordTypeType,
-      "price"            -> LONG,
-      "amount"           -> LONG,
-      "timestamp"        -> LONG,
-      "expiration"       -> LONG,
-      "matcherFee"       -> LONG,
-    ) ++ proven
-  )
-  val exchangeTransactionType = CaseType(
-    "ExchangeTransaction",
-    List("buyOrder"       -> orderType.typeRef,
-         "sellOrder"      -> orderType.typeRef,
-         "price"          -> LONG,
-         "amount"         -> LONG,
-         "buyMatcherFee"  -> LONG,
-         "sellMatcherFee" -> LONG)
-      ++ header ++ proven
   )
 
   private val dataEntryValueType = UNION(LONG, BOOLEAN, BYTEVECTOR, STRING)

@@ -1,7 +1,7 @@
 package com.ltonetwork.history
 
 import com.ltonetwork.TransactionGen
-import com.ltonetwork.account.{Address, AddressOrAlias, PrivateKeyAccount}
+import com.ltonetwork.account.{Address, PrivateKeyAccount}
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs._
 import com.ltonetwork.transaction._
@@ -184,7 +184,7 @@ class BlockchainUpdaterMicroblockSunnyDayTest
     }
   }
 
-  private def effBalance(aa: AddressOrAlias, domain: Domain): Long = aa match {
+  private def effBalance(aa: Address, domain: Domain): Long = aa match {
     case address: Address => domain.effBalance(address)
     case _                => fail("Unexpected address object")
   }

@@ -1,7 +1,7 @@
 package com.ltonetwork.it.sync.smartcontract
 
 import com.typesafe.config.Config
-import com.ltonetwork.account.AddressOrAlias
+import com.ltonetwork.account.Address
 import com.ltonetwork.crypto
 import com.ltonetwork.it.NodeConfigs
 import com.ltonetwork.it.api.SyncHttpApi._
@@ -106,7 +106,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
         .selfSigned(
           version = 2,
           sender = pkByAddress(AliceBC1),
-          recipient = AddressOrAlias.fromString(swapBC1).explicitGet(),
+          recipient = Address.fromString(swapBC1).explicitGet(),
           amount = transferAmount + minFee + smartFee,
           timestamp = System.currentTimeMillis(),
           fee = minFee + smartFee,
@@ -126,7 +126,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
         .selfSigned(
           version = 2,
           sender = pkByAddress(swapBC1),
-          recipient = AddressOrAlias.fromString(AliceBC1).explicitGet(),
+          recipient = Address.fromString(AliceBC1).explicitGet(),
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
           fee = minFee + smartFee,
@@ -150,7 +150,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
           version = 2,
           chainId = None,
           sender = pkByAddress(swapBC1),
-          recipient = AddressOrAlias.fromString(BobBC1).explicitGet(),
+          recipient = Address.fromString(BobBC1).explicitGet(),
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
           fee = minFee + smartFee,
@@ -183,7 +183,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
       .selfSigned(
         version = 2,
         sender = pkByAddress(swapBC1),
-        recipient = AddressOrAlias.fromString(AliceBC1).explicitGet(),
+        recipient = Address.fromString(AliceBC1).explicitGet(),
         amount = transferAmount,
         timestamp = System.currentTimeMillis(),
         fee = minFee + smartFee,

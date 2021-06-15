@@ -271,6 +271,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case (CancelLeaseTransaction, 2)  => TransactionFactory.leaseCancelV2(txJson.as[CancelLeaseV2Request], wallet, signerAddress, time)
               case (DataTransaction, 1)         => TransactionFactory.data(txJson.as[DataV1Request], wallet, signerAddress, time)
               case (SetScriptTransaction, 1)    => TransactionFactory.setScript(txJson.as[SetScriptV1Request], wallet, signerAddress, time)
+              case _                            => Left(GenericError(s"Unsupported transaction type ($typeId) and version ($version)"))
             }
         }).fold(ApiError.fromValidationError, _.json())
     }
@@ -312,6 +313,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
                   case (CancelLeaseTransaction, 2)     => TransactionFactory.leaseCancelV2(txJson.as[CancelLeaseV2Request], senderPk)
                   case (DataTransaction, 1)            => TransactionFactory.data(txJson.as[DataV1Request], senderPk)
                   case (SetScriptTransaction, 1)       => TransactionFactory.setScript(txJson.as[SetScriptV1Request], senderPk)
+                  case _                               => Left(GenericError(s"Unsupported transaction type ($typeId) and version ($version)"))
                 }
             }
           }
@@ -357,6 +359,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case (CancelLeaseTransaction, 2)       => jsv.as[SignedCancelLeaseV2Request].toTx
               case (DataTransaction, 1)              => jsv.as[SignedDataV1Request].toTx
               case (SetScriptTransaction, 1)         => jsv.as[SignedSetScriptV1Request].toTx
+              case _                            => Left(GenericError(s"Unsupported transaction type ($typeId) and version ($version)"))
             }
         }
         import com.ltonetwork.features.FeatureProvider._

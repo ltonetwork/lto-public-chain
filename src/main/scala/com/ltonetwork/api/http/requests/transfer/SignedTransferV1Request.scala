@@ -1,6 +1,6 @@
 package com.ltonetwork.api.http.requests.transfer
 
-import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.transaction.TransactionBuilders.SignatureStringLength
 import com.ltonetwork.transaction.transfer._
@@ -44,7 +44,7 @@ case class SignedTransferV1Request(@ApiModelProperty(value = "Base58 encoded sen
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _signature  <- parseBase58(signature, "invalid.signature", SignatureStringLength)
       _attachment <- parseBase58(attachment.filter(_.length > 0), "invalid.attachment", TransferTransaction.MaxAttachmentStringSize)
-      _account    <- AddressOrAlias.fromString(recipient)
+      _account    <- Address.fromString(recipient)
       t           <- TransferTransaction.create(1, None, timestamp, _sender, fee, _account, amount, _attachment.arr, None, Proofs.fromSignature(_signature))
     } yield t
 }

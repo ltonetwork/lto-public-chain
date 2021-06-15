@@ -1,7 +1,7 @@
 package com.ltonetwork.api.http.requests.lease
 
 import cats.implicits._
-import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.BroadcastRequest
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
@@ -29,7 +29,7 @@ case class SignedLeaseV2Request(@ApiModelProperty(required = true)
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
       _proofs     <- Proofs.create(_proofBytes)
-      _recipient  <- AddressOrAlias.fromString(recipient)
+      _recipient  <- Address.fromString(recipient)
       _t          <- LeaseTransaction.create(version, None, timestamp, _sender, fee, _recipient, amount, None, _proofs)
     } yield _t
 }
