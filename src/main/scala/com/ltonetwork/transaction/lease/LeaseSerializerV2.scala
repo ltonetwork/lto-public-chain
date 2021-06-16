@@ -9,7 +9,7 @@ import play.api.libs.json.{JsObject, Json}
 import scala.util.{Either, Failure, Success, Try}
 
 object LeaseSerializerV2 extends LeaseSerializerLegacy {
-  override def bodyBytes(tx: TransactionT): Coeval[Array[Byte]] = Coeval.evalOnce {
+  override def bodyBytes(tx: TransactionT): Array[Byte] = {
     Bytes.concat(Array(LeaseTransaction.typeId, tx.version, 0), bytesBase(tx))
   }
 

@@ -30,7 +30,7 @@ trait CancelLeaseSerializerLegacy extends TransactionSerializer.For[CancelLeaseT
     (sender, fee, timestamp, leaseId, end)
   }
 
-  override def toJson(tx: TransactionT): Coeval[JsObject] = Coeval.evalOnce {
+  override def toJson(tx: TransactionT): JsObject = {
     import tx._
     jsonBase(
       tx,

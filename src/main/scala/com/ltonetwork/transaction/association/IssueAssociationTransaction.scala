@@ -23,11 +23,11 @@ case class IssueAssociationTransaction private(version: Byte,
                                                proofs: Proofs)
     extends AssociationTransaction {
 
-  override val builder: TransactionBuilder.For[IssueAssociationTransaction] = IssueAssociationTransaction
-  private val serializer: TransactionSerializer.For[IssueAssociationTransaction] = builder.serializer(version)
+  override def builder: TransactionBuilder.For[IssueAssociationTransaction] = IssueAssociationTransaction
+  private def serializer: TransactionSerializer.For[IssueAssociationTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
-  override val json: Coeval[JsObject] = serializer.toJson(this)
+  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociationTransaction] {

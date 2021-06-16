@@ -24,12 +24,13 @@ trait Transaction extends BytesSerializable with JsonSerializable {
   def sponsor: Option[PublicKeyAccount]
   def proofs: Proofs
 
-  protected def prefixByte: Array[Byte] = Array(0: Byte)
-  private def sponsorBytes: Array[Byte] =
+  protected def prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(Array(0: Byte))
+  private def sponsorBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
     if (version >= 3) sponsor.map(account => Bytes.concat(Array(account.keyType.id), account.publicKey)).getOrElse(Array(0: Byte))
     else Array.emptyByteArray
-  protected def footerBytes: Array[Byte] = Bytes.concat(sponsorBytes, proofs.bytes())
-  val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(prefixByte, bodyBytes(), footerBytes))
+  )
+  protected def footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(sponsorBytes(), proofs.bytes()))
+  val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(prefixByte(), bodyBytes(), footerBytes()))
 
   override def toString: String = json().toString()
 
@@ -43,13 +44,19 @@ trait Transaction extends BytesSerializable with JsonSerializable {
 
 object Transaction {
   trait HardcodedV1 extends Transaction {
-    override protected def prefixByte: Array[Byte] = if (this.version == 1) Array.emptyByteArray else Array(0: Byte)
+    override protected def prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(
+      if (this.version == 1) Array.emptyByteArray
+      else Array(0: Byte)
+    )
   }
 
   trait SigProofsSwitch extends Transaction {
     def usesLegacySignature: Boolean = version == 1
     def signature: ByteStr = proofs.toSignature
 
-    override protected def footerBytes: Array[Byte] = if (this.version == 1) proofs.toSignature.arr else super.footerBytes
+    override protected def footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
+      if (this.version == 1) proofs.toSignature.arr
+      else super.footerBytes()
+    )
   }
 }

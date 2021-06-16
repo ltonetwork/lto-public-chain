@@ -24,11 +24,11 @@ case class MassTransferTransaction private (version: Byte,
     extends Transaction
     with Transaction.HardcodedV1 {
 
-  override val builder: TransactionBuilder.For[MassTransferTransaction] = MassTransferTransaction
-  private val serializer: TransactionSerializer.For[MassTransferTransaction] = builder.serializer(version)
+  override def builder: TransactionBuilder.For[MassTransferTransaction] = MassTransferTransaction
+  private def serializer: TransactionSerializer.For[MassTransferTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
-  override val json: Coeval[JsObject] = serializer.toJson(this)
+  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
 
   def compactJson(recipients: Set[Address]): JsObject =
     json() ++ Json.obj("transfers" -> MassTransferTransaction.toJson(transfers.filter(t => recipients.contains(t.address))))

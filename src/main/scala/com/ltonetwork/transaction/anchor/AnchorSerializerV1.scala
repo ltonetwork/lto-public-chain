@@ -14,7 +14,7 @@ import scorex.crypto.signatures.Curve25519.KeyLength
 import scala.util.{Failure, Success, Try}
 
 object AnchorSerializerV1 extends TransactionSerializer.For[AnchorTransaction] {
-  override def bodyBytes(tx: AnchorTransaction): Coeval[Array[Byte]] = Coeval.evalOnce {
+  override def bodyBytes(tx: AnchorTransaction): Array[Byte] = {
     import tx._
 
     Bytes.concat(
@@ -42,10 +42,8 @@ object AnchorSerializerV1 extends TransactionSerializer.For[AnchorTransaction] {
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
-  override def toJson(tx: AnchorTransaction): Coeval[JsObject] = Coeval.evalOnce {
-    jsonBase(
-      tx,
-      Json.obj("anchors" -> Json.toJson(tx.anchors))
-    )
-  }
+  override def toJson(tx: AnchorTransaction): JsObject = jsonBase(
+    tx,
+    Json.obj("anchors" -> Json.toJson(tx.anchors))
+  )
 }

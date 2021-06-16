@@ -19,11 +19,11 @@ case class AnchorTransaction private(version: Byte,
                                      proofs: Proofs)
     extends Transaction {
 
-  override val builder: TransactionBuilder.For[AnchorTransaction] = AnchorTransaction
-  private val serializer: TransactionSerializer.For[AnchorTransaction] = builder.serializer(version)
+  override def builder: TransactionBuilder.For[AnchorTransaction] = AnchorTransaction
+  private def serializer: TransactionSerializer.For[AnchorTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
-  override val json: Coeval[JsObject] = serializer.toJson(this)
+  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {

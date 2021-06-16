@@ -24,11 +24,11 @@ case class CancelLeaseTransaction private(version: Byte,
     with HardcodedV1
     with SigProofsSwitch {
 
-  override val builder: TransactionBuilder.For[CancelLeaseTransaction] = CancelLeaseTransaction
-  private val serializer: TransactionSerializer.For[CancelLeaseTransaction] = builder.serializer(version)
+  override def builder: TransactionBuilder.For[CancelLeaseTransaction] = CancelLeaseTransaction
+  private def serializer: TransactionSerializer.For[CancelLeaseTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
-  override val json: Coeval[JsObject] = serializer.toJson(this)
+  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransaction] {

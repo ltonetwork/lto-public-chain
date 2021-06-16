@@ -12,7 +12,7 @@ import scorex.crypto.signatures.Curve25519.KeyLength
 import scala.util.{Failure, Success, Try}
 
 object SetTransactionSerializerV1 extends TransactionSerializer.For[SetScriptTransaction] {
-  override def bodyBytes(tx: SetScriptTransaction): Coeval[Array[Byte]] = Coeval.evalOnce {
+  override def bodyBytes(tx: SetScriptTransaction): Array[Byte] = {
     import tx._
 
     Bytes.concat(
@@ -39,7 +39,7 @@ object SetTransactionSerializerV1 extends TransactionSerializer.For[SetScriptTra
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
-  override def toJson(tx: SetScriptTransaction): Coeval[JsObject] = Coeval.evalOnce {
+  override def toJson(tx: SetScriptTransaction): JsObject = {
     jsonBase(
       tx,
       Json.obj("script" -> tx.script.map(_.bytes().base64))

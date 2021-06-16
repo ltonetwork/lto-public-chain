@@ -8,7 +8,7 @@ import play.api.libs.json.{JsObject, Json}
 import scorex.crypto.signatures.Curve25519.KeyLength
 
 abstract class SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTransactionBase] extends TransactionSerializer.For[SponsorshipTransactionT] {
-  override def bodyBytes(tx: SponsorshipTransactionT): Coeval[Array[Byte]] = Coeval.evalOnce {
+  override def bodyBytes(tx: SponsorshipTransactionT): Array[Byte] = {
     import tx._
 
     Bytes.concat(
@@ -35,7 +35,7 @@ abstract class SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTra
     } yield (chainId, timestamp, sender, fee, recipient, proofs)
   }
 
-  override def toJson(tx: SponsorshipTransactionT): Coeval[JsObject] = Coeval.evalOnce {
+  override def toJson(tx: SponsorshipTransactionT): JsObject = {
     jsonBase(
       tx,
       Json.obj("recipient" -> tx.recipient.stringRepr)

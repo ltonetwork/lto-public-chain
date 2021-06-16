@@ -17,7 +17,7 @@ import scala.util.{Failure, Success, Try}
 object MassTransferSerializerV1 extends TransactionSerializer.For[MassTransferTransaction] {
   implicit val transferFormat: Format[Transfer] = Json.format
 
-  override def bodyBytes(tx: TransactionT): Coeval[Array[Byte]] = Coeval.evalOnce {
+  override def bodyBytes(tx: TransactionT): Array[Byte] = {
     import tx._
 
     val transferBytes = transfers
@@ -64,15 +64,13 @@ object MassTransferSerializerV1 extends TransactionSerializer.For[MassTransferTr
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
-  override def toJson(tx: MassTransferTransaction): Coeval[JsObject] = Coeval.evalOnce {
-    jsonBase(
-      tx,
-      Json.obj(
-        "attachment" -> Base58.encode(tx.attachment),
-        "transferCount" -> tx.transfers.size,
-        "totalAmount" -> tx.transfers.map(_.amount).sum,
-        "transfers" -> MassTransferTransaction.toJson(tx.transfers)
-      )
+  override def toJson(tx: MassTransferTransaction): JsObject = jsonBase(
+    tx,
+    Json.obj(
+      "attachment" -> Base58.encode(tx.attachment),
+      "transferCount" -> tx.transfers.size,
+      "totalAmount" -> tx.transfers.map(_.amount).sum,
+      "transfers" -> MassTransferTransaction.toJson(tx.transfers)
     )
-  }
+  )
 }

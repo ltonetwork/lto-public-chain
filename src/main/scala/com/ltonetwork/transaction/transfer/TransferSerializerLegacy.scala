@@ -11,7 +11,7 @@ import scorex.crypto.signatures.Curve25519.KeyLength
 
 // Common methods for TransferSerializer v1 and v2
 trait TransferSerializerLegacy extends TransactionSerializer.For[TransferTransaction] {
-  override def bodyBytes(tx: TransactionT): Coeval[Array[Byte]] = Coeval.evalOnce {
+  override def bodyBytes(tx: TransactionT): Array[Byte] = {
     import tx._
 
     Bytes.concat(
@@ -40,16 +40,12 @@ trait TransferSerializerLegacy extends TransactionSerializer.For[TransferTransac
     } yield (sender, timestamp, amount, feeAmount, recipient, attachment, end)
   }
 
-  override def toJson(tx: TransactionT): Coeval[JsObject] = Coeval.evalOnce {
-    import tx._
-
-    jsonBase(
-      tx,
-      Json.obj(
-        "recipient"  -> recipient.stringRepr,
-        "amount"     -> amount,
-        "attachment" -> Base58.encode(attachment)
-      )
+  override def toJson(tx: TransactionT): JsObject = jsonBase(
+    tx,
+    Json.obj(
+      "recipient"  -> tx.recipient.stringRepr,
+      "amount"     -> tx.amount,
+      "attachment" -> Base58.encode(tx.attachment)
     )
-  }
+  )
 }

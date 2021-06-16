@@ -23,7 +23,6 @@ import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, Spo
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.{MaxTransferCount, ParsedTransfer}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.TimeImpl
-import org.scalacheck.Gen.{alphaLowerChar, alphaUpperChar, frequency, numChar}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
@@ -325,7 +324,7 @@ trait TransactionGenBase extends ScriptGen {
     for {
       key   <- keyGen
       size  <- Gen.choose(0, maxSize)
-      value <- Gen.listOfN(size, dataKeyGen)
+      value <- Gen.listOfN(size, Gen.alphaNumChar)
     } yield StringDataEntry(key, value.mkString)
 
   def dataEntryGen(maxSize: Int, keyGen: Gen[String] = dataKeyGen) =

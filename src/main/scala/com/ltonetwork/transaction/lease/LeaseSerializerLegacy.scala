@@ -33,7 +33,7 @@ trait LeaseSerializerLegacy extends TransactionSerializer.For[LeaseTransaction] 
     } yield (sender, recipient, amount, fee, timestamp, end)
   }
 
-  override def toJson(tx: TransactionT): Coeval[JsObject] = Coeval.evalOnce {
+  override def toJson(tx: TransactionT): JsObject = {
     import tx._
     jsonBase(
       tx,

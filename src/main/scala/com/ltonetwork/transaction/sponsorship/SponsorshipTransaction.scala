@@ -18,11 +18,11 @@ case class SponsorshipTransaction private (version: Byte,
                                            proofs: Proofs)
     extends SponsorshipTransactionBase {
 
-  override val builder: TransactionBuilder.For[SponsorshipTransaction] = SponsorshipTransaction
-  private val serializer: TransactionSerializer.For[SponsorshipTransaction] = builder.serializer(version)
+  override def builder: TransactionBuilder.For[SponsorshipTransaction] = SponsorshipTransaction
+  private def serializer: TransactionSerializer.For[SponsorshipTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
-  override val json: Coeval[JsObject] = serializer.toJson(this)
+  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object SponsorshipTransaction extends TransactionBuilder.For[SponsorshipTransaction] {

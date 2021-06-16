@@ -9,7 +9,7 @@ import scorex.crypto.signatures.Curve25519.SignatureLength
 import scala.util.{Failure, Success, Try}
 
 object LeaseSerializerV1 extends LeaseSerializerLegacy {
-  override def bodyBytes(tx: TransactionT): Coeval[Array[Byte]] = Coeval.evalOnce {
+  override def bodyBytes(tx: TransactionT): Array[Byte] = {
     Bytes.concat(Array(LeaseTransaction.typeId), bytesBase(tx))
   }
 

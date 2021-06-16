@@ -10,7 +10,7 @@ import play.api.libs.json.{JsObject, Json}
 import scorex.crypto.signatures.Curve25519.KeyLength
 
 abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction] extends TransactionSerializer.For[AssociationTransactionT] {
-  override def bodyBytes(tx: AssociationTransactionT): Coeval[Array[Byte]] = Coeval.evalOnce {
+  override def bodyBytes(tx: AssociationTransactionT): Array[Byte] = {
     import tx._
 
     Bytes.concat(
@@ -41,14 +41,12 @@ abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTra
     } yield result
   }
 
-  override def toJson(tx: AssociationTransactionT): Coeval[JsObject] = Coeval.evalOnce {
-    jsonBase(
-      tx,
-      Json.obj(
-        "version"         -> tx.version,
-        "associationType" -> tx.assocType,
-        "party"           -> tx.recipient.stringRepr,
-      ) ++ tx.hash.map(hash => Json.obj("hash" -> hash.base58)).getOrElse(Json.obj())
-    )
-  }
+  override def toJson(tx: AssociationTransactionT): JsObject = jsonBase(
+    tx,
+    Json.obj(
+      "version"         -> tx.version,
+      "associationType" -> tx.assocType,
+      "party"           -> tx.recipient.stringRepr,
+    ) ++ tx.hash.map(hash => Json.obj("hash" -> hash.base58)).getOrElse(Json.obj())
+  )
 }

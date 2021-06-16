@@ -13,10 +13,10 @@ import scala.util.{Failure, Try}
 trait TransactionSerializer {
   type TransactionT <: Transaction
 
-  def bodyBytes(tx: TransactionT): Coeval[Array[Byte]]
+  def bodyBytes(tx: TransactionT): Array[Byte]
   def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT]
 
-  def toJson(tx: TransactionT): Coeval[JsObject]
+  def toJson(tx: TransactionT): JsObject
 
   private def jsonSponsor(sponsor: Option[PublicKeyAccount]): JsObject = sponsor.map(acc => Json.obj(
     "sponsor" -> acc.address,
@@ -54,15 +54,15 @@ object TransactionSerializer {
   case class UnsupportedVersion(typeId: Byte, version: Byte) extends NoStackTrace {
     override val getMessage: String = {
       val typeName = TransactionNames(typeId)
-      s"Unsupported version ($version) for {$typeName} transaction"
+      s"Unsupported version ($version) for ${typeName} transaction"
     }
   }
 
   abstract case class Unknown[T <: Transaction](typeId: Byte) extends For[T] {
     override type TransactionT = T
 
-    def bodyBytes(tx: TransactionT): Coeval[Array[Byte]] = Coeval.raiseError(UnsupportedVersion(typeId, tx.version))
-    def toJson(tx: TransactionT): Coeval[JsObject] = Coeval.raiseError(UnsupportedVersion(typeId, tx.version))
+    def bodyBytes(tx: TransactionT): Array[Byte] = throw UnsupportedVersion(typeId, tx.version)
+    def toJson(tx: TransactionT): JsObject = throw UnsupportedVersion(typeId, tx.version)
 
     def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Failure(UnsupportedVersion(typeId, version))
   }

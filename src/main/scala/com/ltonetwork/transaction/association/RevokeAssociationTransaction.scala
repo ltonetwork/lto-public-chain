@@ -22,11 +22,11 @@ case class RevokeAssociationTransaction private (version: Byte,
                                                  proofs: Proofs)
     extends AssociationTransaction {
 
-  override val builder: TransactionBuilder.For[RevokeAssociationTransaction] = RevokeAssociationTransaction
-  private val serializer: TransactionSerializer.For[RevokeAssociationTransaction] = builder.serializer(version)
+  override def builder: TransactionBuilder.For[RevokeAssociationTransaction] = RevokeAssociationTransaction
+  private def serializer: TransactionSerializer.For[RevokeAssociationTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
-  override val json: Coeval[JsObject] = serializer.toJson(this)
+  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssociationTransaction] {

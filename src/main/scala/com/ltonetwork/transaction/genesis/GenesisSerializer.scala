@@ -12,7 +12,7 @@ import play.api.libs.json.{JsObject, Json}
 import scala.util.{Failure, Success, Try}
 
 object GenesisSerializer extends TransactionSerializer.For[GenesisTransaction] {
-  override def bodyBytes(tx: TransactionT): Coeval[Array[Byte]] = Coeval.evalOnce {
+  override def bodyBytes(tx: TransactionT): Array[Byte] = {
     import tx._
 
     val typeBytes = Array(GenesisTransaction.typeId)
@@ -46,7 +46,7 @@ object GenesisSerializer extends TransactionSerializer.For[GenesisTransaction] {
       create(recipient, amount, timestamp).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 
-  override def toJson(tx: TransactionT): Coeval[JsObject] = Coeval.evalOnce {
+  override def toJson(tx: TransactionT): JsObject = {
     import tx._
 
     Json.obj(

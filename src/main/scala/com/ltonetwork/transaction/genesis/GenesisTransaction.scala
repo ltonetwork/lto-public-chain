@@ -28,14 +28,14 @@ case class GenesisTransaction private (version: Byte,
   override def sender: PublicKeyAccount = PublicKeyAccount.Dummy
   override def sponsor: Option[PublicKeyAccount] = None
 
-  override val builder: TransactionBuilder.For[GenesisTransaction] = GenesisTransaction
-  private val serializer: TransactionSerializer.For[GenesisTransaction] = builder.serializer(version)
+  override def builder: TransactionBuilder.For[GenesisTransaction] = GenesisTransaction
+  private def serializer: TransactionSerializer.For[GenesisTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = serializer.bodyBytes(this)
-  override val json: Coeval[JsObject] = serializer.toJson(this)
+  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
 
-  override protected def prefixByte: Array[Byte] = Array[Byte]()
-  override protected def footerBytes: Array[Byte] = Array[Byte]()
+  override protected def prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(Array.emptyByteArray)
+  override protected def footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Array.emptyByteArray)
 }
 
 object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] {
