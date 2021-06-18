@@ -193,7 +193,7 @@ class DataTransactionSpecification extends PropSpec with PropertyChecks with Mat
       .right
       .get
 
-    js shouldEqual tx.json()
+    tx.json() shouldEqual js
   }
 
 }

@@ -1,30 +1,15 @@
 package com.ltonetwork.transaction.transfer
 
-import com.google.common.primitives.{Bytes, Longs}
+import com.google.common.primitives.Longs
 import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.serialization.Deser
 import com.ltonetwork.transaction.{TransactionSerializer, ValidationError}
 import com.ltonetwork.utils.Base58
-import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
 import scorex.crypto.signatures.Curve25519.KeyLength
 
 // Common methods for TransferSerializer v1 and v2
 trait TransferSerializerLegacy extends TransactionSerializer.For[TransferTransaction] {
-  override def bodyBytes(tx: TransactionT): Array[Byte] = {
-    import tx._
-
-    Bytes.concat(
-      Array(TransferTransaction.typeId),
-      sender.publicKey,
-      Longs.toByteArray(timestamp),
-      Longs.toByteArray(amount),
-      Longs.toByteArray(fee),
-      recipient.bytes.arr,
-      Deser.serializeArray(attachment)
-    )
-  }
-
   def parseBase(bytes: Array[Byte], start: Int): Either[ValidationError, (PublicKeyAccount, Long, Long, Long, Address, Array[Byte], Int)] = {
     val sender    = PublicKeyAccount(bytes.slice(start, start + KeyLength))
 

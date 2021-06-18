@@ -91,7 +91,7 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
       .right
       .get
 
-    js shouldEqual tx.json()
+    tx.json() shouldEqual js
   }
 
 }

@@ -220,20 +220,26 @@ trait TransactionGenBase extends ScriptGen {
                         timestamp: Long): Either[ValidationError, TransferTransaction] =
     TransferTransaction.selfSigned(1, timestamp, sender, fee, recipient, amount, Array())
 
+  val transferGen: Gen[TransferTransaction] = (for {
+    version                                                 <- Gen.oneOf(TransferTransaction.supportedVersions.toSeq)
+    (sender, recipient, amount, timestamp, fee, attachment) <- transferParamGen
+  } yield
+    TransferTransaction.selfSigned(version, timestamp, sender, fee, recipient, amount, attachment).explicitGet())
+    .label("TransferTransaction")
+
   val transferV1Gen: Gen[TransferTransaction] = (for {
     (sender, recipient, amount, timestamp, fee, attachment) <- transferParamGen
   } yield TransferTransaction.selfSigned(1, timestamp, sender, fee, recipient, amount, attachment).explicitGet())
-    .label("transferTransaction")
+    .label("TransferTransactionV1")
 
   val transferV2Gen: Gen[TransferTransaction] = (for {
-    version                                                 <- Gen.oneOf(TransferTransaction.supportedVersions.toSeq)
     (sender, recipient, amount, timestamp, fee, attachment) <- transferParamGen
     proofs                                                  <- proofsGen
   } yield
     TransferTransaction
-      .create(version, None, timestamp, sender, fee, recipient, amount, attachment, None, proofs)
+      .create(2, None, timestamp, sender, fee, recipient, amount, attachment, None, proofs)
       .explicitGet())
-    .label("VersionedTransferTransaction")
+    .label("TransferTransactionV2")
 
   def versionedTransferGenP(sender: PublicKeyAccount, recipient: Address, proofs: Proofs): Gen[TransferTransaction] =
     (for {
@@ -364,7 +370,7 @@ trait TransactionGenBase extends ScriptGen {
       setScript <- selfSignedSetScriptTransactionGenP(master, ScriptV1(typed).explicitGet(), timestamp + 1)
       transfer  <- transferGeneratorPV2(timestamp, master, recipient.toAddress, ENOUGH_AMT / 2)
       fee       <- smallFeeGen
-      lease = LeaseTransaction.selfSigned(LeaseTransaction.supportedVersions.head, timestamp, master, fee, recipient, ENOUGH_AMT / 2).explicitGet()
+      lease = LeaseTransaction.selfSigned(2, timestamp, master, fee, recipient, ENOUGH_AMT / 2).explicitGet()
     } yield (genesis, setScript, lease, transfer)
 
   val anchorTransactionGen: Gen[AnchorTransaction] = for {

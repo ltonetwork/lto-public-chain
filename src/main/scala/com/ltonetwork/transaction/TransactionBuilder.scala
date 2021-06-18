@@ -19,10 +19,10 @@ trait TransactionBuilder {
   def serializer(version: Byte): TransactionSerializer.For[TransactionT]
 
   def parseHeader(bytes: Array[Byte]): Try[(Byte, Int)] = MultipleVersions(typeId, supportedVersions).parseHeader(bytes)
-  def parseBytes(bytes: Array[Byte]): Try[TransactionT] = (for {
+  def parseBytes(bytes: Array[Byte]): Try[TransactionT] = for {
     (version, end) <- parseHeader(bytes)
     tx             <- serializer(version).parseBytes(version, bytes.drop(end))
-  } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
+  } yield tx
 
   protected object UnknownSerializer extends TransactionSerializer.Unknown[TransactionT](typeId)
 }

@@ -4,6 +4,7 @@ import cats.data.{Validated, ValidatedNel}
 import com.google.common.primitives.Bytes
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
+import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.TransactionParser.{HardcodedVersion1, MultipleVersions}
 import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
 import com.ltonetwork.transaction._
@@ -34,13 +35,14 @@ case class TransferTransaction private(version: Byte,
   override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
 
   // Special case for transfer tx v1: signature is prepended (after type) instead of appended
-  override protected def prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(
-    if (this.version == 1) Bytes.concat(Array(builder.typeId), proofs.toSignature.arr)
-    else super.prefixByte()
-  )
+  override protected def prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(version match {
+    case 1 if proofs.isEmpty => throw new Exception("Transaction not signed")
+    case 1 => Bytes.concat(Array(builder.typeId), proofs.toSignature.arr)
+    case _ => Array(0: Byte)
+  })
   override protected def footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
-    if (this.version == 1) Array.emptyByteArray
-    else super.footerBytes()
+    if (version == 1) Array.emptyByteArray
+    else super[Transaction].footerBytes()
   )
 }
 
@@ -71,6 +73,7 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(Try(Math.addExact(amount, fee)).isSuccess, None, ValidationError.OverflowError),
         Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(proofs.length <= 1 || version > 1, None, ValidationError.UnsupportedFeature(s"Multiple proofs not supported for tx v1")),
       )
     }
   }

@@ -61,6 +61,7 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
         Validated.condNel(sender.stringRepr != recipient.stringRepr, None, ValidationError.ToSelf),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(proofs.length <= 1 || version > 1, None, ValidationError.UnsupportedFeature(s"Multiple proofs not supported for tx v1")),
       )
     }
   }

@@ -31,12 +31,16 @@ class TransactionSpecification extends PropSpec with PropertyChecks with Matcher
         val sender    = PrivateKeyAccount(senderSeed)
         val recipient = PrivateKeyAccount(recipientSeed)
         val tx        = createLtoTransfer(sender, recipient, amount, fee, time).explicitGet()
-        val txAfter   = TransferTransaction.parseBytes(tx.bytes()).get
 
+        val bytes      = tx.bytes()
+        val txAfterTry = TransferTransaction.parseBytes(bytes)
+        txAfterTry should be a 'success
+
+        val txAfter   = txAfterTry.get
         txAfter.getClass.shouldBe(tx.getClass)
 
         tx.signature shouldEqual txAfter.signature
-        tx.sender shouldEqual txAfter.asInstanceOf[TransferTransaction].sender
+        tx.sender shouldEqual txAfter.sender
         tx.recipient shouldEqual txAfter.recipient
         tx.timestamp shouldEqual txAfter.timestamp
         tx.amount shouldEqual txAfter.amount
@@ -49,13 +53,17 @@ class TransactionSpecification extends PropSpec with PropertyChecks with Matcher
       (senderSeed: Array[Byte], recipientSeed: Array[Byte], time: Long, amount: Long, fee: Long) =>
         val sender    = PrivateKeyAccount(senderSeed)
         val recipient = PrivateKeyAccount(recipientSeed)
-        val tx        = createLtoTransfer(sender, recipient, amount, fee, time).explicitGet()
-        val txAfter   = TransactionBuilders.parseBytes(tx.bytes()).get.asInstanceOf[TransferTransaction]
+        val tx         = createLtoTransfer(sender, recipient, amount, fee, time).explicitGet()
 
+        val bytes      = tx.bytes()
+        val txAfterTry = TransactionBuilders.parseBytes(bytes)
+        txAfterTry should be a 'success
+
+        val txAfter = txAfterTry.get.asInstanceOf[TransferTransaction]
         txAfter.getClass.shouldBe(tx.getClass)
 
         tx.signature shouldEqual txAfter.signature
-        tx.sender shouldEqual txAfter.asInstanceOf[TransferTransaction].sender
+        tx.sender shouldEqual txAfter.sender
         tx.recipient shouldEqual txAfter.recipient
         tx.timestamp shouldEqual txAfter.timestamp
         tx.amount shouldEqual txAfter.amount

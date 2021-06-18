@@ -22,8 +22,8 @@ case class GenesisTransaction private (version: Byte,
     extends Transaction
     with SigProofsSwitch {
 
-  override val fee                        = 0
-  override val id: Coeval[ByteStr]        = Coeval.evalOnce(signature)
+  override val fee = 0
+  override val id: Coeval[ByteStr] = Coeval.evalOnce(signature)
 
   override def sender: PublicKeyAccount = PublicKeyAccount.Dummy
   override def sponsor: Option[PublicKeyAccount] = None

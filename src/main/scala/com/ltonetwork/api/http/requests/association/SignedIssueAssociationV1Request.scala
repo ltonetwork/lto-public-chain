@@ -17,7 +17,7 @@ case class SignedIssueAssociationV1Request(@ApiModelProperty(required = true)
                                            @ApiModelProperty(value = "Association type", required = true)
                                            associationType: Int,
                                            @ApiModelProperty(value = "Association data hash ", required = false)
-                                           hash: String = "",
+                                           hash: Option[String] = None,
                                            @ApiModelProperty(required = true)
                                            fee: Long,
                                            @ApiModelProperty(required = true)
@@ -30,8 +30,8 @@ case class SignedIssueAssociationV1Request(@ApiModelProperty(required = true)
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _party      <- Address.fromString(party)
       _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
-      _hash       <- if (hash == "") Right(None)
-                     else parseBase58(hash, TransactionFactory.IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
+      _hash       <- if (hash.isEmpty || hash.contains("")) Right(None) // TODO there is a nicer way to do this
+                     else parseBase58(hash.get, TransactionFactory.IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
       _proofs     <- Proofs.create(_proofBytes)
       t           <- IssueAssociationTransaction.create(version, None, timestamp, _sender, fee, _party, associationType, None, _hash, None, _proofs)
     } yield t

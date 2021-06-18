@@ -126,6 +126,6 @@ class MassTransferTransactionSpecification extends PropSpec with PropertyChecks 
       .right
       .get
 
-    js shouldEqual tx.json()
+    tx.json() shouldEqual js
   }
 }

@@ -14,7 +14,7 @@ abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTra
     import tx._
 
     Bytes.concat(
-      Array(IssueAssociationTransaction.typeId, version, chainId),
+      Array(builder.typeId, version, chainId),
       sender.publicKey,
       recipient.bytes.arr,
       Ints.toByteArray(assocType),
