@@ -11,9 +11,8 @@ import scorex.crypto.signatures.Curve25519.{KeyLength, SignatureLength}
 import scala.util.{Failure, Success, Try}
 
 object CancelLeaseSerializerV1 extends CancelLeaseSerializerLegacy {
-  override def bodyBytes(tx: TransactionT): Array[Byte] = {
-    Bytes.concat(Array(LeaseTransaction.typeId), bytesBase(tx))
-  }
+  override def bodyBytes(tx: TransactionT): Array[Byte] =
+    Bytes.concat(Array(CancelLeaseTransaction.typeId), bytesBase(tx))
 
   override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
     Try {

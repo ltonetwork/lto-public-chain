@@ -87,7 +87,6 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
           val genesisSignature = d.lastBlockId
 
           val transferAmount = 100
-
           val transfers = txCount.map(tc => Seq.fill(tc)(randomOp(sender, recipient, transferAmount, tc % 3)).flatten)
 
           for (transfer <- transfers) {

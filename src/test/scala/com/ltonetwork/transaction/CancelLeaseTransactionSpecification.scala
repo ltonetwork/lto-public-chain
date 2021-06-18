@@ -12,7 +12,7 @@ class CancelLeaseTransactionSpecification extends PropSpec with PropertyChecks w
 
   property("Cancel lease serialization roundtrip") {
     forAll(leaseCancelGen) { tx: CancelLeaseTransaction =>
-      val recovered = tx.builder.parseBytes(tx.bytes()).get.asInstanceOf[CancelLeaseTransaction]
+      val recovered = tx.builder.parseBytes(tx.bytes()).get
       assertTxs(recovered, tx)
     }
   }
@@ -66,17 +66,17 @@ class CancelLeaseTransactionSpecification extends PropSpec with PropertyChecks w
   property("JSON format validation for CancelLeaseTransaction V2") {
     val js = Json.parse("""{
                         "type": 9,
+                        "version": 2,
                         "id": "4nvUUiQjTH7D2LFyzaxs8JwaZYZHDggJgq1iP99TvVDM",
                         "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                         "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                         "fee": 1000000,
                         "timestamp": 1526646300260,
+                        "leaseId": "DJWkQxRyJNqWhq9qSQpK2D4tsrct6eZbjSv3AH4PSha6",
+                        "chainId": 84,
                         "proofs": [
                         "3h5SQLbCzaLoTHUeoCjXUHB6qhNUfHZjQQVsWTRAgTGMEdK5aeULMVUfDq63J56kkHJiviYTDT92bLGc8ELrUgvi"
-                        ],
-                        "version": 2,
-                        "leaseId": "DJWkQxRyJNqWhq9qSQpK2D4tsrct6eZbjSv3AH4PSha6",
-                        "chainId": 84
+                        ]
                        }
     """)
 

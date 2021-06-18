@@ -12,7 +12,7 @@ import play.api.libs.json.{Format, Json}
 
 import scala.util.Try
 
-class AssociationTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class AssociationTransactionSpecification extends PropSpec with PropertyChecks with OptionValues with Matchers with TransactionGen {
 
   private def checkSerialization(tx: AssociationTransaction, parser: Array[Byte] => Try[AssociationTransaction]): Assertion = {
     val parsed = parser(tx.bytes()).get
@@ -57,8 +57,8 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
       req.timestamp shouldEqual tx.timestamp
       req.associationType shouldEqual tx.assocType
       req.party shouldEqual tx.recipient.toString
-      if (tx.hash.isDefined)
-        req.hash shouldEqual tx.hash.get.base58
+      if (tx.hash.isDefined) req.hash.value shouldEqual tx.hash.get.base58
+      else tx.hash shouldEqual None
     }
   }
 
@@ -66,6 +66,7 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
     val p  = PrivateKeyAccount.fromSeed("xxx").explicitGet().toAddress
     val js = Json.parse(s"""{
                        "type": 16,
+                       "version": 1,
                        "id": "GCRa1NZP34rkvRKxkJkisbvxPZX9sKrVLLqLmi8LvKjx",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
@@ -74,7 +75,6 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
                        "proofs": [
                        "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
                        ],
-                       "version": 1,
                        "party" : "$p",
                        "associationType" : 420,
                        "hash" : ""

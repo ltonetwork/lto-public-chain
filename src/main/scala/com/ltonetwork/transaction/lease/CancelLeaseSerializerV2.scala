@@ -8,9 +8,8 @@ import monix.eval.Coeval
 import scala.util.{Failure, Success, Try}
 
 object CancelLeaseSerializerV2 extends CancelLeaseSerializerLegacy {
-  override def bodyBytes(tx: TransactionT): Array[Byte] = {
-    Bytes.concat(Array(CancelLeaseTransaction.typeId, tx.version, 0), bytesBase(tx))
-  }
+  override def bodyBytes(tx: TransactionT): Array[Byte] =
+    Bytes.concat(Array(CancelLeaseTransaction.typeId, tx.version, tx.chainId), bytesBase(tx))
 
   override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
     Try {
