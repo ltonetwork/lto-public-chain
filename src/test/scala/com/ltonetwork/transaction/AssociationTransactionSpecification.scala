@@ -72,12 +72,11 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
                        "timestamp": 1526911531530,
+                       "associationType" : 420,
+                       "party" : "$p",
                        "proofs": [
                        "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
-                       ],
-                       "party" : "$p",
-                       "associationType" : 420,
-                       "hash" : ""
+                       ]
                        }
   """)
 

@@ -16,11 +16,11 @@ object SetTransactionSerializerV1 extends TransactionSerializer.For[SetScriptTra
     import tx._
 
     Bytes.concat(
-      Array(SetScriptTransaction.typeId, version),
+      Array(SetScriptTransaction.typeId, version, chainId),
       sender.publicKey,
       Deser.serializeOption(script)(s => s.bytes().arr),
+      Longs.toByteArray(fee),
       Longs.toByteArray(timestamp),
-      Longs.toByteArray(fee)
     )
   }
 

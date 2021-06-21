@@ -32,7 +32,7 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
     forAll(anchorTransactionGen)(checkSerialization)
   }
 
-  property("serialization from TypedTransaction") {
+  property("serialization from AnchorTransaction") {
     forAll(anchorTransactionGen) { tx: AnchorTransaction =>
       val recovered = AnchorTransaction.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
