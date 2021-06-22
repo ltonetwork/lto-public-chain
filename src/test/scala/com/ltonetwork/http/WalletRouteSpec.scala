@@ -15,9 +15,6 @@ class WalletRouteSpec
     with PropertyChecks {
   private val route = WalletApiRoute(restAPISettings, testWallet).route
 
-  private val brokenRestApiSettings     = restAPISettings.copy(apiKeyHash = "InvalidAPIKeyHash")
-  private val routeWithIncorrectKeyHash = WalletApiRoute(brokenRestApiSettings, testWallet).route
-
   private val allAccounts  = testWallet.privateKeyAccounts
   private val allAddresses = allAccounts.map(_.address)
 
@@ -43,19 +40,6 @@ class WalletRouteSpec
         }
     }
 
-  routePath("/addresses") in {
-    Post(routePath("/addresses")) ~> route should produce(ApiKeyNotValid)
-    Post(routePath("/addresses")) ~> api_key(apiKey) ~> route ~> check {
-      allAddresses should not contain (responseAs[JsObject] \ "address").as[String]
-    }
-  }
-
-  routePath("/addresses/{address}") in {
-    Delete(routePath(s"/addresses/${allAddresses.head}")) ~> api_key(apiKey) ~> route ~> check {
-      (responseAs[JsObject] \ "deleted").as[Boolean] shouldBe true
-    }
-  }
-
   routePath("/addresses/seq/{from}/{to}") in {
     val r1 = Get(routePath("/addresses/seq/1/4")) ~> route ~> check {
       val response = responseAs[Seq[String]]
@@ -76,4 +60,20 @@ class WalletRouteSpec
 
   routePath("/sign/{address}") in testSign("sign", true)
   routePath("/signText/{address}") in testSign("signText", false)
+
+
+  // Tests that modify the wallet addresses must be done after the other tests, or they'll fail
+
+  routePath("/addresses") in {
+    Post(routePath("/addresses")) ~> route should produce(ApiKeyNotValid)
+    Post(routePath("/addresses")) ~> api_key(apiKey) ~> route ~> check {
+      allAddresses should not contain (responseAs[JsObject] \ "address").as[String]
+    }
+  }
+
+  routePath("/addresses/{address}") in {
+    Delete(routePath(s"/addresses/${allAddresses.head}")) ~> api_key(apiKey) ~> route ~> check {
+      (responseAs[JsObject] \ "deleted").as[Boolean] shouldBe true
+    }
+  }
 }

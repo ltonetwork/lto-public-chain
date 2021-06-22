@@ -1,11 +1,12 @@
 package com.ltonetwork
 
 import com.ltonetwork.settings.WalletSettings
+import com.ltonetwork.state.ByteStr
 import com.ltonetwork.wallet.Wallet
 
 trait TestWallet {
-  protected val testWallet = {
-    val wallet = Wallet(WalletSettings(None, "123", None, None,None))
+  protected val testWallet: Wallet = {
+    val wallet = Wallet(WalletSettings(None, "123", None, None, None))
     wallet.generateNewAccounts(10)
     wallet
   }
