@@ -12,17 +12,22 @@ import scala.util.Try
 case class Proofs private (proofs: Seq[ByteStr]) {
   val bytes: Coeval[Array[Byte]]  = Coeval.evalOnce(Proofs.Version +: Deser.serializeArrays(proofs.map(_.arr)))
   val base58: Coeval[Seq[String]] = Coeval.evalOnce(proofs.map(p => Base58.encode(p.arr)))
+  def toSignature: ByteStr        = proofs.headOption.getOrElse(ByteStr.empty)
+  def length: Int                 = proofs.length
+  def isEmpty: Boolean            = proofs.isEmpty
+  override def toString: String   = s"Proofs(${proofs.mkString(", ")})"
 }
 
 object Proofs {
+  val Version: Byte       = 1
+  val MaxProofs: Int      = 8
+  val MaxProofSize: Int   = 64
 
-  val Version             = 1: Byte
-  val MaxProofs           = 8
-  val MaxProofSize        = 64
-  val MaxProofStringSize  = base58Length(MaxProofSize)
-  val MaxAnchorStringSize = base58Length(AnchorTransaction.EntryLength.last)
+  val MaxProofStringSize: Int = base58Length(MaxProofSize)
 
-  lazy val empty = create(Seq.empty).explicitGet()
+  lazy val empty = new Proofs(Nil)
+
+  def fromSignature(signature: ByteStr): Proofs = new Proofs(Seq(signature))
 
   def create(proofs: Seq[ByteStr]): Either[ValidationError, Proofs] =
     for {
@@ -36,4 +41,8 @@ object Proofs {
       arrs <- Try(Deser.parseArrays(ab.tail)).toEither.left.map(er => GenericError(er.toString))
       r    <- create(arrs.map(ByteStr(_)))
     } yield r
+
+  def apply(proof1: ByteStr, proofs: ByteStr*): Proofs = new Proofs(proof1 +: proofs)
+  def apply(proof1: Array[Byte]): Proofs               = new Proofs(Seq(ByteStr(proof1)))
+  def apply(proofs: Seq[ByteStr]): Proofs              = new Proofs(proofs)
 }

@@ -6,9 +6,9 @@ import com.ltonetwork.state.diffs._
 import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
-import com.ltonetwork.transaction.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.features.BlockchainFeatures
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 
 class BlockchainUpdaterBadReferencesTest
     extends PropSpec
@@ -17,14 +17,14 @@ class BlockchainUpdaterBadReferencesTest
     with Matchers
     with TransactionGen {
 
-  val preconditionsAndPayments: Gen[(GenesisTransaction, TransferTransactionV1, TransferTransactionV1, TransferTransactionV1)] = for {
+  val preconditionsAndPayments: Gen[(GenesisTransaction, TransferTransaction, TransferTransaction, TransferTransaction)] = for {
     master    <- accountGen
     recipient <- accountGen
     ts        <- positiveIntGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    payment: TransferTransactionV1  <- ltoTransferGeneratorP(ts, master, recipient)
-    payment2: TransferTransactionV1 <- ltoTransferGeneratorP(ts, master, recipient)
-    payment3: TransferTransactionV1 <- ltoTransferGeneratorP(ts, master, recipient)
+    payment: TransferTransaction  <- ltoTransferGeneratorP(ts, master, recipient)
+    payment2: TransferTransaction <- ltoTransferGeneratorP(ts, master, recipient)
+    payment3: TransferTransaction <- ltoTransferGeneratorP(ts, master, recipient)
   } yield (genesis, payment, payment2, payment3)
 
   property("microBlock: referenced (micro)block doesn't exist") {

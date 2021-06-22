@@ -1,60 +1,100 @@
 package com.ltonetwork.transaction.lease
 
-import com.google.common.primitives.{Bytes, Longs}
+import cats.data.{Validated, ValidatedNel}
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.crypto
+import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
+import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
+import com.ltonetwork.transaction.TransactionParser.{HardcodedVersion1, MultipleVersions}
 import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json}
-import com.ltonetwork.account.{Address, AddressOrAlias, PublicKeyAccount}
-import com.ltonetwork.transaction.{AssetId, ProvenTransaction, ValidationError, VersionedTransaction}
-import scorex.crypto.signatures.Curve25519._
-import scala.util.Try
+import play.api.libs.json.JsObject
 
-trait LeaseTransaction extends ProvenTransaction with VersionedTransaction {
-  def amount: Long
-  def fee: Long
-  def recipient: AddressOrAlias
+import scala.util.{Either, Try}
 
-  override final val json: Coeval[JsObject] = Coeval.evalOnce(
-    jsonBase() ++ Json.obj(
-      "version"   -> version,
-      "amount"    -> amount,
-      "recipient" -> recipient.stringRepr,
-      "fee"       -> fee,
-      "timestamp" -> timestamp
-    ))
+case class LeaseTransaction private (version: Byte,
+                                     chainId: Byte,
+                                     timestamp: Long,
+                                     sender: PublicKeyAccount,
+                                     fee: Long,
+                                     recipient: Address,
+                                     amount: Long,
+                                     sponsor: Option[PublicKeyAccount],
+                                     proofs: Proofs)
+    extends Transaction
+    with HardcodedV1
+    with SigProofsSwitch {
 
-  protected final val bytesBase = Coeval.evalOnce(
-    Bytes.concat(sender.publicKey, recipient.bytes.arr, Longs.toByteArray(amount), Longs.toByteArray(fee), Longs.toByteArray(timestamp)))
+  override def builder: TransactionBuilder.For[LeaseTransaction] = LeaseTransaction
+  private def serializer: TransactionSerializer.For[LeaseTransaction] = builder.serializer(version)
+
+  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
 }
 
-object LeaseTransaction {
+object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
+
+  override val typeId: Byte                 = 8
+  override def supportedVersions: Set[Byte] = Set(1, 2)
 
   object Status {
     val Active   = "active"
     val Canceled = "canceled"
   }
 
-  def validateLeaseParams(amount: Long, fee: Long, recipient: AddressOrAlias, sender: PublicKeyAccount) =
-    if (amount <= 0) {
-      Left(ValidationError.NegativeAmount(amount, "lto"))
-    } else if (Try(Math.addExact(amount, fee)).isFailure) {
-      Left(ValidationError.OverflowError)
-    } else if (fee <= 0) {
-      Left(ValidationError.InsufficientFee())
-    } else if (recipient.isInstanceOf[Address] && sender.stringRepr == recipient.stringRepr) {
-      Left(ValidationError.ToSelf)
-    } else Right(())
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
+    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
 
-  def parseBase(bytes: Array[Byte], start: Int) = {
-    val sender = PublicKeyAccount(bytes.slice(start, start + KeyLength))
-    for {
-      recRes <- AddressOrAlias.fromBytes(bytes, start + KeyLength)
-      (recipient, recipientEnd) = recRes
-      quantityStart             = recipientEnd
-      quantity                  = Longs.fromByteArray(bytes.slice(quantityStart, quantityStart + 8))
-      fee                       = Longs.fromByteArray(bytes.slice(quantityStart + 8, quantityStart + 16))
-      end                       = quantityStart + 24
-      timestamp                 = Longs.fromByteArray(bytes.slice(quantityStart + 16, end))
-    } yield (sender, recipient, quantity, fee, timestamp, end)
+  override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
+    case 1 => LeaseSerializerV1
+    case 2 => LeaseSerializerV2
+    case _ => UnknownSerializer
   }
 
+  implicit object Validator extends TxValidator[TransactionT] {
+    def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
+      import tx._
+      seq(tx)(
+        Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
+        Validated.condNel(amount > 0, None, ValidationError.NegativeAmount(amount, "lto")),
+        Validated.condNel(Try(Math.addExact(amount, fee)).isSuccess, None, ValidationError.OverflowError),
+        Validated.condNel(sender.stringRepr != recipient.stringRepr, None, ValidationError.ToSelf),
+        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(proofs.length <= 1 || version > 1, None, ValidationError.UnsupportedFeature(s"Multiple proofs not supported for tx v1")),
+      )
+    }
+  }
+
+  override def parseHeader(bytes: Array[Byte]): Try[(Byte, Int)] =
+    if (bytes(0) != 0) HardcodedVersion1(typeId).parseHeader(bytes)
+    else MultipleVersions(typeId, supportedVersions).parseHeader(bytes)
+
+  def create(version: Byte,
+             chainId: Option[Byte],
+             timestamp: Long,
+             sender: PublicKeyAccount,
+             fee: Long,
+             recipient: Address,
+             amount: Long,
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs): Either[ValidationError, TransactionT] =
+    LeaseTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, amount, sponsor, proofs).validatedEither
+
+  def signed(version: Byte,
+             timestamp: Long,
+             sender: PublicKeyAccount,
+             fee: Long,
+             recipient: Address,
+             amount: Long,
+             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, recipient, amount, None, Proofs.empty).signWith(signer)
+
+  def selfSigned(version: Byte,
+                 timestamp: Long,
+                 sender: PrivateKeyAccount,
+                 fee: Long,
+                 recipient: Address,
+                 amount: Long): Either[ValidationError, TransactionT] =
+    signed(version, timestamp, sender, fee, recipient, amount, sender)
 }

@@ -4,10 +4,10 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs._
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
-import com.ltonetwork.transaction.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 
 class BlockchainUpdaterGeneratorFeeSameBlockTest
@@ -17,7 +17,7 @@ class BlockchainUpdaterGeneratorFeeSameBlockTest
     with Matchers
     with TransactionGen {
 
-  type Setup = (GenesisTransaction, TransferTransactionV1, TransferTransactionV1)
+  type Setup = (GenesisTransaction, TransferTransaction, TransferTransaction)
 
   val preconditionsAndPayments: Gen[Setup] = for {
     sender    <- accountGen
@@ -25,8 +25,8 @@ class BlockchainUpdaterGeneratorFeeSameBlockTest
     fee       <- smallFeeGen
     ts        <- positiveIntGen
     genesis: GenesisTransaction = GenesisTransaction.create(sender, ENOUGH_AMT, ts).explicitGet()
-    payment: TransferTransactionV1 <- ltoTransferGeneratorP(sender, recipient)
-    generatorPaymentOnFee: TransferTransactionV1 = createLtoTransfer(defaultSigner, recipient, payment.fee, fee, ts + 1).explicitGet()
+    payment: TransferTransaction <- ltoTransferGeneratorP(sender, recipient)
+    generatorPaymentOnFee: TransferTransaction = createLtoTransfer(defaultSigner, recipient, payment.fee, fee, ts + 1).explicitGet()
   } yield (genesis, payment, generatorPaymentOnFee)
 
   property("block generator can't spend fee after transaction") {

@@ -3,7 +3,7 @@ package com.ltonetwork.state.diffs
 import com.ltonetwork.db.WithState
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.state.EitherExt2
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
@@ -17,16 +17,16 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
 //    acc <- otherAccountGen(candidate = master)
 //    ts        <- positiveIntGen
 //    genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-//   funding  = TransferTransactionV2.selfSigned(2,master,acc, ENOUGH_AMT/2,ts, 100*1000*1000,Array.emptyByteArray )
+//   funding  = TransferTransaction.selfSigned(2,master,acc, ENOUGH_AMT/2,ts, 100*1000*1000,Array.emptyByteArray )
 //  } yield (genesis, funding)
 
   property("disallows double spending") {
-    val preconditionsAndPayment: Gen[(GenesisTransaction, TransferTransactionV1)] = for {
+    val preconditionsAndPayment: Gen[(GenesisTransaction, TransferTransaction)] = for {
       master    <- accountGen
       recipient <- otherAccountGen(candidate = master)
       ts        <- positiveIntGen
       genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-      transfer: TransferTransactionV1 <- ltoTransferGeneratorP(master, recipient)
+      transfer: TransferTransaction <- ltoTransferGeneratorP(master, recipient)
     } yield (genesis, transfer)
 
     forAll(preconditionsAndPayment) {

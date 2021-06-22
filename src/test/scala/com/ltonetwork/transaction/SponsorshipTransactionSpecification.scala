@@ -2,8 +2,9 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.api.http.SignedSponsorshipRequest
+import com.ltonetwork.api.http.requests.sponsorship.SignedSponsorshipV1Request
 import com.ltonetwork.state.{ByteStr, EitherExt2}
+import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
 import com.ltonetwork.utils.Base58
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
@@ -26,7 +27,7 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
 
   property("serialization roundtrip") {
     forAll(sponsorshipGen)(tx => checkSerialization(tx, SponsorshipTransaction.parseBytes))
-    forAll(sponsorshipCancelGen)(tx => checkSerialization(tx, SponsorshipCancelTransaction.parseBytes))
+    forAll(cancelSponsorshipGen)(tx => checkSerialization(tx, CancelSponsorshipTransaction.parseBytes))
   }
 
   property("serialization from TypedTransaction") {
@@ -35,20 +36,20 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
       recovered.bytes() shouldEqual tx.bytes()
     }
 
-    forAll(sponsorshipCancelGen) { tx: SponsorshipTransactionBase =>
-      val recovered = SponsorshipCancelTransaction.parseBytes(tx.bytes()).get
+    forAll(cancelSponsorshipGen) { tx: SponsorshipTransactionBase =>
+      val recovered = CancelSponsorshipTransaction.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
     }
   }
 
   property("JSON roundtrip") {
-    implicit val signedFormat: Format[SignedSponsorshipRequest] = Json.format[SignedSponsorshipRequest]
+    implicit val signedFormat: Format[SignedSponsorshipV1Request] = Json.format[SignedSponsorshipV1Request]
 
     forAll(sponsorshipGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
-      val req = json.as[SignedSponsorshipRequest]
+      val req = json.as[SignedSponsorshipV1Request]
       req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
       req.timestamp shouldEqual tx.timestamp
@@ -77,10 +78,12 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
     val tx = SponsorshipTransaction
       .create(
         version = 1,
+        chainId = None,
         sender = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         recipient = p,
-        feeAmount = 100000,
+        fee = 100000,
         timestamp = 1526911531530L,
+        sponsor = None,
         proofs = Proofs(Seq(arr))
       )
       .explicitGet()

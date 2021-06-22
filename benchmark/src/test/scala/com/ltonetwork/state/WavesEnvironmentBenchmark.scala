@@ -4,7 +4,7 @@ import java.io.File
 import java.util.concurrent.{ThreadLocalRandom, TimeUnit}
 
 import com.typesafe.config.ConfigFactory
-import com.ltonetwork.account.{AddressOrAlias, AddressScheme, Alias}
+import com.ltonetwork.account.{Address, AddressScheme}
 import com.ltonetwork.database.LevelDBWriter
 import com.ltonetwork.db.LevelDBFactory
 import com.ltonetwork.lang.v1.traits.Environment
@@ -72,11 +72,6 @@ class LtoEnvironmentBenchmark {
 object LtoEnvironmentBenchmark {
 
   @State(Scope.Benchmark)
-  class ResolveAddressSt extends BaseSt {
-    val aliases: Vector[String] = load("resolveAddress", benchSettings.aliasesFile)(x => Alias.fromString(x).explicitGet().name)
-  }
-
-  @State(Scope.Benchmark)
   class TransactionByIdSt extends BaseSt {
     val allTxs: Vector[Array[Byte]] = load("transactionById", benchSettings.restTxsFile)(x => Base58.decode(x).get)
   }
@@ -86,7 +81,7 @@ object LtoEnvironmentBenchmark {
 
   @State(Scope.Benchmark)
   class AccountBalanceOfLtoSt extends BaseSt {
-    val accounts: Vector[Array[Byte]] = load("accounts", benchSettings.accountsFile)(x => AddressOrAlias.fromString(x).explicitGet().bytes.arr)
+    val accounts: Vector[Array[Byte]] = load("accounts", benchSettings.accountsFile)(x => Address.fromString(x).explicitGet().bytes.arr)
   }
 
   @State(Scope.Benchmark)

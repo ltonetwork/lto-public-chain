@@ -1,16 +1,16 @@
 package com.ltonetwork.it
 
 import java.net.{InetSocketAddress, URL}
-
 import com.typesafe.config.Config
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.it.util.GlobalTimer
 import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state.EitherExt2
-import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV2, LeaseTransactionV2}
+import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
+import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
-import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransactionV2}
-import com.ltonetwork.transaction.{AnchorTransaction, GenesisTransaction}
+import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransaction}
 import com.ltonetwork.utils.{Base58, LoggerFacade}
 import org.asynchttpclient.Dsl.{config => clientConfig, _}
 import org.asynchttpclient._
@@ -50,10 +50,10 @@ object Node {
     def fee(txTypeId: Byte): Long =
       (txTypeId match {
         case GenesisTransaction.typeId       => 0
-        case TransferTransactionV2.typeId    => 1000
-        case LeaseTransactionV2.typeId       => 1000
+        case TransferTransaction.typeId      => 1000
+        case LeaseTransaction.typeId         => 1000
         case SetScriptTransaction.typeId     => 1000
-        case LeaseCancelTransactionV2.typeId => 1000
+        case CancelLeaseTransaction.typeId   => 1000
         case MassTransferTransaction.typeId  => 1000
         case AnchorTransaction.typeId        => 100
         case _                               => throw new Exception("it: tx not supported")

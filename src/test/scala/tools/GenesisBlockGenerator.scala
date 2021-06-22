@@ -1,7 +1,6 @@
 package tools
 
 import java.io.{File, FileNotFoundException}
-
 import com.typesafe.config.ConfigFactory
 import com.ltonetwork.crypto
 import com.ltonetwork.settings.{GenesisSettings, GenesisTransactionSettings}
@@ -11,8 +10,10 @@ import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import com.ltonetwork.account.{Address, AddressScheme, PrivateKeyAccount}
 import com.ltonetwork.block.Block
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.Proofs
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.wallet.Wallet
+
 import scala.concurrent.duration._
 
 object GenesisBlockGenerator extends App {
@@ -80,7 +81,7 @@ object GenesisBlockGenerator extends App {
 
   val genesisTxs: Seq[GenesisTransaction] = shares.map {
     case (addrInfo, part) =>
-      GenesisTransaction(addrInfo.accountAddress, part, timestamp, ByteStr.empty)
+      GenesisTransaction(1, 'T', timestamp, addrInfo.accountAddress, part, Proofs.fromSignature(ByteStr.empty))
   }.toSeq
 
   val genesisBlock: Block = {

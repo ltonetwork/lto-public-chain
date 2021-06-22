@@ -6,14 +6,14 @@ import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.{BlockDiffer, ENOUGH_AMT}
-import com.ltonetwork.transaction.GenesisTransaction
-import com.ltonetwork.transaction.transfer.TransferTransactionV1
+import com.ltonetwork.transaction.genesis.GenesisTransaction
+import com.ltonetwork.transaction.transfer.TransferTransaction
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 
 class BurnFeeTest extends PropSpec with PropertyChecks with DomainScenarioDrivenPropertyCheck with Matchers with TransactionGen {
-  type Setup = (GenesisTransaction, TransferTransactionV1)
+  type Setup = (GenesisTransaction, TransferTransaction)
 
   val burnFeeEnabledSettings: LtoSettings = settings.copy(
     blockchainSettings =
@@ -30,7 +30,7 @@ class BurnFeeTest extends PropSpec with PropertyChecks with DomainScenarioDriven
     amount <- Gen.choose(1000000000L, 100000000000L)
     fee    <- Gen.choose(150000000L, 150000000L)
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    tx                          = TransferTransactionV1.selfSigned(master, alice, amount, ts, fee, ByteStr.empty.arr).explicitGet()
+    tx                          = TransferTransaction.selfSigned(1, ts, master, fee, alice, amount, ByteStr.empty.arr).explicitGet()
   } yield (genesis, tx)
 
   property("burns exactly 0.1 LTO for 1 transaction") {

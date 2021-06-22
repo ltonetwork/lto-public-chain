@@ -9,8 +9,8 @@ import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.account.Address
 import com.ltonetwork.settings.TestFunctionalitySettings
 import com.ltonetwork.lagonaki.mocks.TestBlock
-import com.ltonetwork.transaction.GenesisTransaction
-import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+import com.ltonetwork.transaction.genesis.GenesisTransaction
+import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.transfer._
 
 class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
@@ -22,7 +22,7 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
 
   property("can lease/cancel lease preserving lto invariant") {
 
-    val sunnyDayLeaseLeaseCancel: Gen[(GenesisTransaction, LeaseTransaction, LeaseCancelTransaction)] = for {
+    val sunnyDayLeaseLeaseCancel: Gen[(GenesisTransaction, LeaseTransaction, CancelLeaseTransaction)] = for {
       master    <- accountGen
       recipient <- accountGen suchThat (_ != master)
       ts        <- positiveIntGen
@@ -50,7 +50,7 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
     }
   }
 
-  val cancelLeaseTwice: Gen[(GenesisTransaction, TransferTransactionV1, LeaseTransaction, LeaseCancelTransaction, LeaseCancelTransaction)] = for {
+  val cancelLeaseTwice: Gen[(GenesisTransaction, TransferTransaction, LeaseTransaction, CancelLeaseTransaction, CancelLeaseTransaction)] = for {
     master   <- accountGen
     recpient <- accountGen suchThat (_ != master)
     ts       <- timestampGen
@@ -91,7 +91,7 @@ class LeaseTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
   }
 
   def cancelLeaseOfAnotherSender(
-      unleaseByRecipient: Boolean): Gen[(GenesisTransaction, GenesisTransaction, LeaseTransaction, LeaseCancelTransaction)] =
+      unleaseByRecipient: Boolean): Gen[(GenesisTransaction, GenesisTransaction, LeaseTransaction, CancelLeaseTransaction)] =
     for {
       master    <- accountGen
       recipient <- accountGen suchThat (_ != master)

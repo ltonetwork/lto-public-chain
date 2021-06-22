@@ -5,8 +5,9 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
 import com.ltonetwork.state.EitherExt2
-import com.ltonetwork.transaction.transfer.TransferTransactionV2
-import com.ltonetwork.transaction.{GenesisTransaction, SponsorshipCancelTransaction, SponsorshipTransaction}
+import com.ltonetwork.transaction.genesis.GenesisTransaction
+import com.ltonetwork.transaction.transfer.TransferTransaction
+import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 import com.ltonetwork.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
@@ -25,16 +26,16 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
     sender  <- accountGen
     other   <- accountGen
     ts      <- timestampGen
-    sposorTxFee = 5 * 100000000L
+    sponsorTxFee = 5 * 100000000L
     transferTxFee <- enoughFeeGen
     transferAmt   <- positiveLongGen
     g1 = GenesisTransaction.create(sponsor, ENOUGH_AMT, ts).explicitGet()
     g2 = GenesisTransaction.create(sender, ENOUGH_AMT, ts).explicitGet()
 
     version <- Gen.oneOf(SponsorshipTransaction.supportedVersions.toSeq)
-    sponsorship = SponsorshipTransaction.selfSigned(version, sponsor, sender, sposorTxFee, ts + 1).explicitGet()
-    cancel      = SponsorshipCancelTransaction.selfSigned(version, sponsor, sender, sposorTxFee, ts + 1).explicitGet()
-    transfer    = TransferTransactionV2.selfSigned(2, sender, other, transferAmt, ts + 1, transferTxFee, Array.emptyByteArray).explicitGet()
+    sponsorship = SponsorshipTransaction.selfSigned(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
+    cancel      = CancelSponsorshipTransaction.selfSigned(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
+    transfer    = TransferTransaction.selfSigned(2, ts + 1, sender, transferTxFee, other, transferAmt, Array.emptyByteArray).explicitGet()
   } yield (List(g1, g2), sponsorship, cancel, transfer)
 
   property("sunny day") {
@@ -81,7 +82,7 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
       sender   <- accountGen
       other    <- accountGen
       ts       <- positiveLongGen
-      sposorTxFee = 5 * 100000000L
+      sponsorTxFee = 5 * 100000000L
       transferTxFee <- enoughFeeGen
       transferAmt   <- positiveLongGen
       g1 = GenesisTransaction.create(sender, ENOUGH_AMT, ts).explicitGet()
@@ -89,10 +90,10 @@ class SponsorTransactionDiffTest extends PropSpec with PropertyChecks with Match
       g3 = GenesisTransaction.create(sponsor2, ENOUGH_AMT, ts).explicitGet()
 
       version <- Gen.oneOf(SponsorshipTransaction.supportedVersions.toSeq)
-      sponsorship  = SponsorshipTransaction.selfSigned(version, sponsor, sender, sposorTxFee, ts + 1).explicitGet()
-      sponsorship2 = SponsorshipTransaction.selfSigned(version, sponsor2, sender, sposorTxFee, ts + 1).explicitGet()
-      cancel       = SponsorshipCancelTransaction.selfSigned(version, sponsor, sender, sposorTxFee, ts + 1).explicitGet()
-      transfer     = TransferTransactionV2.selfSigned(2, sender, other, transferAmt, ts + 1, transferTxFee, Array.emptyByteArray).explicitGet()
+      sponsorship  = SponsorshipTransaction.selfSigned(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
+      sponsorship2 = SponsorshipTransaction.selfSigned(version, ts + 1, sponsor2, sponsorTxFee, sender).explicitGet()
+      cancel       = CancelSponsorshipTransaction.selfSigned(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
+      transfer     = TransferTransaction.selfSigned(2, ts + 1, sender, transferTxFee, other, transferAmt, Array.emptyByteArray).explicitGet()
     } yield (List(g1, g2, g3), sponsorship, sponsorship2, cancel, transfer)
 
     forAll(setup2) {

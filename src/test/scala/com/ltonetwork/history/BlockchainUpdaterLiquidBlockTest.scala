@@ -11,8 +11,9 @@ import com.ltonetwork.block.{Block, MicroBlock, SignerData}
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction.ValidationError.GenericError
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
-import com.ltonetwork.transaction.{GenesisTransaction, Transaction}
+import com.ltonetwork.transaction.Transaction
 
 class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with DomainScenarioDrivenPropertyCheck with Matchers with TransactionGen {
 
@@ -78,9 +79,9 @@ class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with
   private def validTransferGen(from: PrivateKeyAccount, timestamp: Long): Gen[Transaction] =
     for {
       amount    <- smallFeeGen
-      feeAmount <- smallFeeGen
+      fee <- smallFeeGen
       recipient <- accountGen
-    } yield TransferTransactionV1.selfSigned(from, recipient, amount, timestamp, feeAmount, Array.empty).explicitGet()
+    } yield TransferTransaction.selfSigned(1, timestamp, from, fee, recipient, amount, Array.empty).explicitGet()
 
   private def unsafeChainBaseAndMicro(totalRefTo: ByteStr,
                                       base: Seq[Transaction],

@@ -1,7 +1,7 @@
 package com.ltonetwork.state.reader
 
 import com.ltonetwork.consensus.GeneratingBalanceProvider
-import com.ltonetwork.features.BlockchainFeatures.{SmartAccounts}
+import com.ltonetwork.features.BlockchainFeatures.SmartAccounts
 import com.ltonetwork.state.{EitherExt2, LeaseBalance}
 import com.ltonetwork.state.diffs._
 import com.ltonetwork.{NoShrink, TransactionGen}
@@ -10,8 +10,8 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.settings.TestFunctionalitySettings.Enabled
-import com.ltonetwork.transaction.GenesisTransaction
-import com.ltonetwork.transaction.lease.LeaseTransactionV2
+import com.ltonetwork.transaction.genesis.GenesisTransaction
+import com.ltonetwork.transaction.lease.LeaseTransaction
 
 class StateReaderEffectiveBalancePropertyTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
   property("No-interactions genesis account's effectiveBalance doesn't depend on depths") {
@@ -43,9 +43,9 @@ class StateReaderEffectiveBalancePropertyTest extends PropSpec with PropertyChec
       genesis = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
       leaser <- accountGen
       xfer1  <- transferGeneratorPV2(ts + 1, master, leaser.toAddress, ENOUGH_AMT / 3)
-      lease1 = LeaseTransactionV2.signed(2, leaser, xfer1.amount - Fee, Fee, ts + 2, master.toAddress, leaser).explicitGet()
+      lease1 = LeaseTransaction.selfSigned(2, ts + 2, leaser, Fee, master.toAddress, xfer1.amount - Fee).explicitGet()
       xfer2 <- transferGeneratorPV2(ts + 3, master, leaser.toAddress, ENOUGH_AMT / 3)
-      lease2 = LeaseTransactionV2.signed(2, leaser, xfer2.amount - Fee, Fee, ts + 4, master.toAddress, leaser).explicitGet()
+      lease2 = LeaseTransaction.selfSigned(2, ts + 4, leaser, Fee, master.toAddress, xfer2.amount - Fee).explicitGet()
     } yield (leaser, genesis, xfer1, lease1, xfer2, lease2)
 
     forAll(setup) {

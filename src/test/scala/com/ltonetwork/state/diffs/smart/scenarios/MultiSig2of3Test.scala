@@ -14,6 +14,7 @@ import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.transfer._
@@ -40,8 +41,7 @@ class MultiSig2of3Test extends PropSpec with PropertyChecks with Matchers with T
     CompilerV1(dummyCompilerContext, untyped).explicitGet()._1
   }
 
-  val preconditionsAndTransfer: Gen[(GenesisTransaction, SetScriptTransaction, TransferTransactionV2, Seq[ByteStr])] = for {
-    version   <- Gen.oneOf(TransferTransactionV2.supportedVersions.toSeq)
+  val preconditionsAndTransfer: Gen[(GenesisTransaction, SetScriptTransaction, TransferTransaction, Seq[ByteStr])] = for {
     master    <- accountGen
     s0        <- accountGen
     s1        <- accountGen
@@ -55,8 +55,8 @@ class MultiSig2of3Test extends PropSpec with PropertyChecks with Matchers with T
     timestamp <- timestampGen
   } yield {
     val unsigned =
-      TransferTransactionV2
-        .create(version, master, recepient, amount, timestamp, fee, Array.emptyByteArray, proofs = Proofs.empty)
+      TransferTransaction
+        .create(2, None, timestamp, master, fee, recepient, amount, Array.emptyByteArray, None, Proofs.empty)
         .explicitGet()
     val sig0 = ByteStr(crypto.sign(s0, unsigned.bodyBytes()))
     val sig1 = ByteStr(crypto.sign(s1, unsigned.bodyBytes()))

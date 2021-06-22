@@ -2,7 +2,8 @@ package com.ltonetwork.state.diffs
 
 import com.ltonetwork.state.{Blockchain, Diff}
 import com.ltonetwork.transaction.ValidationError.GenericError
-import com.ltonetwork.transaction.{SponsorshipCancelTransaction, SponsorshipTransaction, ValidationError}
+import com.ltonetwork.transaction.ValidationError
+import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 
 object SponsorshipTransactionDiff {
   def sponsor(blockchain: Blockchain, height: Int)(tx: SponsorshipTransaction): Either[ValidationError, Diff] = {
@@ -17,7 +18,7 @@ object SponsorshipTransactionDiff {
       Right(Diff(height, tx, sponsoredBy = Map((tx.recipient -> (newSponsor +: list)))))
   }
 
-  def cancel(blockchain: Blockchain, height: Int)(tx: SponsorshipCancelTransaction): Either[ValidationError, Diff] = {
+  def cancel(blockchain: Blockchain, height: Int)(tx: CancelSponsorshipTransaction): Either[ValidationError, Diff] = {
     val list          = blockchain.sponsorOf(tx.recipient)
     val formerSponsor = tx.sender.toAddress
     if (!list.contains(formerSponsor)) Left(GenericError(s"${tx.recipient} is not sponsored by $formerSponsor"))

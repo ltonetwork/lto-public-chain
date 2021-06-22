@@ -187,6 +187,10 @@ commands += Command.command("packageAll") { state =>
   "clean" :: "assembly" :: "debian:packageBin" :: state
 }
 
+commands += Command.command("clean") { state =>
+  "clean" :: state
+}
+
 // https://stackoverflow.com/a/48592704/4050580
 def allProjects: List[ProjectReference] = ReflectUtilities.allVals[Project](this).values.toList map { p =>
   p: ProjectReference

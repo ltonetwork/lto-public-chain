@@ -9,7 +9,8 @@ import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.settings.TestFunctionalitySettings
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
-import com.ltonetwork.transaction.{DataTransaction, GenesisTransaction}
+import com.ltonetwork.transaction.data.DataTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 
 class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
 
@@ -22,20 +23,20 @@ class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers
   } yield (genesis, master, ts)
 
   def data(version: Byte, sender: PrivateKeyAccount, data: List[DataEntry[_]], fee: Long, timestamp: Long): DataTransaction =
-    DataTransaction.selfSigned(version, sender, data, fee, timestamp).explicitGet()
+    DataTransaction.selfSigned(version, timestamp, sender, fee, data).explicitGet()
 
   property("state invariants hold") {
     val setup = for {
       (genesis, master, ts) <- baseSetup
 
-      key1   <- validAliasStringGen
+      key1   <- dataKeyGen
       value1 <- positiveLongGen
       item1 = IntegerDataEntry(key1, value1)
       fee1     <- smallFeeGen
       version1 <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
       dataTx1 = data(version1, master, List(item1), fee1, ts + 10000)
 
-      key2   <- validAliasStringGen
+      key2   <- dataKeyGen
       value2 <- Arbitrary.arbitrary[Boolean]
       item2 = BooleanDataEntry(key2, value2)
       fee2     <- smallFeeGen
@@ -93,7 +94,7 @@ class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers
   property("cannot overspend funds") {
     val setup = for {
       (genesis, master, ts) <- baseSetup
-      key                   <- validAliasStringGen
+      key                   <- dataKeyGen
       value                 <- bytes64gen
       feeOverhead           <- Gen.choose[Long](1, ENOUGH_AMT)
       version               <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)

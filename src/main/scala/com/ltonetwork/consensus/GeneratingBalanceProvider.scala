@@ -14,14 +14,14 @@ object GeneratingBalanceProvider {
   private val SecondDepth                                = 1000
 
   def isMiningAllowed(blockchain: Blockchain, height: Int, effectiveBalance: Long): Boolean = {
-    val activated = blockchain.activatedFeatures.get(BlockchainFeatures.DUMMY_FOR_TESTS_SmallerMinimalGeneratingBalance.id).exists(height >= _)
+    val activated = blockchain.activatedFeatures.get(BlockchainFeatures.SmallerMinimalGeneratingBalance.id).exists(height >= _)
     (!activated && effectiveBalance >= MinimalEffectiveBalanceForGenerator1) || (activated && effectiveBalance >= MinimalEffectiveBalanceForGenerator2)
   }
 
   def isEffectiveBalanceValid(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, block: Block, effectiveBalance: Long): Boolean =
     (effectiveBalance >= MinimalEffectiveBalanceForGenerator1) ||
       blockchain.activatedFeatures
-        .get(BlockchainFeatures.DUMMY_FOR_TESTS_SmallerMinimalGeneratingBalance.id)
+        .get(BlockchainFeatures.SmallerMinimalGeneratingBalance.id)
         .exists(height >= _) && effectiveBalance >= MinimalEffectiveBalanceForGenerator2
 
   def balance(blockchain: Blockchain, fs: FunctionalitySettings, account: Address, blockId: BlockId = ByteStr.empty): Long = {

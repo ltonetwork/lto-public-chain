@@ -1,29 +1,37 @@
 package com.ltonetwork.account
 
 import java.nio.ByteBuffer
-
 import com.ltonetwork.crypto
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.utils.{Base58, ScorexLogging, base58Length}
 import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.transaction.ValidationError.InvalidAddress
+import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Reads, Writes}
 
-sealed trait Address extends AddressOrAlias {
+sealed trait Address {
   val bytes: ByteStr
   lazy val address: String    = bytes.base58
   lazy val stringRepr: String = address
 
+  override def toString: String = stringRepr
+
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case a: Address => bytes == a.bytes
+    case _          => false
+  }
+
+  override def hashCode(): Int = java.util.Arrays.hashCode(bytes.arr)
 }
 
 object Address extends ScorexLogging {
 
   val Prefix: String = "address:"
 
-  val AddressVersion: Byte = 1
-  val ChecksumLength       = 4
-  val HashLength           = 20
-  val AddressLength        = 1 + 1 + HashLength + ChecksumLength
-  val AddressStringLength  = base58Length(AddressLength)
+  val AddressVersion: Byte     = 1
+  val ChecksumLength: Int      = 4
+  val HashLength: Int          = 20
+  val AddressLength: Int       = 1 + 1 + HashLength + ChecksumLength
+  val AddressStringLength: Int = base58Length(AddressLength)
 
   private def scheme = AddressScheme.current
 
@@ -51,6 +59,16 @@ object Address extends ScorexLogging {
     } yield new AddressImpl(ByteStr(addressBytes))).left.map(InvalidAddress)
   }
 
+  def fromBytes(bytes: Array[Byte], position: Int): Either[InvalidAddress, (Address, Int)] = {
+    bytes(position) match {
+      case Address.AddressVersion =>
+        val addressEnd   = position + Address.AddressLength
+        val addressBytes = bytes.slice(position, addressEnd)
+        Address.fromBytes(addressBytes).map((_, addressEnd))
+      case _ => Left(ValidationError.InvalidAddress("Unknown address version"))
+    }
+  }
+
   def fromString(addressStr: String): Either[ValidationError, Address] = {
     val base58String = if (addressStr.startsWith(Prefix)) addressStr.drop(Prefix.length) else addressStr
     for {
@@ -64,4 +82,8 @@ object Address extends ScorexLogging {
 
   private def calcCheckSum(withoutChecksum: Array[Byte]): Array[Byte] = crypto.secureHash(withoutChecksum).take(ChecksumLength)
 
+  implicit val jsonFormat: Format[Address] = Format[Address](
+    Reads(jsValue => fromString(jsValue.as[String]).fold(err => JsError(err.toString), JsSuccess(_))),
+    Writes(addr => JsString(addr.stringRepr))
+  )
 }

@@ -41,11 +41,7 @@
             <parameter name="maxParameters"><![CDATA[15]]></parameter>
         </parameters>
     </check>
-    <check level="warning" class="org.scalastyle.scalariform.MagicNumberChecker" enabled="true">
-        <parameters>
-            <parameter name="ignore"><![CDATA[-1,0,1,2,3]]></parameter>
-        </parameters>
-    </check>
+    <check level="warning" class="org.scalastyle.scalariform.MagicNumberChecker" enabled="false"></check>
     <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceBeforeLeftBracketChecker"
            enabled="true"></check>
     <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceAfterLeftBracketChecker"

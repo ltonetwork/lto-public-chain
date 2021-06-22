@@ -5,12 +5,12 @@ import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
 import org.scalatest.{Matchers, PropSpec}
 import org.scalatest.prop.PropertyChecks
-import com.ltonetwork.account.{Address, Alias}
-import com.ltonetwork.transaction.{ProvenTransaction, VersionedTransaction}
+import com.ltonetwork.account.Address
+import com.ltonetwork.transaction.Transaction
 import play.api.libs.json.Json // For string escapes.
 
 class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
-  def provenPart(t: ProvenTransaction): String = {
+  def provenPart(t: Transaction): String = {
     def pg(i: Int) = s"let proof$i = t.proofs[$i] == base58'${t.proofs.proofs.applyOrElse(i, (_: Int) => ByteStr.empty).base58}'"
     s"""
        |   let id = t.id == base58'${t.id().base58}'
@@ -19,10 +19,7 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
        |   let bodyBytes = t.bodyBytes == base64'${ByteStr(t.bodyBytes.apply()).base64}'
        |   let sender = t.sender == addressFromPublicKey(base58'${ByteStr(t.sender.publicKey).base58}')
        |   let senderPublicKey = t.senderPublicKey == base58'${ByteStr(t.sender.publicKey).base58}'
-       |   let version = t.version == ${t match {
-         case v: VersionedTransaction => v.version
-         case _                       => 1
-       }}
+       |   let version = t.version == ${t.version}
        |   ${Range(0, 8).map(pg).mkString("\n")}
      """.stripMargin
   }
@@ -114,7 +111,7 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
   }
   property("MassTransferTransaction binding") {
     forAll(massTransferGen) { t =>
-      def pg(i: Int) =
+      def pg(i: Int): String =
         s"""let recipient$i =
            | t.transfers[$i].recipient.bytes == base58'${t.transfers(i).address.cast[Address].map(_.bytes.base58).getOrElse("")}'
            |let amount$i = t.transfers[$i].amount == ${t.transfers(i).amount}
@@ -124,7 +121,7 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
         if (t.transfers.isEmpty) assertProvenPart
         else
           assertProvenPart + s" &&" + {
-            Range(0, t.transfers.length)
+            t.transfers.indices
               .map(i => s"recipient$i && amount$i")
               .mkString(" && ")
           }
@@ -135,7 +132,7 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
                       |     let transferCount = t.transferCount == ${t.transfers.length}
                       |     let totalAmount = t.totalAmount == ${t.transfers.map(_.amount).sum}
                       |     let attachment = t.attachment == base58'${ByteStr(t.attachment).base58}'
-                      |     ${Range(0, t.transfers.length).map(pg).mkString("\n")}
+                      |     ${t.transfers.indices.map(pg).mkString("\n")}
                       |   ${provenPart(t)}
                       |   $resString && transferCount && totalAmount && attachment
                       | case other => throw()

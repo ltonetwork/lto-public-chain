@@ -6,13 +6,13 @@ import org.scalatest.Suite
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.block.Block
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
-import com.ltonetwork.transaction.{SignedTransaction, Transaction}
+import com.ltonetwork.transaction.Transaction
 
 trait BlockGen extends TransactionGen { _: Suite =>
 
   import BlockGen._
 
-  val blockParamGen: Gen[(Seq[SignedTransaction], PrivateKeyAccount)] = for {
+  val blockParamGen: Gen[(Seq[Transaction], PrivateKeyAccount)] = for {
     count        <- Gen.choose(minTransactionsInBlockCount, maxTransactionsInBlockCount)
     transactions <- randomTransactionsGen(count)
     signer       <- accountGen

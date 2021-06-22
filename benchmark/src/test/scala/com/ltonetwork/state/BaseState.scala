@@ -2,7 +2,6 @@ package com.ltonetwork.state
 
 import java.io.File
 import java.nio.file.Files
-
 import com.ltonetwork.TransactionGenBase
 import com.ltonetwork.database.LevelDBWriter
 import com.ltonetwork.db.LevelDBFactory
@@ -15,7 +14,8 @@ import org.scalacheck.Gen
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.block.Block
 import com.ltonetwork.lagonaki.mocks.TestBlock
-import com.ltonetwork.transaction.{GenesisTransaction, Transaction}
+import com.ltonetwork.transaction.Transaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 
 trait BaseState extends TransactionGenBase {
   import BaseState._

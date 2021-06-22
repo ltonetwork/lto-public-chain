@@ -7,7 +7,6 @@ import com.ltonetwork.lang.v1.parser.Parser
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.smart.smartEnabledFS
 import com.ltonetwork.state.diffs.{ENOUGH_AMT, assertDiffAndState}
-import com.ltonetwork.transaction.GenesisTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.utils.{Base58, dummyCompilerContext}
@@ -16,7 +15,7 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import org.scalacheck.Gen
 
 class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
@@ -42,7 +41,7 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
       val compilerScript = CompilerV1(dummyCompilerContext, untypedScript).explicitGet()._1
       ScriptV1(compilerScript).explicitGet()
     }
-    setScriptTransaction: SetScriptTransaction = SetScriptTransaction.selfSigned(1, recipient, Some(typedScript), 1000000000L, ts).explicitGet()
+    setScriptTransaction: SetScriptTransaction = SetScriptTransaction.selfSigned(1, ts, recipient, 1000000000L, Some(typedScript)).explicitGet()
 
   } yield (Seq(genesis1, genesis2), setScriptTransaction, transfer)
 

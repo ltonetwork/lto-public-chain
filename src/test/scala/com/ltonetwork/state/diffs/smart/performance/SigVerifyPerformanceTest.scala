@@ -14,7 +14,7 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.lagonaki.mocks.TestBlock
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.transfer._
 
@@ -22,18 +22,18 @@ class SigVerifyPerformanceTest extends PropSpec with PropertyChecks with Matcher
 
   private val AmtOfTxs = 10000
 
-  private def simpleSendGen(from: PrivateKeyAccount, to: PublicKeyAccount, ts: Long): Gen[TransferTransactionV1] =
+  private def simpleSendGen(from: PrivateKeyAccount, to: PublicKeyAccount, ts: Long): Gen[TransferTransaction] =
     for {
       amt <- smallFeeGen
       fee <- smallFeeGen
-    } yield TransferTransactionV1.selfSigned(from, to.toAddress, amt, ts, fee, Array.emptyByteArray).explicitGet()
+    } yield TransferTransaction.selfSigned(1, ts, from, fee, to.toAddress, amt, Array.emptyByteArray).explicitGet()
 
-  private def scriptedSendGen(from: PrivateKeyAccount, to: PublicKeyAccount, ts: Long): Gen[TransferTransactionV2] =
+  private def scriptedSendGen(from: PrivateKeyAccount, to: PublicKeyAccount, ts: Long): Gen[TransferTransaction] =
     for {
-      version <- Gen.oneOf(TransferTransactionV2.supportedVersions.toSeq)
+      version <- Gen.oneOf(TransferTransaction.supportedVersions.toSeq)
       amt     <- smallFeeGen
       fee     <- smallFeeGen
-    } yield TransferTransactionV2.selfSigned(version, from, to.toAddress, amt, ts, fee, Array.emptyByteArray).explicitGet()
+    } yield TransferTransaction.selfSigned(version, ts, from, fee, to.toAddress, amt, Array.emptyByteArray).explicitGet()
 
   private def differentTransfers(typed: EXPR) =
     for {

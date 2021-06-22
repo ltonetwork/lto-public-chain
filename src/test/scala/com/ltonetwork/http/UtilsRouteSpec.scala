@@ -52,26 +52,6 @@ class UtilsRouteSpec extends RouteSpec("/utils") with RestAPISettingsHelper with
     }
   }
 
-  routePath("/seed") in {
-    Get(routePath("/seed")) ~> route ~> check {
-      val seed = Base58.decode((responseAs[JsValue] \ "seed").as[String])
-      seed shouldBe 'success
-      seed.get.length shouldEqual UtilsApiRoute.DefaultSeedSize
-    }
-  }
-
-  routePath("/seed/{length}") in forAll(Gen.posNum[Int]) { l =>
-    if (l > UtilsApiRoute.MaxSeedSize) {
-      Get(routePath(s"/seed/$l")) ~> route should produce(TooBigArrayAllocation)
-    } else {
-      Get(routePath(s"/seed/$l")) ~> route ~> check {
-        val seed = Base58.decode((responseAs[JsValue] \ "seed").as[String])
-        seed shouldBe 'success
-        seed.get.length shouldEqual l
-      }
-    }
-  }
-
   for ((hash, f) <- Seq[(String, String => Array[Byte])](
          "secure" -> crypto.secureHash,
          "fast"   -> crypto.fastHash

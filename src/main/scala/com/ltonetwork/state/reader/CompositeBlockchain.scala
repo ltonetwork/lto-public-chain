@@ -5,8 +5,8 @@ import com.ltonetwork.account.Address
 import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.block.{Block, BlockHeader}
 import com.ltonetwork.state._
-import com.ltonetwork.transaction.Transaction.Type
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.smart.script.Script
 
@@ -41,7 +41,7 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
 
   override def height: Int = inner.height + (if (maybeDiff.isDefined) 1 else 0)
 
-  override def addressTransactions(address: Address, types: Set[Type], count: Int, from: Int): Seq[(Int, Transaction)] = {
+  override def addressTransactions(address: Address, types: Set[Byte], count: Int, from: Int): Seq[(Int, Transaction)] = {
     val transactionsFromDiff = diff.transactions.values.view
       .collect {
         case (height, tx, addresses) if addresses(address) && (types.isEmpty || types.contains(tx.builder.typeId)) => (height, tx)
@@ -145,9 +145,9 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
 
   override def carryFee: Long = carry
 
-  override def blockBytes(height: Int): Option[Array[Type]] = inner.blockBytes(height)
+  override def blockBytes(height: Int): Option[Array[Byte]] = inner.blockBytes(height)
 
-  override def blockBytes(blockId: ByteStr): Option[Array[Type]] = inner.blockBytes(blockId)
+  override def blockBytes(blockId: ByteStr): Option[Array[Byte]] = inner.blockBytes(blockId)
 
   override def heightOf(blockId: ByteStr): Option[Int] = inner.heightOf(blockId)
 
@@ -172,7 +172,7 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
 
   override def associations(address: Address): Blockchain.Associations = {
     val a0 = inner.associations(address)
-    val diffAssociations: Seq[(Int, AssociationTransactionBase)] = maybeDiff
+    val diffAssociations: Seq[(Int, AssociationTransaction)] = maybeDiff
       .map(
         d =>
           d.transactions.values
@@ -182,10 +182,10 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
               tpid == IssueAssociationTransaction.typeId || tpid == RevokeAssociationTransaction.typeId
             })
             .toList
-            .map(_.asInstanceOf[(Int, AssociationTransactionBase)]))
+            .map(_.asInstanceOf[(Int, AssociationTransaction)]))
       .getOrElse(List.empty)
     val outgoing = diffAssociations.filter(_._2.sender.toAddress == address)
-    val incoming = diffAssociations.filter(_._2.assoc.party == address)
+    val incoming = diffAssociations.filter(_._2.recipient == address)
 
     Blockchain.Associations(a0.outgoing ++ outgoing, a0.incoming ++ incoming)
   }

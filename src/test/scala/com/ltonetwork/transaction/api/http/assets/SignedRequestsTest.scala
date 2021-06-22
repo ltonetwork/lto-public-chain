@@ -1,10 +1,10 @@
 package com.ltonetwork.transaction.api.http.assets
 
+import com.ltonetwork.api.http.requests.transfer.SignedTransferV1Request
 import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.utils.Base58
 import org.scalatest.{FunSuite, Matchers}
 import play.api.libs.json.Json
-import com.ltonetwork.api.http.assets._
 
 class SignedRequestsTest extends FunSuite with Matchers {
 

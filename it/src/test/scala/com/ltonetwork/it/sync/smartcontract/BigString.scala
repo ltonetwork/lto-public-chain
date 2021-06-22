@@ -9,7 +9,7 @@ import com.ltonetwork.lang.v1.compiler.CompilerV1
 import com.ltonetwork.lang.v1.parser.Parser
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.Proofs
-import com.ltonetwork.transaction.lease.LeaseTransactionV2
+import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.utils.{Base58, dummyCompilerContext}
@@ -50,7 +50,7 @@ class BigString extends BaseTransactionSuite with CancelAfterFailure {
 
     val script = ScriptV1(scriptText).explicitGet()
     val setScriptTransaction = SetScriptTransaction
-      .selfSigned(SetScriptTransaction.supportedVersions.head, acc0, Some(script), minFee, System.currentTimeMillis())
+      .selfSigned(1, System.currentTimeMillis(), acc0, minFee, Some(script))
       .explicitGet()
 
     val setScriptId = sender
@@ -60,14 +60,16 @@ class BigString extends BaseTransactionSuite with CancelAfterFailure {
     nodes.waitForHeightAriseAndTxPresent(setScriptId)
 
     val unsignedLeasing =
-      LeaseTransactionV2
+      LeaseTransaction
         .create(
           2,
-          acc0,
-          transferAmount,
-          minFee + 0.2.lto,
+          None,
           System.currentTimeMillis(),
+          acc0,
+          minFee + 0.2.lto,
           acc2,
+          transferAmount,
+          None,
           Proofs.empty
         )
         .explicitGet()
@@ -78,7 +80,7 @@ class BigString extends BaseTransactionSuite with CancelAfterFailure {
     val signedLeasing =
       unsignedLeasing.copy(proofs = Proofs(Seq(sigLeasingA, ByteStr.empty, sigLeasingC)))
 
-    assertBadRequestAndMessage(sender.signedBroadcast(signedLeasing.json() + ("type" -> JsNumber(LeaseTransactionV2.typeId.toInt))).id,
+    assertBadRequestAndMessage(sender.signedBroadcast(signedLeasing.json() + ("type" -> JsNumber(LeaseTransaction.typeId.toInt))).id,
                                "String is too large")
 
     val leasingId = Base58.encode(unsignedLeasing.id().arr)

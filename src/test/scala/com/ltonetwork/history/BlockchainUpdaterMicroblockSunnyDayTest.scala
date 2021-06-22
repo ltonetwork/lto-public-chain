@@ -1,10 +1,11 @@
 package com.ltonetwork.history
 
 import com.ltonetwork.TransactionGen
-import com.ltonetwork.account.{Address, AddressOrAlias, PrivateKeyAccount}
+import com.ltonetwork.account.{Address, PrivateKeyAccount}
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs._
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 import org.scalacheck.Gen
 import org.scalatest._
@@ -18,7 +19,7 @@ class BlockchainUpdaterMicroblockSunnyDayTest
     with Matchers
     with TransactionGen {
 
-  type Setup = (GenesisTransaction, TransferTransactionV1, TransferTransactionV1, TransferTransactionV1)
+  type Setup = (GenesisTransaction, TransferTransaction, TransferTransaction, TransferTransaction)
   val preconditionsAndPayments: Gen[Setup] = for {
     master <- accountGen
     alice  <- accountGen
@@ -26,7 +27,7 @@ class BlockchainUpdaterMicroblockSunnyDayTest
     ts     <- positiveIntGen
     fee    <- smallFeeGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    masterToAlice: TransferTransactionV1 <- ltoTransferGeneratorP(ts, master, alice)
+    masterToAlice: TransferTransaction <- ltoTransferGeneratorP(ts, master, alice)
     aliceToBob  = createLtoTransfer(alice, bob, masterToAlice.amount - fee - 1, fee, ts).explicitGet()
     aliceToBob2 = createLtoTransfer(alice, bob, masterToAlice.amount - fee - 1, fee, ts + 1).explicitGet()
   } yield (genesis, masterToAlice, aliceToBob, aliceToBob2)
@@ -183,7 +184,7 @@ class BlockchainUpdaterMicroblockSunnyDayTest
     }
   }
 
-  private def effBalance(aa: AddressOrAlias, domain: Domain): Long = aa match {
+  private def effBalance(aa: Address, domain: Domain): Long = aa match {
     case address: Address => domain.effBalance(address)
     case _                => fail("Unexpected address object")
   }

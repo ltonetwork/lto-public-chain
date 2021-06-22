@@ -1,7 +1,6 @@
 package com.ltonetwork.it
 
 import java.util.concurrent.ThreadLocalRandom
-
 import com.typesafe.config.Config
 import com.ltonetwork.it.TransferSending.Req
 import com.ltonetwork.it.api.AsyncHttpApi._
@@ -9,8 +8,8 @@ import com.ltonetwork.it.api.Transaction
 import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.utils.{Base58, ScorexLogging}
 import org.scalatest.Suite
-import com.ltonetwork.account.{Address, AddressOrAlias, AddressScheme, PrivateKeyAccount}
-import com.ltonetwork.api.http.assets.SignedTransferV2Request
+import com.ltonetwork.account.{Address, AddressScheme, PrivateKeyAccount}
+import com.ltonetwork.api.http.requests.transfer.SignedTransferV2Request
 import com.ltonetwork.transaction.transfer._
 
 import scala.concurrent.Future
@@ -110,13 +109,13 @@ trait TransferSending extends ScorexLogging {
       .map {
         case (x, i) =>
           createSignedTransferRequest(
-            TransferTransactionV2
+            TransferTransaction
               .selfSigned(
                 sender = PrivateKeyAccount.fromSeed(x.senderSeed).explicitGet(),
-                recipient = AddressOrAlias.fromString(x.targetAddress).explicitGet(),
+                recipient = Address.fromString(x.targetAddress).explicitGet(),
                 amount = x.amount,
                 timestamp = start + i,
-                feeAmount = x.fee,
+                fee = x.fee,
                 attachment = if (includeAttachment) {
                   Array.fill(TransferTransaction.MaxAttachmentSize)(ThreadLocalRandom.current().nextInt().toByte)
                 } else Array.emptyByteArray,
@@ -133,7 +132,7 @@ trait TransferSending extends ScorexLogging {
       .map(_.flatten)
   }
 
-  protected def createSignedTransferRequest(tx: TransferTransactionV2): SignedTransferV2Request = {
+  protected def createSignedTransferRequest(tx: TransferTransaction): SignedTransferV2Request = {
     import tx._
     SignedTransferV2Request(
       Base58.encode(tx.sender.publicKey),

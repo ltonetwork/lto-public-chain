@@ -1,8 +1,9 @@
 package com.ltonetwork.transaction
 
-import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings}
+import com.ltonetwork.settings.{Constants, FeesSettings, FunctionalitySettings}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.GenericError
+import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.transfer._
 
 class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
@@ -21,6 +22,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
   def enoughFee[T <: Transaction](tx: T, blockchain: Blockchain, fs: FunctionalitySettings): Either[ValidationError, T] = enoughFee(tx)
 
   def enoughFee[T <: Transaction](tx: T): Either[ValidationError, T] = {
+    val txName      = Constants.TransactionNames(tx.typeId)
     val txFeeValue    = tx.fee
     val txAssetFeeKey = tx.builder.typeId.toString
     for {
@@ -30,7 +32,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
         txFeeValue >= minTxFee,
         (),
         GenericError {
-          s"Fee in LTO for ${tx.builder.classTag} transaction($txFeeValue) does not exceed minimal value of $minTxFee"
+          s"Fee for ${txName} transaction ($txFeeValue LTO) does not exceed minimal value of $minTxFee LTO"
         }
       )
     } yield tx
@@ -42,7 +44,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
       txMinBaseFee * sizeInKb
     case tx: MassTransferTransaction =>
       val transferFeeSpec =
-        map.getOrElse(TransferTransactionV1.typeId.toString, throw new IllegalStateException("Can't find spec for TransferTransaction"))
+        map.getOrElse(TransferTransaction.typeId.toString, throw new IllegalStateException("Can't find spec for TransferTransaction"))
       transferFeeSpec + txMinBaseFee * tx.transfers.size
     case _ => txMinBaseFee
   }

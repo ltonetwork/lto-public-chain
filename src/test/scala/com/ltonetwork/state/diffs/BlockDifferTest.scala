@@ -1,7 +1,6 @@
 package com.ltonetwork.state.diffs
 
 import java.util.concurrent.ThreadLocalRandom
-
 import com.ltonetwork.BlockGen
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.block.Block
@@ -9,7 +8,7 @@ import com.ltonetwork.db.WithState
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state.{Blockchain, Diff, EitherExt2}
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import org.scalatest.{FreeSpecLike, Matchers}
 import scorex.crypto.signatures.Curve25519._
 

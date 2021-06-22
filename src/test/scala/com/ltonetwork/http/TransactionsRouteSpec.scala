@@ -166,7 +166,7 @@ class TransactionsRouteSpec
         Get(routePath("/unconfirmed")) ~> route ~> check {
           val resp = responseAs[Seq[JsValue]]
           for ((r, t) <- resp.zip(txs)) {
-            (r \ "signature").as[String] shouldEqual t.signature.base58
+            (r \ "signature").as[String] shouldEqual t.proofs.toSignature.base58 // Todo: also test with proofs
           }
         }
       }

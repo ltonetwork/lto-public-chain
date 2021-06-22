@@ -6,9 +6,10 @@ import com.ltonetwork.lang.v1.evaluator.EvaluatorV1
 import com.ltonetwork.lang.v1.parser.Parser
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs._
+import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.transfer._
-import com.ltonetwork.transaction.{DataTransaction, GenesisTransaction}
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.utils._
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
@@ -16,7 +17,7 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 
 class NotaryControlledTransferScenartioTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
-  val preconditions: Gen[(Seq[GenesisTransaction], DataTransaction, TransferTransactionV1, DataTransaction, DataTransaction, TransferTransactionV1)] =
+  val preconditions: Gen[(Seq[GenesisTransaction], DataTransaction, TransferTransaction, DataTransaction, DataTransaction, TransferTransaction)] =
     for {
       company  <- accountGen
       king     <- accountGen
@@ -59,23 +60,23 @@ class NotaryControlledTransferScenartioTest extends PropSpec with PropertyChecks
       typedScript = ScriptV1(CompilerV1(dummyCompilerContext, untypedScript).explicitGet()._1).explicitGet()
 
       kingDataTransaction = DataTransaction
-        .selfSigned(1, king, List(BinaryDataEntry("notary1PK", ByteStr(notary.publicKey))), 1000, ts + 1)
+        .selfSigned(1, ts + 1, king, 1000, List(BinaryDataEntry("notary1PK", ByteStr(notary.publicKey))))
         .explicitGet()
 
-      transferFromCompanyToA = TransferTransactionV1
-        .selfSigned(company, accountA, 1, ts + 20, 1000, Array.empty)
+      transferFromCompanyToA = TransferTransaction
+        .selfSigned(1, ts + 20, company, 1, accountA, 1000, Array.empty)
         .explicitGet()
 
-      transferFromAToB = TransferTransactionV1
-        .selfSigned(accountA, accountB, 1, ts + 30, 1000, Array.empty)
+      transferFromAToB = TransferTransaction
+        .selfSigned(1, ts + 30, accountA, 1, accountB, 1000, Array.empty)
         .explicitGet()
 
       notaryDataTransaction = DataTransaction
-        .selfSigned(1, notary, List(BooleanDataEntry(transferFromAToB.id().base58, true)), 1000, ts + 4)
+        .selfSigned(1, ts + 4, notary, 1000, List(BooleanDataEntry(transferFromAToB.id().base58, true)))
         .explicitGet()
 
       accountBDataTransaction = DataTransaction
-        .selfSigned(1, accountB, List(BooleanDataEntry(transferFromAToB.id().base58, true)), 1000, ts + 5)
+        .selfSigned(1, ts + 5, accountB, 1000, List(BooleanDataEntry(transferFromAToB.id().base58, true)))
         .explicitGet()
     } yield
       (Seq(genesis1, genesis2, genesis3, genesis4, genesis5),

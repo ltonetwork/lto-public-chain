@@ -1,5 +1,5 @@
 package com.ltonetwork.state.reader
 
-import com.ltonetwork.account.{AddressOrAlias, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PublicKeyAccount}
 
-case class LeaseDetails(sender: PublicKeyAccount, recipient: AddressOrAlias, height: Int, amount: Long, isActive: Boolean)
+case class LeaseDetails(sender: PublicKeyAccount, recipient: Address, height: Int, amount: Long, isActive: Boolean)

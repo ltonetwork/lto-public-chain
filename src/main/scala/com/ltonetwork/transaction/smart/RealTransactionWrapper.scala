@@ -3,21 +3,20 @@ package com.ltonetwork.transaction.smart
 import com.ltonetwork.lang.v1.traits.{Proven, _}
 import com.ltonetwork.state._
 import scodec.bits.ByteVector
-import com.ltonetwork.account.{Address, AddressOrAlias}
+import com.ltonetwork.account.Address
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
+import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.transfer._
 
 object RealTransactionWrapper {
 
   private def header(tx: Transaction): Header = {
-    val v = tx match {
-      case vt: VersionedTransaction => vt.version
-      case _                        => 1
-    }
-    Header(ByteVector(tx.id().arr), tx.fee, tx.timestamp, v)
+    Header(ByteVector(tx.id().arr), tx.fee, tx.timestamp, tx.version)
   }
-  private def proven(tx: ProvenTransaction): Proven =
+
+  private def proven(tx: Transaction): Proven =
     Proven(
       header(tx),
       LangAddress(ByteVector(tx.sender.bytes.arr)),
@@ -28,10 +27,7 @@ object RealTransactionWrapper {
 
   implicit def toByteVector(s: ByteStr): ByteVector = ByteVector(s.arr)
 
-  implicit def aoaToRecipient(aoa: AddressOrAlias): LangAddress = aoa match {
-    case a: Address => LangAddress(ByteVector(a.bytes.arr))
-    case _          => throw new Exception("Aliases are deprecated")
-  }
+  implicit def aoaToRecipient(a: Address): LangAddress = LangAddress(ByteVector(a.bytes.arr))
 
   def apply(tx: Transaction): Tx = {
     tx match {
@@ -45,7 +41,7 @@ object RealTransactionWrapper {
         )
 
       case b: LeaseTransaction       => Tx.Lease(proven(b), b.amount, b.recipient)
-      case b: LeaseCancelTransaction => Tx.LeaseCancel(proven(b), b.leaseId)
+      case b: CancelLeaseTransaction => Tx.LeaseCancel(proven(b), b.leaseId)
       case ms: MassTransferTransaction =>
         Tx.MassTransfer(
           proven(ms),

@@ -1,20 +1,20 @@
 package com.ltonetwork.database
 
-import com.typesafe.config.ConfigFactory
 import com.ltonetwork.account.{Address, PrivateKeyAccount}
 import com.ltonetwork.block.Block
-import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.lang.v1.compiler.Terms
-import com.ltonetwork.settings.{TestFunctionalitySettings, LtoSettings, loadConfig}
+import com.ltonetwork.settings.{LtoSettings, TestFunctionalitySettings, loadConfig}
 import com.ltonetwork.state.diffs.ENOUGH_AMT
 import com.ltonetwork.state.{BlockchainUpdaterImpl, EitherExt2}
+import com.ltonetwork.transaction.Transaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
-import com.ltonetwork.transaction.transfer.{TransferTransaction, TransferTransactionV1}
-import com.ltonetwork.transaction.{GenesisTransaction, Transaction}
+import com.ltonetwork.transaction.transfer.TransferTransaction
 import com.ltonetwork.utils.{Time, TimeImpl}
 import com.ltonetwork.{RequestGen, WithDB}
+import com.typesafe.config.ConfigFactory
 import org.scalacheck.Gen
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -77,7 +77,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
     def resetGen(ts: Long): Gen[(PrivateKeyAccount, Seq[Block])] = baseGen(ts).map {
       case (master, blocks) =>
         val unsetScriptTx = SetScriptTransaction
-          .selfSigned(1, master, None, 100 * 1000 * 1000L, ts + 1)
+          .selfSigned(1, ts + 1, master, 100 * 1000 * 1000L, None)
           .explicitGet()
 
         val block1 = TestBlock.create(ts + 1, blocks.last.uniqueId, Seq(unsetScriptTx))
@@ -88,7 +88,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
     def baseGen(ts: Long): Gen[(PrivateKeyAccount, Seq[Block])] = accountGen.map { master =>
       val genesisTx = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
       val setScriptTx = SetScriptTransaction
-        .selfSigned(1, master, Some(ScriptV1(Terms.TRUE).explicitGet()), 100 * 1000 * 1000L, ts)
+        .selfSigned(1, ts, master, 100 * 1000 * 1000L, Some(ScriptV1(Terms.TRUE).explicitGet()))
         .explicitGet()
 
       val block = TestBlock.create(ts, Seq(genesisTx, setScriptTx))
@@ -146,7 +146,7 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
 
       baseTest(time => preconditions(time.correctedTime())) { (writer, account) =>
         val txs = writer
-          .addressTransactions(account.toAddress, Set(TransferTransactionV1.typeId), 3, 0)
+          .addressTransactions(account.toAddress, Set(TransferTransaction.typeId), 3, 0)
 
         val ordering = Ordering
           .by[(Int, Transaction), (Int, Long)]({ case (h, t) => (-h, -t.timestamp) })
@@ -158,8 +158,8 @@ class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestG
     }
 
     def createTransfer(master: PrivateKeyAccount, recipient: Address, ts: Long): TransferTransaction = {
-      TransferTransactionV1
-        .selfSigned(master, recipient, ENOUGH_AMT / 5, ts, 100 * 1000 * 1000L, Array.emptyByteArray)
+      TransferTransaction
+        .selfSigned(1, ts, master, 100 * 1000 * 1000L, recipient, ENOUGH_AMT / 5, Array.emptyByteArray)
         .explicitGet()
     }
   }

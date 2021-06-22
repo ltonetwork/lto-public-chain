@@ -7,14 +7,14 @@ import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.lagonaki.mocks.TestBlock
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.transfer._
 
 class BalanceDiffValidationTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
 
   property("disallows overflow") {
-    val preconditionsAndPayment: Gen[(GenesisTransaction, GenesisTransaction, TransferTransactionV1, TransferTransactionV1)] = for {
+    val preconditionsAndPayment: Gen[(GenesisTransaction, GenesisTransaction, TransferTransaction, TransferTransaction)] = for {
       master    <- accountGen
       master2   <- accountGen
       recipient <- otherAccountGen(candidate = master)
@@ -57,7 +57,7 @@ class BalanceDiffValidationTest extends PropSpec with PropertyChecks with Matche
     }
   }
 
-  val ownLessThatLeaseOut: Gen[(GenesisTransaction, TransferTransactionV1, LeaseTransaction, LeaseTransaction, TransferTransactionV1)] = for {
+  val ownLessThatLeaseOut: Gen[(GenesisTransaction, TransferTransaction, LeaseTransaction, LeaseTransaction, TransferTransaction)] = for {
     master <- accountGen
     alice  <- accountGen
     bob    <- accountGen
@@ -66,7 +66,7 @@ class BalanceDiffValidationTest extends PropSpec with PropertyChecks with Matche
     amt    <- positiveLongGen
     fee    <- smallFeeGen
     genesis: GenesisTransaction                   = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
-    masterTransfersToAlice: TransferTransactionV1 = createLtoTransfer(master, alice, amt, fee, ts).explicitGet()
+    masterTransfersToAlice: TransferTransaction = createLtoTransfer(master, alice, amt, fee, ts).explicitGet()
     (aliceLeasesToBob, _)    <- leaseAndCancelGeneratorP(alice, bob, alice, ts) suchThat (_._1.amount < amt)
     (masterLeasesToAlice, _) <- leaseAndCancelGeneratorP(master, alice, master, ts) suchThat (_._1.amount > aliceLeasesToBob.amount)
     transferAmt              <- Gen.choose(amt - fee - aliceLeasesToBob.amount, amt - fee)

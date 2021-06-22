@@ -75,7 +75,7 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
       Right(())
     } else {
       val sender: Option[String] = tx match {
-        case x: Authorized => Some(x.sender.address)
+        case x: Transaction => Some(x.sender.address)
         case _             => None
       }
 

@@ -1,11 +1,19 @@
 package com.ltonetwork.account
 
-import com.ltonetwork.crypto
+import com.ltonetwork.{TransactionGen, crypto}
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.utils.Base58
+import com.ltonetwork.state.EitherExt2
 
-class AccountSpecification extends PropSpec with PropertyChecks with Matchers {
+class AccountSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+  property("Account serialization round trip") {
+    forAll(accountGen) { account: PrivateKeyAccount =>
+      val bytes   = account.bytes.arr
+      val address = Address.fromBytes(bytes).explicitGet()
+      address.stringRepr shouldBe account.stringRepr
+    }
+  }
 
   property("Account.isValidAddress should return false for another address version") {
     forAll { (data: Array[Byte], AddressVersion2: Byte) =>

@@ -9,7 +9,7 @@ import org.scalatest.{Matchers, PropSpec}
 import com.ltonetwork.account.{Address, PrivateKeyAccount}
 import com.ltonetwork.settings.TestFunctionalitySettings
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
-import com.ltonetwork.transaction.GenesisTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
 
 class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
@@ -31,7 +31,7 @@ class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with 
           amount    <- Gen.choose(100000L, 1000000000L)
         } yield ParsedTransfer(recipient, amount)
         transfers <- Gen.listOfN(transferCount, transferGen)
-        transfer  <- massTransferGeneratorP(master, transfers, None)
+        transfer  <- massTransferGeneratorP(master, transfers)
       } yield (genesis, transfer)
 
       forAll(setup) {
@@ -61,7 +61,7 @@ class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with 
     val setup = for {
       (genesis, master) <- baseSetup
       recipients        <- Gen.listOfN(2, accountGen.map(acc => ParsedTransfer(acc.toAddress, ENOUGH_AMT / 2 + 1)))
-      transfer          <- massTransferGeneratorP(master, recipients, None)
+      transfer          <- massTransferGeneratorP(master, recipients)
     } yield (genesis, transfer)
 
     forAll(setup) {

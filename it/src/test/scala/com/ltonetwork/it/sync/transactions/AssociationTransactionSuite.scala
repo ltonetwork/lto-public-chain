@@ -7,8 +7,8 @@ import com.ltonetwork.it.api.SyncHttpApi._
 import com.ltonetwork.it.transactions.BaseTransactionSuite
 import com.ltonetwork.it.util._
 import com.ltonetwork.state.EitherExt2
-import com.ltonetwork.transaction.AssociationTransaction.ActionType
-import com.ltonetwork.transaction.{AssociationTransaction, AssociationTransactionBase, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.TransactionBuilder
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import org.scalatest.CancelAfterFailure
 class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
   val fee   = 1.lto
@@ -22,26 +22,26 @@ class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterF
     a.revokeTransactionId shouldBe revokeTxId
   }
 
-  def build(tpe: ActionType, from: PrivateKeyAccount, to: Address, id: Int) = {
-    val m = tpe match {
-      case ActionType.Revoke => RevokeAssociationTransaction.selfSigned _
-      case ActionType.Issue  => IssueAssociationTransaction.selfSigned _
-    }
-    m(1, from, to, id, None, fee, System.currentTimeMillis()).explicitGet()
+  def build(builder: TransactionBuilder, from: PrivateKeyAccount, to: Address, id: Int) = {
+    val ts = System.currentTimeMillis()
+    (builder match {
+      case RevokeAssociationTransaction => RevokeAssociationTransaction.selfSigned(1, ts, from, fee, to, id, None)
+      case IssueAssociationTransaction  => IssueAssociationTransaction.selfSigned(1, ts, from, fee, to, id, None, None)
+    }).explicitGet()
   }
-  def postAssoc(assocTx: AssociationTransactionBase) = {
+  def postAssoc(assocTx: AssociationTransaction) = {
     val assocId = sender
       .signedBroadcast(assocTx.json())
       .id
     nodes.waitForHeightAriseAndTxPresent(assocId)
     assocId
   }
-  def assertError(assocTx: AssociationTransactionBase, err: String) = {
+  def assertError(assocTx: AssociationTransaction, err: String) = {
     assertBadRequestAndResponse(sender.signedBroadcast(assocTx.json()), err)
   }
 
   test("post and revoke association") {
-    val assocId = postAssoc(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 42))
+    val assocId = postAssoc(build(IssueAssociationTransaction, notMiner.privateKey, party.toAddress, 42))
 
     val alice = notMiner.address
     val bob   = party.address
@@ -57,7 +57,7 @@ class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterF
     bobAssocs.incoming.size shouldBe 1
     verifyAssoc(bobAssocs.incoming.head)(alice, "", 42, assocId, None)
 
-    val revokeId = postAssoc(build(AssociationTransaction.ActionType.Revoke, notMiner.privateKey, party.toAddress, 42))
+    val revokeId = postAssoc(build(RevokeAssociationTransaction, notMiner.privateKey, party.toAddress, 42))
 
     val revokedAliceAssocs = notMiner.getAssociations(alice)
     revokedAliceAssocs.outgoing.size shouldBe 1
@@ -71,13 +71,13 @@ class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterF
   }
 
   test("can't revoke non-existing assoc") {
-    postAssoc(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 88))
+    postAssoc(build(IssueAssociationTransaction, notMiner.privateKey, party.toAddress, 88))
 
-    assertError(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 88), ".+already.+")
+    assertError(build(IssueAssociationTransaction, notMiner.privateKey, party.toAddress, 88), ".+already.+")
 
-    assertError(build(AssociationTransaction.ActionType.Revoke, notMiner.privateKey, party.toAddress, 89), ".+doesn't exist.+")
+    assertError(build(RevokeAssociationTransaction, notMiner.privateKey, party.toAddress, 89), ".+doesn't exist.+")
 
-    postAssoc(build(AssociationTransaction.ActionType.Issue, notMiner.privateKey, party.toAddress, 89))
-    postAssoc(build(AssociationTransaction.ActionType.Revoke, notMiner.privateKey, party.toAddress, 89))
+    postAssoc(build(IssueAssociationTransaction, notMiner.privateKey, party.toAddress, 89))
+    postAssoc(build(RevokeAssociationTransaction, notMiner.privateKey, party.toAddress, 89))
   }
 }

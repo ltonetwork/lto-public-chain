@@ -10,7 +10,7 @@ import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.block.{Block, MicroBlock}
 import com.ltonetwork.network.message.Message._
 import com.ltonetwork.network.message._
-import com.ltonetwork.transaction.{Transaction, TransactionParsers}
+import com.ltonetwork.transaction.{Transaction, TransactionBuilders}
 import scorex.crypto.signatures.Curve25519._
 import scala.util.Try
 
@@ -193,7 +193,7 @@ object TransactionSpec extends MessageSpec[Transaction] {
   override val maxLength: Int = 150 * 1024
 
   override def deserializeData(bytes: Array[Byte]): Try[Transaction] =
-    TransactionParsers.parseBytes(bytes)
+    TransactionBuilders.parseBytes(bytes)
 
   override def serializeData(tx: Transaction): Array[Byte] = tx.bytes()
 }

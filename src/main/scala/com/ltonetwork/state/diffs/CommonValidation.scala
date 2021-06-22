@@ -4,12 +4,17 @@ import cats._
 import com.ltonetwork.account.Address
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.features.{BlockchainFeature, BlockchainFeatures}
-import com.ltonetwork.settings.FunctionalitySettings
+import com.ltonetwork.settings.{Constants, FunctionalitySettings}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.association.IssueAssociationTransaction
+import com.ltonetwork.transaction.data.DataTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.SetScriptTransaction
+import com.ltonetwork.transaction.sponsorship.SponsorshipTransactionBase
 import com.ltonetwork.transaction.transfer._
 
 import scala.concurrent.duration._
@@ -44,11 +49,6 @@ object CommonValidation {
     }
 
     tx match {
-      case ptx: PaymentTransaction if blockchain.portfolio(ptx.sender).balance < (ptx.amount + ptx.fee) =>
-        Left(
-          GenericError(
-            "Attempt to pay unavailable funds: balance " +
-              s"${blockchain.portfolio(ptx.sender).balance} is less than ${ptx.amount + ptx.fee}"))
       case ttx: TransferTransaction     => checkTransfer(ttx.sender, ttx.amount, ttx.fee)
       case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.transfers.map(_.amount).sum, mtx.fee)
       case _                            => Right(tx)
@@ -58,7 +58,6 @@ object CommonValidation {
                                              settings: FunctionalitySettings,
                                              height: Int,
                                              tx: T): Either[ValidationError, T] = tx match {
-    case _: PaymentTransaction => Right(tx)
     case _                     => if (blockchain.containsTransaction(tx.id())) Left(AlreadyInTheState(tx.id(), 0)) else Right(tx)
   }
 
@@ -77,27 +76,21 @@ object CommonValidation {
         ValidationError.ActivationError(s"${tx.getClass.getSimpleName} transaction has been deactivated")
       )
 
-    val disabled = Left(GenericError("tx type is disabled"))
-
-    tx match {
-      case _: GenesisTransaction       => Right(tx)
-      case _: TransferTransactionV1    => Right(tx)
-      case _: TransferTransactionV2    => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case _: LeaseTransactionV1       => Right(tx)
-      case _: LeaseTransactionV2       => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case _: LeaseCancelTransactionV1 => Right(tx)
-      case _: LeaseCancelTransactionV2 => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case _: MassTransferTransaction  => Right(tx)
-      case _: DataTransaction =>
-        for {
-          _ <- deactivationBarrier(BlockchainFeatures.SmartAccounts)
-        } yield tx
-      case _: SetScriptTransaction       => Right(tx)
-      case _: AnchorTransaction          => Right(tx)
-      case _: AssociationTransactionBase => activationBarrier(BlockchainFeatures.AssociationTransaction)
-      case _: SponsorshipTransactionBase => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
-      case _: PaymentTransaction         => disabled
-      case _                             => Left(GenericError("Unknown transaction must be explicitly activated"))
+    (tx, tx.version) match {
+      case (_: GenesisTransaction, 1)           => Right(tx)
+      case (_: TransferTransaction, 1)          => Right(tx)
+      case (_: TransferTransaction, 2)          => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: LeaseTransaction, 1)             => Right(tx)
+      case (_: LeaseTransaction, 2)             => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: CancelLeaseTransaction, 1)       => Right(tx)
+      case (_: CancelLeaseTransaction, 2)       => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: MassTransferTransaction, 1)      => Right(tx)
+      case (_: DataTransaction, 1)              => deactivationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: SetScriptTransaction, 1)         => Right(tx)
+      case (_: AnchorTransaction, 1)            => Right(tx)
+      case (_: IssueAssociationTransaction, 1)  => activationBarrier(BlockchainFeatures.AssociationTransaction)
+      case (_: SponsorshipTransactionBase, 1)   => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
+      case _                                    => Left(GenericError("Unknown transaction must be explicitly activated"))
     }
   }
 
@@ -116,11 +109,10 @@ object CommonValidation {
 
   private def oldFeeInUnits(blockchain: Blockchain, height: Int, tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: GenesisTransaction       => Right(0)
-    case _: PaymentTransaction       => Right(1)
     case _: TransferTransaction      => Right(1)
     case tx: MassTransferTransaction => Right(1 + (tx.transfers.size + 1) / 2)
     case _: LeaseTransaction         => Right(1)
-    case _: LeaseCancelTransaction   => Right(1)
+    case _: CancelLeaseTransaction   => Right(1)
     case tx: DataTransaction =>
       val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
       Right(1 + (base.length - 1) / 1024)
@@ -134,10 +126,10 @@ object CommonValidation {
     case _: TransferTransaction        => Right(1000)
     case _: LeaseTransaction           => Right(1000)
     case _: SetScriptTransaction       => Right(1000)
-    case _: LeaseCancelTransaction     => Right(1000)
+    case _: CancelLeaseTransaction     => Right(1000)
     case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
     case _: AnchorTransaction          => Right(100)
-    case _: AssociationTransactionBase => Right(1000)
+    case _: IssueAssociationTransaction => Right(1000)
     case _: SponsorshipTransactionBase => Right(5000)
     case _                             => Left(UnsupportedTransactionType)
   }
@@ -147,10 +139,10 @@ object CommonValidation {
     case _: TransferTransaction        => Right(1000)
     case _: LeaseTransaction           => Right(1000)
     case _: SetScriptTransaction       => Right(1000)
-    case _: LeaseCancelTransaction     => Right(1000)
+    case _: CancelLeaseTransaction     => Right(1000)
     case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
     case _: AnchorTransaction          => Right(350)
-    case _: AssociationTransactionBase => Right(1000)
+    case _: IssueAssociationTransaction => Right(1000)
     case _: SponsorshipTransactionBase => Right(5000)
     case _                             => Left(UnsupportedTransactionType)
   }
@@ -161,8 +153,8 @@ object CommonValidation {
       type FeeInfo = Long
 
       def hasSmartAccountScript: Boolean = tx match {
-        case tx: Transaction with Authorized => blockchain.hasScript(tx.sender)
-        case _                               => false
+        case _: GenesisTransaction => false
+        case _ => blockchain.hasScript(tx.sender)
       }
 
       def feeAfterSmartAccounts(inputFee: FeeInfo): FeeInfo =
@@ -186,6 +178,7 @@ object CommonValidation {
   def checkFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Unit] = {
     def oldFees() = {
       def restFee(inputFee: Long): Either[ValidationError, (Option[AssetId], Long)] = {
+        val txName      = Constants.TransactionNames(tx.typeId)
         val feeAmount = inputFee
         for {
           feeInUnits <- oldFeeInUnits(blockchain, height, tx)
@@ -194,14 +187,14 @@ object CommonValidation {
           _ <- Either.cond(
             restFeeAmount >= 0,
             (),
-            GenericError(s"Fee in LTO for ${tx.builder.classTag} does not exceed minimal value of $minimumFee LTOs: $feeAmount")
+            GenericError(s"Fee in LTO for ${txName} does not exceed minimal value of $minimumFee LTOs: $feeAmount")
           )
         } yield (None, restFeeAmount)
       }
 
       def hasSmartAccountScript: Boolean = tx match {
-        case tx: Transaction with Authorized => blockchain.hasScript(tx.sender)
-        case _                               => false
+        case _: GenesisTransaction => false
+        case _ => blockchain.hasScript(tx.sender)
       }
 
       def restFeeAfterSmartAccounts(inputFee: (Option[AssetId], Long)): Either[ValidationError, (Option[AssetId], Long)] =

@@ -10,7 +10,7 @@ import com.ltonetwork.lang.v1.compiler.CompilerV1
 import com.ltonetwork.lang.v1.parser.Parser
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.Proofs
-import com.ltonetwork.transaction.lease.{LeaseCancelTransactionV2, LeaseTransactionV2}
+import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.utils.dummyCompilerContext
@@ -48,7 +48,7 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
 
     val script = ScriptV1(scriptText).explicitGet()
     val setScriptTransaction = SetScriptTransaction
-      .selfSigned(SetScriptTransaction.supportedVersions.head, acc0, Some(script), minFee, System.currentTimeMillis())
+      .selfSigned(1, System.currentTimeMillis(), acc0, minFee, Some(script))
       .explicitGet()
 
     val setScriptId = sender
@@ -58,15 +58,17 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
     nodes.waitForHeightAriseAndTxPresent(setScriptId)
 
     val unsignedLeasing =
-      LeaseTransactionV2
+      LeaseTransaction
         .create(
-          2,
-          acc0,
-          transferAmount,
-          minFee + 0.2.lto,
-          System.currentTimeMillis(),
-          acc2,
-          Proofs.empty
+          version = 2,
+          chainId = None,
+          timestamp = System.currentTimeMillis(),
+          sender = acc0,
+          fee = minFee + 0.2.lto,
+          amount = transferAmount,
+          recipient = acc2,
+          sponsor = None,
+          proofs = Proofs.empty
         )
         .explicitGet()
 
@@ -77,7 +79,7 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
       unsignedLeasing.copy(proofs = Proofs(Seq(sigLeasingA, ByteStr.empty, sigLeasingC)))
 
     val leasingId =
-      sender.signedBroadcast(signedLeasing.json() + ("type" -> JsNumber(LeaseTransactionV2.typeId.toInt))).id
+      sender.signedBroadcast(signedLeasing.json() + ("type" -> JsNumber(LeaseTransaction.typeId.toInt))).id
 
     nodes.waitForHeightAriseAndTxPresent(leasingId)
 
@@ -87,14 +89,15 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
     notMiner.assertBalances(thirdAddress, balance2, eff2 + transferAmount)
 
     val unsignedCancelLeasing =
-      LeaseCancelTransactionV2
+      CancelLeaseTransaction
         .create(
           version = 2,
-          chainId = AddressScheme.current.chainId,
+          chainId = Some(AddressScheme.current.chainId),
           sender = acc0,
           leaseId = ByteStr.decodeBase58(leasingId).get,
           fee = minFee + 0.2.lto,
           timestamp = System.currentTimeMillis(),
+          sponsor = None,
           proofs = Proofs.empty
         )
         .explicitGet()
@@ -106,7 +109,7 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
       unsignedCancelLeasing.copy(proofs = Proofs(Seq(ByteStr.empty, sigLeasingCancelA, sigLeasingCancelB)))
 
     val leasingCancelId =
-      sender.signedBroadcast(signedLeasingCancel.json() + ("type" -> JsNumber(LeaseCancelTransactionV2.typeId.toInt))).id
+      sender.signedBroadcast(signedLeasingCancel.json() + ("type" -> JsNumber(CancelLeaseTransaction.typeId.toInt))).id
 
     nodes.waitForHeightAriseAndTxPresent(leasingCancelId)
 

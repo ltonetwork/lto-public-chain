@@ -11,9 +11,9 @@ import com.ltonetwork.mining.{MiningConstraint, MiningConstraints, MultiDimensio
 import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state.diffs.BlockDiffer
 import com.ltonetwork.state.reader.{CompositeBlockchain, LeaseDetails}
-import com.ltonetwork.transaction.Transaction.Type
 import com.ltonetwork.transaction.ValidationError.{BlockAppendError, GenericError, MicroBlockAppendError}
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.utils.{ScorexLogging, Time, UnsupportedFeature, forceStopApplication}
@@ -399,7 +399,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
       .map(t => (t._1, t._2))
       .orElse(blockchain.transactionInfo(id))
 
-  override def addressTransactions(address: Address, types: Set[Type], count: Int, from: Int): Seq[(Int, Transaction)] =
+  override def addressTransactions(address: Address, types: Set[Byte], count: Int, from: Int): Seq[(Int, Transaction)] =
     ngState.fold(blockchain.addressTransactions(address, types, count, from)) { ng =>
       val transactionsFromDiff = ng.bestLiquidDiff.transactions.values.view
         .collect {
@@ -543,9 +543,9 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
             val tpid = x._2.builder.typeId
             tpid == IssueAssociationTransaction.typeId || tpid == RevokeAssociationTransaction.typeId
           })
-          .map(x => (x._1, x._2.asInstanceOf[AssociationTransactionBase]))
+          .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
           .toList
-        Blockchain.Associations(outgoing = a.filter(_._2.sender.toAddress == address), incoming = a.filter(_._2.assoc.party == address))
+        Blockchain.Associations(outgoing = a.filter(_._2.sender.toAddress == address), incoming = a.filter(_._2.recipient == address))
       }
       .getOrElse(Blockchain.Associations(List.empty, List.empty))
     Blockchain.Associations(a0.outgoing ++ a1.outgoing, a0.incoming ++ a1.incoming)

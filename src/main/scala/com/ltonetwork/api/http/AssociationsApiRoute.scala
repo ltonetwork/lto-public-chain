@@ -6,14 +6,13 @@ import com.ltonetwork.account.Address
 import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.state.{Blockchain, ByteStr}
-import com.ltonetwork.transaction.AssociationTransaction.ActionType.{Issue, Revoke}
-import com.ltonetwork.transaction.AssociationTransaction.Assoc
-import com.ltonetwork.transaction.{AssociationTransactionBase, TransactionFactory}
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
+
 import javax.ws.rs.Path
 import play.api.libs.json._
 
@@ -30,9 +29,9 @@ case class AssociationsApiRoute(settings: RestAPISettings,
 
   import AssociationsApiRoute._
 
-  override lazy val route =
+  override lazy val route: Route =
     pathPrefix("associations") {
-      issueAssociation ~ revokeAssociation ~ associations
+      associations
     }
 
   @Path("/status/{address}")
@@ -53,14 +52,14 @@ case class AssociationsApiRoute(settings: RestAPISettings,
     )
   }
 
-  private def associationsJson(address: Address, a: Blockchain.Associations): AssociationsInfo = {
-    def f(l: List[(Int, AssociationTransactionBase)]) = {
-      l.foldLeft(Map.empty[Assoc, (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
-          case (acc, (height, as: AssociationTransactionBase)) =>
-            val cp = if (address == as.sender.toAddress) as.assoc.party else as.sender.toAddress
-            (as.actionType, acc.get(as.assoc)) match {
-              case (Issue, None)                    => acc + (as.assoc -> (height, cp, as.id(), None))
-              case (Revoke, Some((h, _, bs, None))) => acc + (as.assoc -> (h, cp, bs, Some((height, as.id()))))
+  private def associationsJson(address: Address, associations: Blockchain.Associations): AssociationsInfo = {
+    def fold(list: List[(Int, AssociationTransaction)]) = {
+      list.foldLeft(Map.empty[(Int, Address, Option[ByteStr]), (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
+          case (acc, (height, tx: AssociationTransaction)) =>
+            val cp = if (address == tx.sender.toAddress) tx.recipient else tx.sender.toAddress
+            (tx, acc.get(tx.assoc)) match {
+              case (_: IssueAssociationTransaction, None)                    => acc + (tx.assoc -> (height, cp, tx.id(), None))
+              case (_: RevokeAssociationTransaction, Some((h, _, bs, None))) => acc + (tx.assoc -> (h, cp, bs, Some((height, tx.id()))))
               case _                                => acc
             }
         }
@@ -68,10 +67,11 @@ case class AssociationsApiRoute(settings: RestAPISettings,
         .sortBy(_._2._1)
         .map {
           case (assoc, (h, cp, id, r)) =>
+            val (assocType, _, hash) = assoc
             AssociationInfo(
               party = cp.stringRepr,
-              hash = assoc.hashStr,
-              associationType = assoc.assocType,
+              hash = hash.map(_.base58).getOrElse(""),
+              associationType = assocType,
               issueHeight = h,
               issueTransactionId = id.toString,
               revokeHeight = r.map(_._1),
@@ -80,61 +80,8 @@ case class AssociationsApiRoute(settings: RestAPISettings,
         }
     }
 
-    AssociationsInfo(address.stringRepr, f(a.outgoing), f(a.incoming))
-
+    AssociationsInfo(address.stringRepr, fold(associations.outgoing), fold(associations.incoming))
   }
-
-  @Path("/issue")
-  @ApiOperation(value = "Creates an association between accounts", httpMethod = "POST", produces = "application/json", consumes = "application/json")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "Json with data",
-        required = true,
-        paramType = "body",
-        dataType = "com.ltonetwork.api.http.AssociationRequest",
-        defaultValue =
-          "\n   {\n       \"sender\": \"3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg\",\n       \"fee\": 100000,\n       \"version\": 1,\n       \"party\" : \"3MSDfsdfsdfsdfsdfsdfsdsdfsdfsdfsdf\",\n       \"associationType\" : 420,\n       \"hash\" : \"\"\n   }\n"
-      )
-    ))
-  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
-  def issueAssociation: Route =
-    processRequest(
-      "issue",
-      (req: AssociationRequest) => {
-        doBroadcast(
-          TransactionFactory
-            .issueAssociation(req, wallet, time)
-            .flatMap(TransactionsApiRoute.ifPossible(blockchain, _)))
-      }
-    )
-
-  @Path("/revoke")
-  @ApiOperation(value = "Revokes an association between accounts", httpMethod = "POST", produces = "application/json", consumes = "application/json")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "Json with data",
-        required = true,
-        paramType = "body",
-        dataType = "com.ltonetwork.api.http.AssociationRequest",
-        defaultValue =
-          "\n   {\n       \"sender\": \"3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg\",\n       \"fee\": 100000,\n       \"version\": 1,\n       \"party\" : \"3MSDfsdfsdfsdfsdfsdfsdsdfsdfsdfsdf\",\n       \"associationType\" : 420,\n       \"hash\" : \"\"\n   }\n"
-      )
-    ))
-  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
-  def revokeAssociation: Route =
-    processRequest(
-      "revoke",
-      (req: AssociationRequest) =>
-        doBroadcast(
-          TransactionFactory
-            .revokeAssociation(req, wallet, time)
-            .flatMap(TransactionsApiRoute.ifPossible(blockchain, _)))
-    )
-
 }
 
 object AssociationsApiRoute {
@@ -149,7 +96,7 @@ object AssociationsApiRoute {
 
   case class AssociationsInfo(address: String, outgoing: List[AssociationInfo], incoming: List[AssociationInfo])
 
-  implicit val associactionInfoFormat: Format[AssociationInfo]   = Json.format
-  implicit val associactionsInfoFormat: Format[AssociationsInfo] = Json.format
+  implicit val associationInfoFormat: Format[AssociationInfo]   = Json.format
+  implicit val associationsInfoFormat: Format[AssociationsInfo] = Json.format
 
 }

@@ -1,12 +1,12 @@
 package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
+import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.state.{ByteStr, EitherExt2}
+import com.ltonetwork.transaction.lease.LeaseTransaction
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.Json
-import com.ltonetwork.account.{Address, PublicKeyAccount}
-import com.ltonetwork.transaction.lease.{LeaseTransaction, LeaseTransactionV1, LeaseTransactionV2}
 
 class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
@@ -19,7 +19,7 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
 
   property("Lease transaction from TransactionParser") {
     forAll(leaseGen) { tx: LeaseTransaction =>
-      val recovered = TransactionParsers.parseBytes(tx.bytes()).get
+      val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
       assertTxs(recovered.asInstanceOf[LeaseTransaction], tx)
     }
   }
@@ -33,7 +33,7 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
     first.bytes() shouldEqual second.bytes()
   }
 
-  property("JSON format validation for LeaseTransactionV1") {
+  property("JSON format validation for LeaseTransaction V1") {
     val js = Json.parse("""{
                           |  "type": 8,
                           |  "id": "7EyfHdDiassBQ5ZAyXKefW4743A4HqHSB6DHirVmCUkv",
@@ -48,22 +48,25 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
                           |}
     """.stripMargin)
 
-    val tx = LeaseTransactionV1
+    val tx = LeaseTransaction
       .create(
-        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
-        10000000,
-        1000000,
+        1,
+        None,
         1526646300260L,
+        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
+        1000000,
         Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet(),
-        ByteStr.decodeBase58("iy3TmfbFds7pc9cDDqfjEJhfhVyNtm3GcxoVz8L3kJFvgRPUmiqqKLMeJGYyN12AhaQ6HvE7aF1tFgaAoCCgNJJ").get
+        10000000,
+        None,
+        Proofs.fromSignature(ByteStr.decodeBase58("iy3TmfbFds7pc9cDDqfjEJhfhVyNtm3GcxoVz8L3kJFvgRPUmiqqKLMeJGYyN12AhaQ6HvE7aF1tFgaAoCCgNJJ").get)
       )
       .right
       .get
 
-    js shouldEqual tx.json()
+    tx.json() shouldEqual js
   }
 
-  property("JSON format validation for LeaseTransactionV2") {
+  property("JSON format validation for LeaseTransaction V2") {
     val js = Json.parse("""{
                         "type": 8,
                         "id": "3EuU5xQrkA6juSGHszb8TJgxbfmoz6Bdrcvu8HQuu2dT",
@@ -80,20 +83,22 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
                        }
     """)
 
-    val tx = LeaseTransactionV2
+    val tx = LeaseTransaction
       .create(
         2,
-        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
-        10000000,
-        1000000,
+        None,
         1526646497465L,
+        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
+        1000000,
         Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet(),
+        10000000,
+        None,
         Proofs(Seq(ByteStr.decodeBase58("5Fr3yLwvfKGDsFLi8A8JbHqToHDojrPbdEGx9mrwbeVWWoiDY5pRqS3rcX1rXC9ud52vuxVdBmGyGk5krcgwFu9q").get))
       )
       .right
       .get
 
-    js shouldEqual tx.json()
+    tx.json() shouldEqual js
   }
 
 }

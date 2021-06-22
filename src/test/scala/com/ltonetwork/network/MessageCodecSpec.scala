@@ -3,8 +3,8 @@ package com.ltonetwork.network
 import java.nio.charset.StandardCharsets
 
 import com.ltonetwork.TransactionGen
-import com.ltonetwork.transaction.transfer.TransferTransactionV1
-import com.ltonetwork.transaction.{SignedTransaction, Transaction}
+import com.ltonetwork.transaction.transfer.TransferTransaction
+import com.ltonetwork.transaction.Transaction
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.embedded.EmbeddedChannel
 import org.scalamock.scalatest.MockFactory
@@ -18,12 +18,12 @@ class MessageCodecSpec extends FreeSpec with Matchers with MockFactory with Prop
     val ch    = new EmbeddedChannel(codec)
 
     ch.writeInbound(RawBytes(TransactionSpec.messageCode, "foo".getBytes(StandardCharsets.UTF_8)))
-    ch.readInbound[TransferTransactionV1]()
+    ch.readInbound[TransferTransaction]()
 
     codec.blockCalls shouldBe 1
   }
 
-  "should not block a sender of valid messages" in forAll(randomTransactionGen) { origTx: SignedTransaction =>
+  "should not block a sender of valid messages" in forAll(randomTransactionGen) { origTx: Transaction =>
     val codec = new SpiedMessageCodec
     val ch    = new EmbeddedChannel(codec)
 

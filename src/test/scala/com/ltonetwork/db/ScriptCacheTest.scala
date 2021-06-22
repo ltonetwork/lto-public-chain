@@ -4,6 +4,7 @@ import com.typesafe.config.ConfigFactory
 import com.ltonetwork.database.LevelDBWriter
 import com.ltonetwork.settings.{TestFunctionalitySettings, LtoSettings, loadConfig}
 import com.ltonetwork.state.{BlockchainUpdaterImpl, _}
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.{TransactionGen, WithDB}
 import org.scalacheck.Gen
 import org.scalatest.{FreeSpec, Matchers}
@@ -13,7 +14,7 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.{Script, ScriptCompiler}
-import com.ltonetwork.transaction.{BlockchainUpdater, GenesisTransaction}
+import com.ltonetwork.transaction.BlockchainUpdater
 
 class ScriptCacheTest extends FreeSpec with Matchers with WithDB with TransactionGen {
 
@@ -52,7 +53,7 @@ class ScriptCacheTest extends FreeSpec with Matchers with WithDB with Transactio
             .map {
               case (account, script) =>
                 SetScriptTransaction
-                  .selfSigned(1, account, Some(script), FEE, ts + accounts.length + accounts.indexOf(account) + 1)
+                  .selfSigned(1, ts + accounts.length + accounts.indexOf(account) + 1, account, FEE, Some(script))
                   .explicitGet()
             }
 
@@ -104,7 +105,7 @@ class ScriptCacheTest extends FreeSpec with Matchers with WithDB with Transactio
           val lastBlock = bcu.lastBlock.get
 
           val newScriptTx = SetScriptTransaction
-            .selfSigned(1, account, None, FEE, lastBlock.timestamp + 1)
+            .selfSigned(1, lastBlock.timestamp + 1, account, FEE, None)
             .explicitGet()
 
           val blockWithEmptyScriptTx = TestBlock

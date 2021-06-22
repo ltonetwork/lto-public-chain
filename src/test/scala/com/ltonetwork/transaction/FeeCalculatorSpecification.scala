@@ -5,8 +5,10 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.Address
 import com.ltonetwork.settings.FeesSettings
 import com.ltonetwork.state.{ByteStr, _}
-import com.ltonetwork.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+import com.ltonetwork.transaction.association.AssociationTransaction
+import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.smart.script.Script
+import com.ltonetwork.transaction.sponsorship.SponsorshipTransactionBase
 import com.ltonetwork.transaction.transfer._
 import org.scalacheck.Gen
 import org.scalamock.scalatest.MockFactory
@@ -66,7 +68,7 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
 
   property("Transfer transaction ") {
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(transferV1Gen) { tx: TransferTransactionV1 =>
+    forAll(transferV1Gen) { tx: TransferTransaction =>
       feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 100000)
     }
   }
@@ -80,21 +82,21 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
 
   property("Association transaction") {
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(assocTransactionGen) { tx: AssociationTransactionBase =>
+    forAll(assocTransactionGen) { tx: AssociationTransaction =>
       feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 100000000)
     }
   }
 
   property("Sposnorship transaction") {
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(Gen.oneOf(sponsorshipGen, sponsorshipCancelGen)) { tx: SponsorshipTransactionBase =>
+    forAll(Gen.oneOf(sponsorshipGen, cancelSponsorshipGen)) { tx: SponsorshipTransactionBase =>
       feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 600000000)
     }
   }
 
   property("Lease cancel transaction") {
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(leaseCancelGen) { tx: LeaseCancelTransaction =>
+    forAll(leaseCancelGen) { tx: CancelLeaseTransaction =>
       feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 500000)
     }
   }

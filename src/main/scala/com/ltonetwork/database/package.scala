@@ -8,7 +8,7 @@ import com.google.common.io.{ByteArrayDataInput, ByteArrayDataOutput}
 import com.google.common.primitives.{Ints, Shorts}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.smart.script.{Script, ScriptReader}
-import com.ltonetwork.transaction.{Transaction, TransactionParsers}
+import com.ltonetwork.transaction.{Transaction, TransactionBuilders}
 
 package object database {
   implicit class ByteArrayDataOutputExt(val output: ByteArrayDataOutput) extends AnyVal {
@@ -146,7 +146,7 @@ package object database {
   }
 
   def readTransactionInfo(data: Array[Byte]): (Int, Transaction) =
-    (Ints.fromByteArray(data), TransactionParsers.parseBytes(data.drop(4)).get)
+    (Ints.fromByteArray(data), TransactionBuilders.parseBytes(data.drop(4)).get)
 
   def readTransactionHeight(data: Array[Byte]): Int = Ints.fromByteArray(data)
 

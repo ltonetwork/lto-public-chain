@@ -1,8 +1,9 @@
 package com.ltonetwork.transaction.api.http.leasing
 
+import com.ltonetwork.api.http.requests.lease.{CancelLeaseV1Request, LeaseV1Request, SignedCancelLeaseV1Request, SignedLeaseV1Request}
 import org.scalatest.{FunSuite, Matchers}
 import play.api.libs.json.Json
-import com.ltonetwork.api.http.leasing.{LeaseCancelV1Request, LeaseV1Request, SignedLeaseCancelV1Request, SignedLeaseV1Request}
+import com.ltonetwork.api.http.requests.lease._
 
 class LeaseV1RequestsTests extends FunSuite with Matchers {
 
@@ -32,9 +33,9 @@ class LeaseV1RequestsTests extends FunSuite with Matchers {
         }
       """
 
-    val req = Json.parse(json).validate[LeaseCancelV1Request].get
+    val req = Json.parse(json).validate[CancelLeaseV1Request].get
 
-    req shouldBe LeaseCancelV1Request("3Myss6gmMckKYtka3cKCM563TBJofnxvfD7", "ABMZDPY4MyQz7kKNAevw5P9eNmRErMutJoV9UNeCtqRV", 10000000)
+    req shouldBe CancelLeaseV1Request("3Myss6gmMckKYtka3cKCM563TBJofnxvfD7", "ABMZDPY4MyQz7kKNAevw5P9eNmRErMutJoV9UNeCtqRV", 10000000)
   }
 
   test("SignedLeaseRequest") {
@@ -74,9 +75,9 @@ class LeaseV1RequestsTests extends FunSuite with Matchers {
          }
       """
 
-    val req = Json.parse(json).validate[SignedLeaseCancelV1Request].get
+    val req = Json.parse(json).validate[SignedCancelLeaseV1Request].get
 
-    req shouldBe SignedLeaseCancelV1Request(
+    req shouldBe SignedCancelLeaseV1Request(
       "CRxqEuxhdZBEHX42MU4FfyJxuHmbDBTaHMhM3Uki7pLw",
       "D6HmGZqpXCyAqpz8mCAfWijYDWsPKncKe5v3jq1nTpf5",
       0L,

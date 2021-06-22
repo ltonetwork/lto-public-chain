@@ -3,7 +3,6 @@ package com.ltonetwork
 import java.io.File
 import java.security.Security
 import java.util.concurrent.ConcurrentHashMap
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
@@ -13,11 +12,9 @@ import com.typesafe.config._
 import com.ltonetwork.account.{Address, AddressScheme}
 import com.ltonetwork.actor.RootActorSystem
 import com.ltonetwork.api.http._
-import com.ltonetwork.api.http.assets.AssetsBroadcastApiRoute
-import com.ltonetwork.api.http.leasing.LeaseApiRoute
 import com.ltonetwork.consensus.PoSSelector
 import com.ltonetwork.consensus.nxt.api.http.NxtConsensusApiRoute
-import com.ltonetwork.db.{openDB, DBExt}
+import com.ltonetwork.db.{DBExt, openDB}
 import com.ltonetwork.database.Keys
 import com.ltonetwork.features.api.ActivationApiRoute
 import com.ltonetwork.history.{CheckpointServiceImpl, StorageFactory}
@@ -255,7 +252,6 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
           scoreStatsReporter,
           configRoot
         ),
-        AssetsBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels),
         ActivationApiRoute(settings.restAPISettings, settings.blockchainSettings.functionalitySettings, settings.featuresSettings, blockchainUpdater)
       )
 
@@ -271,7 +267,6 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
         typeOf[PeersApiRoute],
         typeOf[AddressApiRoute],
         typeOf[AssociationsApiRoute],
-        typeOf[AssetsBroadcastApiRoute],
         typeOf[DebugApiRoute],
         typeOf[ActivationApiRoute]
       )

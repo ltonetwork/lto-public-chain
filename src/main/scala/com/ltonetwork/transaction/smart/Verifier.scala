@@ -1,10 +1,11 @@
 package com.ltonetwork.transaction.smart
 
-import cats.syntax.all._
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.{GenericError, ScriptExecutionError, TransactionNotAllowedByScript}
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.Transaction.SigProofsSwitch
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.smart.script.{Script, ScriptRunner}
 
 object Verifier {
@@ -12,12 +13,11 @@ object Verifier {
   def apply(blockchain: Blockchain, currentBlockHeight: Int)(tx: Transaction): Either[ValidationError, Transaction] =
     tx match {
       case _: GenesisTransaction => Right(tx)
-      case pt: ProvenTransaction =>
-        (pt, blockchain.accountScript(pt.sender)) match {
-          case (stx: SignedTransaction, None)       => stx.signaturesValid()
-          case (_: SignedTransaction, Some(_))      => Left(GenericError("Can't process transaction  with signature from scripted account"))
-          case (_: ProvenTransaction, Some(script)) => verify(blockchain, script, currentBlockHeight, pt, false)
-          case (_: ProvenTransaction, None)         => verifyAsEllipticCurveSignature(pt)
+      case _ =>
+        (tx, blockchain.accountScript(tx.sender)) match {
+          case (stx: SigProofsSwitch, Some(_)) if stx.usesLegacySignature => Left(GenericError("Can't process transaction with signature from scripted account"))
+          case (_, Some(script)) => verify(blockchain, script, currentBlockHeight, tx, isTokenScript = false)
+          case (_, None)         => verifyAsEllipticCurveSignature(tx)
         }
     }
 
@@ -33,7 +33,7 @@ object Verifier {
     }
   }
 
-  def verifyAsEllipticCurveSignature[T <: ProvenTransaction](pt: T): Either[ValidationError, T] =
+  def verifyAsEllipticCurveSignature[T <: Transaction](pt: T): Either[ValidationError, T] =
     pt.proofs.proofs match {
       case p :: Nil =>
         Either.cond(crypto.verify(p.arr, pt.bodyBytes(), pt.sender.publicKey),

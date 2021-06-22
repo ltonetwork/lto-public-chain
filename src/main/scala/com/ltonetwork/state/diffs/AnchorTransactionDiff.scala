@@ -1,9 +1,10 @@
 package com.ltonetwork.state.diffs
 
 import com.ltonetwork.features.BlockchainFeatures
-import com.ltonetwork.state.{Blockchain, Diff, LeaseBalance, Portfolio}
+import com.ltonetwork.state.{Blockchain, Diff}
 import com.ltonetwork.transaction.ValidationError.GenericError
-import com.ltonetwork.transaction.{AnchorTransaction, ValidationError}
+import com.ltonetwork.transaction.ValidationError
+import com.ltonetwork.transaction.anchor.AnchorTransaction
 
 object AnchorTransactionDiff {
   import com.ltonetwork.features.FeatureProvider._

@@ -1,7 +1,6 @@
 package com.ltonetwork.block
 
 import java.nio.ByteBuffer
-
 import cats._
 import com.google.common.primitives.{Bytes, Ints, Longs}
 import com.ltonetwork.crypto
@@ -15,6 +14,7 @@ import com.ltonetwork.consensus.nxt.{NxtConsensusBlockField, NxtLikeConsensusBlo
 import com.ltonetwork.utils.ScorexLogging
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction._
+import com.ltonetwork.transaction.genesis.GenesisTransaction
 import scorex.crypto.signatures.Curve25519._
 
 import scala.util.{Failure, Try}
@@ -26,12 +26,12 @@ class BlockHeader(val timestamp: Long,
                   val consensusData: NxtLikeConsensusBlockData,
                   val transactionCount: Int,
                   val featureVotes: Set[Short]) {
-  protected val versionField: ByteBlockField      = ByteBlockField("version", version)
-  protected val timestampField: LongBlockField    = LongBlockField("timestamp", timestamp)
-  protected val referenceField: BlockIdField      = BlockIdField("reference", reference.arr)
-  protected val signerField: SignerDataBlockField = SignerDataBlockField("signature", signerData)
-  protected val consensusField                    = NxtConsensusBlockField(consensusData)
-  protected val supportedFeaturesField            = FeaturesBlockField(version, featureVotes)
+  protected val versionField: ByteBlockField               = ByteBlockField("version", version)
+  protected val timestampField: LongBlockField             = LongBlockField("timestamp", timestamp)
+  protected val referenceField: BlockIdField               = BlockIdField("reference", reference.arr)
+  protected val signerField: SignerDataBlockField          = SignerDataBlockField("signature", signerData)
+  protected val consensusField: NxtConsensusBlockField     = NxtConsensusBlockField(consensusData)
+  protected val supportedFeaturesField: FeaturesBlockField = FeaturesBlockField(version, featureVotes)
 
   val headerJson: Coeval[JsObject] = Coeval.evalOnce(
     versionField.json() ++
@@ -207,7 +207,7 @@ object Block extends ScorexLogging {
           val transactionLengthBytes = v._1.slice(pos, pos + TransactionSizeLength)
           val transactionLength      = Ints.fromByteArray(transactionLengthBytes)
           val transactionBytes       = v._1.slice(pos + TransactionSizeLength, pos + TransactionSizeLength + transactionLength)
-          txs += TransactionParsers.parseBytes(transactionBytes).get
+          txs += TransactionBuilders.parseBytes(transactionBytes).get
           pos + TransactionSizeLength + transactionLength
       }
 
@@ -272,7 +272,7 @@ object Block extends ScorexLogging {
     val genesisSigner = PrivateKeyAccount(Array.empty)
 
     val transactionGenesisData      = genesisTransactions(genesisSettings)
-    val transactionGenesisDataField = TransactionsBlockFieldVersion1or2(transactionGenesisData)
+    val transactionGenesisDataField = TransactionsBlockField.Version1or2(transactionGenesisData)
     val consensusGenesisData        = NxtLikeConsensusBlockData(genesisSettings.initialBaseTarget, ByteStr(Array.fill(crypto.DigestSize)(0: Byte)))
     val consensusGenesisDataField   = NxtConsensusBlockField(consensusGenesisData)
     val txBytesSize                 = transactionGenesisDataField.bytes().length

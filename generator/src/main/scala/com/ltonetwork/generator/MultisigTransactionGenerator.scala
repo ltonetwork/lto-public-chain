@@ -6,7 +6,7 @@ import com.ltonetwork.state._
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
-import com.ltonetwork.transaction.transfer.TransferTransactionV2
+import com.ltonetwork.transaction.transfer.TransferTransaction
 import com.ltonetwork.transaction.{Proofs, Transaction}
 import com.ltonetwork.it.util._
 import scala.util.Random
@@ -28,17 +28,19 @@ class MultisigTransactionGenerator(settings: MultisigTransactionGenerator.Settin
 
     val script: Script = Gen.multiSigScript(owners, 3)
 
-    val setScript = SetScriptTransaction.selfSigned(1, bank, Some(script), enoughFee, System.currentTimeMillis()).explicitGet()
+    val setScript = SetScriptTransaction.selfSigned(1, System.currentTimeMillis(), bank, enoughFee, Some(script)).explicitGet()
 
     val res = Range(0, settings.transactions).map { i =>
-      val tx = TransferTransactionV2
+      val tx = TransferTransaction
         .create(2,
+                None,
+                System.currentTimeMillis(),
                 bank,
+                enoughFee,
                 owners(1),
                 totalAmountOnNewAccount - 2 * enoughFee - i,
-                System.currentTimeMillis(),
-                enoughFee,
                 Array.emptyByteArray,
+                None,
                 Proofs.empty)
         .explicitGet()
       val signatures = owners.map(crypto.sign(_, tx.bodyBytes())).map(ByteStr(_))

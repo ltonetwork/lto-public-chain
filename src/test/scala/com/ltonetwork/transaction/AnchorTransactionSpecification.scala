@@ -2,8 +2,9 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.{SignedAnchorRequest, SignedDataRequest}
+import com.ltonetwork.api.http.requests.anchor.SignedAnchorV1Request
 import com.ltonetwork.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, EitherExt2, IntegerDataEntry}
+import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.utils.Base58
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
@@ -31,7 +32,7 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
     forAll(anchorTransactionGen)(checkSerialization)
   }
 
-  property("serialization from TypedTransaction") {
+  property("serialization from AnchorTransaction") {
     forAll(anchorTransactionGen) { tx: AnchorTransaction =>
       val recovered = AnchorTransaction.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
@@ -39,13 +40,13 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
   }
 
   property("JSON roundtrip") {
-    implicit val signedFormat: Format[SignedAnchorRequest] = Json.format[SignedAnchorRequest]
+    implicit val signedFormat: Format[SignedAnchorV1Request] = Json.format[SignedAnchorV1Request]
 
     forAll(anchorTransactionGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
-      val req = json.as[SignedAnchorRequest]
+      val req = json.as[SignedAnchorV1Request]
       req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
       req.timestamp shouldEqual tx.timestamp
@@ -79,16 +80,18 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
     val tx = AnchorTransaction
       .create(
         1,
-        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
-        List(arr),
-        100000,
+        None,
         1526911531530L,
+        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
+        100000,
+        List(arr),
+        None,
         Proofs(Seq(arr))
       )
       .right
       .get
 
-    js shouldEqual tx.json()
+    tx.json() shouldEqual js
   }
 
 }
