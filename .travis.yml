@@ -3,6 +3,11 @@ language: scala
 # Use container-based infrastructure
 sudo: false
 
+addons:
+  apt:
+    packages:
+      - ca-certificates-java
+    
 branches:
   only:
     - master
@@ -13,9 +18,6 @@ jdk:
 scala:
 - 2.12.7
 
-install:
-  - sudo update-ca-certificates
-  
 before_script:
   - unset _JAVA_OPTIONS
   - unset SBT_OPTS
