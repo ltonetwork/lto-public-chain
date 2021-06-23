@@ -13,10 +13,12 @@ branches:
     - master
     - travis
 
-jdk:
-- oraclejdk9
-scala:
-- 2.12.7
+jdk: openjdk9
+scala: 2.12.7
+
+before_install:
+  - rm '${JAVA_HOME}/lib/security/cacerts'
+  - ln -s /etc/ssl/certs/java/cacerts '${JAVA_HOME}/lib/security/cacerts'
 
 before_script:
   - unset _JAVA_OPTIONS
