@@ -65,7 +65,7 @@ class BalanceDiffValidationTest extends PropSpec with PropertyChecks with Matche
     ts     <- positiveIntGen
     amt    <- positiveLongGen
     fee    <- smallFeeGen
-    genesis: GenesisTransaction                   = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
+    genesis: GenesisTransaction                 = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
     masterTransfersToAlice: TransferTransaction = createLtoTransfer(master, alice, amt, fee, ts).explicitGet()
     (aliceLeasesToBob, _)    <- leaseAndCancelGeneratorP(alice, bob, alice, ts) suchThat (_._1.amount < amt)
     (masterLeasesToAlice, _) <- leaseAndCancelGeneratorP(master, alice, master, ts) suchThat (_._1.amount > aliceLeasesToBob.amount)

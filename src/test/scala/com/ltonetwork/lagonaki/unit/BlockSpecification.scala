@@ -33,11 +33,11 @@ class BlockSpecification extends PropSpec with PropertyChecks with TransactionGe
 
   def bigBlockGen(amt: Int): Gen[Block] =
     for {
-      baseTarget          <- arbitrary[Long]
-      reference           <- byteArrayGen(Block.BlockIdLength).map(r => ByteStr(r))
-      generationSignature <- byteArrayGen(Block.GeneratorSignatureLength)
-      sender                                    <- accountGen
-      recipient                                 <- accountGen
+      baseTarget                              <- arbitrary[Long]
+      reference                               <- byteArrayGen(Block.BlockIdLength).map(r => ByteStr(r))
+      generationSignature                     <- byteArrayGen(Block.GeneratorSignatureLength)
+      sender                                  <- accountGen
+      recipient                               <- accountGen
       paymentTransaction: TransferTransaction <- ltoTransferGeneratorP(time, sender, recipient)
     } yield
       Block

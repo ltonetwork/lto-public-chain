@@ -79,7 +79,7 @@ class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with
   private def validTransferGen(from: PrivateKeyAccount, timestamp: Long): Gen[Transaction] =
     for {
       amount    <- smallFeeGen
-      fee <- smallFeeGen
+      fee       <- smallFeeGen
       recipient <- accountGen
     } yield TransferTransaction.selfSigned(1, timestamp, from, fee, recipient, amount, Array.empty).explicitGet()
 

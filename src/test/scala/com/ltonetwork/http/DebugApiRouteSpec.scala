@@ -5,9 +5,9 @@ import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.api.http.ApiKeyNotValid
 
 class DebugApiRouteSpec extends RouteSpec("/debug") with RestAPISettingsHelper with TestWallet {
-  private val sampleConfig  = com.typesafe.config.ConfigFactory.load()
-  private val ltoSettings = LtoSettings.fromConfig(sampleConfig)
-  private val configObject  = sampleConfig.root()
+  private val sampleConfig = com.typesafe.config.ConfigFactory.load()
+  private val ltoSettings  = LtoSettings.fromConfig(sampleConfig)
+  private val configObject = sampleConfig.root()
   private val route =
     DebugApiRoute(ltoSettings, null, null, null, null, null, null, null, null, null, null, null, null, configObject).route
 

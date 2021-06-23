@@ -8,11 +8,7 @@ import com.ltonetwork.utils.Base58
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 
-class WalletRouteSpec
-    extends RouteSpec("/wallet")
-    with RestAPISettingsHelper
-    with TestWallet
-    with PropertyChecks {
+class WalletRouteSpec extends RouteSpec("/wallet") with RestAPISettingsHelper with TestWallet with PropertyChecks {
   private val route = WalletApiRoute(restAPISettings, testWallet).route
 
   private val allAccounts  = testWallet.privateKeyAccounts
@@ -60,7 +56,6 @@ class WalletRouteSpec
 
   routePath("/sign/{address}") in testSign("sign", true)
   routePath("/signText/{address}") in testSign("signText", false)
-
 
   // Tests that modify the wallet addresses must be done after the other tests, or they'll fail
 

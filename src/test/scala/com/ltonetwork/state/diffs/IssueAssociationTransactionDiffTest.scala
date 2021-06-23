@@ -51,16 +51,18 @@ class IssueAssociationTransactionDiffTest extends PropSpec with PropertyChecks w
       genesis1 = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
       genesis2 = GenesisTransaction.create(master2, ENOUGH_AMT, ts).explicitGet()
       feeOverhead <- Gen.choose[Long](0, 100)
-      tx1 = IssueAssociationTransaction.selfSigned(
-        version,
-        ts + 1,
-        master,
-        Constants.UnitsInLTO + feeOverhead,
-        party,
-        100,
-        None,
-        Some(ByteStr.decodeBase58("Fjn9ZkwYx1YuXDskEGDhLA8PdQGgewHRK9PGxYmzy61g").get)
-      ).explicitGet()
+      tx1 = IssueAssociationTransaction
+        .selfSigned(
+          version,
+          ts + 1,
+          master,
+          Constants.UnitsInLTO + feeOverhead,
+          party,
+          100,
+          None,
+          Some(ByteStr.decodeBase58("Fjn9ZkwYx1YuXDskEGDhLA8PdQGgewHRK9PGxYmzy61g").get)
+        )
+        .explicitGet()
       tx2 = IssueAssociationTransaction
         .selfSigned(version, ts + 2, master, Constants.UnitsInLTO + feeOverhead, party, 11, None, None)
         .explicitGet()

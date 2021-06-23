@@ -11,21 +11,20 @@ import org.scalatest.{FunSuite, Matchers}
 class WalletSpecification extends FunSuite with Matchers {
 
   private val walletSize = 10
-  def newW()                  = Wallet(WalletSettings(None, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption,None,None))
-  def neww2()                  = Wallet(WalletSettings(None, "cookies",None,None, ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
+  def newW()             = Wallet(WalletSettings(None, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption, None, None))
+  def neww2()            = Wallet(WalletSettings(None, "cookies", None, None, ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
 
   test("wallet from accountSeed") {
-    val w2 = neww2()
+    val w2       = neww2()
     val accounts = w2.privateKeyAccounts
     accounts.size shouldBe 1
   }
-
 
   test("wallet - accs creation") {
     val w = newW()
     w.generateNewAccounts(walletSize)
 
-    w.privateKeyAccounts.size shouldBe walletSize+1
+    w.privateKeyAccounts.size shouldBe walletSize + 1
     w.privateKeyAccounts.map(_.address) shouldBe Seq(
       "3MsY36nMfpp3PgH7q5J7upa2WbNkjz9eYnN",
       "3N14vexKx7EpVy4iSBCyG3esoEggqSvZvn5",
@@ -61,13 +60,13 @@ class WalletSpecification extends FunSuite with Matchers {
   test("reopening") {
     val walletFile = Some(createTestTemporaryFile("wallet", ".dat"))
 
-    val w1 = Wallet(WalletSettings(walletFile, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption,None,None))
+    val w1 = Wallet(WalletSettings(walletFile, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption, None, None))
     w1.generateNewAccounts(10)
     val w1privateKeyAccounts = w1.privateKeyAccounts
     w1.privateKeyAccounts.nonEmpty shouldBe true
-    val w1nonce              = w1.nonce
+    val w1nonce = w1.nonce
 
-    val w2 = Wallet(WalletSettings(walletFile, "cookies", None, None,None))
+    val w2 = Wallet(WalletSettings(walletFile, "cookies", None, None, None))
     w2.privateKeyAccounts.nonEmpty shouldBe true
     w2.privateKeyAccounts shouldEqual w1privateKeyAccounts
     w2.nonce shouldBe w1nonce
@@ -76,14 +75,14 @@ class WalletSpecification extends FunSuite with Matchers {
   test("reopening with accountSeed") {
     val walletFile = Some(createTestTemporaryFile("wallet", ".dat"))
 
-    val w1 = Wallet(WalletSettings(walletFile, "cookies",None, None,ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
+    val w1                   = Wallet(WalletSettings(walletFile, "cookies", None, None, ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
     val w1privateKeyAccounts = w1.privateKeyAccounts
     w1.privateKeyAccounts.nonEmpty shouldBe true
     w1.accountSeed.nonEmpty shouldBe true
     w1.seed shouldBe 'left
     w1.save()
 
-    val w2 = Wallet(WalletSettings(walletFile, "cookies", None, None,None))
+    val w2 = Wallet(WalletSettings(walletFile, "cookies", None, None, None))
     ByteStr(w2.accountSeed.get) shouldEqual ByteStr(w1.accountSeed.get)
     w2.seed shouldBe 'left
     w2.privateKeyAccounts.nonEmpty shouldBe true
@@ -93,14 +92,14 @@ class WalletSpecification extends FunSuite with Matchers {
   test("reopening with seed phrase") {
     val walletFile = Some(createTestTemporaryFile("wallet", ".dat"))
 
-    val w1 = Wallet(WalletSettings(walletFile, "cookies",None, Some("crypto is here to stay"),None))
+    val w1                   = Wallet(WalletSettings(walletFile, "cookies", None, Some("crypto is here to stay"), None))
     val w1privateKeyAccounts = w1.privateKeyAccounts
     w1privateKeyAccounts.nonEmpty shouldBe true
     w1.accountSeed shouldBe empty
     w1.seed shouldBe 'right
     w1.save()
 
-    val w2 = Wallet(WalletSettings(walletFile, "cookies", None, None,None))
+    val w2 = Wallet(WalletSettings(walletFile, "cookies", None, None, None))
     w2.accountSeed shouldBe None
     w2.privateKeyAccounts.nonEmpty shouldBe true
     w2.privateKeyAccounts shouldEqual w1privateKeyAccounts
@@ -109,11 +108,11 @@ class WalletSpecification extends FunSuite with Matchers {
 
   test("reopen with incorrect password") {
     val file = Some(createTestTemporaryFile("wallet", ".dat"))
-    val w1   = Wallet(WalletSettings(file, "password", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption,None,None))
+    val w1   = Wallet(WalletSettings(file, "password", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption, None, None))
     w1.generateNewAccounts(3)
 
     assertThrows[IllegalStateException] {
-      Wallet(WalletSettings(file, "incorrect password", None, None,None))
+      Wallet(WalletSettings(file, "incorrect password", None, None, None))
     }
   }
 

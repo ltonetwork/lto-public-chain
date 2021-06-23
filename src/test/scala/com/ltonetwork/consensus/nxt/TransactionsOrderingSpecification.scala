@@ -10,14 +10,15 @@ import scala.util.Random
 
 class TransactionsOrderingSpecification extends PropSpec with Assertions with Matchers {
 
-  def sender: PrivateKeyAccount = PrivateKeyAccount(Array.fill(32) (0))
+  def sender: PrivateKeyAccount = PrivateKeyAccount(Array.fill(32)(0))
   def recipient: Address        = Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet()
 
   ignore("TransactionsOrdering.InUTXPool should sort correctly") {
     val txsDifferentById = (0 to 3)
       .map(i => {
         TransferTransaction.selfSigned(1, 5, sender, 100000, recipient, 125L, Array(i.toByte)).right.get
-      }).sortBy(t => t.id().base58)
+      })
+      .sortBy(t => t.id().base58)
 
     val correctSeq = txsDifferentById ++ Seq(
       TransferTransaction.selfSigned(1, 1, sender, 100000, recipient, 124L, Array.empty).right.get,

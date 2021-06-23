@@ -23,7 +23,7 @@ class BlockchainUpdaterGeneratorFeeNextBlockOrMicroBlockTest
     sender    <- accountGen
     recipient <- accountGen
     ts        <- positiveIntGen
-    genesis: GenesisTransaction        = GenesisTransaction.create(sender, ENOUGH_AMT, ts).explicitGet()
+    genesis: GenesisTransaction      = GenesisTransaction.create(sender, ENOUGH_AMT, ts).explicitGet()
     somePayment: TransferTransaction = createLtoTransfer(sender, recipient, 1, 100 * 1000 * 1000, ts + 1).explicitGet()
     // generator has enough balance for this transaction if gets fee for block before applying it
     generatorPaymentOnFee: TransferTransaction = createLtoTransfer(defaultSigner, recipient, 11, 100 * 1000 * 1000, ts + 2).explicitGet()

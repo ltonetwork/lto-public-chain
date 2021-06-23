@@ -62,9 +62,15 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
 
           case TransferTransaction =>
             val recipient = randomFrom(accounts).get.toAddress
-            val sender = randomFrom(accounts).get
+            val sender    = randomFrom(accounts).get
             logOption(
-              TransferTransaction.selfSigned(1, ts, sender, moreThatStandardFee, recipient, r.nextInt(500000), Array.fill(r.nextInt(100))(r.nextInt().toByte))
+              TransferTransaction.selfSigned(1,
+                                             ts,
+                                             sender,
+                                             moreThatStandardFee,
+                                             recipient,
+                                             r.nextInt(500000),
+                                             Array.fill(r.nextInt(100))(r.nextInt().toByte))
             )
 
           case LeaseTransaction =>
@@ -84,13 +90,9 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
               ParsedTransfer(recipient, amount)
             }
             val sender = randomFrom(accounts).get
-            logOption(MassTransferTransaction.selfSigned(1,
-                                                         ts,
-                                                         sender,
-                                                         100000 + 50000 * transferCount,
-                                                         transfers.toList,
-                                                         Array.fill(r.nextInt(100))(r.nextInt().toByte))
-            )
+            logOption(
+              MassTransferTransaction
+                .selfSigned(1, ts, sender, 100000 + 50000 * transferCount, transfers.toList, Array.fill(r.nextInt(100))(r.nextInt().toByte)))
           case DataTransaction =>
             val sender = randomFrom(accounts).get
             val count  = r.nextInt(10)
@@ -117,7 +119,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
         }
 
         (tx.map(tx => allTxsWithValid :+ tx).getOrElse(allTxsWithValid), tx match {
-          case Some(tx: LeaseTransaction)     => activeLeaseTransactions :+ tx
+          case Some(tx: LeaseTransaction)       => activeLeaseTransactions :+ tx
           case Some(tx: CancelLeaseTransaction) => activeLeaseTransactions.filter(_.id() != tx.leaseId)
           case _                                => activeLeaseTransactions
         })

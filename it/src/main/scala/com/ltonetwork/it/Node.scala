@@ -49,14 +49,14 @@ object Node {
 
     def fee(txTypeId: Byte): Long =
       (txTypeId match {
-        case GenesisTransaction.typeId       => 0
-        case TransferTransaction.typeId      => 1000
-        case LeaseTransaction.typeId         => 1000
-        case SetScriptTransaction.typeId     => 1000
-        case CancelLeaseTransaction.typeId   => 1000
-        case MassTransferTransaction.typeId  => 1000
-        case AnchorTransaction.typeId        => 100
-        case _                               => throw new Exception("it: tx not supported")
+        case GenesisTransaction.typeId      => 0
+        case TransferTransaction.typeId     => 1000
+        case LeaseTransaction.typeId        => 1000
+        case SetScriptTransaction.typeId    => 1000
+        case CancelLeaseTransaction.typeId  => 1000
+        case MassTransferTransaction.typeId => 1000
+        case AnchorTransaction.typeId       => 100
+        case _                              => throw new Exception("it: tx not supported")
       }) * 100 * 1000
 
     def blockDelay: FiniteDuration = n.settings.blockchainSettings.genesisSettings.averageBlockDelay

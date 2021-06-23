@@ -266,7 +266,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
 
   private val enoughFeeTxWithScriptedAccount = for {
     (sender, senderBalance, utx, ts) <- withScriptedAccount
-    fee                        <- choose(100 * 1000 * 1000, 2 * 100 * 1000 * 1000)
+    fee                              <- choose(100 * 1000 * 1000, 2 * 100 * 1000 * 1000)
     tx                               <- transactionGen(sender, ts + 1, fee)
   } yield (utx, tx)
 

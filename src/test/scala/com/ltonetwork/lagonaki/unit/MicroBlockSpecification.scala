@@ -23,7 +23,7 @@ class MicroBlockSpecification extends FunSuite with Matchers with MockFactory wi
 
   test("MicroBlock with txs bytes/parse roundtrip") {
 
-    val ts                         = System.currentTimeMillis() - 5000
+    val ts                       = System.currentTimeMillis() - 5000
     val tr: TransferTransaction  = TransferTransaction.selfSigned(1, ts + 1, sender, 2, gen, 5, Array()).explicitGet()
     val tr2: TransferTransaction = TransferTransaction.selfSigned(1, ts + 2, sender, 2, gen, 5, Array()).explicitGet()
 

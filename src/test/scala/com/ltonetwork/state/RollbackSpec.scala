@@ -79,15 +79,15 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
     "forget rollbacked transaction for quering" in forAll(accountGen, accountGen, Gen.nonEmptyListOf(Gen.choose(1, 10))) {
       case (sender, recipient, txCount) =>
         val settings = createSettings()
-        val ltoSettings = history.DefaultLtoSettings.copy(
-          blockchainSettings = history.DefaultLtoSettings.blockchainSettings.copy(functionalitySettings = settings))
+        val ltoSettings =
+          history.DefaultLtoSettings.copy(blockchainSettings = history.DefaultLtoSettings.blockchainSettings.copy(functionalitySettings = settings))
         withDomain(ltoSettings) { d =>
           d.appendBlock(genesisBlock(nextTs, sender, com.ltonetwork.state.diffs.ENOUGH_AMT))
 
           val genesisSignature = d.lastBlockId
 
           val transferAmount = 100
-          val transfers = txCount.map(tc => Seq.fill(tc)(randomOp(sender, recipient, transferAmount, tc % 3)).flatten)
+          val transfers      = txCount.map(tc => Seq.fill(tc)(randomOp(sender, recipient, transferAmount, tc % 3)).flatten)
 
           for (transfer <- transfers) {
             d.appendBlock(
@@ -234,8 +234,8 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
       case (sponsor, sender) =>
         import com.ltonetwork.state.diffs.ENOUGH_AMT
         val settings = createSettings(BlockchainFeatures.SponsorshipTransaction -> 0, BlockchainFeatures.SmartAccounts -> 0)
-        val ltoSettings = history.DefaultLtoSettings.copy(
-          blockchainSettings = history.DefaultLtoSettings.blockchainSettings.copy(functionalitySettings = settings))
+        val ltoSettings =
+          history.DefaultLtoSettings.copy(blockchainSettings = history.DefaultLtoSettings.blockchainSettings.copy(functionalitySettings = settings))
         val tx  = SponsorshipTransaction.selfSigned(1, nextTs, sponsor, 5 * 100000000L, sender).explicitGet()
         val tx2 = CancelSponsorshipTransaction.selfSigned(1, nextTs, sponsor, 5 * 100000000L, sender).explicitGet()
 

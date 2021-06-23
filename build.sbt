@@ -33,6 +33,7 @@ val network = SettingKey[Network]("network")
 network := { Network(sys.props.get("network")) }
 name := "lto"
 normalizedName := s"${name.value}${network.value.packageSuffix}"
+unmanagedSources / excludeFilter := "Version.scala"
 
 git.useGitDescribe := true
 git.uncommittedSignifier := Some("DIRTY")

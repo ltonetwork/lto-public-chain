@@ -32,7 +32,7 @@ class TransactionsRouteSpec
 
   import TransactionsApiRoute.MaxTransactionsPerRequest
 
-  private val wallet       = Wallet(WalletSettings(None, "qwerty", None, None,None))
+  private val wallet       = Wallet(WalletSettings(None, "qwerty", None, None, None))
   private val blockchain   = mock[Blockchain]
   private val utx          = mock[UtxPool]
   private val allChannels  = mock[ChannelGroup]
@@ -51,8 +51,9 @@ class TransactionsRouteSpec
           "recipient"       -> accountGen.sample.get.toAddress
         )
 
-        val featuresSettings = TestFunctionalitySettings.Enabled.copy(preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0))
-        val blockchain       = mock[Blockchain]
+        val featuresSettings = TestFunctionalitySettings.Enabled.copy(
+          preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0))
+        val blockchain = mock[Blockchain]
         (blockchain.height _).expects().returning(1).anyNumberOfTimes()
         (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
         (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures)
@@ -84,8 +85,9 @@ class TransactionsRouteSpec
           )
         )
 
-        val featuresSettings = TestFunctionalitySettings.Enabled.copy(preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0))
-        val blockchain       = mock[Blockchain]
+        val featuresSettings = TestFunctionalitySettings.Enabled.copy(
+          preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0))
+        val blockchain = mock[Blockchain]
         (blockchain.height _).expects().returning(1).anyNumberOfTimes()
         (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
         (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures)

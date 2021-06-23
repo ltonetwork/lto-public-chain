@@ -14,7 +14,7 @@ import scala.util.{Failure, Success}
 
 package object http {
 
-  val LTO: Long  = 100000000L
+  val LTO: Long             = 100000000L
   val ApiKeyHeader: api_key = api_key("ridethelto!")
 
   def sameSignature(target: Array[Byte])(actual: Array[Byte]): Boolean = target sameElements actual
@@ -95,7 +95,7 @@ package object http {
       (JsPath \ "attachment").readWithDefault(Array[Byte]()) and
       (JsPath \ "proofs").readNullable[Proofs] and
       (JsPath \ "signature").readNullable[ByteStr]
-    ) { (version, chainId, sender, recipient, amount, timestamp, fee, attachment, proofs, signature) =>
+  ) { (version, chainId, sender, recipient, amount, timestamp, fee, attachment, proofs, signature) =>
     TransferTransaction
       .create(
         version.getOrElse(1.toByte),

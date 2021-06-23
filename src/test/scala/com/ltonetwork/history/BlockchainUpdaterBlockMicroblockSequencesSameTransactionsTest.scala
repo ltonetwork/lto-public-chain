@@ -51,7 +51,7 @@ class BlockchainUpdaterBlockMicroblockSequencesSameTransactionsTest
       ts     <- positiveIntGen
       fee    <- smallFeeGen
       amt    <- smallFeeGen
-      genesis: GenesisTransaction    = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
+      genesis: GenesisTransaction  = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
       payment: TransferTransaction = createLtoTransfer(master, master, amt, fee, ts).explicitGet()
     } yield (miner, genesis, payment, ts)
     scenario(preconditionsAndPayments, MicroblocksActivatedAt0LtoSettings) {
@@ -106,7 +106,7 @@ class BlockchainUpdaterBlockMicroblockSequencesSameTransactionsTest
   def g(totalTxs: Int, totalScenarios: Int): Gen[(Block, Seq[(BlockAndMicroblockSequence, Block)])] =
     for {
       aaa @ (accs, miner, genesis, ts)      <- accsAndGenesis()
-      payments: Seq[TransferTransaction]  <- randomPayments(accs, ts, totalTxs)
+      payments: Seq[TransferTransaction]    <- randomPayments(accs, ts, totalTxs)
       intSeqs: Seq[BlockAndMicroblockSizes] <- randomSequences(totalTxs, totalScenarios)
     } yield {
       val version = 3: Byte

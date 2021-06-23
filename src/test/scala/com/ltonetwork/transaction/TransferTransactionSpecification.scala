@@ -41,7 +41,7 @@ class TransferTransactionSpecification extends PropSpec with PropertyChecks with
     } yield TransferTransaction.selfSigned(1, timestamp, sender, fee, recipient, amount, attachment) should produce("insufficient fee")
   }
 
-  private val versionGen: Gen[Byte] = Gen.oneOf(TransferTransaction.supportedVersions.toSeq) filter(_ != 1)
+  private val versionGen: Gen[Byte] = Gen.oneOf(TransferTransaction.supportedVersions.toSeq) filter (_ != 1)
 
   property("TransferTransaction v2 id doesn't depend on proof") {
     forAll(versionGen, accountGen, accountGen, proofsGen, proofsGen, bytes32gen) {
