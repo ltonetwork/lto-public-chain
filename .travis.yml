@@ -1,3 +1,4 @@
+dist: focal
 language: scala
 # Use container-based infrastructure
 sudo: false
