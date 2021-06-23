@@ -19,11 +19,11 @@ case class SetScriptTransaction private (version: Byte,
                                          proofs: Proofs)
     extends Transaction {
 
-  override def builder: TransactionBuilder.For[SetScriptTransaction] = SetScriptTransaction
+  override def builder: TransactionBuilder.For[SetScriptTransaction]      = SetScriptTransaction
   private def serializer: TransactionSerializer.For[SetScriptTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
+  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction] {
@@ -36,7 +36,7 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
       Deser.parseOption(bytes, start)(ScriptReader.fromBytes)
 
     val scriptOpt = scriptOptEi match {
-      case None => Right(None)
+      case None            => Right(None)
       case Some(Right(sc)) => Right(Some(sc))
       case Some(Left(err)) => Left(err)
     }
@@ -54,7 +54,9 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isEmpty || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
   }

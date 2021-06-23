@@ -18,11 +18,11 @@ case class SponsorshipTransaction private (version: Byte,
                                            proofs: Proofs)
     extends SponsorshipTransactionBase {
 
-  override def builder: TransactionBuilder.For[SponsorshipTransaction] = SponsorshipTransaction
+  override def builder: TransactionBuilder.For[SponsorshipTransaction]      = SponsorshipTransaction
   private def serializer: TransactionSerializer.For[SponsorshipTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
+  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object SponsorshipTransaction extends TransactionBuilder.For[SponsorshipTransaction] {
@@ -34,13 +34,14 @@ object SponsorshipTransaction extends TransactionBuilder.For[SponsorshipTransact
     tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   object SerializerV1 extends SponsorshipSerializerV1[TransactionT] {
-    def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-      (for {
-        parsed <- parseBase(bytes)
-        (chainId, timestamp, sender, fee, recipient, proofs) = parsed
-        tx <- create(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
-      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
+    def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+      Try {
+        (for {
+          parsed <- parseBase(bytes)
+          (chainId, timestamp, sender, fee, recipient, proofs) = parsed
+          tx <- create(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
+        } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
+      }.flatten
   }
 
   implicit object Validator extends SponsorshipTransactionBase.Validator[TransactionT]
@@ -68,10 +69,6 @@ object SponsorshipTransaction extends TransactionBuilder.For[SponsorshipTransact
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
     create(version, None, timestamp, sender, fee, recipient, None, Proofs.empty).signWith(signer)
 
-  def selfSigned(version: Byte,
-                 timestamp: Long,
-                 sender: PrivateKeyAccount,
-                 fee: Long,
-                 recipient: Address): Either[ValidationError, TransactionT] =
+  def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, recipient: Address): Either[ValidationError, TransactionT] =
     signed(version, timestamp, sender, fee, recipient, sender)
 }

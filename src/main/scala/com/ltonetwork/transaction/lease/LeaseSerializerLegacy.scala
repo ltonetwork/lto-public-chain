@@ -38,8 +38,8 @@ trait LeaseSerializerLegacy extends TransactionSerializer.For[LeaseTransaction] 
     jsonBase(
       tx,
       Json.obj(
-        "recipient"  -> recipient.stringRepr,
-        "amount"     -> amount
+        "recipient" -> recipient.stringRepr,
+        "amount"    -> amount
       )
     )
   }

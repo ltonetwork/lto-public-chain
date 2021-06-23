@@ -22,7 +22,7 @@ trait PublicKeyAccount {
 object PublicKeyAccount {
   private case class PublicKeyAccountImpl(keyType: KeyType, publicKey: Array[Byte]) extends PublicKeyAccount
 
-  def apply(publicKey: Array[Byte]): PublicKeyAccount = PublicKeyAccountImpl(ED25519, publicKey)
+  def apply(publicKey: Array[Byte]): PublicKeyAccount                   = PublicKeyAccountImpl(ED25519, publicKey)
   def apply(keyType: KeyType, publicKey: Array[Byte]): PublicKeyAccount = PublicKeyAccountImpl(keyType, publicKey)
 
   implicit def toAddress(publicKeyAccount: PublicKeyAccount): Address = Address.fromPublicKey(publicKeyAccount.publicKey)
@@ -32,7 +32,7 @@ object PublicKeyAccount {
   }
 
   object Dummy extends PublicKeyAccount {
-    def keyType: KeyType = ED25519
+    def keyType: KeyType       = ED25519
     def publicKey: Array[Byte] = Array[Byte](0)
   }
 

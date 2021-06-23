@@ -30,9 +30,9 @@ case class SignedRevokeAssociationV1Request(@ApiModelProperty(required = true)
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
       _party      <- Address.fromString(party)
       _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
-      _hash       <- if (hash == "") Right(None)
-                     else parseBase58(hash, TransactionFactory.IncorectHashMessage, RevokeAssociationTransaction.StringHashLength).map(Some(_))
-      _proofs     <- Proofs.create(_proofBytes)
-      t           <- RevokeAssociationTransaction.create(version, None, timestamp, _sender, fee, _party, associationType, _hash, None, _proofs)
+      _hash <- if (hash == "") Right(None)
+      else parseBase58(hash, TransactionFactory.IncorectHashMessage, RevokeAssociationTransaction.StringHashLength).map(Some(_))
+      _proofs <- Proofs.create(_proofBytes)
+      t       <- RevokeAssociationTransaction.create(version, None, timestamp, _sender, fee, _party, associationType, _hash, None, _proofs)
     } yield t
 }

@@ -17,10 +17,10 @@ object Constants extends ScorexLogging {
 
   lazy val TransactionNames: Map[Byte, String] =
     Map(
-      (1: Byte) -> "genesis",
-      (4: Byte) -> "transfer",
-      (8: Byte) -> "lease",
-      (9: Byte) -> "cancel lease",
+      (1: Byte)  -> "genesis",
+      (4: Byte)  -> "transfer",
+      (8: Byte)  -> "lease",
+      (9: Byte)  -> "cancel lease",
       (11: Byte) -> "mass transfer",
       (12: Byte) -> "data",
       (13: Byte) -> "set script",

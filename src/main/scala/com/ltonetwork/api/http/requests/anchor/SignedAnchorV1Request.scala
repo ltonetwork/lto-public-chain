@@ -9,18 +9,18 @@ import io.swagger.annotations.{ApiModel, ApiModelProperty}
 
 @ApiModel(value = "Signed Anchor transaction")
 case class SignedAnchorV1Request(@ApiModelProperty(required = true)
-                               version: Byte,
+                                 version: Byte,
                                  @ApiModelProperty(value = "Base58 encoded sender public key", required = true)
-                               senderPublicKey: String,
+                                 senderPublicKey: String,
                                  @ApiModelProperty(value = "Anchors to put into blockchain", required = true)
-                               anchors: List[String],
+                                 anchors: List[String],
                                  @ApiModelProperty(required = true)
-                               fee: Long,
+                                 fee: Long,
                                  @ApiModelProperty(required = true)
-                               timestamp: Long,
+                                 timestamp: Long,
                                  @ApiModelProperty(required = true)
-                               proofs: List[String])
-  extends BroadcastRequest {
+                                 proofs: List[String])
+    extends BroadcastRequest {
   def toTx: Either[ValidationError, AnchorTransaction] =
     for {
       _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)

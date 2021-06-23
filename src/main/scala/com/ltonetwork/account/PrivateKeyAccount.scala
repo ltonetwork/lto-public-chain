@@ -14,7 +14,8 @@ sealed trait PrivateKeyAccount extends PublicKeyAccount {
 
 object PrivateKeyAccount {
 
-  private case class PrivateKeyAccountImpl(seed: Array[Byte], keyType: KeyType, privateKey: Array[Byte], publicKey: Array[Byte]) extends PrivateKeyAccount
+  private case class PrivateKeyAccountImpl(seed: Array[Byte], keyType: KeyType, privateKey: Array[Byte], publicKey: Array[Byte])
+      extends PrivateKeyAccount
 
   def apply(seed: Array[Byte]): PrivateKeyAccount = {
     val pair = crypto.createKeyPair(seed)

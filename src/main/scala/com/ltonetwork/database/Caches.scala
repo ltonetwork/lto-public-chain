@@ -112,7 +112,7 @@ trait Caches extends Blockchain {
 
     lastAddressId += newAddressIds.size
 
-    val ltoBalances = Map.newBuilder[BigInt, Long]
+    val ltoBalances   = Map.newBuilder[BigInt, Long]
     val leaseBalances = Map.newBuilder[BigInt, LeaseBalance]
     val newPortfolios = Map.newBuilder[Address, Portfolio]
 

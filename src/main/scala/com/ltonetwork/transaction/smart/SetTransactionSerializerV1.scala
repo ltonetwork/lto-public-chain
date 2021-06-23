@@ -26,11 +26,11 @@ object SetTransactionSerializerV1 extends TransactionSerializer.For[SetScriptTra
 
   override def parseBytes(version: Byte, bytes: Array[Byte]): Try[SetScriptTransaction] =
     Try {
-      val chainId = bytes(0)
-      val sender  = PublicKeyAccount(bytes.slice(1, KeyLength + 1))
+      val chainId                  = bytes(0)
+      val sender                   = PublicKeyAccount(bytes.slice(1, KeyLength + 1))
       val (scriptOptEi, scriptEnd) = SetScriptTransaction.parseScript(bytes, KeyLength + 1)
-      val fee       = Longs.fromByteArray(bytes.slice(scriptEnd, scriptEnd + 8))
-      val timestamp = Longs.fromByteArray(bytes.slice(scriptEnd + 8, scriptEnd + 16))
+      val fee                      = Longs.fromByteArray(bytes.slice(scriptEnd, scriptEnd + 8))
+      val timestamp                = Longs.fromByteArray(bytes.slice(scriptEnd + 8, scriptEnd + 16))
 
       (for {
         scriptOpt <- scriptOptEi

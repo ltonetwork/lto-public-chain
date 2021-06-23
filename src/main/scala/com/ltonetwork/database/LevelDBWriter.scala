@@ -403,7 +403,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                     }
                   }
 
-                case tx: IssueAssociationTransaction => // TODO
+                case tx: IssueAssociationTransaction  => // TODO
                 case tx: RevokeAssociationTransaction => // TODO
 
                 case _ => // do nothinhg specific

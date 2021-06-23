@@ -7,7 +7,8 @@ import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
 import scorex.crypto.signatures.Curve25519.KeyLength
 
-abstract class SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTransactionBase] extends TransactionSerializer.For[SponsorshipTransactionT] {
+abstract class SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTransactionBase]
+    extends TransactionSerializer.For[SponsorshipTransactionT] {
   override def bodyBytes(tx: SponsorshipTransactionT): Array[Byte] = {
     import tx._
 
@@ -30,7 +31,7 @@ abstract class SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTra
       recipientEnd = p0 + 1 + Address.AddressLength
       s1           = recipientEnd
       timestamp    = Longs.fromByteArray(bytes.drop(s1))
-      fee    = Longs.fromByteArray(bytes.drop(s1 + 8))
+      fee          = Longs.fromByteArray(bytes.drop(s1 + 8))
       proofs <- Proofs.fromBytes(bytes.drop(s1 + 16))
     } yield (chainId, timestamp, sender, fee, recipient, proofs)
   }

@@ -14,32 +14,33 @@ import play.api.libs.json.JsObject
 
 import scala.util.Try
 
-case class TransferTransaction private(version: Byte,
-                                       chainId: Byte,
-                                       timestamp: Long,
-                                       sender: PublicKeyAccount,
-                                       fee: Long,
-                                       recipient: Address,
-                                       amount: Long,
-                                       attachment: Array[Byte],
-                                       sponsor: Option[PublicKeyAccount],
-                                       proofs: Proofs)
+case class TransferTransaction private (version: Byte,
+                                        chainId: Byte,
+                                        timestamp: Long,
+                                        sender: PublicKeyAccount,
+                                        fee: Long,
+                                        recipient: Address,
+                                        amount: Long,
+                                        attachment: Array[Byte],
+                                        sponsor: Option[PublicKeyAccount],
+                                        proofs: Proofs)
     extends Transaction
     with HardcodedV1
     with SigProofsSwitch {
 
-  override def builder: TransactionBuilder.For[TransferTransaction] = TransferTransaction
+  override def builder: TransactionBuilder.For[TransferTransaction]      = TransferTransaction
   private def serializer: TransactionSerializer.For[TransferTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
+  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
 
   // Special case for transfer tx v1: signature is prepended (after type) instead of appended
-  override protected def prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(version match {
-    case 1 if proofs.isEmpty => throw new Exception("Transaction not signed")
-    case 1 => Bytes.concat(Array(builder.typeId), proofs.toSignature.arr)
-    case _ => Array(0: Byte)
-  })
+  override protected def prefixByte: Coeval[Array[Byte]] =
+    Coeval.evalOnce(version match {
+      case 1 if proofs.isEmpty => throw new Exception("Transaction not signed")
+      case 1                   => Bytes.concat(Array(builder.typeId), proofs.toSignature.arr)
+      case _                   => Array(0: Byte)
+    })
   override protected def footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
     if (version == 1) Array.emptyByteArray
     else super[Transaction].footerBytes()
@@ -48,7 +49,7 @@ case class TransferTransaction private(version: Byte,
 
 object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
 
-  override val typeId: Byte = 4
+  override val typeId: Byte                 = 4
   override val supportedVersions: Set[Byte] = Set(1, 2)
 
   val MaxAttachmentSize: Int       = 140
@@ -72,7 +73,9 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
         Validated.condNel(attachment.length <= TransferTransaction.MaxAttachmentSize, None, ValidationError.TooBigArray),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(Try(Math.addExact(amount, fee)).isSuccess, None, ValidationError.OverflowError),
-        Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isEmpty || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
         Validated.condNel(proofs.length <= 1 || version > 1, None, ValidationError.UnsupportedFeature(s"Multiple proofs not supported for tx v1")),
       )
     }

@@ -19,11 +19,11 @@ case class CancelSponsorshipTransaction private (version: Byte,
                                                  proofs: Proofs)
     extends SponsorshipTransactionBase {
 
-  override def builder: TransactionBuilder.For[CancelSponsorshipTransaction] = CancelSponsorshipTransaction
+  override def builder: TransactionBuilder.For[CancelSponsorshipTransaction]      = CancelSponsorshipTransaction
   private def serializer: TransactionSerializer.For[CancelSponsorshipTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
+  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object CancelSponsorshipTransaction extends TransactionBuilder.For[CancelSponsorshipTransaction] {
@@ -35,13 +35,14 @@ object CancelSponsorshipTransaction extends TransactionBuilder.For[CancelSponsor
     tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   object SerializerV1 extends SponsorshipSerializerV1[CancelSponsorshipTransaction] {
-    def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-      (for {
-        parsed <- parseBase(bytes)
-        (chainId, timestamp, sender, fee, recipient, proofs) = parsed
-        tx <- create(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
-      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
+    def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+      Try {
+        (for {
+          parsed <- parseBase(bytes)
+          (chainId, timestamp, sender, fee, recipient, proofs) = parsed
+          tx <- create(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
+        } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
+      }.flatten
   }
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
@@ -69,10 +70,6 @@ object CancelSponsorshipTransaction extends TransactionBuilder.For[CancelSponsor
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
     create(version, None, timestamp, sender, fee, recipient, None, Proofs.empty).signWith(signer)
 
-  def selfSigned(version: Byte,
-                 timestamp: Long,
-                 sender: PrivateKeyAccount,
-                 fee: Long,
-                 recipient: Address): Either[ValidationError, TransactionT] =
+  def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, recipient: Address): Either[ValidationError, TransactionT] =
     signed(version, timestamp, sender, fee, recipient, sender)
 }

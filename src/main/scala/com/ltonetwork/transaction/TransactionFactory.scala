@@ -345,7 +345,8 @@ object TransactionFactory extends BroadcastRequest {
       BroadcastRequest.parseBase58(
         s,
         s"invalid base58 string or anchor too long: max anchor string size = ${AnchorTransaction.MaxAnchorStringSize}",
-        AnchorTransaction.MaxAnchorStringSize)
+        AnchorTransaction.MaxAnchorStringSize
+      )
     })
   }
 
@@ -381,7 +382,7 @@ object TransactionFactory extends BroadcastRequest {
         Proofs.empty
       )
     } yield tx
-  
+
   val IncorectHashMessage = "Incorrect hash length, should be <= 64 bytes"
 
   def issueAssociation(request: IssueAssociationV1Request, wallet: Wallet, time: Time): Either[ValidationError, IssueAssociationTransaction] =
@@ -392,11 +393,11 @@ object TransactionFactory extends BroadcastRequest {
                        signerAddress: String,
                        time: Time): Either[ValidationError, IssueAssociationTransaction] =
     for {
-      sender <- wallet.findPrivateKey(request.sender)
-      signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      recipient  <- Address.fromString(request.party)
+      sender    <- wallet.findPrivateKey(request.sender)
+      signer    <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
+      recipient <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
-              else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
+      else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
       tx <- IssueAssociationTransaction.signed(
         request.version,
         request.timestamp.getOrElse(time.getTimestamp()),
@@ -414,7 +415,7 @@ object TransactionFactory extends BroadcastRequest {
     for {
       recipient <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
-              else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
+      else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
       tx <- IssueAssociationTransaction.create(
         request.version,
         None,
@@ -438,11 +439,11 @@ object TransactionFactory extends BroadcastRequest {
                         signerAddress: String,
                         time: Time): Either[ValidationError, RevokeAssociationTransaction] =
     for {
-      sender <- wallet.findPrivateKey(request.sender)
-      signer <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
-      recipient  <- Address.fromString(request.party)
+      sender    <- wallet.findPrivateKey(request.sender)
+      signer    <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
+      recipient <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
-              else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
+      else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
       tx <- RevokeAssociationTransaction.signed(
         request.version,
         request.timestamp.getOrElse(time.getTimestamp()),
@@ -459,7 +460,7 @@ object TransactionFactory extends BroadcastRequest {
     for {
       recipient <- Address.fromString(request.party)
       hash <- if (request.hash == "") Right(None)
-              else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
+      else parseBase58(request.hash, IncorectHashMessage, IssueAssociationTransaction.StringHashLength).map(Some(_))
       tx <- RevokeAssociationTransaction.create(
         request.version,
         None,

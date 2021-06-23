@@ -10,24 +10,24 @@ import play.api.libs.json._
 
 import scala.util.{Failure, Success, Try}
 
-case class IssueAssociationTransaction private(version: Byte,
-                                               chainId: Byte,
-                                               timestamp: Long,
-                                               sender: PublicKeyAccount,
-                                               fee: Long,
-                                               recipient: Address,
-                                               assocType: Int,
-                                               expires: Option[Long],
-                                               hash: Option[ByteStr],
-                                               sponsor: Option[PublicKeyAccount],
-                                               proofs: Proofs)
+case class IssueAssociationTransaction private (version: Byte,
+                                                chainId: Byte,
+                                                timestamp: Long,
+                                                sender: PublicKeyAccount,
+                                                fee: Long,
+                                                recipient: Address,
+                                                assocType: Int,
+                                                expires: Option[Long],
+                                                hash: Option[ByteStr],
+                                                sponsor: Option[PublicKeyAccount],
+                                                proofs: Proofs)
     extends AssociationTransaction {
 
-  override def builder: TransactionBuilder.For[IssueAssociationTransaction] = IssueAssociationTransaction
+  override def builder: TransactionBuilder.For[IssueAssociationTransaction]      = IssueAssociationTransaction
   private def serializer: TransactionSerializer.For[IssueAssociationTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
+  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociationTransaction] {
@@ -47,10 +47,16 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(!hash.exists(_.arr.length > MaxHashLength), None, ValidationError.GenericError(s"Hash length must be <= $MaxHashLength bytes")),
+        Validated.condNel(!hash.exists(_.arr.length > MaxHashLength),
+                          None,
+                          ValidationError.GenericError(s"Hash length must be <= $MaxHashLength bytes")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(expires.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Association expiry is not supported for tx v$version")),
-        Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(expires.isEmpty || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Association expiry is not supported for tx v$version")),
+        Validated.condNel(sponsor.isEmpty || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
   }
@@ -62,7 +68,7 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
         (for {
           parsed <- parse(version, bytes)
           (version, timestamp, sender, fee, recipient, assocType, hashOpt, proofs) = parsed
-          tx     <- create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, None, hashOpt, None, proofs)
+          tx <- create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, None, hashOpt, None, proofs)
         } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
       }.flatten
   }

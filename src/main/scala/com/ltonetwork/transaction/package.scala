@@ -17,7 +17,7 @@ package object transaction {
 
   implicit class TransactionValidationOps[T <: Transaction](val tx: T) extends AnyVal {
     def validatedNel(implicit validator: TxValidator[T]): ValidatedNel[ValidationError, T] = validator.validate(tx)
-    def validatedEither(implicit validator: TxValidator[T]): Either[ValidationError, T] = this.validatedNel.toEither.left.map(_.head)
+    def validatedEither(implicit validator: TxValidator[T]): Either[ValidationError, T]    = this.validatedNel.toEither.left.map(_.head)
   }
 
   implicit class TransactionSignOps[T](val tx: T) extends AnyVal {

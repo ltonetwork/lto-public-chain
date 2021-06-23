@@ -5,7 +5,7 @@ import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.Transaction
 
 // Base class for issue and revoke association transactions
-abstract class AssociationTransaction extends Transaction  {
+abstract class AssociationTransaction extends Transaction {
   def assocType: Int
   def recipient: Address
   def hash: Option[ByteStr]

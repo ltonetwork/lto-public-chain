@@ -67,10 +67,10 @@ object MassTransferSerializerV1 extends TransactionSerializer.For[MassTransferTr
   override def toJson(tx: MassTransferTransaction): JsObject = jsonBase(
     tx,
     Json.obj(
-      "attachment" -> Base58.encode(tx.attachment),
+      "attachment"    -> Base58.encode(tx.attachment),
       "transferCount" -> tx.transfers.size,
-      "totalAmount" -> tx.transfers.map(_.amount).sum,
-      "transfers" -> MassTransferTransaction.toJson(tx.transfers)
+      "totalAmount"   -> tx.transfers.map(_.amount).sum,
+      "transfers"     -> MassTransferTransaction.toJson(tx.transfers)
     )
   )
 }

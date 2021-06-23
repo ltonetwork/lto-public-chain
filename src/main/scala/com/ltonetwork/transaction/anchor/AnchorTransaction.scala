@@ -9,21 +9,21 @@ import com.ltonetwork.transaction._
 import monix.eval.Coeval
 import play.api.libs.json._
 
-case class AnchorTransaction private(version: Byte,
-                                     chainId: Byte,
-                                     timestamp: Long,
-                                     sender: PublicKeyAccount,
-                                     fee: Long,
-                                     anchors: List[ByteStr],
-                                     sponsor: Option[PublicKeyAccount],
-                                     proofs: Proofs)
+case class AnchorTransaction private (version: Byte,
+                                      chainId: Byte,
+                                      timestamp: Long,
+                                      sender: PublicKeyAccount,
+                                      fee: Long,
+                                      anchors: List[ByteStr],
+                                      sponsor: Option[PublicKeyAccount],
+                                      proofs: Proofs)
     extends Transaction {
 
-  override def builder: TransactionBuilder.For[AnchorTransaction] = AnchorTransaction
+  override def builder: TransactionBuilder.For[AnchorTransaction]      = AnchorTransaction
   private def serializer: TransactionSerializer.For[AnchorTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
+  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
@@ -48,10 +48,14 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
         Validated.condNel(anchors.lengthCompare(MaxEntryCount) <= 0, None, ValidationError.TooBigArray),
-        Validated.condNel(anchors.forall(a => EntryLength.contains(a.arr.length)), None, ValidationError.GenericError(s"Anchor can only be of length $EntryLength Bytes")),
+        Validated.condNel(anchors.forall(a => EntryLength.contains(a.arr.length)),
+                          None,
+                          ValidationError.GenericError(s"Anchor can only be of length $EntryLength Bytes")),
         Validated.condNel(anchors.distinct.lengthCompare(anchors.size) == 0, None, ValidationError.GenericError("Duplicate anchor in one tx found")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isEmpty || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
   }
@@ -80,10 +84,6 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
     create(version, None, timestamp, sender, fee, data, None, Proofs.empty).signWith(signer)
 
-  def selfSigned(version: Byte,
-                 timestamp: Long,
-                 sender: PrivateKeyAccount,
-                 fee: Long,
-                 data: List[ByteStr]): Either[ValidationError, TransactionT] =
+  def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, data: List[ByteStr]): Either[ValidationError, TransactionT] =
     signed(version, timestamp, sender, fee, data, sender)
 }

@@ -21,7 +21,7 @@ object SponsorshipTransactionBase {
 
   val supportedVersions: Set[Byte] = Set(1)
   val HashLength                   = 64
-  def networkByte: Byte = AddressScheme.current.chainId
+  def networkByte: Byte            = AddressScheme.current.chainId
 
   trait Validator[T <: SponsorshipTransactionBase] extends TxValidator[T] {
     def validate(tx: T): ValidatedNel[ValidationError, T] = {
@@ -31,7 +31,9 @@ object SponsorshipTransactionBase {
         Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
         Validated.condNel(sender.address != recipient.address, None, ValidationError.GenericError("Can't sponsor oneself")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isEmpty || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
   }

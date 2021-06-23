@@ -13,7 +13,7 @@ trait TransactionsBlockField extends BlockField[Seq[Transaction]]
 object TransactionsBlockField {
   def apply(version: Int, value: Seq[Transaction]): TransactionsBlockField = version match {
     case 1 | 2 => Version1or2(value)
-    case 3 => Version3(value)
+    case 3     => Version3(value)
   }
 
   def serTxs(value: Seq[Transaction], serTxCount: Array[Byte]): Array[Byte] = {
@@ -21,7 +21,7 @@ object TransactionsBlockField {
     byteBuffer.write(serTxCount, 0, serTxCount.length)
     value.foreach { tx =>
       val txBytes = tx.bytes()
-      val txSize = Bytes.ensureCapacity(Ints.toByteArray(txBytes.length), 4, 0)
+      val txSize  = Bytes.ensureCapacity(Ints.toByteArray(txBytes.length), 4, 0)
       byteBuffer.write(txSize, 0, txSize.length)
       byteBuffer.write(txBytes, 0, txBytes.length)
     }
@@ -43,7 +43,7 @@ object TransactionsBlockField {
 
     override def b: Array[Byte] = {
       val txCount = value.size
-      val bb = ByteBuffer.allocate(4)
+      val bb      = ByteBuffer.allocate(4)
       TransactionsBlockField.serTxs(value, bb.putInt(txCount).array)
     }
   }

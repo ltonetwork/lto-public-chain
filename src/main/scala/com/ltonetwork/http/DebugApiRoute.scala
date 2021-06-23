@@ -52,8 +52,8 @@ case class DebugApiRoute(ws: LtoSettings,
 
   import DebugApiRoute._
 
-  private lazy val configStr             = configRoot.render(ConfigRenderOptions.concise().setJson(true).setFormatted(true))
-  private lazy val fullConfig: JsValue   = Json.parse(configStr)
+  private lazy val configStr           = configRoot.render(ConfigRenderOptions.concise().setJson(true).setFormatted(true))
+  private lazy val fullConfig: JsValue = Json.parse(configStr)
   private lazy val ltoConfig: JsObject = Json.obj("lto" -> (fullConfig \ "lto").get)
 
   override val settings = ws.restAPISettings

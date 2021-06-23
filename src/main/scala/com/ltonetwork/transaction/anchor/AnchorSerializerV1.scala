@@ -35,7 +35,7 @@ object AnchorSerializerV1 extends TransactionSerializer.For[AnchorTransaction] {
         arrays    = r._1
         pos       = r._2
         timestamp = Longs.fromByteArray(bytes.drop(KeyLength + pos))
-        fee = Longs.fromByteArray(bytes.drop(KeyLength + pos + Longs.BYTES))
+        fee       = Longs.fromByteArray(bytes.drop(KeyLength + pos + Longs.BYTES))
 
         proofs <- Proofs.fromBytes(bytes.drop(KeyLength + pos + Longs.BYTES + Longs.BYTES))
         tx     <- create(version, None, timestamp, sender, fee, arrays.map(ByteStr(_)).toList, None, proofs)

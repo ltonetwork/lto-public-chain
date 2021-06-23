@@ -15,10 +15,10 @@ object GenesisSerializer extends TransactionSerializer.For[GenesisTransaction] {
   override def bodyBytes(tx: TransactionT): Array[Byte] = {
     import tx._
 
-    val typeBytes = Array(GenesisTransaction.typeId)
+    val typeBytes      = Array(GenesisTransaction.typeId)
     val timestampBytes = Bytes.ensureCapacity(Longs.toByteArray(timestamp), TimestampLength, 0)
-    val amountBytes = Bytes.ensureCapacity(Longs.toByteArray(amount), AmountLength, 0)
-    val rcpBytes = recipient.bytes.arr
+    val amountBytes    = Bytes.ensureCapacity(Longs.toByteArray(amount), AmountLength, 0)
+    val rcpBytes       = recipient.bytes.arr
     require(rcpBytes.length == Address.AddressLength)
     val res = Bytes.concat(typeBytes, timestampBytes, rcpBytes, amountBytes)
     require(res.length == TypeLength + GenesisTransaction.BASE_LENGTH)

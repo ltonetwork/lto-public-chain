@@ -12,23 +12,23 @@ import play.api.libs.json.JsObject
 
 import scala.util.Try
 
-case class CancelLeaseTransaction private(version: Byte,
-                                          chainId: Byte,
-                                          timestamp: Long,
-                                          sender: PublicKeyAccount,
-                                          fee: Long,
-                                          leaseId: ByteStr,
-                                          sponsor: Option[PublicKeyAccount],
-                                          proofs: Proofs)
+case class CancelLeaseTransaction private (version: Byte,
+                                           chainId: Byte,
+                                           timestamp: Long,
+                                           sender: PublicKeyAccount,
+                                           fee: Long,
+                                           leaseId: ByteStr,
+                                           sponsor: Option[PublicKeyAccount],
+                                           proofs: Proofs)
     extends Transaction
     with HardcodedV1
     with SigProofsSwitch {
 
-  override def builder: TransactionBuilder.For[CancelLeaseTransaction] = CancelLeaseTransaction
+  override def builder: TransactionBuilder.For[CancelLeaseTransaction]      = CancelLeaseTransaction
   private def serializer: TransactionSerializer.For[CancelLeaseTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
+  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransaction] {
@@ -52,7 +52,9 @@ object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransact
         Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
         Validated.condNel(leaseId.arr.length == crypto.DigestSize, None, ValidationError.GenericError("Lease transaction id is invalid")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isEmpty || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
         Validated.condNel(proofs.length <= 1 || version > 1, None, ValidationError.UnsupportedFeature(s"Multiple proofs not supported for tx v1")),
       )
     }
@@ -80,10 +82,6 @@ object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransact
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
     create(version, None, timestamp, sender, fee, leaseId, None, Proofs.empty).signWith(signer)
 
-  def selfSigned(version: Byte,
-                 timestamp: Long,
-                 sender: PrivateKeyAccount,
-                 fee: Long,
-                 leaseId: ByteStr): Either[ValidationError, TransactionT] =
+  def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, leaseId: ByteStr): Either[ValidationError, TransactionT] =
     signed(version, timestamp, sender, fee, leaseId, sender)
 }

@@ -24,11 +24,11 @@ case class LeaseTransaction private (version: Byte,
     with HardcodedV1
     with SigProofsSwitch {
 
-  override def builder: TransactionBuilder.For[LeaseTransaction] = LeaseTransaction
+  override def builder: TransactionBuilder.For[LeaseTransaction]      = LeaseTransaction
   private def serializer: TransactionSerializer.For[LeaseTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
+  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
@@ -60,7 +60,9 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
         Validated.condNel(Try(Math.addExact(amount, fee)).isSuccess, None, ValidationError.OverflowError),
         Validated.condNel(sender.stringRepr != recipient.stringRepr, None, ValidationError.ToSelf),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isEmpty || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
         Validated.condNel(proofs.length <= 1 || version > 1, None, ValidationError.UnsupportedFeature(s"Multiple proofs not supported for tx v1")),
       )
     }

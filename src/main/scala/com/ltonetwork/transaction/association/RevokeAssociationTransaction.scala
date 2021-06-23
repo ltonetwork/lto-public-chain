@@ -22,11 +22,11 @@ case class RevokeAssociationTransaction private (version: Byte,
                                                  proofs: Proofs)
     extends AssociationTransaction {
 
-  override def builder: TransactionBuilder.For[RevokeAssociationTransaction] = RevokeAssociationTransaction
+  override def builder: TransactionBuilder.For[RevokeAssociationTransaction]      = RevokeAssociationTransaction
   private def serializer: TransactionSerializer.For[RevokeAssociationTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
+  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
 }
 
 object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssociationTransaction] {
@@ -34,7 +34,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
   override def typeId: Byte                 = 17
   override def supportedVersions: Set[Byte] = Set(1: Byte)
 
-  val MaxHashLength: Int = IssueAssociationTransaction.MaxHashLength
+  val MaxHashLength: Int    = IssueAssociationTransaction.MaxHashLength
   val StringHashLength: Int = IssueAssociationTransaction.StringHashLength
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
@@ -46,9 +46,13 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(!hash.exists(_.arr.length > MaxHashLength), None, ValidationError.GenericError(s"Hash length must be <= ${MaxHashLength} bytes")),
+        Validated.condNel(!hash.exists(_.arr.length > MaxHashLength),
+                          None,
+                          ValidationError.GenericError(s"Hash length must be <= ${MaxHashLength} bytes")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isEmpty || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
   }
@@ -60,7 +64,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
         (for {
           parsed <- parse(version, bytes)
           (version, timestamp, sender, fee, recipient, assocType, hashOpt, proofs) = parsed
-          tx     <- create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, hashOpt, None, proofs)
+          tx <- create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, hashOpt, None, proofs)
         } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
       }.flatten
   }

@@ -54,13 +54,14 @@ case class AssociationsApiRoute(settings: RestAPISettings,
 
   private def associationsJson(address: Address, associations: Blockchain.Associations): AssociationsInfo = {
     def fold(list: List[(Int, AssociationTransaction)]) = {
-      list.foldLeft(Map.empty[(Int, Address, Option[ByteStr]), (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
+      list
+        .foldLeft(Map.empty[(Int, Address, Option[ByteStr]), (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
           case (acc, (height, tx: AssociationTransaction)) =>
             val cp = if (address == tx.sender.toAddress) tx.recipient else tx.sender.toAddress
             (tx, acc.get(tx.assoc)) match {
               case (_: IssueAssociationTransaction, None)                    => acc + (tx.assoc -> (height, cp, tx.id(), None))
               case (_: RevokeAssociationTransaction, Some((h, _, bs, None))) => acc + (tx.assoc -> (h, cp, bs, Some((height, tx.id()))))
-              case _                                => acc
+              case _                                                         => acc
             }
         }
         .toList

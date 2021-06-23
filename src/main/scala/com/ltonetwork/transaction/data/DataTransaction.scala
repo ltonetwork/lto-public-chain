@@ -20,11 +20,11 @@ case class DataTransaction private (version: Byte,
                                     proofs: Proofs)
     extends Transaction {
 
-  override def builder: TransactionBuilder.For[DataTransaction] = DataTransaction
+  override def builder: TransactionBuilder.For[DataTransaction]      = DataTransaction
   private def serializer: TransactionSerializer.For[DataTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
+  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
 
   implicit val dataItemFormat: Format[DataEntry[_]] = DataEntry.Format
 }
@@ -52,7 +52,9 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
         Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, None, ValidationError.GenericError("Duplicate keys found")),
         Try { Validated.condNel(bytes().length <= MaxBytes, None, ValidationError.TooBigArray) }.getOrElse(None.validNel),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
-        Validated.condNel(sponsor.isEmpty || version >= 3, None, ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sponsor.isEmpty || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
   }

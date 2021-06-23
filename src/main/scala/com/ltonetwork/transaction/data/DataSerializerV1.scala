@@ -37,7 +37,7 @@ object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
         } else (List.empty, p0 + 2)
 
       val timestamp = Longs.fromByteArray(bytes.drop(p1))
-      val fee = Longs.fromByteArray(bytes.drop(p1 + 8))
+      val fee       = Longs.fromByteArray(bytes.drop(p1 + 8))
       (for {
         proofs <- Proofs.fromBytes(bytes.drop(p1 + 16))
         tx     <- create(version, None, timestamp, sender, fee, entries, None, proofs)

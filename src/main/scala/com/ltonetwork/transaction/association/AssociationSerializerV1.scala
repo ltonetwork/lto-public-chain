@@ -24,9 +24,10 @@ abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTra
     )
   }
 
-  def parse(version: Byte, bytes: Array[Byte]): Either[ValidationError, (Byte, Long, PublicKeyAccount, Long, Address, Int, Option[ByteStr], Proofs)] = {
-    val p0      = KeyLength
-    val sender  = PublicKeyAccount(bytes.slice(1, p0 + 1))
+  def parse(version: Byte,
+            bytes: Array[Byte]): Either[ValidationError, (Byte, Long, PublicKeyAccount, Long, Address, Int, Option[ByteStr], Proofs)] = {
+    val p0     = KeyLength
+    val sender = PublicKeyAccount(bytes.slice(1, p0 + 1))
 
     for {
       recipient <- Address.fromBytes(bytes.slice(p0 + 1, p0 + 1 + Address.AddressLength))

@@ -48,8 +48,8 @@ object TransactionParser {
   private def parsePublicKeyAccount(bytes: Array[Byte], start: Int): Option[PublicKeyAccount] = {
     val keyTypeId = bytes(start)
 
-    keyType(keyTypeId) map {
-      kt => PublicKeyAccount(kt, bytes.slice(1, 1 + kt.length))
+    keyType(keyTypeId) map { kt =>
+      PublicKeyAccount(kt, bytes.slice(1, 1 + kt.length))
     }
   }
 
@@ -66,13 +66,13 @@ object TransactionParser {
 
   // Base structure for transactions v3 and up
   def parseBase(bytes: Array[Byte]): Either[ValidationError, (Byte, Long, PublicKeyAccount, Long, Int)] = {
-    val chainId = bytes.head
+    val chainId   = bytes.head
     val timestamp = Longs.fromByteArray(bytes.slice(1, 1 + Longs.BYTES))
 
     parsePublicKeyAccount(bytes, 1 + Longs.BYTES)
       .toRight(InvalidPublicKey("Invalid sender key type"))
       .map(sender => {
-        val s1 = 1 + Longs.BYTES + 1 + sender.keyType.length
+        val s1  = 1 + Longs.BYTES + 1 + sender.keyType.length
         val fee = Longs.fromByteArray(bytes.slice(s1, s1 + Longs.BYTES))
 
         (chainId, timestamp, sender, fee, s1 + Longs.BYTES)

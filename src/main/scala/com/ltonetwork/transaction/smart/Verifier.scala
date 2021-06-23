@@ -15,7 +15,8 @@ object Verifier {
       case _: GenesisTransaction => Right(tx)
       case _ =>
         (tx, blockchain.accountScript(tx.sender)) match {
-          case (stx: SigProofsSwitch, Some(_)) if stx.usesLegacySignature => Left(GenericError("Can't process transaction with signature from scripted account"))
+          case (stx: SigProofsSwitch, Some(_)) if stx.usesLegacySignature =>
+            Left(GenericError("Can't process transaction with signature from scripted account"))
           case (_, Some(script)) => verify(blockchain, script, currentBlockHeight, tx, isTokenScript = false)
           case (_, None)         => verifyAsEllipticCurveSignature(tx)
         }

@@ -11,7 +11,7 @@ import scorex.crypto.signatures.Curve25519.KeyLength
 // Common methods for TransferSerializer v1 and v2
 trait TransferSerializerLegacy extends TransactionSerializer.For[TransferTransaction] {
   def parseBase(bytes: Array[Byte], start: Int): Either[ValidationError, (PublicKeyAccount, Long, Long, Long, Address, Array[Byte], Int)] = {
-    val sender    = PublicKeyAccount(bytes.slice(start, start + KeyLength))
+    val sender = PublicKeyAccount(bytes.slice(start, start + KeyLength))
 
     val s1        = start + KeyLength
     val timestamp = Longs.fromByteArray(bytes.slice(s1, s1 + Longs.BYTES))

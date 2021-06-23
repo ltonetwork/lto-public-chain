@@ -13,34 +13,29 @@ import play.api.libs.json.JsObject
 
 import scala.util.Try
 
-case class GenesisTransaction private (version: Byte,
-                                       chainId: Byte,
-                                       timestamp: Long,
-                                       recipient: Address,
-                                       amount: Long,
-                                       proofs: Proofs)
+case class GenesisTransaction private (version: Byte, chainId: Byte, timestamp: Long, recipient: Address, amount: Long, proofs: Proofs)
     extends Transaction
     with SigProofsSwitch {
 
-  override val fee = 0
+  override val fee                 = 0
   override val id: Coeval[ByteStr] = Coeval.evalOnce(signature)
 
-  override def sender: PublicKeyAccount = PublicKeyAccount.Dummy
+  override def sender: PublicKeyAccount          = PublicKeyAccount.Dummy
   override def sponsor: Option[PublicKeyAccount] = None
 
-  override def builder: TransactionBuilder.For[GenesisTransaction] = GenesisTransaction
+  override def builder: TransactionBuilder.For[GenesisTransaction]      = GenesisTransaction
   private def serializer: TransactionSerializer.For[GenesisTransaction] = builder.serializer(version)
 
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject] = Coeval.evalOnce(serializer.toJson(this))
+  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
 
-  override protected def prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(Array.emptyByteArray)
+  override protected def prefixByte: Coeval[Array[Byte]]  = Coeval.evalOnce(Array.emptyByteArray)
   override protected def footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Array.emptyByteArray)
 }
 
 object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] {
 
-  override val typeId: Byte = 1
+  override val typeId: Byte                 = 1
   override val supportedVersions: Set[Byte] = Set(1)
 
   val RECIPIENT_LENGTH: Int = Address.AddressLength

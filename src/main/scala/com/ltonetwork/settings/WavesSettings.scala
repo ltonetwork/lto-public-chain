@@ -6,20 +6,20 @@ import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 
 case class LtoSettings(directory: String,
-                         dataDirectory: String,
-                         maxCacheSize: Int,
-                         maxRollbackDepth: Int,
-                         networkSettings: NetworkSettings,
-                         walletSettings: WalletSettings,
-                         blockchainSettings: BlockchainSettings,
-                         checkpointsSettings: CheckpointsSettings,
-                         feesSettings: FeesSettings,
-                         minerSettings: MinerSettings,
-                         restAPISettings: RestAPISettings,
-                         synchronizationSettings: SynchronizationSettings,
-                         utxSettings: UtxSettings,
-                         featuresSettings: FeaturesSettings,
-                         metrics: Metrics.Settings)
+                       dataDirectory: String,
+                       maxCacheSize: Int,
+                       maxRollbackDepth: Int,
+                       networkSettings: NetworkSettings,
+                       walletSettings: WalletSettings,
+                       blockchainSettings: BlockchainSettings,
+                       checkpointsSettings: CheckpointsSettings,
+                       feesSettings: FeesSettings,
+                       minerSettings: MinerSettings,
+                       restAPISettings: RestAPISettings,
+                       synchronizationSettings: SynchronizationSettings,
+                       utxSettings: UtxSettings,
+                       featuresSettings: FeaturesSettings,
+                       metrics: Metrics.Settings)
 
 object LtoSettings {
 

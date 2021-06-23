@@ -22,7 +22,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
   def enoughFee[T <: Transaction](tx: T, blockchain: Blockchain, fs: FunctionalitySettings): Either[ValidationError, T] = enoughFee(tx)
 
   def enoughFee[T <: Transaction](tx: T): Either[ValidationError, T] = {
-    val txName      = Constants.TransactionNames(tx.typeId)
+    val txName        = Constants.TransactionNames(tx.typeId)
     val txFeeValue    = tx.fee
     val txAssetFeeKey = tx.builder.typeId.toString
     for {
