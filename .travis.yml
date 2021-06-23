@@ -2,6 +2,11 @@ language: scala
 # Use container-based infrastructure
 sudo: false
 
+branches:
+  only:
+    - master
+    - travis
+
 jdk:
 - oraclejdk9
 scala:
@@ -9,7 +14,7 @@ scala:
 script:
   - unset _JAVA_OPTIONS
   - unset SBT_OPTS
-  - export JAVA_TOOL_OPTIONS="-Xmx1548m"
+  - export JAVA_TOOL_OPTIONS="-Xmx1548m -Djavax.net.ssl.trustStore"
   - sbt -J-Xms128m -J-Xmx1248m -J-XX:+UseConcMarkSweepGC -J-XX:+CMSClassUnloadingEnabled checkPR
 # These directories are cached to S3 at the end of the build
 cache:
