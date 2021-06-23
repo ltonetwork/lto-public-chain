@@ -18,7 +18,7 @@ install:
 before_script:
   - unset _JAVA_OPTIONS
   - unset SBT_OPTS
-  - export JAVA_TOOL_OPTIONS="-Xmx1548m -Djavax.net.ssl.trustStore"
+  - export JAVA_TOOL_OPTIONS="-Xmx1548m"
 script:
   - sbt -J-Xms128m -J-Xmx1248m -J-XX:+UseConcMarkSweepGC -J-XX:+CMSClassUnloadingEnabled checkPR
 
