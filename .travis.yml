@@ -17,8 +17,8 @@ jdk: openjdk9
 scala: 2.12.7
 
 before_install:
-  - rm '${JAVA_HOME}/lib/security/cacerts'
-  - ln -s /etc/ssl/certs/java/cacerts '${JAVA_HOME}/lib/security/cacerts'
+  - rm "${JAVA_HOME}/lib/security/cacerts"
+  - ln -s /etc/ssl/certs/java/cacerts "${JAVA_HOME}/lib/security/cacerts"
 
 before_script:
   - unset _JAVA_OPTIONS
