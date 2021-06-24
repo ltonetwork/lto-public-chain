@@ -61,17 +61,18 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
   property(testName = "JSON format validation") {
     val js = Json.parse("""{
                        "type": 15,
+                       "version": 1,
                        "id": "9sFJpeo6y3txeNxrueWVgrEDU9zGAvk2CPh8N9Dd4fRM",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+                       "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
                        "timestamp": 1526911531530,
-                       "proofs": [
-                       "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
-                       ],
-                       "version": 1,
                        "anchors": [
-                       "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
+                         "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
+                       ],
+                       "proofs": [
+                         "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
                        ]
                        }
   """)

@@ -35,18 +35,19 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
 
   property("JSON format validation for LeaseTransaction V1") {
     val js = Json.parse("""{
-                          |  "type": 8,
-                          |  "id": "7EyfHdDiassBQ5ZAyXKefW4743A4HqHSB6DHirVmCUkv",
-                          |  "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
-                          |  "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
-                          |  "fee": 1000000,
-                          |  "timestamp": 1526646300260,
-                          |  "signature": "iy3TmfbFds7pc9cDDqfjEJhfhVyNtm3GcxoVz8L3kJFvgRPUmiqqKLMeJGYyN12AhaQ6HvE7aF1tFgaAoCCgNJJ",
-                          |  "version": 1,
-                          |  "amount": 10000000,
-                          |  "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt"
-                          |}
-    """.stripMargin)
+                       "type": 8,
+                       "version": 1,
+                       "id": "7EyfHdDiassBQ5ZAyXKefW4743A4HqHSB6DHirVmCUkv",
+                       "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+                       "senderKeyType": "ed25519",
+                       "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
+                       "fee": 1000000,
+                       "timestamp": 1526646300260,
+                       "amount": 10000000,
+                       "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt",
+                       "signature": "iy3TmfbFds7pc9cDDqfjEJhfhVyNtm3GcxoVz8L3kJFvgRPUmiqqKLMeJGYyN12AhaQ6HvE7aF1tFgaAoCCgNJJ"
+                     }
+    """)
 
     val tx = LeaseTransaction
       .create(
@@ -69,18 +70,19 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
   property("JSON format validation for LeaseTransaction V2") {
     val js = Json.parse("""{
                         "type": 8,
+                        "version": 2,
                         "id": "3EuU5xQrkA6juSGHszb8TJgxbfmoz6Bdrcvu8HQuu2dT",
                         "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+                        "senderKeyType": "ed25519",
                         "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                         "fee": 1000000,
                         "timestamp": 1526646497465,
-                        "proofs": [
-                        "5Fr3yLwvfKGDsFLi8A8JbHqToHDojrPbdEGx9mrwbeVWWoiDY5pRqS3rcX1rXC9ud52vuxVdBmGyGk5krcgwFu9q"
-                        ],
-                        "version": 2,
                         "amount": 10000000,
-                        "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt"
-                       }
+                        "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt",
+                        "proofs": [
+                          "5Fr3yLwvfKGDsFLi8A8JbHqToHDojrPbdEGx9mrwbeVWWoiDY5pRqS3rcX1rXC9ud52vuxVdBmGyGk5krcgwFu9q"
+                        ]
+                        }
     """)
 
     val tx = LeaseTransaction

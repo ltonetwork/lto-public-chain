@@ -24,7 +24,7 @@ trait TransactionSerializer {
         acc =>
           Json.obj(
             "sponsor" -> acc.address,
-            //"sponsorKeyType" -> acc.reference,
+            "sponsorKeyType" -> acc.keyType.reference,
             "sponsorPublicKey" -> Base58.encode(acc.publicKey)
         ))
       .getOrElse(Json.obj())
@@ -32,11 +32,11 @@ trait TransactionSerializer {
   protected def jsonBase(tx: Transaction, txJson: JsObject): JsObject = {
     import tx._
     Json.obj(
-      "type"    -> typeId,
-      "version" -> version,
-      "id"      -> id().toString,
-      "sender"  -> sender.address,
-      //"senderKeyType"   -> sender.keyType.reference,
+      "type"            -> typeId,
+      "version"         -> version,
+      "id"              -> id().toString,
+      "sender"          -> sender.address,
+      "senderKeyType"   -> sender.keyType.reference,
       "senderPublicKey" -> Base58.encode(sender.publicKey),
       "fee"             -> fee,
       "timestamp"       -> timestamp,

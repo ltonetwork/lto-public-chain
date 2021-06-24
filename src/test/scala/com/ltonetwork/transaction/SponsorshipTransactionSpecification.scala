@@ -61,16 +61,17 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
     val p  = PrivateKeyAccount.fromSeed("xxx").explicitGet().toAddress
     val js = Json.parse(s"""{
                        "type": 18,
+                       "version": 1,
                        "id": "6Cet5iVQ6STk4HxcRL2p5A9vQKnaPwoJxZZyAAo6SwQa",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+                       "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
                        "timestamp": 1526911531530,
+                       "recipient" : "$p",
                        "proofs": [
-                       "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
-                       ],
-                       "version": 1,
-                       "recipient" : "$p"
+                         "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
+                       ]
                        }
   """)
 

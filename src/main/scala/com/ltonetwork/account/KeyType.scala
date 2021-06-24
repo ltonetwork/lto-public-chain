@@ -1,6 +1,8 @@
 package com.ltonetwork.account
 
-case class KeyType private (id: Byte, length: Short, reference: String)
+case class KeyType private (id: Byte, length: Short, reference: String)  {
+  override def toString: String = reference
+}
 
 object KeyTypes {
   val ED25519: KeyType = KeyType(1, 32, "ed25519")

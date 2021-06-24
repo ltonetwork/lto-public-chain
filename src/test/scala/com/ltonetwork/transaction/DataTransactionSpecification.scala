@@ -147,31 +147,32 @@ class DataTransactionSpecification extends PropSpec with PropertyChecks with Mat
   property(testName = "JSON format validation") {
     val js = Json.parse("""{
                        "type": 12,
+                       "version": 1,
                        "id": "87SfuGJXH1cki2RGDH7WMTGnTXeunkc5mEjNKmmMdRzM",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+                       "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
                        "timestamp": 1526911531530,
-                       "proofs": [
-                       "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
-                       ],
-                       "version": 1,
                        "data": [
-                       {
-                       "key": "int",
-                       "type": "integer",
-                       "value": 24
-                       },
-                       {
-                       "key": "bool",
-                       "type": "boolean",
-                       "value": true
-                       },
-                       {
-                       "key": "blob",
-                       "type": "binary",
-                       "value": "base64:YWxpY2U="
-                       }
+                         {
+                           "key": "int",
+                           "type": "integer",
+                           "value": 24
+                           },
+                         {
+                           "key": "bool",
+                           "type": "boolean",
+                           "value": true
+                           },
+                         {
+                           "key": "blob",
+                           "type": "binary",
+                           "value": "base64:YWxpY2U="
+                           }
+                       ],
+                       "proofs": [
+                         "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
                        ]
                        }
   """)

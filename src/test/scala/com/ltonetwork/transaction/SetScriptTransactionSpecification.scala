@@ -2,7 +2,6 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.requests.anchor.SignedAnchorV1Request
 import com.ltonetwork.api.http.requests.smart.SignedSetScriptV1Request
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
@@ -48,12 +47,13 @@ class SetScriptTransactionSpecification extends PropSpec with PropertyChecks wit
                        "version": 1,
                        "id": "3ivr43eyGGsy5Grcy2kDUFmruEq7bQZdvGaPpakXnrfr",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+                       "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
                        "timestamp": 1526911531530,
                        "script": "base64:AQQAAAABeAAAAAAAAAAACgkAAAAAAAACAAAAAAAAAAAUCQAAZAAAAAIFAAAAAXgFAAAAAXgY49ib",
                        "proofs": [
-                       "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
+                         "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
                        ]
                        }
   """)
