@@ -17,7 +17,7 @@ object CancelLeaseSerializerV1 extends CancelLeaseSerializerLegacy {
   override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
     Try {
       val (sender, fee, timestamp, leaseId, end) = parseBase(bytes, 0)
-      val signature                              = ByteStr(bytes.slice(end, KeyLength + 16 + crypto.DigestSize + SignatureLength))
+      val signature                              = ByteStr(bytes.slice(end, KeyLength + 16 + crypto.DigestLength + SignatureLength))
       create(version, None, timestamp, sender, fee, leaseId, None, Proofs.fromSignature(signature))
         .fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten

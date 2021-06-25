@@ -1,13 +1,13 @@
 package com.ltonetwork
 
 import java.security.SecureRandom
-
 import cats.kernel.Monoid
 import com.google.common.base.Throwables
 import com.ltonetwork.account.AddressScheme
 import com.ltonetwork.db.{Storage, VersionedStorage}
 import com.ltonetwork.lang.Global
 import com.ltonetwork.state._
+import com.ltonetwork.state.ByteStr._
 import com.ltonetwork.lang.v1.compiler.CompilerContext
 import com.ltonetwork.lang.v1.compiler.CompilerContext._
 import com.ltonetwork.lang.v1.evaluator.ctx._
@@ -19,6 +19,7 @@ import monix.eval.Coeval
 import monix.execution.UncaughtExceptionReporter
 import org.joda.time.Duration
 import org.joda.time.format.PeriodFormat
+import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -144,6 +145,16 @@ package object utils extends ScorexLogging {
     r
   }
 
+  implicit val byteStrFormat: Format[ByteStr] = new Format[ByteStr] {
+    override def writes(o: ByteStr): JsValue = JsString(o.toString)
+
+    override def reads(json: JsValue): JsResult[ByteStr] = json match {
+      case JsString(v) if v.startsWith("base64:") =>
+        decodeBase64(v.substring(7)).fold(e => JsError(s"Error parsing base64: ${e.getMessage}"), b => JsSuccess(b))
+      case JsString(v)                                         => decodeBase58(v).fold(e => JsError(s"Error parsing base58: ${e.getMessage}"), b => JsSuccess(b))
+      case _                                                   => JsError("Expected JsString")
+    }
+  }
   def objectFromString[T](fullClassName: String): Try[T] = Try {
     val runtimeMirror = universe.runtimeMirror(getClass.getClassLoader)
     val module        = runtimeMirror.staticModule(fullClassName)

@@ -13,16 +13,13 @@ case class Proofs private (proofs: Seq[ByteStr]) {
   val bytes: Coeval[Array[Byte]]  = Coeval.evalOnce(Proofs.Version +: Deser.serializeArrays(proofs.map(_.arr)))
   val base58: Coeval[Seq[String]] = Coeval.evalOnce(proofs.map(p => Base58.encode(p.arr)))
   def toSignature: ByteStr        = proofs.headOption.getOrElse(ByteStr.empty)
-  def length: Int                 = proofs.length
-  def isEmpty: Boolean            = proofs.isEmpty
   override def toString: String   = s"Proofs(${proofs.mkString(", ")})"
 }
 
 object Proofs {
-  val Version: Byte     = 1
-  val MaxProofs: Int    = 8
-  val MaxProofSize: Int = 64
-
+  val Version: Byte           = 1
+  val MaxProofs: Int          = 8
+  val MaxProofSize: Int       = 64
   val MaxProofStringSize: Int = base58Length(MaxProofSize)
 
   lazy val empty = new Proofs(Nil)
@@ -45,4 +42,6 @@ object Proofs {
   def apply(proof1: ByteStr, proofs: ByteStr*): Proofs = new Proofs(proof1 +: proofs)
   def apply(proof1: Array[Byte]): Proofs               = new Proofs(Seq(ByteStr(proof1)))
   def apply(proofs: Seq[ByteStr]): Proofs              = new Proofs(proofs)
+
+  implicit def toSeq(proofs: Proofs): Seq[ByteStr]     = proofs.proofs
 }

@@ -25,7 +25,7 @@ trait CancelLeaseSerializerLegacy extends TransactionSerializer.For[CancelLeaseT
     val sender    = PublicKeyAccount(bytes.slice(start, start + KeyLength))
     val fee       = Longs.fromByteArray(bytes.slice(start + KeyLength, start + KeyLength + 8))
     val timestamp = Longs.fromByteArray(bytes.slice(start + KeyLength + 8, start + KeyLength + 16))
-    val end       = start + KeyLength + 16 + crypto.DigestSize
+    val end       = start + KeyLength + 16 + crypto.DigestLength
     val leaseId   = ByteStr(bytes.slice(start + KeyLength + 16, end))
     (sender, fee, timestamp, leaseId, end)
   }
