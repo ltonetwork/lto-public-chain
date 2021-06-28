@@ -17,7 +17,7 @@ case class SponsorshipRequest(version: Option[Byte],
                               recipient: String,
                               signature: Option[ByteStr] = None,
                               proofs: Option[Proofs] = None
-    ) extends TxRequest {
+    ) extends TxRequest[SponsorshipTransaction] {
 
   def toTx(sender: PublicKeyAccount): Either[ValidationError, SponsorshipTransaction] =
     for {

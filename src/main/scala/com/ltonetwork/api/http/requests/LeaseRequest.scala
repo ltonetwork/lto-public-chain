@@ -18,7 +18,7 @@ case class LeaseRequest(version: Option[Byte],
                         amount: Long,
                         signature: Option[ByteStr] = None,
                         proofs: Option[Proofs] = None
-    ) extends TxRequest {
+    ) extends TxRequest[LeaseTransaction] {
 
   def toTx(sender: PublicKeyAccount): Either[ValidationError, LeaseTransaction] =
     for {

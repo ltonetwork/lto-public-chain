@@ -12,7 +12,7 @@ import com.ltonetwork.state.Blockchain
 import com.ltonetwork.state.diffs.CommonValidation
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.smart.script.ScriptCompiler
-import com.ltonetwork.transaction.{TransactionFactory, ValidationError}
+import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.utils.{Base58, Time}
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
@@ -39,7 +39,7 @@ case class AddressApiRoute(settings: RestAPISettings,
 
   import AddressApiRoute._
 
-  override lazy val route =
+  override lazy val route: Route =
     pathPrefix("addresses") {
       validate ~ balanceWithConfirmations ~ balanceDetails ~ balanceHistory ~ balance ~
         balanceWithConfirmations ~ verify ~ verifyText ~ publicKey ~

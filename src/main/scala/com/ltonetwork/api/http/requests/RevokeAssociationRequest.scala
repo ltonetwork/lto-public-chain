@@ -20,7 +20,7 @@ case class RevokeAssociationRequest(version: Option[Byte],
                                     hash: Option[ByteStr] = None,
                                     signature: Option[ByteStr] = None,
                                     proofs: Option[Proofs] = None,
-    ) extends TxRequest {
+    ) extends TxRequest[RevokeAssociationTransaction] {
 
   def toTx(sender: PublicKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
     for {

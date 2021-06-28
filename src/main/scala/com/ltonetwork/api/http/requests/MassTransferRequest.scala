@@ -19,7 +19,7 @@ case class MassTransferRequest(version: Option[Byte],
                                attachment: Option[ByteStr] = None,
                                signature: Option[ByteStr] = None,
                                proofs: Option[Proofs] = None
-    ) extends TxRequest {
+    ) extends TxRequest[MassTransferTransaction] {
 
   def toTx(sender: PublicKeyAccount): Either[ValidationError, MassTransferTransaction] =
     for {

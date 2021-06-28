@@ -18,7 +18,7 @@ case class AnchorRequest(version: Option[Byte],
                          anchors: List[String],
                          signature: Option[ByteStr] = None,
                          proofs: Option[Proofs] = None,
-    ) extends TxRequest {
+    ) extends TxRequest[AnchorTransaction] {
 
   def toTx(sender: PublicKeyAccount): Either[ValidationError, AnchorTransaction] =
     for {

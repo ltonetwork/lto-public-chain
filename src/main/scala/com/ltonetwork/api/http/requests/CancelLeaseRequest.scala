@@ -18,7 +18,7 @@ case class CancelLeaseRequest(version: Option[Byte],
                               leaseId: String,
                               signature: Option[ByteStr],
                               proofs: Option[Proofs]
-    ) extends TxRequest {
+    ) extends TxRequest[CancelLeaseTransaction] {
 
   def toTx(sender: PublicKeyAccount): Either[ValidationError, CancelLeaseTransaction] =
     for {

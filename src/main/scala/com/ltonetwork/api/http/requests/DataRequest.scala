@@ -17,7 +17,7 @@ case class DataRequest(version: Option[Byte],
                        data: List[DataEntry[_]],
                        signature: Option[ByteStr] = None,
                        proofs: Option[Proofs] = None
-    ) extends TxRequest {
+    ) extends TxRequest[DataTransaction] {
 
   def toTx(sender: PublicKeyAccount): Either[ValidationError, DataTransaction] =
     for {

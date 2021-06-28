@@ -5,13 +5,7 @@ import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import com.ltonetwork.account.{Address, PublicKeyAccount}
-import com.ltonetwork.api.http.requests.anchor._
-import com.ltonetwork.api.http.requests.association._
-import com.ltonetwork.api.http.requests.data._
-import com.ltonetwork.api.http.requests.lease._
-import com.ltonetwork.api.http.requests.smart._
-import com.ltonetwork.api.http.requests.sponsorship._
-import com.ltonetwork.api.http.requests.transfer._
+import com.ltonetwork.api.http.requests._
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
@@ -54,7 +48,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
 
   import TransactionsApiRoute.MaxTransactionsPerRequest
 
-  override lazy val route =
+  override lazy val route: Route =
     pathPrefix("transactions") {
       unconfirmed ~ addressLimit ~ info ~ sign ~ calculateFee ~ broadcast
     }
@@ -177,21 +171,18 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           val senderPk = (jsv \ "senderPublicKey").as[String]
           // Just for converting the request to the transaction
           val enrichedJsv = jsv ++ Json.obj(
-            "fee"    -> 1234567,
+            "fee"    -> 0,
             "sender" -> senderPk
           )
           createTransaction(senderPk, enrichedJsv) { tx =>
-            val minFees = CommonValidation.getMinFee(blockchain, functionalitySettings, blockchain.height, tx)
-            val r1 = minFees.map {
-              case assetAmount =>
+            CommonValidation.getMinFee(blockchain, functionalitySettings, blockchain.height, tx).map {
+              assetAmount =>
                 val utxMinFee = new FeeCalculator(feesSettings, blockchain).map.getOrElse(tx.builder.typeId.toInt.toString, 0L)
-                val minFee    = Math.max(utxMinFee, assetAmount)
+                val minFee = Math.max(utxMinFee, assetAmount)
                 Json.obj(
-//                  "feeAssetId" -> null,
                   "feeAmount" -> minFee
                 )
             }
-            r1
           }
         }
       }
@@ -240,85 +231,63 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   private def signTransaction(signerAddress: String, jsv: JsObject): ToResponseMarshallable = {
     val typeId = (jsv \ "type").as[Byte]
 
-    (jsv \ "version").validateOpt[Byte](versionReads) match {
-      case JsError(errors) => WrongJson(None, errors)
-      case JsSuccess(value, _) =>
-        val version = value getOrElse (1: Byte)
-        val txJson  = jsv ++ Json.obj("version" -> version)
-
-        (TransactionBuilders.by(typeId, version) match {
-          case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
-          case Some(x) =>
-            (x, version) match {
-              case (AnchorTransaction, 1) => TransactionFactory.anchor(txJson.as[AnchorV1Request], wallet, signerAddress, time)
-              case (IssueAssociationTransaction, 1) =>
-                TransactionFactory
-                  .issueAssociation(txJson.as[IssueAssociationV1Request], wallet, signerAddress, time)
-                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-              case (RevokeAssociationTransaction, 1) =>
-                TransactionFactory
-                  .revokeAssociation(txJson.as[IssueAssociationV1Request], wallet, signerAddress, time)
-                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-              case (SponsorshipTransaction, 1) => TransactionFactory.sponsorship(txJson.as[SponsorshipV1Request], wallet, signerAddress, time)
-              case (CancelSponsorshipTransaction, 1) =>
-                TransactionFactory.cancelSponsorship(txJson.as[SponsorshipV1Request], wallet, signerAddress, time)
-              case (TransferTransaction, 1)     => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], wallet, signerAddress, time)
-              case (TransferTransaction, 2)     => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], wallet, signerAddress, time)
-              case (MassTransferTransaction, 1) => TransactionFactory.massTransferAsset(txJson.as[MassTransferV1Request], wallet, signerAddress, time)
-              case (LeaseTransaction, 1)        => TransactionFactory.leaseV1(txJson.as[LeaseV1Request], wallet, signerAddress, time)
-              case (LeaseTransaction, 2)        => TransactionFactory.leaseV2(txJson.as[LeaseV2Request], wallet, signerAddress, time)
-              case (CancelLeaseTransaction, 1)  => TransactionFactory.leaseCancelV1(txJson.as[CancelLeaseV1Request], wallet, signerAddress, time)
-              case (CancelLeaseTransaction, 2)  => TransactionFactory.leaseCancelV2(txJson.as[CancelLeaseV2Request], wallet, signerAddress, time)
-              case (DataTransaction, 1)         => TransactionFactory.data(txJson.as[DataV1Request], wallet, signerAddress, time)
-              case (SetScriptTransaction, 1)    => TransactionFactory.setScript(txJson.as[SetScriptV1Request], wallet, signerAddress, time)
-              case _                            => Left(GenericError(s"Unsupported transaction type ($typeId) and version ($version)"))
-            }
-        }).fold(ApiError.fromValidationError, _.json())
-    }
+    (TransactionBuilders.by(typeId) match {
+      case None => Left(GenericError(s"Bad transaction type ($typeId)"))
+      case Some(x) =>
+        x match {
+          case AnchorTransaction => jsv.as[AnchorRequest].signTx(wallet, signerAddress, time)
+          case IssueAssociationTransaction =>
+            jsv.as[IssueAssociationRequest].signTx(wallet, signerAddress, time)
+              .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+          case RevokeAssociationTransaction =>
+            jsv.as[IssueAssociationRequest].signTx(wallet, signerAddress, time)
+              .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+          case SponsorshipTransaction       => jsv.as[SponsorshipRequest].signTx(wallet, signerAddress, time)
+          case CancelSponsorshipTransaction => jsv.as[SponsorshipRequest].signTx(wallet, signerAddress, time)
+          case TransferTransaction          => jsv.as[TransferRequest].signTx(wallet, signerAddress, time)
+          case MassTransferTransaction      => jsv.as[MassTransferRequest].signTx(wallet, signerAddress, time)
+          case LeaseTransaction             => jsv.as[LeaseRequest].signTx(wallet, signerAddress, time)
+          case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].signTx(wallet, signerAddress, time)
+          case DataTransaction              => jsv.as[DataRequest].signTx(wallet, signerAddress, time)
+          case SetScriptTransaction         => jsv.as[SetScriptRequest].signTx(wallet, signerAddress, time)
+          case _                            => Left(GenericError(s"Unsupported transaction type ($typeId)"))
+        }
+    }).fold(ApiError.fromValidationError, _.json())
   }
 
   private def createTransaction(senderPk: String, jsv: JsObject)(f: Transaction => ToResponseMarshallable): ToResponseMarshallable = {
     val typeId = (jsv \ "type").as[Byte]
 
-    (jsv \ "version").validateOpt[Byte](versionReads) match {
-      case JsError(errors) => WrongJson(None, errors)
-      case JsSuccess(value, _) =>
-        val version = value.getOrElse(1: Byte)
-        val txJson  = jsv ++ Json.obj("version" -> version)
-
-        PublicKeyAccount
-          .fromBase58String(senderPk)
-          .flatMap { senderPk =>
-            TransactionBuilders.by(typeId, version) match {
-              case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
-              case Some(x) =>
-                (x, version) match {
-                  case (AnchorTransaction, 1) => TransactionFactory.anchor(txJson.as[AnchorV1Request], senderPk)
-                  case (IssueAssociationTransaction, 1) =>
-                    TransactionFactory
-                      .issueAssociation(txJson.as[IssueAssociationV1Request], senderPk)
-                      .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-                  case (RevokeAssociationTransaction, 1) =>
-                    TransactionFactory
-                      .revokeAssociation(txJson.as[IssueAssociationV1Request], senderPk)
-                      .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-                  case (SponsorshipTransaction, 1)       => TransactionFactory.sponsorship(txJson.as[SponsorshipV1Request], senderPk)
-                  case (CancelSponsorshipTransaction, 1) => TransactionFactory.cancelSponsorship(txJson.as[SponsorshipV1Request], senderPk)
-                  case (TransferTransaction, 1)          => TransactionFactory.transferAssetV1(txJson.as[TransferV1Request], senderPk)
-                  case (TransferTransaction, 2)          => TransactionFactory.transferAssetV2(txJson.as[TransferV2Request], senderPk)
-                  case (MassTransferTransaction, 1)      => TransactionFactory.massTransferAsset(txJson.as[MassTransferV1Request], senderPk)
-                  case (LeaseTransaction, 1)             => TransactionFactory.leaseV1(txJson.as[LeaseV1Request], senderPk)
-                  case (CancelLeaseTransaction, 1)       => TransactionFactory.leaseCancelV1(txJson.as[CancelLeaseV1Request], senderPk)
-                  case (LeaseTransaction, 2)             => TransactionFactory.leaseV2(txJson.as[LeaseV2Request], senderPk)
-                  case (CancelLeaseTransaction, 2)       => TransactionFactory.leaseCancelV2(txJson.as[CancelLeaseV2Request], senderPk)
-                  case (DataTransaction, 1)              => TransactionFactory.data(txJson.as[DataV1Request], senderPk)
-                  case (SetScriptTransaction, 1)         => TransactionFactory.setScript(txJson.as[SetScriptV1Request], senderPk)
-                  case _                                 => Left(GenericError(s"Unsupported transaction type ($typeId) and version ($version)"))
-                }
+    PublicKeyAccount
+      .fromBase58String(senderPk)
+      .flatMap { senderPk =>
+        TransactionBuilders.by(typeId) match {
+          case None => Left(GenericError(s"Bad transaction type ($typeId)"))
+          case Some(x) =>
+            x match {
+              case AnchorTransaction => jsv.as[AnchorRequest].toTx(senderPk)
+              case IssueAssociationTransaction =>
+                jsv.as[IssueAssociationRequest].toTx(senderPk)
+                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+              case RevokeAssociationTransaction =>
+                jsv.as[RevokeAssociationRequest].toTx(senderPk)
+                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+              case SponsorshipTransaction       => jsv.as[SponsorshipRequest].toTx(senderPk)
+              case CancelSponsorshipTransaction => jsv.as[SponsorshipRequest].toTx(senderPk)
+              case TransferTransaction          => jsv.as[TransferRequest].toTx(senderPk)
+              case TransferTransaction          => jsv.as[TransferRequest].toTx(senderPk)
+              case MassTransferTransaction      => jsv.as[MassTransferRequest].toTx(senderPk)
+              case LeaseTransaction             => jsv.as[LeaseRequest].toTx(senderPk)
+              case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].toTx(senderPk)
+              case LeaseTransaction             => jsv.as[LeaseRequest].toTx(senderPk)
+              case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].toTx(senderPk)
+              case DataTransaction              => jsv.as[DataRequest].toTx(senderPk)
+              case SetScriptTransaction         => jsv.as[SetScriptRequest].toTx(senderPk)
+              case _                            => Left(GenericError(s"Unsupported transaction type ($typeId)"))
             }
-          }
-          .fold(ApiError.fromValidationError, tx => f(tx))
-    }
+        }
+      }
+      .fold(ApiError.fromValidationError, tx => f(tx))
   }
 
   @Path("/broadcast")
@@ -335,33 +304,28 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     handleExceptions(jsonExceptionHandler) {
       json[JsObject] { jsv =>
         val typeId  = (jsv \ "type").as[Byte]
-        val version = (jsv \ "version").asOpt[Byte](versionReads).getOrElse(1.toByte)
 
-        implicit val broadcastAnchorV1RequestReadsFormat: Format[SignedAnchorV1Request]           = Json.format
-        implicit val broadcastAssocRequestReadsFormat: Format[SignedIssueAssociationV1Request]  = Json.format
-        implicit val broadcastSponsorshipRequestReadsFormat: Format[SignedSponsorshipV1Request] = Json.format
-
-        val r: Either[ValidationError, Transaction] = TransactionBuilders.by(typeId, version) match {
-          case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
+        val r: Either[ValidationError, Transaction] = TransactionBuilders.by(typeId) match {
+          case None => Left(GenericError(s"Bad transaction type ($typeId)"))
           case Some(x) =>
-            (x, version) match {
-              case (AnchorTransaction, 1) => jsv.as[SignedAnchorV1Request].toTx
-              case (IssueAssociationTransaction, 1) =>
-                jsv.as[SignedIssueAssociationV1Request].toTx.flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-              case (RevokeAssociationTransaction, 1) =>
-                jsv.as[SignedIssueAssociationV1Request].toTx.flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-              case (SponsorshipTransaction, 1)       => jsv.as[SignedSponsorshipV1Request].toTx
-              case (CancelSponsorshipTransaction, 1) => jsv.as[SignedSponsorshipV1Request].toTx
-              case (TransferTransaction, 1)          => jsv.as[SignedTransferV1Request].toTx
-              case (TransferTransaction, 2)          => jsv.as[SignedTransferV2Request].toTx
-              case (MassTransferTransaction, 1)      => jsv.as[SignedMassTransferV1Request].toTx
-              case (LeaseTransaction, 1)             => jsv.as[SignedLeaseV1Request].toTx
-              case (LeaseTransaction, 2)             => jsv.as[SignedLeaseV2Request].toTx
-              case (CancelLeaseTransaction, 1)       => jsv.as[SignedCancelLeaseV1Request].toTx
-              case (CancelLeaseTransaction, 2)       => jsv.as[SignedCancelLeaseV2Request].toTx
-              case (DataTransaction, 1)              => jsv.as[SignedDataV1Request].toTx
-              case (SetScriptTransaction, 1)         => jsv.as[SignedSetScriptV1Request].toTx
-              case _                                 => Left(GenericError(s"Unsupported transaction type ($typeId) and version ($version)"))
+            x match {
+              case AnchorTransaction => jsv.as[AnchorRequest].toTx
+              case IssueAssociationTransaction =>
+                jsv.as[IssueAssociationRequest].toTx.flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+              case RevokeAssociationTransaction =>
+                jsv.as[RevokeAssociationRequest].toTx.flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+              case SponsorshipTransaction       => jsv.as[SponsorshipRequest].toTx
+              case CancelSponsorshipTransaction => jsv.as[SponsorshipRequest].toTx
+              case TransferTransaction          => jsv.as[TransferRequest].toTx
+              case TransferTransaction          => jsv.as[TransferRequest].toTx
+              case MassTransferTransaction      => jsv.as[MassTransferRequest].toTx
+              case LeaseTransaction             => jsv.as[LeaseRequest].toTx
+              case LeaseTransaction             => jsv.as[LeaseRequest].toTx
+              case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].toTx
+              case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].toTx
+              case DataTransaction              => jsv.as[DataRequest].toTx
+              case SetScriptTransaction         => jsv.as[SetScriptRequest].toTx
+              case _                            => Left(GenericError(s"Unsupported transaction type ($typeId)"))
             }
         }
         import com.ltonetwork.features.FeatureProvider._

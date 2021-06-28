@@ -21,7 +21,7 @@ case class IssueAssociationRequest(version: Option[Byte],
                                    hash: Option[ByteStr] = None,
                                    signature: Option[ByteStr] = None,
                                    proofs: Option[Proofs] = None,
-    ) extends TxRequest {
+    ) extends TxRequest[IssueAssociationTransaction] {
 
   def toTx(sender: PublicKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
     for {
