@@ -49,11 +49,3 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     case _ => txMinBaseFee
   }
 }
-
-object FeeCalculator {
-
-  private case class TransactionAssetFee(txType: Int, assetId: Option[AssetId]) {
-    val key = s"TransactionAssetFee($txType, ${assetId.map(_.base58)})"
-  }
-
-}

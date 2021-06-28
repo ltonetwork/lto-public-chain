@@ -3,7 +3,7 @@ package com.ltonetwork.api.http.requests.sponsorship
 import cats.implicits._
 import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.BroadcastRequest
-import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransactionBase}
+import com.ltonetwork.transaction.sponsorship.CancelSponsorshipTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
 

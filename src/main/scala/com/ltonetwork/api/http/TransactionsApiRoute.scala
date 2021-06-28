@@ -5,7 +5,6 @@ import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import com.ltonetwork.account.{Address, PublicKeyAccount}
-import com.ltonetwork.api.http.requests.AnchorRequest
 import com.ltonetwork.api.http.requests.anchor._
 import com.ltonetwork.api.http.requests.association._
 import com.ltonetwork.api.http.requests.data._
@@ -251,7 +250,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
           case Some(x) =>
             (x, version) match {
-              case (AnchorTransaction, 1) => TransactionFactory.anchor(txJson.as[AnchorRequest], wallet, signerAddress, time)
+              case (AnchorTransaction, 1) => TransactionFactory.anchor(txJson.as[AnchorV1Request], wallet, signerAddress, time)
               case (IssueAssociationTransaction, 1) =>
                 TransactionFactory
                   .issueAssociation(txJson.as[IssueAssociationV1Request], wallet, signerAddress, time)
@@ -294,7 +293,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case None => Left(GenericError(s"Bad transaction type ($typeId) and version ($version)"))
               case Some(x) =>
                 (x, version) match {
-                  case (AnchorTransaction, 1) => TransactionFactory.anchor(txJson.as[AnchorRequest], senderPk)
+                  case (AnchorTransaction, 1) => TransactionFactory.anchor(txJson.as[AnchorV1Request], senderPk)
                   case (IssueAssociationTransaction, 1) =>
                     TransactionFactory
                       .issueAssociation(txJson.as[IssueAssociationV1Request], senderPk)
@@ -338,7 +337,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         val typeId  = (jsv \ "type").as[Byte]
         val version = (jsv \ "version").asOpt[Byte](versionReads).getOrElse(1.toByte)
 
-        implicit val broadcastAnchorRequestReadsFormat: Format[SignedAnchorV1Request]           = Json.format
+        implicit val broadcastAnchorV1RequestReadsFormat: Format[SignedAnchorV1Request]           = Json.format
         implicit val broadcastAssocRequestReadsFormat: Format[SignedIssueAssociationV1Request]  = Json.format
         implicit val broadcastSponsorshipRequestReadsFormat: Format[SignedSponsorshipV1Request] = Json.format
 

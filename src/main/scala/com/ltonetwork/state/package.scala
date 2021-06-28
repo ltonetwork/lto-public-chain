@@ -85,4 +85,7 @@ package object state {
 
   }
 
+  implicit class OptionNoneIfEmpty[T <: Option[ByteStr]](val option: T) extends AnyVal {
+    def noneIfEmpty: Option[ByteStr] = option.collect { case h if h.toString.nonEmpty => h }
+  }
 }

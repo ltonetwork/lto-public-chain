@@ -80,9 +80,9 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             data: List[ByteStr],
+             anchors: List[ByteStr],
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, data, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, anchors, None, Proofs.empty).signWith(signer)
 
   def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, data: List[ByteStr]): Either[ValidationError, TransactionT] =
     signed(version, timestamp, sender, fee, data, sender)

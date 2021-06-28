@@ -3,8 +3,8 @@ package com.ltonetwork.api.http
 import cats.Applicative
 import com.ltonetwork.crypto.{DigestLength, SignatureLength}
 import com.ltonetwork.state.ByteStr
-import com.ltonetwork.transaction.{Proofs, TransactionBuilder, ValidationError}
 import com.ltonetwork.transaction.ValidationError._
+import com.ltonetwork.transaction.{Proofs, TransactionBuilder, ValidationError}
 import com.ltonetwork.utils.base58Length
 import play.api.libs.json._
 import supertagged.TaggedType

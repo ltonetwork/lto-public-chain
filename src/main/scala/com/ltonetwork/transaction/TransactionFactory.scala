@@ -1,7 +1,8 @@
 package com.ltonetwork.transaction
 
 import com.ltonetwork.account._
-import com.ltonetwork.api.http.requests.{AnchorRequest, BroadcastRequest}
+import com.ltonetwork.api.http.requests.anchor.AnchorV1Request
+import com.ltonetwork.api.http.requests.{AnchorV1Request, BroadcastRequest}
 import com.ltonetwork.api.http.requests.association.IssueAssociationV1Request
 import com.ltonetwork.api.http.requests.data.DataV1Request
 import com.ltonetwork.api.http.requests.lease.{CancelLeaseV1Request, CancelLeaseV2Request, LeaseV1Request, LeaseV2Request}
@@ -349,10 +350,10 @@ object TransactionFactory extends BroadcastRequest {
     })
   }
 
-  def anchor(request: AnchorRequest, wallet: Wallet, time: Time): Either[ValidationError, AnchorTransaction] =
+  def anchor(request: AnchorV1Request, wallet: Wallet, time: Time): Either[ValidationError, AnchorTransaction] =
     anchor(request, wallet, request.sender, time)
 
-  def anchor(request: AnchorRequest, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AnchorTransaction] =
+  def anchor(request: AnchorV1Request, wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AnchorTransaction] =
     for {
       sender  <- wallet.findPrivateKey(request.sender)
       signer  <- if (request.sender == signerAddress) Right(sender) else wallet.findPrivateKey(signerAddress)
@@ -367,7 +368,7 @@ object TransactionFactory extends BroadcastRequest {
       )
     } yield tx
 
-  def anchor(request: AnchorRequest, sender: PublicKeyAccount): Either[ValidationError, AnchorTransaction] =
+  def anchor(request: AnchorV1Request, sender: PublicKeyAccount): Either[ValidationError, AnchorTransaction] =
     for {
       anchors <- parseAnchors(request.anchors)
       tx <- AnchorTransaction.create(

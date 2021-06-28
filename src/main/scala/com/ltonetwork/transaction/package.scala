@@ -20,7 +20,7 @@ package object transaction {
     def validatedEither(implicit validator: TxValidator[T]): Either[ValidationError, T]    = this.validatedNel.toEither.left.map(_.head)
   }
 
-  implicit class TransactionSignOps[T <: TransactionBuilder](val tx: T) extends AnyVal {
+  implicit class TransactionSignOps[T](val tx: T) extends AnyVal {
     def signWith(privateKey: PrivateKeyAccount)(implicit sign: (T, PrivateKeyAccount) => T): T = sign(tx, privateKey)
   }
 }

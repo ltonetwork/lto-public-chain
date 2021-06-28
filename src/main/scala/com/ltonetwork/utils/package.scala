@@ -155,6 +155,7 @@ package object utils extends ScorexLogging {
       case _                                                   => JsError("Expected JsString")
     }
   }
+
   def objectFromString[T](fullClassName: String): Try[T] = Try {
     val runtimeMirror = universe.runtimeMirror(getClass.getClassLoader)
     val module        = runtimeMirror.staticModule(fullClassName)
