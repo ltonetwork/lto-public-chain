@@ -30,8 +30,9 @@ class SignedRequestsTest extends FunSuite with Matchers {
     req.senderPublicKey should be ('defined)
     req.senderPublicKey.get shouldBe "D6HmGZqpXCyAqpz8mCAfWijYDWsPKncKe5v3jq1nTpf5"
     req.signature should be ('defined)
-    req.signature.get shouldBe "4dPRTW6XyRQUTQwwpuZDCNy1UDHYG9WGsEQnn5v49Lj5uyh4XGDdwtEq3t6ZottweAXHieK32UokHwiTxGFtz9bQ"
-    req.attachment shouldBe Some("A")
+    req.signature.get.base58 shouldBe "4dPRTW6XyRQUTQwwpuZDCNy1UDHYG9WGsEQnn5v49Lj5uyh4XGDdwtEq3t6ZottweAXHieK32UokHwiTxGFtz9bQ"
+    req.attachment should be ('defined)
+    req.attachment.get.base58 shouldBe "A"
 
     val tx = req.toTx.explicitGet()
     Base58.encode(tx.sender.publicKey) shouldBe "D6HmGZqpXCyAqpz8mCAfWijYDWsPKncKe5v3jq1nTpf5"
