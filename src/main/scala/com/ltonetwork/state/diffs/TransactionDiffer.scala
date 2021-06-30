@@ -7,7 +7,7 @@ import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.UnsupportedTransactionType
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransaction
-import com.ltonetwork.transaction.association.IssueAssociationTransaction
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
@@ -37,21 +37,24 @@ object TransactionDiffer {
             case ttx: TransferTransaction     => TransferTransactionDiff(blockchain, settings, currentBlockTimestamp, currentBlockHeight)(ttx)
             case mtx: MassTransferTransaction => MassTransferTransactionDiff(blockchain, currentBlockTimestamp, currentBlockHeight)(mtx)
             case ltx: LeaseTransaction        => LeaseTransactionsDiff.lease(blockchain, currentBlockHeight)(ltx)
-            case ltx: CancelLeaseTransaction =>
+            case ltx: CancelLeaseTransaction  =>
               LeaseTransactionsDiff.leaseCancel(blockchain, settings, currentBlockTimestamp, currentBlockHeight)(ltx)
             case dtx: DataTransaction               => DataTransactionDiff(blockchain, currentBlockHeight)(dtx)
             case sstx: SetScriptTransaction         => SetScriptTransactionDiff(currentBlockHeight)(sstx)
             case at: AnchorTransaction              => AnchorTransactionDiff(blockchain, currentBlockHeight)(at)
-            case as: IssueAssociationTransaction    => AssociationTransactionDiff(currentBlockHeight)(as)
+            case as: AssociationTransaction         => AssociationTransactionDiff(currentBlockHeight)(as)
             case stx: SponsorshipTransaction        => SponsorshipTransactionDiff.sponsor(blockchain, currentBlockHeight)(stx)
             case sctx: CancelSponsorshipTransaction => SponsorshipTransactionDiff.cancel(blockchain, currentBlockHeight)(sctx)
             case _                                  => Left(UnsupportedTransactionType)
           }).map { d: Diff =>
+            val feeAccount: Address = tx.sponsor.getOrElse(tx.sender)
             val feePayer: Address = blockchain
-              .sponsorOf(tx.sender)
+              .sponsorOf(feeAccount)
               .find(a => blockchain.portfolio(a).spendableBalance >= tx.fee)
               .getOrElse(tx.sender.toAddress)
-            Monoid.combine(d, Diff.empty.copy(portfolios = Map(feePayer -> Portfolio(-tx.fee, LeaseBalance.empty))))
+            Monoid.combine(d, Diff.empty.copy(portfolios = Map(feePayer -> Portfolio(-tx.fee))))
+
+            // TODO; if (feePayer != tx.sender) index fee payer of tx
           }
       }
       positiveDiff <- BalanceDiffValidation(blockchain, currentBlockHeight, settings)(diff)

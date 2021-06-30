@@ -13,17 +13,17 @@ import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.state.reader.CompositeBlockchain.composite
 import com.ltonetwork.transaction.{Transaction, ValidationError}
-import com.ltonetwork.utils.ScorexLogging
+import com.ltonetwork.utils._
 
 object BlockDiffer extends ScorexLogging with Instrumented {
 
-  val feeBurnAmt = 10 * 1000 * 1000
+  val feeBurnAmt: Long = 0.1.lto
   def maybeBurnFee(bc: Blockchain, tx: Transaction): Portfolio = {
     import com.ltonetwork.features.FeatureProvider._
     if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, bc.height))
-      Portfolio(balance = Math.max(0, tx.fee - feeBurnAmt), lease = LeaseBalance.empty)
+      Portfolio(balance = Math.max(0, tx.fee - feeBurnAmt))
     else
-      Portfolio(balance = tx.fee, lease = LeaseBalance.empty)
+      Portfolio(balance = tx.fee)
   }
 
   def fromBlock[Constraint <: MiningConstraint](settings: FunctionalitySettings,

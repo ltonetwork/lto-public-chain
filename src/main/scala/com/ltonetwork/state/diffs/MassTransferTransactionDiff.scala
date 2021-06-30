@@ -14,7 +14,7 @@ object MassTransferTransactionDiff {
   def apply(blockchain: Blockchain, blockTime: Long, height: Int)(tx: MassTransferTransaction): Either[ValidationError, Diff] = {
     def parseTransfer(xfer: ParsedTransfer): (Map[Address, Portfolio], Long) = {
       val recipientAddr = xfer.address.asInstanceOf[Address]
-      val portfolio     = Map(recipientAddr -> Portfolio(xfer.amount, LeaseBalance.empty))
+      val portfolio     = Map(recipientAddr -> Portfolio(xfer.amount))
       (portfolio, xfer.amount)
     }
     val portfoliosEi: Seq[(Map[Address, Portfolio], Long)] = tx.transfers.map(parseTransfer)
@@ -23,7 +23,7 @@ object MassTransferTransactionDiff {
     val (recipientPortfolios, totalAmount) = portfoliosEi.fold((Map.empty[Address, Portfolio], 0L)) { (u, v) =>
       (u._1 combine v._1, u._2 + v._2)
     }
-    val completePortfolio = recipientPortfolios.combine(Map(sender -> Portfolio(-totalAmount, LeaseBalance.empty)))
+    val completePortfolio = recipientPortfolios.combine(Map(sender -> Portfolio(-totalAmount)))
 
     Right(Diff(height, tx, completePortfolio))
   }

@@ -31,9 +31,9 @@ object CommonValidation {
                                                           blockTime: Long,
                                                           tx: T): Either[ValidationError, T] = {
     def checkTransfer(sender: Address, amount: Long, feeAmount: Long) = {
-      val amountDiff = Portfolio(-amount, LeaseBalance.empty)
+      val amountDiff = Portfolio(-amount)
 
-      val feeDiff = Portfolio(-feeAmount, LeaseBalance.empty)
+      val feeDiff = Portfolio(-feeAmount)
 
       val spendings     = Monoid.combine(amountDiff, feeDiff)
       val oldLtoBalance = blockchain.portfolio(sender).balance
