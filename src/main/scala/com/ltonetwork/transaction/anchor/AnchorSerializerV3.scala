@@ -39,9 +39,4 @@ object AnchorSerializerV3 extends TransactionSerializer.For[AnchorTransaction] {
         tx     <- AnchorTransaction.create(version, Some(chainId), timestamp, sender, fee, anchors.map(ByteStr(_)).toList, sponsor, proofs)
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
-
-  override def toJson(tx: AnchorTransaction): JsObject = jsonBase(
-    tx,
-    Json.obj("anchors" -> Json.toJson(tx.anchors))
-  )
 }

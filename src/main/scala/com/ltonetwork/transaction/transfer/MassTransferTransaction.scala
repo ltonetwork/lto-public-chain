@@ -7,6 +7,7 @@ import com.ltonetwork.crypto
 import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
+import com.ltonetwork.utils.Base58
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, JsValue, Json, OFormat}
 
@@ -27,8 +28,13 @@ case class MassTransferTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[MassTransferTransaction]      = MassTransferTransaction
   private def serializer: TransactionSerializer.For[MassTransferTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj(
+    "attachment"    -> Base58.encode(attachment),
+    "transferCount" -> transfers.size,
+    "totalAmount"   -> transfers.map(_.amount).sum,
+    "transfers"     -> MassTransferTransaction.toJson(transfers)
+  ))
 
   def compactJson(recipients: Set[Address]): JsObject =
     json() ++ Json.obj("transfers" -> MassTransferTransaction.toJson(transfers.filter(t => recipients.contains(t.address))))

@@ -24,13 +24,4 @@ trait TransferSerializerLegacy extends TransactionSerializer.For[TransferTransac
       (attachment, end)         = Deser.parseArraySize(bytes, recipientEnd)
     } yield (sender, timestamp, amount, feeAmount, recipient, attachment, end)
   }
-
-  override def toJson(tx: TransactionT): JsObject = jsonBase(
-    tx,
-    Json.obj(
-      "recipient"  -> tx.recipient.stringRepr,
-      "amount"     -> tx.amount,
-      "attachment" -> Base58.encode(tx.attachment)
-    )
-  )
 }

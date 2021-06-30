@@ -23,8 +23,8 @@ case class DataTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[DataTransaction]      = DataTransaction
   private def serializer: TransactionSerializer.For[DataTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj("data" -> Json.toJson(data)))
 
   implicit val dataItemFormat: Format[DataEntry[_]] = DataEntry.Format
 }

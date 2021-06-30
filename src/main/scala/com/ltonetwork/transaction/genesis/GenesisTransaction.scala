@@ -9,7 +9,7 @@ import com.ltonetwork.transaction.TransactionParser.HardcodedVersion1
 import com.ltonetwork.transaction.Transaction.SigProofsSwitch
 import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, ValidationError}
 import monix.eval.Coeval
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 
 import scala.util.Try
 
@@ -26,8 +26,17 @@ case class GenesisTransaction private (version: Byte, chainId: Byte, timestamp: 
   override def builder: TransactionBuilder.For[GenesisTransaction]      = GenesisTransaction
   private def serializer: TransactionSerializer.For[GenesisTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(Json.obj(
+    "type"      -> GenesisTransaction.typeId,
+    "version"   -> version,
+    "id"        -> id().base58,
+    "fee"       -> fee,
+    "timestamp" -> timestamp,
+    "signature" -> signature.base58,
+    "recipient" -> recipient.address,
+    "amount"    -> amount
+  ))
 
   override protected def prefixByte: Coeval[Array[Byte]]  = Coeval.evalOnce(Array.emptyByteArray)
   override protected def footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Array.emptyByteArray)

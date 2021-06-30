@@ -32,15 +32,4 @@ trait LeaseSerializerLegacy extends TransactionSerializer.For[LeaseTransaction] 
       timestamp                 = Longs.fromByteArray(bytes.slice(amountStart + 16, end))
     } yield (sender, recipient, amount, fee, timestamp, end)
   }
-
-  override def toJson(tx: TransactionT): JsObject = {
-    import tx._
-    jsonBase(
-      tx,
-      Json.obj(
-        "recipient" -> recipient.stringRepr,
-        "amount"    -> amount
-      )
-    )
-  }
 }

@@ -6,7 +6,7 @@ import com.ltonetwork.crypto
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import monix.eval.Coeval
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 
 import scala.util.{Failure, Success, Try}
 
@@ -25,8 +25,15 @@ case class RevokeAssociationTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[RevokeAssociationTransaction]      = RevokeAssociationTransaction
   private def serializer: TransactionSerializer.For[RevokeAssociationTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+
+  val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase ++
+    Json.obj(
+      "associationType" -> assocType,
+      "party"           -> recipient.stringRepr,
+    ) ++
+    hash.map(h => Json.obj("hash" -> h.base58)).getOrElse(Json.obj())
+  )
 }
 
 object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssociationTransaction] {

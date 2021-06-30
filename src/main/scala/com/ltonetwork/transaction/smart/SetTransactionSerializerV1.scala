@@ -38,11 +38,4 @@ object SetTransactionSerializerV1 extends TransactionSerializer.For[SetScriptTra
         tx        <- create(version, Some(chainId), timestamp, sender, fee, scriptOpt, None, proofs)
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
-
-  override def toJson(tx: SetScriptTransaction): JsObject = {
-    jsonBase(
-      tx,
-      Json.obj("script" -> tx.script.map(_.bytes().base64))
-    )
-  }
 }

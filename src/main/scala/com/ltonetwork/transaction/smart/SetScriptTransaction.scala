@@ -7,7 +7,7 @@ import com.ltonetwork.serialization.Deser
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.smart.script.{Script, ScriptReader}
 import monix.eval.Coeval
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 
 case class SetScriptTransaction private (version: Byte,
                                          chainId: Byte,
@@ -22,8 +22,8 @@ case class SetScriptTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[SetScriptTransaction]      = SetScriptTransaction
   private def serializer: TransactionSerializer.For[SetScriptTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj("script" -> script.map(_.bytes().base64)))
 }
 
 object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction] {

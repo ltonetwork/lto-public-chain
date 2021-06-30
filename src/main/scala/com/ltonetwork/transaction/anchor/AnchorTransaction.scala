@@ -22,8 +22,8 @@ case class AnchorTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[AnchorTransaction]      = AnchorTransaction
   private def serializer: TransactionSerializer.For[AnchorTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj("anchors" -> Json.toJson(anchors)))
 }
 
 object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {

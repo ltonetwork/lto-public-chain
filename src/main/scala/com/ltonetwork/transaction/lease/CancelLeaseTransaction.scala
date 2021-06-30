@@ -8,7 +8,7 @@ import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
 import com.ltonetwork.transaction.TransactionParser.{HardcodedVersion1, MultipleVersions}
 import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import monix.eval.Coeval
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 
 import scala.util.Try
 
@@ -27,8 +27,14 @@ case class CancelLeaseTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[CancelLeaseTransaction]      = CancelLeaseTransaction
   private def serializer: TransactionSerializer.For[CancelLeaseTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj(
+    "chainId"   -> chainId,
+    "version"   -> version,
+    "fee"       -> fee,
+    "timestamp" -> timestamp,
+    "leaseId"   -> leaseId.base58
+  ))
 }
 
 object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransaction] {

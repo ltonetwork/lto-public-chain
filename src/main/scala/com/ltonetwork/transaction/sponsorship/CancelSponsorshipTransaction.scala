@@ -22,8 +22,7 @@ case class CancelSponsorshipTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[CancelSponsorshipTransaction]      = CancelSponsorshipTransaction
   private def serializer: TransactionSerializer.For[CancelSponsorshipTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
 }
 
 object CancelSponsorshipTransaction extends TransactionBuilder.For[CancelSponsorshipTransaction] {

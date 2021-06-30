@@ -6,7 +6,9 @@ import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import monix.eval.Coeval
 import com.ltonetwork.serialization.{BytesSerializable, JsonSerializable}
-import play.api.libs.json.JsObject
+import com.ltonetwork.transaction.Transaction.SigProofsSwitch
+import com.ltonetwork.utils.Base58
+import play.api.libs.json.{JsArray, JsObject, JsString, Json}
 
 trait Transaction extends BytesSerializable with JsonSerializable {
   def builder: TransactionBuilder
@@ -31,6 +33,8 @@ trait Transaction extends BytesSerializable with JsonSerializable {
   )
   protected def footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(sponsorBytes(), proofs.bytes()))
   val bytes: Coeval[Array[Byte]]                 = Coeval.evalOnce(Bytes.concat(prefixByte(), bodyBytes(), footerBytes()))
+
+  protected def jsonBase: Transaction.TxJson = Transaction.TxJson(this)
 
   override def toString: String = json().toString()
 
@@ -58,5 +62,38 @@ object Transaction {
       if (this.version == 1) proofs.toSignature.arr
       else super.footerBytes()
     )
+  }
+
+  case class TxJson(tx: Transaction) {
+    private def commonJson: JsObject = {
+      import tx._
+      Json.obj(
+        "type" -> typeId,
+        "version" -> version,
+        "id" -> id().toString,
+        "sender" -> sender.address,
+        "senderKeyType" -> sender.keyType.reference,
+        "senderPublicKey" -> Base58.encode(sender.publicKey),
+        "fee" -> fee,
+        "timestamp" -> timestamp,
+      )
+    }
+
+    private def sponsorJson: JsObject = tx.sponsor.map(
+      acc => Json.obj(
+        "sponsor" -> acc.address,
+        "sponsorKeyType" -> acc.keyType.reference,
+        "sponsorPublicKey" -> Base58.encode(acc.publicKey)
+      )
+    ).getOrElse(Json.obj())
+
+    private def proofsJson: JsObject = tx match {
+      case s: SigProofsSwitch if s.usesLegacySignature => Json.obj("signature" -> s.signature.toString)
+      case _ if tx.proofs.proofs.nonEmpty              => Json.obj("proofs" -> JsArray(tx.proofs.proofs.map(p => JsString(p.toString))))
+      case _                                           => Json.obj()
+    }
+
+    //noinspection ScalaStyle
+    def ++(txSpecificJson: JsObject): JsObject = commonJson ++ sponsorJson ++ txSpecificJson ++ proofsJson
   }
 }

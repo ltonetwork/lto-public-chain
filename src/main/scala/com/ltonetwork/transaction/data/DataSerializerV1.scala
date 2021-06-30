@@ -43,9 +43,4 @@ object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
         tx     <- create(version, None, timestamp, sender, fee, entries, None, proofs)
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
-
-  override def toJson(tx: TransactionT): JsObject = jsonBase(
-    tx,
-    Json.obj("data" -> Json.toJson(tx.data))
-  )
 }

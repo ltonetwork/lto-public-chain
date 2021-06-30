@@ -35,11 +35,4 @@ abstract class SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTra
       proofs <- Proofs.fromBytes(bytes.drop(s1 + 16))
     } yield (chainId, timestamp, sender, fee, recipient, proofs)
   }
-
-  override def toJson(tx: SponsorshipTransactionT): JsObject = {
-    jsonBase(
-      tx,
-      Json.obj("recipient" -> tx.recipient.stringRepr)
-    )
-  }
 }

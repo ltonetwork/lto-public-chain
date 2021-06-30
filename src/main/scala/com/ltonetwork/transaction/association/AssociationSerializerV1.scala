@@ -41,13 +41,4 @@ abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTra
       result = (version, timestamp, sender, fee, recipient, assocType, hashOpt, proofs)
     } yield result
   }
-
-  override def toJson(tx: AssociationTransactionT): JsObject = jsonBase(
-    tx,
-    Json.obj(
-      "version"         -> tx.version,
-      "associationType" -> tx.assocType,
-      "party"           -> tx.recipient.stringRepr,
-    ) ++ tx.hash.map(hash => Json.obj("hash" -> hash.base58)).getOrElse(Json.obj())
-  )
 }

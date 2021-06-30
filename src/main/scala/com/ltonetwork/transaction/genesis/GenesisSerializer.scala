@@ -45,19 +45,4 @@ object GenesisSerializer extends TransactionSerializer.For[GenesisTransaction] {
 
       create(recipient, amount, timestamp).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
-
-  override def toJson(tx: TransactionT): JsObject = {
-    import tx._
-
-    Json.obj(
-      "type"      -> GenesisTransaction.typeId,
-      "version"   -> version,
-      "id"        -> id().base58,
-      "fee"       -> fee,
-      "timestamp" -> timestamp,
-      "signature" -> signature.base58,
-      "recipient" -> recipient.address,
-      "amount"    -> amount
-    )
-  }
 }

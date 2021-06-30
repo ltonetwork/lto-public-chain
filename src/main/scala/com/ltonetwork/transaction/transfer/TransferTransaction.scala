@@ -8,9 +8,9 @@ import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.TransactionParser.{HardcodedVersion1, MultipleVersions}
 import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
 import com.ltonetwork.transaction._
-import com.ltonetwork.utils.base58Length
+import com.ltonetwork.utils.{Base58, base58Length}
 import monix.eval.Coeval
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 
 import scala.util.Try
 
@@ -31,8 +31,12 @@ case class TransferTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[TransferTransaction]      = TransferTransaction
   private def serializer: TransactionSerializer.For[TransferTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj(
+    "recipient"  -> recipient.stringRepr,
+    "amount"     -> amount,
+    "attachment" -> Base58.encode(attachment)
+  ))
 
   // Special case for transfer tx v1: signature is prepended (after type) instead of appended
   override protected def prefixByte: Coeval[Array[Byte]] =

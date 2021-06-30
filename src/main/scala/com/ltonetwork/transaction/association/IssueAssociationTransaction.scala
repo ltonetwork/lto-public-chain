@@ -26,8 +26,16 @@ case class IssueAssociationTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[IssueAssociationTransaction]      = IssueAssociationTransaction
   private def serializer: TransactionSerializer.For[IssueAssociationTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+
+  val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase ++
+    Json.obj(
+      "associationType" -> assocType,
+      "party"           -> recipient.stringRepr,
+    ) ++
+    expires.map(h => Json.obj("expires" -> expires)).getOrElse(Json.obj()) ++
+    hash.map(h => Json.obj("hash" -> h.base58)).getOrElse(Json.obj())
+  )
 }
 
 object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociationTransaction] {

@@ -3,6 +3,8 @@ package com.ltonetwork.transaction.association
 import com.ltonetwork.account.Address
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.Transaction
+import monix.eval.Coeval
+import play.api.libs.json.{JsObject, Json}
 
 // Base class for issue and revoke association transactions
 abstract class AssociationTransaction extends Transaction {

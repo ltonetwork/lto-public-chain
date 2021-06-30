@@ -29,18 +29,4 @@ trait CancelLeaseSerializerLegacy extends TransactionSerializer.For[CancelLeaseT
     val leaseId   = ByteStr(bytes.slice(start + KeyLength + 16, end))
     (sender, fee, timestamp, leaseId, end)
   }
-
-  override def toJson(tx: TransactionT): JsObject = {
-    import tx._
-    jsonBase(
-      tx,
-      Json.obj(
-        "chainId"   -> chainId,
-        "version"   -> version,
-        "fee"       -> fee,
-        "timestamp" -> timestamp,
-        "leaseId"   -> leaseId.base58
-      )
-    )
-  }
 }

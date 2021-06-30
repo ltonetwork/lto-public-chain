@@ -63,14 +63,4 @@ object MassTransferSerializerV1 extends TransactionSerializer.For[MassTransferTr
         tx     <- MassTransferTransaction.create(version, None, timestamp, sender, fee, transfers, attachment, None, proofs)
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
-
-  override def toJson(tx: MassTransferTransaction): JsObject = jsonBase(
-    tx,
-    Json.obj(
-      "attachment"    -> Base58.encode(tx.attachment),
-      "transferCount" -> tx.transfers.size,
-      "totalAmount"   -> tx.transfers.map(_.amount).sum,
-      "transfers"     -> MassTransferTransaction.toJson(tx.transfers)
-    )
-  )
 }
