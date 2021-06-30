@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.requests.smart.SignedSetScriptV1Request
+import com.ltonetwork.api.http.requests.SetScriptRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.utils.Base58
@@ -26,16 +26,16 @@ class SetScriptTransactionSpecification extends PropSpec with PropertyChecks wit
   }
 
   property("JSON roundtrip") {
-    implicit val signedFormat: Format[SignedSetScriptV1Request] = Json.format[SignedSetScriptV1Request]
-
     forAll(setScriptTransactionGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
-      val req = json.as[SignedSetScriptV1Request]
-      req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
+      val req = json.as[SetScriptRequest]
+      req.senderPublicKey should be ('defined)
+      req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp shouldEqual tx.timestamp
+      req.timestamp should be ('defined)
+      req.timestamp.get shouldEqual tx.timestamp
 
       req.script shouldEqual tx.script.map(_.bytes().base64)
     }

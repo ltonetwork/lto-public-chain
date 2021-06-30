@@ -9,17 +9,17 @@ import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
 import play.api.libs.json.{Format, Json}
 
-case class SponsorshipRequest(version: Option[Byte],
+case class SponsorshipRequest(version: Option[Byte] = None,
                               timestamp: Option[Long] = None,
-                              sender: Option[String],
-                              senderPublicKey: Option[String],
+                              sender: Option[String] = None,
+                              senderPublicKey: Option[String] = None,
                               fee: Long,
                               recipient: String,
                               signature: Option[ByteStr] = None,
                               proofs: Option[Proofs] = None
     ) extends TxRequest[SponsorshipTransaction] {
 
-  def toTx(sender: PublicKeyAccount): Either[ValidationError, SponsorshipTransaction] =
+  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, SponsorshipTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
       validProofs    <- toProofs(signature, proofs)

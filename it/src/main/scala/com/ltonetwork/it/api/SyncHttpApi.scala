@@ -130,7 +130,7 @@ object SyncHttpApi extends Assertions {
       Await.result(async(n).transfer(sourceAddress, recipient, amount, fee), RequestAwaitTime)
 
     def massTransfer(sourceAddress: String, transfers: List[Transfer], fee: Long, assetId: Option[String] = None): Transaction =
-      Await.result(async(n).massTransfer(sourceAddress, transfers, fee, assetId), RequestAwaitTime)
+      Await.result(async(n).massTransfer(sourceAddress, transfers, fee), RequestAwaitTime)
 
     def lease(sourceAddress: String, recipient: String, leasingAmount: Long, leasingFee: Long): Transaction =
       Await.result(async(n).lease(sourceAddress, recipient, leasingAmount, leasingFee), RequestAwaitTime)

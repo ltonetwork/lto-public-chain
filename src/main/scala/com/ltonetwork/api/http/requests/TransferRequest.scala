@@ -9,10 +9,10 @@ import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
 import play.api.libs.json._
 
-case class TransferRequest(version: Option[Byte],
+case class TransferRequest(version: Option[Byte] = None,
                            timestamp: Option[Long] = None,
-                           sender: Option[String],
-                           senderPublicKey: Option[String],
+                           sender: Option[String] = None,
+                           senderPublicKey: Option[String] = None,
                            fee: Long,
                            recipient: String,
                            amount: Long,
@@ -21,7 +21,7 @@ case class TransferRequest(version: Option[Byte],
                            proofs: Option[Proofs] = None
     ) extends TxRequest[TransferTransaction] {
 
-  def toTx(sender: PublicKeyAccount): Either[ValidationError, TransferTransaction] =
+  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, TransferTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
       validProofs    <- toProofs(signature, proofs)

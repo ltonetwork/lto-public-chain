@@ -265,24 +265,21 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case None => Left(GenericError(s"Bad transaction type ($typeId)"))
           case Some(x) =>
             x match {
-              case AnchorTransaction => jsv.as[AnchorRequest].toTx(senderPk)
+              case AnchorTransaction => jsv.as[AnchorRequest].toTxFrom(senderPk)
               case IssueAssociationTransaction =>
-                jsv.as[IssueAssociationRequest].toTx(senderPk)
+                jsv.as[IssueAssociationRequest].toTxFrom(senderPk)
                   .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
               case RevokeAssociationTransaction =>
-                jsv.as[RevokeAssociationRequest].toTx(senderPk)
+                jsv.as[RevokeAssociationRequest].toTxFrom(senderPk)
                   .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-              case SponsorshipTransaction       => jsv.as[SponsorshipRequest].toTx(senderPk)
-              case CancelSponsorshipTransaction => jsv.as[SponsorshipRequest].toTx(senderPk)
-              case TransferTransaction          => jsv.as[TransferRequest].toTx(senderPk)
-              case TransferTransaction          => jsv.as[TransferRequest].toTx(senderPk)
-              case MassTransferTransaction      => jsv.as[MassTransferRequest].toTx(senderPk)
-              case LeaseTransaction             => jsv.as[LeaseRequest].toTx(senderPk)
-              case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].toTx(senderPk)
-              case LeaseTransaction             => jsv.as[LeaseRequest].toTx(senderPk)
-              case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].toTx(senderPk)
-              case DataTransaction              => jsv.as[DataRequest].toTx(senderPk)
-              case SetScriptTransaction         => jsv.as[SetScriptRequest].toTx(senderPk)
+              case SponsorshipTransaction       => jsv.as[SponsorshipRequest].toTxFrom(senderPk)
+              case CancelSponsorshipTransaction => jsv.as[SponsorshipRequest].toTxFrom(senderPk)
+              case TransferTransaction          => jsv.as[TransferRequest].toTxFrom(senderPk)
+              case MassTransferTransaction      => jsv.as[MassTransferRequest].toTxFrom(senderPk)
+              case LeaseTransaction             => jsv.as[LeaseRequest].toTxFrom(senderPk)
+              case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].toTxFrom(senderPk)
+              case DataTransaction              => jsv.as[DataRequest].toTxFrom(senderPk)
+              case SetScriptTransaction         => jsv.as[SetScriptRequest].toTxFrom(senderPk)
               case _                            => Left(GenericError(s"Unsupported transaction type ($typeId)"))
             }
         }
@@ -317,11 +314,8 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case SponsorshipTransaction       => jsv.as[SponsorshipRequest].toTx
               case CancelSponsorshipTransaction => jsv.as[SponsorshipRequest].toTx
               case TransferTransaction          => jsv.as[TransferRequest].toTx
-              case TransferTransaction          => jsv.as[TransferRequest].toTx
               case MassTransferTransaction      => jsv.as[MassTransferRequest].toTx
               case LeaseTransaction             => jsv.as[LeaseRequest].toTx
-              case LeaseTransaction             => jsv.as[LeaseRequest].toTx
-              case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].toTx
               case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].toTx
               case DataTransaction              => jsv.as[DataRequest].toTx
               case SetScriptTransaction         => jsv.as[SetScriptRequest].toTx

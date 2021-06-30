@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.api.http.requests.association.SignedIssueAssociationV1Request
+import com.ltonetwork.api.http.requests.IssueAssociationRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.utils.Base58
@@ -45,18 +45,18 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
   }
 
   property("JSON roundtrip") {
-    implicit val signedFormat: Format[SignedIssueAssociationV1Request] = Json.format[SignedIssueAssociationV1Request]
-
     forAll(assocTransactionGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
-      val req = json.as[SignedIssueAssociationV1Request]
-      req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
+      val req = json.as[IssueAssociationRequest]
+      req.senderPublicKey should be ('defined)
+      req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp shouldEqual tx.timestamp
+      req.timestamp should be ('defined)
+      req.timestamp.get shouldEqual tx.timestamp
       req.associationType shouldEqual tx.assocType
-      req.party shouldEqual tx.recipient.toString
+      req.recipient shouldEqual tx.recipient.toString
       if (tx.hash.isDefined) req.hash.value shouldEqual tx.hash.get.base58
       else tx.hash shouldEqual None
     }

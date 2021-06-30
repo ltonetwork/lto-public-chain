@@ -1,7 +1,7 @@
 package com.ltonetwork
 
-import com.ltonetwork.api.http.requests.lease.{SignedCancelLeaseV1Request, SignedLeaseV1Request}
-import com.ltonetwork.api.http.requests.transfer.{SignedTransferV1Request, TransferV1Request}
+import com.ltonetwork.api.http.requests._
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.Base58
 import org.scalacheck.Gen.{alphaNumChar, choose, listOfN, oneOf}
@@ -23,38 +23,35 @@ trait RequestGen extends TransactionGen { _: Suite =>
   ).map(new String(_))
 
   val addressValGen: G[String] = listOfN(32, Arbitrary.arbByte.arbitrary).map(b => Base58.encode(b.toArray))
-  val signatureGen: G[String] = listOfN(SignatureLength, Arbitrary.arbByte.arbitrary)
-    .map(b => Base58.encode(b.toArray))
+  val signatureGen: G[ByteStr] = listOfN(SignatureLength, Arbitrary.arbByte.arbitrary)
+    .map(b => ByteStr(b.toArray))
 
   private val commonFields = for {
     _account <- addressValGen
     _fee     <- smallFeeGen
   } yield (_account, _fee)
 
-  val transferReq: G[TransferV1Request] = for {
+  val transferReq: G[TransferRequest] = for {
     (account, fee) <- commonFields
     recipient      <- addressValGen
     amount         <- positiveLongGen
-    assetId    = None
-    feeAssetId = None
-    attachment <- genBoundedString(1, 20).map(b => Some(Base58.encode(b)))
-  } yield TransferV1Request(assetId, feeAssetId, amount, fee, account, attachment, recipient)
+    attachment     <- genBoundedString(1, 20).map(b => Some(ByteStr(b)))
+  } yield TransferRequest(Some(1), None, Some(account), None, fee, recipient, amount, attachment)
 
-  val broadcastTransferReq: G[SignedTransferV1Request] = for {
+  val broadcastTransferReq: G[TransferRequest] = for {
     _signature <- signatureGen
     _timestamp <- ntpTimestampGen
     _tr        <- transferReq
-  } yield SignedTransferV1Request(_tr.sender, _tr.recipient, _tr.amount, _tr.fee, _timestamp, _tr.attachment, _signature)
+  } yield TransferRequest(Some(1), Some(_timestamp), _tr.sender, None, _tr.fee, _tr.recipient, _tr.amount, _tr.attachment, Some(_signature))
 
-  val leaseReq: G[SignedLeaseV1Request] = for {
+  val leaseReq: G[LeaseRequest] = for {
     _signature <- signatureGen
     _timestamp <- ntpTimestampGen
-    _alias     <- leaseGen
-  } yield SignedLeaseV1Request(_alias.sender.toString, _alias.amount, _alias.fee, _alias.recipient.toString, _timestamp, _signature)
+    _lease     <- leaseGen
+  } yield LeaseRequest(Some(1), Some(_timestamp), Some(_lease.sender.toString), None, _lease.fee, _lease.recipient.toString, _lease.amount, Some(_signature))
 
-  val leaseCancelReq: G[SignedCancelLeaseV1Request] = for {
+  val leaseCancelReq: G[CancelLeaseRequest] = for {
     _signature <- signatureGen
-    _timestamp <- ntpTimestampGen
     _cancel    <- leaseCancelGen
-  } yield SignedCancelLeaseV1Request(_cancel.sender.toString, _cancel.leaseId.base58, _cancel.timestamp, _signature, _cancel.fee)
+  } yield CancelLeaseRequest(Some(1), Some(_cancel.timestamp), Some(_cancel.sender.toString), None, _cancel.fee, _cancel.leaseId, Some(_signature))
 }

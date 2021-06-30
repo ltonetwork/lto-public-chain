@@ -2,14 +2,13 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.requests.anchor.SignedAnchorV1Request
-import com.ltonetwork.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, EitherExt2, IntegerDataEntry}
+import com.ltonetwork.api.http.requests.AnchorRequest
+import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.utils.Base58
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.{Format, Json}
-import scorex.crypto.encode.Base64
 
 class AnchorTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
@@ -40,16 +39,16 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
   }
 
   property("JSON roundtrip") {
-    implicit val signedFormat: Format[SignedAnchorV1Request] = Json.format[SignedAnchorV1Request]
-
     forAll(anchorTransactionGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
-      val req = json.as[SignedAnchorV1Request]
-      req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
+      val req = json.as[AnchorRequest]
+      req.senderPublicKey should be ('defined)
+      req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp shouldEqual tx.timestamp
+      req.timestamp should be ('defined)
+      req.timestamp.get shouldEqual tx.timestamp
 
       req.anchors zip tx.anchors foreach {
         case (re, te) =>

@@ -145,7 +145,7 @@ package object utils extends ScorexLogging {
     r
   }
 
-  implicit val byteStrFormat: Format[ByteStr] = new Format[ByteStr] {
+  /*implicit val byteStrFormat: Format[ByteStr] = new Format[ByteStr] {
     override def writes(o: ByteStr): JsValue = JsString(o.toString)
 
     override def reads(json: JsValue): JsResult[ByteStr] = json match {
@@ -154,7 +154,7 @@ package object utils extends ScorexLogging {
       case JsString(v)                                         => decodeBase58(v).fold(e => JsError(s"Error parsing base58: ${e.getMessage}"), b => JsSuccess(b))
       case _                                                   => JsError("Expected JsString")
     }
-  }
+  }*/
 
   def objectFromString[T](fullClassName: String): Try[T] = Try {
     val runtimeMirror = universe.runtimeMirror(getClass.getClassLoader)

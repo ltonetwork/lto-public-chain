@@ -5,11 +5,12 @@ import com.typesafe.config.Config
 import com.ltonetwork.it.TransferSending.Req
 import com.ltonetwork.it.api.AsyncHttpApi._
 import com.ltonetwork.it.api.Transaction
-import com.ltonetwork.state.EitherExt2
+import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.utils.{Base58, ScorexLogging}
 import org.scalatest.Suite
 import com.ltonetwork.account.{Address, AddressScheme, PrivateKeyAccount}
-import com.ltonetwork.api.http.requests.transfer.SignedTransferV2Request
+import com.ltonetwork.api.http.requests
+import com.ltonetwork.api.http.requests.TransferRequest
 import com.ltonetwork.transaction.transfer._
 
 import scala.concurrent.Future
@@ -132,17 +133,19 @@ trait TransferSending extends ScorexLogging {
       .map(_.flatten)
   }
 
-  protected def createSignedTransferRequest(tx: TransferTransaction): SignedTransferV2Request = {
+  protected def createSignedTransferRequest(tx: TransferTransaction): TransferRequest = {
     import tx._
-    SignedTransferV2Request(
-      Base58.encode(tx.sender.publicKey),
+    requests.TransferRequest(
+      Some(2),
+      Some(timestamp),
+      Some(Base58.encode(sender.publicKey)),
+      None,
+      fee,
       recipient.stringRepr,
       amount,
-      fee,
-      timestamp,
-      2,
-      attachment.headOption.map(_ => Base58.encode(attachment)),
-      proofs.base58().toList
+      Some(ByteStr(attachment)),
+      None,
+      Some(proofs)
     )
   }
 

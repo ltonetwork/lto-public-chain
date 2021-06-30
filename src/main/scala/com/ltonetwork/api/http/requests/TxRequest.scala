@@ -5,13 +5,12 @@ import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.{Transaction, ValidationError}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
-import play.api.libs.json.{Format, Json}
 
 trait TxRequest[TransactionT <: Transaction] {
-  def sender: Option[String]
-  def senderPublicKey: Option[String]
+  val sender: Option[String]
+  val senderPublicKey: Option[String]
 
-  def toTx(sender: PublicKeyAccount): Either[ValidationError, TransactionT]
+  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, TransactionT]
 
   def toTx: Either[ValidationError, TransactionT] =
     for {
@@ -19,7 +18,7 @@ trait TxRequest[TransactionT <: Transaction] {
         case Some(key) => PublicKeyAccount.fromBase58String(key)
         case None      => Left(ValidationError.InvalidPublicKey("invalid.senderPublicKey"))
       }
-      tx <- toTx(sender)
+      tx <- toTxFrom(sender)
     } yield tx
 
   def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransactionT]

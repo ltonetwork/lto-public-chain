@@ -10,10 +10,10 @@ import com.ltonetwork.wallet.Wallet
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class RevokeAssociationRequest(version: Option[Byte],
+case class RevokeAssociationRequest(version: Option[Byte] = None,
                                     timestamp: Option[Long] = None,
-                                    sender: Option[String],
-                                    senderPublicKey: Option[String],
+                                    sender: Option[String] = None,
+                                    senderPublicKey: Option[String] = None,
                                     fee: Long,
                                     recipient: String,
                                     associationType: Int,
@@ -22,7 +22,7 @@ case class RevokeAssociationRequest(version: Option[Byte],
                                     proofs: Option[Proofs] = None,
     ) extends TxRequest[RevokeAssociationTransaction] {
 
-  def toTx(sender: PublicKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
+  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
     for {
       validProofs <- toProofs(signature, proofs)
       validRecipient <- Address.fromString(recipient)
@@ -70,6 +70,6 @@ object RevokeAssociationRequest {
       (JsPath \ "hash").readNullable[ByteStr] and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(RevokeAssociationRequest.apply _),
-    Json.writes[CancelLeaseRequest]
+    Json.writes[RevokeAssociationRequest]
   )
 }

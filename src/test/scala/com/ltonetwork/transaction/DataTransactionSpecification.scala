@@ -10,7 +10,7 @@ import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.{Format, Json}
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.requests.data.SignedDataV1Request
+import com.ltonetwork.api.http.requests.DataRequest
 import com.ltonetwork.transaction.data.DataTransaction
 import scorex.crypto.encode.Base64
 
@@ -61,16 +61,16 @@ class DataTransactionSpecification extends PropSpec with PropertyChecks with Mat
   }
 
   property("JSON roundtrip") {
-    implicit val signedFormat: Format[SignedDataV1Request] = Json.format[SignedDataV1Request]
-
     forAll(dataTransactionGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
-      val req = json.as[SignedDataV1Request]
-      req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
+      val req = json.as[DataRequest]
+      req.senderPublicKey should be ('defined)
+      req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp shouldEqual tx.timestamp
+      req.timestamp should be ('defined)
+      req.timestamp.get shouldEqual tx.timestamp
 
       req.data zip tx.data foreach {
         case (re, te) =>

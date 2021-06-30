@@ -10,10 +10,10 @@ import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
 import play.api.libs.json.{Format, Json}
 
-case class MassTransferRequest(version: Option[Byte],
+case class MassTransferRequest(version: Option[Byte] = None,
                                timestamp: Option[Long] = None,
-                               sender: Option[String],
-                               senderPublicKey: Option[String],
+                               sender: Option[String] = None,
+                               senderPublicKey: Option[String] = None,
                                fee: Long,
                                transfers: List[Transfer],
                                attachment: Option[ByteStr] = None,
@@ -21,7 +21,7 @@ case class MassTransferRequest(version: Option[Byte],
                                proofs: Option[Proofs] = None
     ) extends TxRequest[MassTransferTransaction] {
 
-  def toTx(sender: PublicKeyAccount): Either[ValidationError, MassTransferTransaction] =
+  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, MassTransferTransaction] =
     for {
       validTransfers <- MassTransferTransaction.parseTransfersList(transfers)
       validProofs <- toProofs(signature, proofs)

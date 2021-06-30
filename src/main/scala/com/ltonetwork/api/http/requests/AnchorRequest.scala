@@ -10,17 +10,17 @@ import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
 import play.api.libs.json.{Format, Json}
 
-case class AnchorRequest(version: Option[Byte],
+case class AnchorRequest(version: Option[Byte] = None,
                          timestamp: Option[Long] = None,
-                         sender: Option[String],
-                         senderPublicKey: Option[String],
+                         sender: Option[String] = None,
+                         senderPublicKey: Option[String] = None,
                          fee: Long,
                          anchors: List[String],
                          signature: Option[ByteStr] = None,
                          proofs: Option[Proofs] = None,
     ) extends TxRequest[AnchorTransaction] {
 
-  def toTx(sender: PublicKeyAccount): Either[ValidationError, AnchorTransaction] =
+  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, AnchorTransaction] =
     for {
       validProofs  <- toProofs(signature, proofs)
       validAnchors <- anchors.traverse(s => parseBase58(s, "invalid anchor", AnchorTransaction.MaxAnchorStringSize))

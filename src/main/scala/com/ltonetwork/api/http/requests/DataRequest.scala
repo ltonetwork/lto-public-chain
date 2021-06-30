@@ -9,17 +9,17 @@ import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
 import play.api.libs.json.{Format, Json}
 
-case class DataRequest(version: Option[Byte],
+case class DataRequest(version: Option[Byte] = None,
                        timestamp: Option[Long] = None,
-                       sender: Option[String],
-                       senderPublicKey: Option[String],
+                       sender: Option[String] = None,
+                       senderPublicKey: Option[String] = None,
                        fee: Long,
                        data: List[DataEntry[_]],
                        signature: Option[ByteStr] = None,
                        proofs: Option[Proofs] = None
     ) extends TxRequest[DataTransaction] {
 
-  def toTx(sender: PublicKeyAccount): Either[ValidationError, DataTransaction] =
+  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, DataTransaction] =
     for {
       validProofs    <- toProofs(signature, proofs)
       tx <- DataTransaction.create(

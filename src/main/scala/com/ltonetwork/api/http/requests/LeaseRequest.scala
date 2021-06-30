@@ -9,10 +9,10 @@ import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
 import play.api.libs.json.{Format, Json}
 
-case class LeaseRequest(version: Option[Byte],
+case class LeaseRequest(version: Option[Byte] = None,
                         timestamp: Option[Long] = None,
-                        sender: Option[String],
-                        senderPublicKey: Option[String],
+                        sender: Option[String] = None,
+                        senderPublicKey: Option[String] = None,
                         fee: Long,
                         recipient: String,
                         amount: Long,
@@ -20,7 +20,7 @@ case class LeaseRequest(version: Option[Byte],
                         proofs: Option[Proofs] = None
     ) extends TxRequest[LeaseTransaction] {
 
-  def toTx(sender: PublicKeyAccount): Either[ValidationError, LeaseTransaction] =
+  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, LeaseTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
       validProofs    <- toProofs(signature, proofs)

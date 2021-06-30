@@ -62,7 +62,6 @@ class TransactionsRouteSpec
 
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
-          (responseAs[JsObject] \ "feeAssetId").asOpt[String] shouldBe empty
           (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 100 * 1000 * 1000L
         }
       }

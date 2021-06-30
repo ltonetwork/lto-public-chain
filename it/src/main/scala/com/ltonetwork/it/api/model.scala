@@ -217,9 +217,3 @@ case class FeeInfo(feeAssetId: Option[String], feeAmount: Long)
 object FeeInfo {
   implicit val format: Format[FeeInfo] = Json.format
 }
-
-// Obsolete payment request
-case class PaymentRequest(amount: Long, fee: Long, sender: String, recipient: String)
-object PaymentRequest {
-  implicit val paymentFormat: Format[PaymentRequest] = Json.format
-}
