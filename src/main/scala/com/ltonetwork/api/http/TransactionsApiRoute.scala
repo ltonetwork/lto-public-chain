@@ -20,7 +20,7 @@ import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer._
-import com.ltonetwork.utils.Time
+import com.ltonetwork.utils._
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
@@ -168,10 +168,11 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     pathEndOrSingleSlash {
       handleExceptions(jsonExceptionHandler) {
         json[JsObject] { jsv =>
+          val enoughFee = 1000.lto
           val senderPk = (jsv \ "senderPublicKey").as[String]
           // Just for converting the request to the transaction
           val enrichedJsv = jsv ++ Json.obj(
-            "fee"    -> 0,
+            "fee"    -> enoughFee,
             "sender" -> senderPk
           )
           createTransaction(senderPk, enrichedJsv) { tx =>

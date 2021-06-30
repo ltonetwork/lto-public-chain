@@ -14,6 +14,7 @@ import com.ltonetwork.lang.v1.evaluator.ctx._
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.lto.LtoContext
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.{CryptoContext, PureContext}
 import com.ltonetwork.lang.v1.{FunctionHeader, ScriptEstimator}
+import com.ltonetwork.settings.Constants
 import com.ltonetwork.transaction.smart.{BlockchainContext, LtoEnvironment}
 import monix.eval.Coeval
 import monix.execution.UncaughtExceptionReporter
@@ -161,5 +162,9 @@ package object utils extends ScorexLogging {
     val module        = runtimeMirror.staticModule(fullClassName)
     val obj           = runtimeMirror.reflectModule(module)
     obj.instance.asInstanceOf[T]
+  }
+
+  implicit class DoubleExt(val d: Double) extends AnyVal {
+    def lto: Long = (d * Constants.UnitsInLTO).toLong
   }
 }
