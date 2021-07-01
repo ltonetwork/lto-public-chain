@@ -47,14 +47,19 @@ object TransactionDiffer {
             case sctx: CancelSponsorshipTransaction => SponsorshipTransactionDiff.cancel(blockchain, currentBlockHeight)(sctx)
             case _                                  => Left(UnsupportedTransactionType)
           }).map { d: Diff =>
-            val feeAccount: Address = tx.sponsor.getOrElse(tx.sender)
+            // Sponsored transaction
+            val feeAccount: Address = tx.sponsor.getOrElse(tx.sender).toAddress
+
+            // Sponsored account
             val feePayer: Address = blockchain
               .sponsorOf(feeAccount)
               .find(a => blockchain.portfolio(a).spendableBalance >= tx.fee)
               .getOrElse(tx.sender.toAddress)
-            Monoid.combine(d, Diff.empty.copy(portfolios = Map(feePayer -> Portfolio(-tx.fee))))
 
-            // TODO; if (feePayer != tx.sender) index fee payer of tx
+            // Effective fee sponsor. None if the fee is paid by the sender.
+            val feeSponsor = if (feePayer == tx.sender.toAddress) None else Some(feePayer)
+
+            Monoid.combine(d, Diff.fee(tx, feeSponsor, Map(feePayer -> Portfolio(-tx.fee))))
           }
       }
       positiveDiff <- BalanceDiffValidation(blockchain, currentBlockHeight, settings)(diff)

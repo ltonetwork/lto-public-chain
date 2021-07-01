@@ -6,47 +6,8 @@ import com.ltonetwork.account.Address
 import com.ltonetwork.transaction.Transaction
 import com.ltonetwork.transaction.smart.script.Script
 
-case class LeaseBalance(in: Long, out: Long)
-
-object LeaseBalance {
-  val empty = LeaseBalance(0, 0)
-
-  implicit val m: Monoid[LeaseBalance] = new Monoid[LeaseBalance] {
-    override def empty: LeaseBalance = LeaseBalance.empty
-
-    override def combine(x: LeaseBalance, y: LeaseBalance): LeaseBalance =
-      LeaseBalance(safeSum(x.in, y.in), safeSum(x.out, y.out))
-  }
-}
-
-case class VolumeAndFee(volume: Long, fee: Long)
-
-object VolumeAndFee {
-  val empty = VolumeAndFee(0, 0)
-
-  implicit val m: Monoid[VolumeAndFee] = new Monoid[VolumeAndFee] {
-    override def empty: VolumeAndFee = VolumeAndFee.empty
-
-    override def combine(x: VolumeAndFee, y: VolumeAndFee): VolumeAndFee =
-      VolumeAndFee(x.volume + y.volume, x.fee + y.fee)
-  }
-}
-
-case class AccountDataInfo(data: Map[String, DataEntry[_]])
-
-object AccountDataInfo {
-  implicit val accountDataInfoMonoid: Monoid[AccountDataInfo] = new Monoid[AccountDataInfo] {
-    override def empty: AccountDataInfo = AccountDataInfo(Map.empty)
-
-    override def combine(x: AccountDataInfo, y: AccountDataInfo): AccountDataInfo = AccountDataInfo(x.data ++ y.data)
-  }
-}
-
-object Sponsorship {
-  val FeeUnit = 100000
-}
-
 case class Diff(transactions: Map[ByteStr, (Int, Transaction, Set[Address])],
+                feeSponsors: Map[ByteStr, Address],
                 portfolios: Map[Address, Portfolio],
                 sponsoredBy: Map[Address, List[Address]], // multiple sponsors, first priority
                 leaseState: Map[ByteStr, Boolean],
@@ -77,21 +38,28 @@ object Diff {
             accountData: Map[Address, AccountDataInfo] = Map.empty): Diff =
     Diff(
       transactions = Map((tx.id(), (height, tx, portfolios.keys.toSet))),
+      feeSponsors = Map.empty,
       portfolios = portfolios,
       sponsoredBy = sponsoredBy,
       leaseState = leaseState,
       scripts = scripts,
-      accountData = accountData
+      accountData = accountData,
     )
 
-  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
+  def fee(tx: Transaction, feeSponsor: Option[Address], portfolios: Map[Address, Portfolio]): Diff = {
+    val feeSponsors = feeSponsor.map(address => Map((tx.id(), address))).getOrElse(Map.empty)
+    new Diff(Map.empty, feeSponsors, portfolios, Map.empty, Map.empty, Map.empty, Map.empty)
+  }
 
-  implicit val diffMonoid = new Monoid[Diff] {
+  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
+
+  implicit val diffMonoid: Monoid[Diff] = new Monoid[Diff] {
     override def empty: Diff = Diff.empty
 
     override def combine(older: Diff, newer: Diff): Diff =
       Diff(
         transactions = older.transactions ++ newer.transactions,
+        feeSponsors = older.feeSponsors ++ newer.feeSponsors,
         portfolios = older.portfolios.combine(newer.portfolios),
         sponsoredBy = older.sponsoredBy ++ newer.sponsoredBy, // whole list overriding
         leaseState = older.leaseState ++ newer.leaseState,

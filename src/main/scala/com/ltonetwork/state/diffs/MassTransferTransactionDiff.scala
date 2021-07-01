@@ -25,6 +25,6 @@ object MassTransferTransactionDiff {
     }
     val completePortfolio = recipientPortfolios.combine(Map(sender -> Portfolio(-totalAmount)))
 
-    Right(Diff(height, tx, completePortfolio))
+    Right(Diff(height, tx, portfolios = completePortfolio))
   }
 }

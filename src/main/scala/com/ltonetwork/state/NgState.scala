@@ -9,9 +9,9 @@ import com.ltonetwork.utils.ScorexLogging
 import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.block.{Block, MicroBlock}
 import com.ltonetwork.transaction.{DiscardedMicroBlocks, Transaction}
-import scala.collection.mutable.{ListBuffer => MList, Map => MMap}
 
 class NgState(val base: Block, val baseBlockDiff: Diff, val baseBlockCarry: Long, val approvedFeatures: Set[Short]) extends ScorexLogging {
+  import NgState._
 
   private val MaxTotalDiffs = 3
 
@@ -116,42 +116,47 @@ class NgState(val base: Block, val baseBlockDiff: Diff, val baseBlockCarry: Long
   def carryFee: Long = baseBlockCarry + microDiffs.values.map(_._2).sum
 }
 
-/**
-  * Allow atomically appends to state
-  * Return internal stack and mapping state without dirty reads
-  */
-private class SynchronizedAppendState[T, K, V](toKey: T => K) {
-  private def inLock[R](l: Lock, f: => R) = {
-    try {
-      l.lock()
-      val res = f
-      res
-    } finally {
-      l.unlock()
+object NgState {
+  /**
+    * Allow atomically appends to state
+    * Return internal stack and mapping state without dirty reads
+    */
+  private class SynchronizedAppendState[T, K, V](toKey: T => K) {
+    private def inLock[R](l: Lock, f: => R) = {
+      try {
+        l.lock()
+        val res = f
+        res
+      } finally {
+        l.unlock()
+      }
     }
-  }
-  private val lock                     = new ReentrantReadWriteLock
-  private def writeLock[B](f: => B): B = inLock(lock.writeLock(), f)
-  private def readLock[B](f: => B): B  = inLock(lock.readLock(), f)
 
-  @volatile private var internalStack = List.empty[T]
-  @volatile private var internalMap   = Map.empty[K, V]
+    private val lock = new ReentrantReadWriteLock
 
-  /**
-    * Stack state
-    */
-  def stack: List[T] = readLock(internalStack)
+    private def writeLock[B](f: => B): B = inLock(lock.writeLock(), f)
 
-  /**
-    * Mapping state
-    */
-  def mapping: Map[K, V] = readLock(internalMap)
+    private def readLock[B](f: => B): B = inLock(lock.readLock(), f)
 
-  /**
-    * Atomically appends to state both stack and map
-    */
-  def append(t: T, v: V): Unit = writeLock {
-    internalStack = t :: internalStack
-    internalMap = internalMap.updated(toKey(t), v)
+    @volatile private var internalStack = List.empty[T]
+    @volatile private var internalMap = Map.empty[K, V]
+
+    /**
+      * Stack state
+      */
+    def stack: List[T] = readLock(internalStack)
+
+    /**
+      * Mapping state
+      */
+    def mapping: Map[K, V] = readLock(internalMap)
+
+    /**
+      * Atomically appends to state both stack and map
+      */
+    def append(t: T, v: V): Unit = writeLock {
+      internalStack = t :: internalStack
+      internalMap = internalMap.updated(toKey(t), v)
+    }
   }
 }
