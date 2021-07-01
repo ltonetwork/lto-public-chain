@@ -72,6 +72,8 @@ object RevokeAssociationRequest {
       (JsPath \ "recipient").read[String].orElse((JsPath \ "party").read[String]) and
       (JsPath \ "associationType").read[Int] and
       (JsPath \ "hash").readNullable[ByteStr] and
+      (JsPath \ "sponsor").readNullable[String] and
+      (JsPath \ "sponsorPublicKey").readNullable[String] and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(RevokeAssociationRequest.apply _),
     Json.writes[RevokeAssociationRequest]
