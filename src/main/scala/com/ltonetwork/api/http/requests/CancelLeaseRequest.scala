@@ -16,11 +16,13 @@ case class CancelLeaseRequest(version: Option[Byte] = None,
                               senderPublicKey: Option[String] = None,
                               fee: Long,
                               leaseId: ByteStr,
+                              sponsor: Option[String] = None,
+                              sponsorPublicKey: Option[String] = None,
                               signature: Option[ByteStr] = None,
                               proofs: Option[Proofs] = None
     ) extends TxRequest[CancelLeaseTransaction] {
 
-  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, CancelLeaseTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, CancelLeaseTransaction] =
     for {
       validProofs  <- toProofs(signature, proofs)
       tx <- CancelLeaseTransaction.create(
@@ -30,21 +32,23 @@ case class CancelLeaseRequest(version: Option[Byte] = None,
         sender,
         fee,
         leaseId,
-        None,
+        sponsor,
         validProofs
       )
     } yield tx
 
   def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, CancelLeaseTransaction] = for {
-    senderAddress <- sender.toRight(GenericError("invalid.sender"))
-    senderAccount <- wallet.findPrivateKey(senderAddress)
-    signerAccount <- if (senderAddress == signerAddress) Right(senderAccount) else wallet.findPrivateKey(signerAddress)
+    accounts       <- resolveAccounts(wallet, signerAddress)
+    (senderAccount, sponsorAccount, signerAccount) = accounts
+    validProofs   <- toProofs(signature, proofs)
     tx <- CancelLeaseTransaction.signed(
       version.getOrElse(CancelLeaseTransaction.latestVersion),
       timestamp.getOrElse(time.getTimestamp()),
       senderAccount,
       fee,
       leaseId,
+      sponsorAccount,
+      validProofs,
       signerAccount
     )
   } yield tx
@@ -58,6 +62,8 @@ object CancelLeaseRequest {
       (JsPath \ "senderPublicKey").readNullable[String] and
       (JsPath \ "fee").read[Long] and
       (JsPath \ "leaseId").read[ByteStr].orElse((JsPath \ "txId").read[ByteStr]) and
+      (JsPath \ "sponsor").readNullable[String] and
+      (JsPath \ "sponsorPublicKey").readNullable[String] and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(CancelLeaseRequest.apply _),
     Json.writes[CancelLeaseRequest]

@@ -17,11 +17,13 @@ case class TransferRequest(version: Option[Byte] = None,
                            recipient: String,
                            amount: Long,
                            attachment: Option[ByteStr] = None,
+                           sponsor: Option[String] = None,
+                           sponsorPublicKey: Option[String] = None,
                            signature: Option[ByteStr] = None,
                            proofs: Option[Proofs] = None
     ) extends TxRequest[TransferTransaction] {
 
-  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, TransferTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, TransferTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
       validProofs    <- toProofs(signature, proofs)
@@ -34,16 +36,16 @@ case class TransferRequest(version: Option[Byte] = None,
         validRecipient,
         amount,
         attachment.getOrElse(ByteStr.empty).arr,
-        None,
+        sponsor,
         validProofs
       )
     } yield tx
 
   def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransferTransaction] = for {
-    senderAddress  <- sender.toRight(GenericError("invalid.sender"))
-    senderAccount  <- wallet.findPrivateKey(senderAddress)
-    signerAccount  <- if (senderAddress == signerAddress) Right(senderAccount) else wallet.findPrivateKey(signerAddress)
+    accounts       <- resolveAccounts(wallet, signerAddress)
+    (senderAccount, sponsorAccount, signerAccount) = accounts
     validRecipient <- Address.fromString(recipient)
+    validProofs    <- toProofs(signature, proofs)
     tx <- TransferTransaction.signed(
       version.getOrElse(TransferTransaction.latestVersion),
       timestamp.getOrElse(time.getTimestamp()),
@@ -52,6 +54,8 @@ case class TransferRequest(version: Option[Byte] = None,
       validRecipient,
       amount,
       attachment.getOrElse(ByteStr.empty).arr,
+      sponsorAccount,
+      validProofs,
       signerAccount
     )
   } yield tx}

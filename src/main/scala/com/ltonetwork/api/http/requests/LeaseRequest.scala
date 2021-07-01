@@ -16,11 +16,13 @@ case class LeaseRequest(version: Option[Byte] = None,
                         fee: Long,
                         recipient: String,
                         amount: Long,
+                        sponsor: Option[String] = None,
+                        sponsorPublicKey: Option[String] = None,
                         signature: Option[ByteStr] = None,
                         proofs: Option[Proofs] = None
     ) extends TxRequest[LeaseTransaction] {
 
-  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, LeaseTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, LeaseTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
       validProofs    <- toProofs(signature, proofs)
@@ -32,16 +34,16 @@ case class LeaseRequest(version: Option[Byte] = None,
         fee,
         validRecipient,
         amount,
-        None,
+        sponsor,
         validProofs
       )
     } yield tx
 
   def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, LeaseTransaction] = for {
-    senderAddress <- sender.toRight(GenericError("invalid.sender"))
-    senderAccount <- wallet.findPrivateKey(senderAddress)
-    signerAccount <- if (senderAddress == signerAddress) Right(senderAccount) else wallet.findPrivateKey(signerAddress)
+    accounts       <- resolveAccounts(wallet, signerAddress)
+    (senderAccount, sponsorAccount, signerAccount) = accounts
     validRecipient <- Address.fromString(recipient)
+    validProofs    <- toProofs(signature, proofs)
     tx <- LeaseTransaction.signed(
       version.getOrElse(LeaseTransaction.latestVersion),
       timestamp.getOrElse(time.getTimestamp()),
@@ -49,6 +51,8 @@ case class LeaseRequest(version: Option[Byte] = None,
       fee,
       validRecipient,
       amount,
+      sponsorAccount,
+      validProofs,
       signerAccount
     )
   } yield tx

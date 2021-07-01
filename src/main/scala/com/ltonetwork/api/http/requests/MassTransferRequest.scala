@@ -17,11 +17,13 @@ case class MassTransferRequest(version: Option[Byte] = None,
                                fee: Long,
                                transfers: List[Transfer],
                                attachment: Option[ByteStr] = None,
+                               sponsor: Option[String] = None,
+                               sponsorPublicKey: Option[String] = None,
                                signature: Option[ByteStr] = None,
                                proofs: Option[Proofs] = None
     ) extends TxRequest[MassTransferTransaction] {
 
-  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, MassTransferTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, MassTransferTransaction] =
     for {
       validTransfers <- MassTransferTransaction.parseTransfersList(transfers)
       validProofs <- toProofs(signature, proofs)
@@ -33,16 +35,16 @@ case class MassTransferRequest(version: Option[Byte] = None,
         fee,
         validTransfers,
         attachment.getOrElse(ByteStr.empty).arr,
-        None,
+        sponsor,
         validProofs
       )
     } yield tx
 
   def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, MassTransferTransaction] = for {
-    senderAddress  <- sender.toRight(GenericError("invalid.sender"))
-    senderAccount  <- wallet.findPrivateKey(senderAddress)
-    signerAccount  <- if (senderAddress == signerAddress) Right(senderAccount) else wallet.findPrivateKey(signerAddress)
+    accounts       <- resolveAccounts(wallet, signerAddress)
+    (senderAccount, sponsorAccount, signerAccount) = accounts
     validTransfers <- MassTransferTransaction.parseTransfersList(transfers)
+    validProofs <- toProofs(signature, proofs)
     tx <- MassTransferTransaction.signed(
       version.getOrElse(MassTransferTransaction.latestVersion),
       timestamp.getOrElse(time.getTimestamp()),
@@ -50,6 +52,8 @@ case class MassTransferRequest(version: Option[Byte] = None,
       fee,
       validTransfers,
       attachment.getOrElse(ByteStr.empty).arr,
+      sponsorAccount,
+      validProofs,
       signerAccount
     )
   } yield tx

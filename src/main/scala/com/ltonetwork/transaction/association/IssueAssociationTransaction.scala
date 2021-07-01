@@ -47,7 +47,7 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
   val StringHashLength: Int = com.ltonetwork.utils.base58Length(IssueAssociationTransaction.MaxHashLength)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
@@ -107,8 +107,10 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
              assocType: Int,
              expires: Option[Long],
              hash: Option[ByteStr],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
-    create(version, None, timestamp, sender, fee, recipient, assocType, expires, hash, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, recipient, assocType, expires, hash, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
@@ -118,5 +120,5 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
                  assocType: Int,
                  expires: Option[Long],
                  hash: Option[ByteStr]): Either[ValidationError, IssueAssociationTransaction] =
-    signed(version, timestamp, sender, fee, recipient, assocType, expires, hash, sender)
+    signed(version, timestamp, sender, fee, recipient, assocType, expires, hash, None, Proofs.empty, sender)
 }

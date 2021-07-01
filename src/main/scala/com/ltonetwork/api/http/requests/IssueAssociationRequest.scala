@@ -19,14 +19,16 @@ case class IssueAssociationRequest(version: Option[Byte] = None,
                                    associationType: Int,
                                    expires: Option[Long] = None,
                                    hash: Option[ByteStr] = None,
+                                   sponsor: Option[String] = None,
+                                   sponsorPublicKey: Option[String] = None,
                                    signature: Option[ByteStr] = None,
                                    proofs: Option[Proofs] = None,
     ) extends TxRequest[IssueAssociationTransaction] {
 
-  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, IssueAssociationTransaction] =
     for {
-      validProofs <- toProofs(signature, proofs)
       validRecipient <- Address.fromString(recipient)
+      validProofs <- toProofs(signature, proofs)
       tx <- IssueAssociationTransaction.create(
         version.getOrElse(IssueAssociationTransaction.latestVersion),
         None,
@@ -37,16 +39,16 @@ case class IssueAssociationRequest(version: Option[Byte] = None,
         associationType,
         expires,
         hash.noneIfEmpty,
-        None,
+        sponsor,
         validProofs
       )
     } yield tx
 
   def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, IssueAssociationTransaction] = for {
-    senderAddress <- sender.toRight(GenericError("invalid.sender"))
-    senderAccount <- wallet.findPrivateKey(senderAddress)
-    signerAccount <- if (senderAddress == signerAddress) Right(senderAccount) else wallet.findPrivateKey(signerAddress)
+    accounts       <- resolveAccounts(wallet, signerAddress)
+    (senderAccount, sponsorAccount, signerAccount) = accounts
     validRecipient <- Address.fromString(recipient)
+    validProofs    <- toProofs(signature, proofs)
     tx <- IssueAssociationTransaction.signed(
       version.getOrElse(IssueAssociationTransaction.latestVersion),
       timestamp.getOrElse(time.getTimestamp()),
@@ -56,6 +58,8 @@ case class IssueAssociationRequest(version: Option[Byte] = None,
       associationType,
       expires,
       hash.noneIfEmpty,
+      sponsorAccount,
+      validProofs,
       signerAccount
     )
   } yield tx
@@ -72,6 +76,8 @@ object IssueAssociationRequest {
       (JsPath \ "associationType").read[Int] and
       (JsPath \ "expires").readNullable[Long] and
       (JsPath \ "hash").readNullable[ByteStr] and
+      (JsPath \ "sponsor").readNullable[String] and
+      (JsPath \ "sponsorPublicKey").readNullable[String] and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(IssueAssociationRequest.apply _),
     Json.writes[IssueAssociationRequest]

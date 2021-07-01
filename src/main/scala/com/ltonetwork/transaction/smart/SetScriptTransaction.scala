@@ -45,7 +45,7 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
   }
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
@@ -81,13 +81,15 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
              sender: PublicKeyAccount,
              fee: Long,
              script: Option[Script],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, script, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, script, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
                  sender: PrivateKeyAccount,
                  fee: Long,
                  script: Option[Script]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, script, sender)
+    signed(version, timestamp, sender, fee, script, None, Proofs.empty, sender)
 }

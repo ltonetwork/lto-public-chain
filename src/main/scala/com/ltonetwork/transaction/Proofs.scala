@@ -14,6 +14,8 @@ case class Proofs private (proofs: Seq[ByteStr]) {
   val base58: Coeval[Seq[String]] = Coeval.evalOnce(proofs.map(p => Base58.encode(p.arr)))
   def toSignature: ByteStr        = proofs.headOption.getOrElse(ByteStr.empty)
   override def toString: String   = s"Proofs(${proofs.mkString(", ")})"
+
+  def ++(other: Proofs): Proofs = Proofs(this.proofs ++ other.proofs)
 }
 
 object Proofs {

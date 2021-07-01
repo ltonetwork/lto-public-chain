@@ -15,11 +15,13 @@ case class DataRequest(version: Option[Byte] = None,
                        senderPublicKey: Option[String] = None,
                        fee: Long,
                        data: List[DataEntry[_]],
+                       sponsor: Option[String] = None,
+                       sponsorPublicKey: Option[String] = None,
                        signature: Option[ByteStr] = None,
                        proofs: Option[Proofs] = None
     ) extends TxRequest[DataTransaction] {
 
-  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, DataTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, DataTransaction] =
     for {
       validProofs    <- toProofs(signature, proofs)
       tx <- DataTransaction.create(
@@ -29,21 +31,23 @@ case class DataRequest(version: Option[Byte] = None,
         sender,
         fee,
         data,
-        None,
+        sponsor,
         validProofs
       )
     } yield tx
 
   def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, DataTransaction] = for {
-    senderAddress  <- sender.toRight(GenericError("invalid.sender"))
-    senderAccount  <- wallet.findPrivateKey(senderAddress)
-    signerAccount  <- if (senderAddress == signerAddress) Right(senderAccount) else wallet.findPrivateKey(signerAddress)
+    accounts       <- resolveAccounts(wallet, signerAddress)
+    (senderAccount, sponsorAccount, signerAccount) = accounts
+    validProofs    <- toProofs(signature, proofs)
     tx <- DataTransaction.signed(
       version.getOrElse(DataTransaction.latestVersion),
       timestamp.getOrElse(time.getTimestamp()),
       senderAccount,
       fee,
       data,
+      sponsorAccount,
+      validProofs,
       signerAccount
     )
   } yield tx

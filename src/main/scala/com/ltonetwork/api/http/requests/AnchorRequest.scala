@@ -16,14 +16,16 @@ case class AnchorRequest(version: Option[Byte] = None,
                          senderPublicKey: Option[String] = None,
                          fee: Long,
                          anchors: List[String],
+                         sponsor: Option[String] = None,
+                         sponsorPublicKey: Option[String] = None,
                          signature: Option[ByteStr] = None,
                          proofs: Option[Proofs] = None,
     ) extends TxRequest[AnchorTransaction] {
 
-  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, AnchorTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, AnchorTransaction] =
     for {
-      validProofs  <- toProofs(signature, proofs)
       validAnchors <- anchors.traverse(s => parseBase58(s, "invalid anchor", AnchorTransaction.MaxAnchorStringSize))
+      validProofs  <- toProofs(signature, proofs)
       tx <- AnchorTransaction.create(
         version.getOrElse(AnchorTransaction.latestVersion),
         None,
@@ -31,22 +33,24 @@ case class AnchorRequest(version: Option[Byte] = None,
         sender,
         fee,
         validAnchors,
-        None,
+        sponsor,
         validProofs
       )
     } yield tx
 
   def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, AnchorTransaction] = for {
-    senderAddress <- sender.toRight(GenericError("invalid.sender"))
-    senderAccount <- wallet.findPrivateKey(senderAddress)
-    signerAccount <- if (senderAddress == signerAddress) Right(senderAccount) else wallet.findPrivateKey(signerAddress)
-    validAnchors  <- anchors.traverse(s => parseBase58(s, "invalid anchor", AnchorTransaction.MaxAnchorStringSize))
+    accounts       <- resolveAccounts(wallet, signerAddress)
+    (senderAccount, sponsorAccount, signerAccount) = accounts
+    validAnchors   <- anchors.traverse(s => parseBase58(s, "invalid anchor", AnchorTransaction.MaxAnchorStringSize))
+    validProofs    <- toProofs(signature, proofs)
     tx <- AnchorTransaction.signed(
       version.getOrElse(AnchorTransaction.latestVersion),
       timestamp.getOrElse(time.getTimestamp()),
       senderAccount,
       fee,
       validAnchors,
+      sponsorAccount,
+      validProofs,
       signerAccount
     )
   } yield tx

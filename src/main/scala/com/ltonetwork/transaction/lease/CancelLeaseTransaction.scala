@@ -42,7 +42,7 @@ object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransact
   override def supportedVersions: Set[Byte] = Set(1, 2)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => CancelLeaseSerializerV1
@@ -85,9 +85,11 @@ object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransact
              sender: PublicKeyAccount,
              fee: Long,
              leaseId: ByteStr,
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, leaseId, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, leaseId, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, leaseId: ByteStr): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, leaseId, sender)
+    signed(version, timestamp, sender, fee, leaseId, None, Proofs.empty, sender)
 }

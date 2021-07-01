@@ -60,7 +60,7 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
   val MaxAttachmentStringSize: Int = base58Length(MaxAttachmentSize)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => TransferSerializerV1
@@ -108,8 +108,10 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
              recipient: Address,
              amount: Long,
              attachment: Array[Byte],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, recipient, amount, attachment, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
@@ -118,5 +120,5 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
                  recipient: Address,
                  amount: Long,
                  attachment: Array[Byte]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, recipient, amount, attachment, sender)
+    signed(version, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.empty, sender)
 }

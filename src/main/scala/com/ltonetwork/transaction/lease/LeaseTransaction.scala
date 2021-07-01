@@ -45,7 +45,7 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
   }
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => LeaseSerializerV1
@@ -92,8 +92,10 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
              fee: Long,
              recipient: Address,
              amount: Long,
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, amount, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, recipient, amount, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,

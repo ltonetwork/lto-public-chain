@@ -56,7 +56,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
   case class ParsedTransfer(address: Address, amount: Long)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   implicit object Validator extends TxValidator[TransactionT] {
     private def validateTotalAmount(tx: TransactionT): ValidatedNel[ValidationError, None.type] =
@@ -112,8 +112,10 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
              fee: Long,
              transfers: List[ParsedTransfer],
              attachment: Array[Byte],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, transfers, attachment, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, transfers, attachment, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
@@ -121,7 +123,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
                  fee: Long,
                  transfers: List[ParsedTransfer],
                  attachment: Array[Byte]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, transfers, attachment, sender)
+    signed(version, timestamp, sender, fee, transfers, attachment, None, Proofs.empty, sender)
 
   def parseTransfersList(transfers: List[Transfer]): Validation[List[ParsedTransfer]] = {
     transfers.traverse {

@@ -45,7 +45,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
   val StringHashLength: Int = IssueAssociationTransaction.StringHashLength
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
@@ -100,8 +100,10 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
              recipient: Address,
              assocType: Int,
              hash: Option[ByteStr],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
-    create(version, None, timestamp, sender, fee, recipient, assocType, hash, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, recipient, assocType, hash, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
@@ -110,5 +112,5 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
                  recipient: Address,
                  assocType: Int,
                  hash: Option[ByteStr]): Either[ValidationError, RevokeAssociationTransaction] =
-    signed(version, timestamp, sender, fee, recipient, assocType, hash, sender)
+    signed(version, timestamp, sender, fee, recipient, assocType, hash, None, Proofs.empty, sender)
 }

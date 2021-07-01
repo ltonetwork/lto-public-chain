@@ -38,7 +38,7 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
   val MaxEntryCount: Int = 100
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
@@ -79,13 +79,15 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
              sender: PublicKeyAccount,
              fee: Long,
              data: List[DataEntry[_]],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, data, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, data, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
                  sender: PrivateKeyAccount,
                  fee: Long,
                  data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, data, sender)
+    signed(version, timestamp, sender, fee, data, None, Proofs.empty, sender)
 }

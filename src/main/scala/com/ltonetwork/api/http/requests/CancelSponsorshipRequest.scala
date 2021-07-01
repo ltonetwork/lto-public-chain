@@ -15,11 +15,13 @@ case class CancelSponsorshipRequest(version: Option[Byte] = None,
                                     senderPublicKey: Option[String] = None,
                                     fee: Long,
                                     recipient: String,
+                                    sponsor: Option[String] = None,
+                                    sponsorPublicKey: Option[String] = None,
                                     signature: Option[ByteStr] = None,
                                     proofs: Option[Proofs] = None
                                    ) extends TxRequest[CancelSponsorshipTransaction] {
 
-  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, CancelSponsorshipTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, CancelSponsorshipTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
       validProofs <- toProofs(signature, proofs)
@@ -30,22 +32,24 @@ case class CancelSponsorshipRequest(version: Option[Byte] = None,
         sender,
         fee,
         validRecipient,
-        None,
+        sponsor,
         validProofs
       )
     } yield tx
 
   def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, CancelSponsorshipTransaction] = for {
-    senderAddress  <- sender.toRight(GenericError("invalid.sender"))
-    senderAccount  <- wallet.findPrivateKey(senderAddress)
-    signerAccount  <- if (senderAddress == signerAddress) Right(senderAccount) else wallet.findPrivateKey(signerAddress)
+    accounts       <- resolveAccounts(wallet, signerAddress)
+    (senderAccount, sponsorAccount, signerAccount) = accounts
     validRecipient <- Address.fromString(recipient)
+    validProofs   <- toProofs(signature, proofs)
     tx <- CancelSponsorshipTransaction.signed(
       version.getOrElse(CancelSponsorshipTransaction.latestVersion),
       timestamp.getOrElse(time.getTimestamp()),
       senderAccount,
       fee,
       validRecipient,
+      sponsorAccount,
+      validProofs,
       signerAccount
     )
   } yield tx

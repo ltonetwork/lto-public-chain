@@ -39,7 +39,7 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
   val MaxAnchorStringSize: Int = base58Length(EntryLength.last)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
@@ -62,7 +62,7 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => AnchorSerializerV1
-    //case 3 => AnchorSerializerV3
+    case 3 => AnchorSerializerV3
     case _ => UnknownSerializer
   }
 
@@ -81,9 +81,11 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
              sender: PublicKeyAccount,
              fee: Long,
              anchors: List[ByteStr],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, anchors, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, anchors, sponsor, proofs).signWith(signer)
 
-  def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, data: List[ByteStr]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, data, sender)
+  def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, anchors: List[ByteStr]): Either[ValidationError, TransactionT] =
+    signed(version, timestamp, sender, fee, anchors, None, Proofs.empty, sender)
 }

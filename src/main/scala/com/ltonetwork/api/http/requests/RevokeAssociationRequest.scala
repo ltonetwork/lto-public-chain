@@ -18,14 +18,16 @@ case class RevokeAssociationRequest(version: Option[Byte] = None,
                                     recipient: String,
                                     associationType: Int,
                                     hash: Option[ByteStr] = None,
+                                    sponsor: Option[String] = None,
+                                    sponsorPublicKey: Option[String] = None,
                                     signature: Option[ByteStr] = None,
                                     proofs: Option[Proofs] = None,
     ) extends TxRequest[RevokeAssociationTransaction] {
 
-  def toTxFrom(sender: PublicKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, RevokeAssociationTransaction] =
     for {
-      validProofs <- toProofs(signature, proofs)
       validRecipient <- Address.fromString(recipient)
+      validProofs <- toProofs(signature, proofs)
       tx <- RevokeAssociationTransaction.create(
         version.getOrElse(RevokeAssociationTransaction.latestVersion),
         None,
@@ -35,16 +37,16 @@ case class RevokeAssociationRequest(version: Option[Byte] = None,
         validRecipient,
         associationType,
         hash.noneIfEmpty,
-        None,
+        sponsor,
         validProofs
       )
     } yield tx
 
   def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, RevokeAssociationTransaction] = for {
-    senderAddress <- sender.toRight(GenericError("invalid.sender"))
-    senderAccount <- wallet.findPrivateKey(senderAddress)
-    signerAccount <- if (senderAddress == signerAddress) Right(senderAccount) else wallet.findPrivateKey(signerAddress)
+    accounts       <- resolveAccounts(wallet, signerAddress)
+    (senderAccount, sponsorAccount, signerAccount) = accounts
     validRecipient <- Address.fromString(recipient)
+    validProofs <- toProofs(signature, proofs)
     tx <- RevokeAssociationTransaction.signed(
       version.getOrElse(RevokeAssociationTransaction.latestVersion),
       timestamp.getOrElse(time.getTimestamp()),
@@ -53,6 +55,8 @@ case class RevokeAssociationRequest(version: Option[Byte] = None,
       validRecipient,
       associationType,
       hash.noneIfEmpty,
+      sponsorAccount,
+      validProofs,
       signerAccount
     )
   } yield tx
