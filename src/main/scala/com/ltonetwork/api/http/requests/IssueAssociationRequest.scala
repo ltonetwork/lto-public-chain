@@ -80,6 +80,6 @@ object IssueAssociationRequest {
       (JsPath \ "sponsorPublicKey").readNullable[String] and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(IssueAssociationRequest.apply _),
-    Json.writes[IssueAssociationRequest]
+    Json.writes[IssueAssociationRequest].transform((json: JsObject) => Json.obj("type" -> IssueAssociationTransaction.typeId.toInt) ++ json)
   )
 }

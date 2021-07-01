@@ -8,7 +8,8 @@ import monix.eval.Coeval
 import com.ltonetwork.serialization.{BytesSerializable, JsonSerializable}
 import com.ltonetwork.transaction.Transaction.SigProofsSwitch
 import com.ltonetwork.utils.Base58
-import play.api.libs.json.{JsArray, JsObject, JsString, Json}
+import play.api.libs.json.Json.JsValueWrapper
+import play.api.libs.json.{JsArray, JsObject, JsString, JsValue, Json}
 
 trait Transaction extends BytesSerializable with JsonSerializable {
   def builder: TransactionBuilder

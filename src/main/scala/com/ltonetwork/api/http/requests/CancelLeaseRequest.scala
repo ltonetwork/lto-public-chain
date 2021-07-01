@@ -66,6 +66,6 @@ object CancelLeaseRequest {
       (JsPath \ "sponsorPublicKey").readNullable[String] and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(CancelLeaseRequest.apply _),
-    Json.writes[CancelLeaseRequest]
+    Json.writes[CancelLeaseRequest].transform((json: JsObject) => Json.obj("type" -> CancelLeaseTransaction.typeId.toInt) ++ json)
   )
 }

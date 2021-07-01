@@ -103,5 +103,5 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
                  fee: Long,
                  recipient: Address,
                  amount: Long): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, recipient, amount, sender)
+    signed(version, timestamp, sender, fee, recipient, amount, None, Proofs.empty, sender)
 }

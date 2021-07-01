@@ -8,7 +8,7 @@ import com.ltonetwork.transaction.transfer.MassTransferTransaction.Transfer
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, JsObject, Json}
 
 case class MassTransferRequest(version: Option[Byte] = None,
                                timestamp: Option[Long] = None,
@@ -60,5 +60,8 @@ case class MassTransferRequest(version: Option[Byte] = None,
 }
 
 object MassTransferRequest {
-  implicit val jsonFormat: Format[MassTransferRequest] = Json.format
+  implicit val jsonFormat: Format[MassTransferRequest] = Format(
+    Json.reads[MassTransferRequest],
+    Json.writes[MassTransferRequest].transform((json: JsObject) => Json.obj("type" -> MassTransferTransaction.typeId.toInt) ++ json)
+  )
 }

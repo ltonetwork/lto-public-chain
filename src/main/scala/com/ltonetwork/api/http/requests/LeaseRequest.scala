@@ -7,7 +7,7 @@ import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, JsObject, Json}
 
 case class LeaseRequest(version: Option[Byte] = None,
                         timestamp: Option[Long] = None,
@@ -59,5 +59,8 @@ case class LeaseRequest(version: Option[Byte] = None,
 }
 
 object LeaseRequest {
-  implicit val jsonFormat: Format[LeaseRequest] = Json.format
+  implicit val jsonFormat: Format[LeaseRequest] = Format(
+    Json.reads[LeaseRequest],
+    Json.writes[LeaseRequest].transform((json: JsObject) => Json.obj("type" -> LeaseTransaction.typeId.toInt) ++ json)
+  )
 }

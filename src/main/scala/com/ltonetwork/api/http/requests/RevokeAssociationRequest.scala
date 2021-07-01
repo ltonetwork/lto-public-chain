@@ -76,6 +76,6 @@ object RevokeAssociationRequest {
       (JsPath \ "sponsorPublicKey").readNullable[String] and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(RevokeAssociationRequest.apply _),
-    Json.writes[RevokeAssociationRequest]
+    Json.writes[RevokeAssociationRequest].transform((json: JsObject) => Json.obj("type" -> RevokeAssociationTransaction.typeId.toInt) ++ json)
   )
 }

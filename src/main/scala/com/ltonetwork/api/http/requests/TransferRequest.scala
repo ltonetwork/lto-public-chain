@@ -61,5 +61,8 @@ case class TransferRequest(version: Option[Byte] = None,
   } yield tx}
 
 object TransferRequest {
-  implicit val jsonFormat: Format[TransferRequest] = Json.format
+  implicit val jsonFormat: Format[TransferRequest] = Format(
+    Json.reads[TransferRequest],
+    Json.writes[TransferRequest].transform((json: JsObject) => Json.obj("type" -> TransferTransaction.typeId.toInt) ++ json)
+  )
 }

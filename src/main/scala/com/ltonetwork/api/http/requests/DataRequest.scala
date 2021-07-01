@@ -7,7 +7,7 @@ import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, JsObject, Json}
 
 case class DataRequest(version: Option[Byte] = None,
                        timestamp: Option[Long] = None,
@@ -54,5 +54,8 @@ case class DataRequest(version: Option[Byte] = None,
 }
 
 object DataRequest {
-  implicit val jsonFormat: Format[DataRequest] = Json.format[DataRequest]
+  implicit val jsonFormat: Format[DataRequest] = Format(
+    Json.reads[DataRequest],
+    Json.writes[DataRequest].transform((json: JsObject) => Json.obj("type" -> DataTransaction.typeId.toInt) ++ json)
+  )
 }

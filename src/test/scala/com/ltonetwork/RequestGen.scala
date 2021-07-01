@@ -42,16 +42,16 @@ trait RequestGen extends TransactionGen { _: Suite =>
     _signature <- signatureGen
     _timestamp <- ntpTimestampGen
     _tr        <- transferReq
-  } yield TransferRequest(Some(1), Some(_timestamp), _tr.sender, None, _tr.fee, _tr.recipient, _tr.amount, _tr.attachment, Some(_signature))
+  } yield TransferRequest(Some(1), Some(_timestamp), _tr.sender, None, _tr.fee, _tr.recipient, _tr.amount, _tr.attachment, signature = Some(_signature))
 
   val leaseReq: G[LeaseRequest] = for {
     _signature <- signatureGen
     _timestamp <- ntpTimestampGen
     _lease     <- leaseGen
-  } yield LeaseRequest(Some(1), Some(_timestamp), Some(_lease.sender.toString), None, _lease.fee, _lease.recipient.toString, _lease.amount, Some(_signature))
+  } yield LeaseRequest(Some(1), Some(_timestamp), Some(_lease.sender.toString), None, _lease.fee, _lease.recipient.toString, _lease.amount, signature = Some(_signature))
 
   val leaseCancelReq: G[CancelLeaseRequest] = for {
     _signature <- signatureGen
     _cancel    <- leaseCancelGen
-  } yield CancelLeaseRequest(Some(1), Some(_cancel.timestamp), Some(_cancel.sender.toString), None, _cancel.fee, _cancel.leaseId, Some(_signature))
+  } yield CancelLeaseRequest(Some(1), Some(_cancel.timestamp), Some(_cancel.sender.toString), None, _cancel.fee, _cancel.leaseId, signature = Some(_signature))
 }

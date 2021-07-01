@@ -1,7 +1,7 @@
 package com.ltonetwork.it.sync.transactions
 
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.requests.transfer.SignedTransferV1Request
+import com.ltonetwork.api.http.requests.TransferRequest
 import com.ltonetwork.crypto
 import com.ltonetwork.it.api.SyncHttpApi._
 import com.ltonetwork.it.sync._
@@ -95,7 +95,7 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite {
                  "amount"     -> 1.lto,
                  "attachment" -> Base58.encode("falafel".getBytes)),
         usesProofs = Option(v).nonEmpty,
-        version = v
+        version = Some(v)
       )
     }
   }
@@ -120,9 +120,9 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite {
       val leaseId =
         signBroadcastAndCalcFee(Json.obj("type" -> 8, "sender" -> firstAddress, "amount" -> 1.lto, "recipient" -> secondAddress),
                                 usesProofs = isProof,
-                                version = v)
+                                version = Some(v))
 
-      signBroadcastAndCalcFee(Json.obj("type" -> 9, "sender" -> firstAddress, "txId" -> leaseId), usesProofs = isProof, version = v)
+      signBroadcastAndCalcFee(Json.obj("type" -> 9, "sender" -> firstAddress, "txId" -> leaseId), usesProofs = isProof, version = Some(v))
     }
   }
 
@@ -167,8 +167,8 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite {
     val signedRequestResponse = sender.postJsonWithApiKey(s"/transactions/sign/$thirdAddress", json)
     assert(signedRequestResponse.getStatusCode == HttpConstants.ResponseStatusCodes.OK_200)
     val signedRequestJson = Json.parse(signedRequestResponse.getResponseBody)
-    val signedRequest     = signedRequestJson.as[SignedTransferV1Request]
-    assert(PublicKeyAccount.fromBase58String(signedRequest.senderPublicKey).explicitGet().address == firstAddress)
+    val signedRequest     = signedRequestJson.as[TransferRequest]
+    assert(PublicKeyAccount.fromBase58String(signedRequest.senderPublicKey.get).explicitGet().address == firstAddress)
     assert(signedRequest.recipient == secondAddress)
     assert(signedRequest.fee == 25000000)
     assert(signedRequest.amount == 1.lto)
@@ -178,11 +178,11 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite {
     assert(crypto.verify(signature, tx.bodyBytes(), privateKey.publicKey))
   }
 
-  private def signBroadcastAndCalcFee(json: JsObject, usesProofs: Boolean, version: String = null, fee: Option[Long] = None): String = {
+  private def signBroadcastAndCalcFee(json: JsObject, usesProofs: Boolean, version: Option[String] = None, fee: Option[Long] = None): String = {
     val jsWithPK        = json ++ Json.obj("senderPublicKey" -> sender.publicKey.toString)
     val actualFee: Long = fee.getOrElse(sender.calculateFee(jsWithPK).feeAmount)
     val jsWithFee       = jsWithPK ++ Json.obj("fee" -> actualFee)
-    val js              = if (Option(version).isDefined) jsWithFee ++ Json.obj("version" -> version.toInt) else jsWithFee
+    val js              = jsWithFee ++ version.map(v => Json.obj("version" -> v.toInt)).getOrElse(Json.obj())
     val rs              = sender.postJsonWithApiKey("/transactions/sign", js)
     assert(rs.getStatusCode == HttpConstants.ResponseStatusCodes.OK_200)
     val body = Json.parse(rs.getResponseBody)

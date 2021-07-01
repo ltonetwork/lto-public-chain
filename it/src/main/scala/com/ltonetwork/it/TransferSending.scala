@@ -136,16 +136,14 @@ trait TransferSending extends ScorexLogging {
   protected def createSignedTransferRequest(tx: TransferTransaction): TransferRequest = {
     import tx._
     requests.TransferRequest(
-      Some(2),
-      Some(timestamp),
-      Some(Base58.encode(sender.publicKey)),
-      None,
-      fee,
-      recipient.stringRepr,
-      amount,
-      Some(ByteStr(attachment)),
-      None,
-      Some(proofs)
+      version = Some(2),
+      timestamp = Some(timestamp),
+      sender = Some(Base58.encode(sender.publicKey)),
+      fee = fee,
+      recipient = recipient.stringRepr,
+      amount = amount,
+      attachment = Some(ByteStr(attachment)),
+      proofs = Some(proofs)
     )
   }
 

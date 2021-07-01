@@ -7,7 +7,7 @@ import com.ltonetwork.transaction.sponsorship.SponsorshipTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, JsObject, Json}
 
 case class SponsorshipRequest(version: Option[Byte] = None,
                               timestamp: Option[Long] = None,
@@ -56,5 +56,8 @@ case class SponsorshipRequest(version: Option[Byte] = None,
 }
 
 object SponsorshipRequest {
-  implicit val jsonFormat: Format[SponsorshipRequest] = Json.format
+  implicit val jsonFormat: Format[SponsorshipRequest] = Format(
+    Json.reads[SponsorshipRequest],
+    Json.writes[SponsorshipRequest].transform((json: JsObject) => Json.obj("type" -> SponsorshipTransaction.typeId.toInt) ++ json)
+  )
 }

@@ -8,7 +8,7 @@ import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, JsObject, Json, OWrites}
 
 case class SetScriptRequest(version: Option[Byte] = None,
                             timestamp: Option[Long] = None,
@@ -62,5 +62,11 @@ case class SetScriptRequest(version: Option[Byte] = None,
 }
 
 object SetScriptRequest {
-  implicit val jsonFormat: Format[SetScriptRequest] = Json.format[SetScriptRequest]
+  implicit val jsonFormat: Format[SetScriptRequest] = Format(
+    Json.reads[SetScriptRequest],
+    Json.writes[SetScriptRequest].transform((json: JsObject) => Json.obj("type" -> SetScriptTransaction.typeId.toInt) ++ json)
+  )
+
+  // Needed for compiling the tests. But why?
+  implicit val jsonWrites: OWrites[SetScriptRequest] = Json.writes[SetScriptRequest]
 }

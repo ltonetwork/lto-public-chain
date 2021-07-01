@@ -8,7 +8,7 @@ import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, JsNumber, JsObject, Json, OWrites}
 
 case class AnchorRequest(version: Option[Byte] = None,
                          timestamp: Option[Long] = None,
@@ -57,5 +57,8 @@ case class AnchorRequest(version: Option[Byte] = None,
 }
 
 object AnchorRequest {
-  implicit val jsonFormat: Format[AnchorRequest] = Json.format[AnchorRequest]
+  implicit val jsonFormat: Format[AnchorRequest] = Format(
+    Json.reads[AnchorRequest],
+    Json.writes[AnchorRequest].transform((json: JsObject) => Json.obj("type" -> AnchorTransaction.typeId.toInt) ++ json)
+  )
 }

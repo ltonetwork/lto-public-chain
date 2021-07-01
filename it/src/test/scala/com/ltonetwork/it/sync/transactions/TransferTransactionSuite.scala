@@ -1,12 +1,12 @@
 package com.ltonetwork.it.sync.transactions
 
 import com.ltonetwork.account.Address
-import com.ltonetwork.api.http.requests.transfer.SignedTransferV1Request
+import com.ltonetwork.api.http.requests.TransferRequest
 import com.ltonetwork.it.api.SyncHttpApi._
 import com.ltonetwork.it.sync._
 import com.ltonetwork.it.transactions.BaseTransactionSuite
 import com.ltonetwork.it.util._
-import com.ltonetwork.state.EitherExt2
+import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.Base58
 import org.scalatest.CancelAfterFailure
@@ -35,19 +35,16 @@ class TransferTransactionSuite extends BaseTransactionSuite with CancelAfterFail
         .right
         .get
 
-    def request(tx: TransferTransaction): SignedTransferV1Request =
-      SignedTransferV1Request(
-        Base58.encode(tx.sender.publicKey),
-        tx.recipient.stringRepr,
-        tx.amount,
-        tx.fee,
-        tx.timestamp,
-        tx.attachment.headOption.map(_ => Base58.encode(tx.attachment)),
-        tx.signature.base58
+    def request(tx: TransferTransaction): TransferRequest =
+      TransferRequest(
+        senderPublicKey = Some(Base58.encode(tx.sender.publicKey)),
+        recipient = tx.recipient.stringRepr,
+        amount = tx.amount,
+        fee = tx.fee,
+        timestamp = Some(tx.timestamp),
+        attachment = Some(ByteStr(tx.attachment)),
+        signature = Some(tx.signature)
       )
-
-    implicit val w =
-      Json.writes[SignedTransferV1Request].transform((jsobj: JsObject) => jsobj + ("type" -> JsNumber(TransferTransaction.typeId.toInt)))
 
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
 
