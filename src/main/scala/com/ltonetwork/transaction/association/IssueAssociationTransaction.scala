@@ -33,8 +33,8 @@ case class IssueAssociationTransaction private (version: Byte,
       "associationType" -> assocType,
       "party"           -> recipient.stringRepr,
     ) ++
-    expires.map(h => Json.obj("expires" -> expires)).getOrElse(Json.obj()) ++
-    hash.map(h => Json.obj("hash" -> h.base58)).getOrElse(Json.obj())
+    expires.fold(Json.obj())(e => Json.obj("expires" -> e)) ++
+    hash.fold(Json.obj())(h => Json.obj("hash" -> h.base58))
   )
 }
 

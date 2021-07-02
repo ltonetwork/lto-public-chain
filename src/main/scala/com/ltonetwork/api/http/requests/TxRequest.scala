@@ -23,12 +23,9 @@ trait TxRequest[TransactionT <: Transaction] {
         case Some(key) => PublicKeyAccount.fromBase58String(key)
         case None      => Left(ValidationError.InvalidPublicKey("invalid.senderPublicKey"))
       }
-      sponsor <- sponsorPublicKey match {
-        case Some(key) => PublicKeyAccount.fromBase58String(key)
-        case None      => Left(ValidationError.InvalidPublicKey("invalid.sponsorPublicKey"))
-      }
-
-      tx <- toTxFrom(sender, Some(sponsor))
+      sponsor <- sponsorPublicKey.map(key => PublicKeyAccount.fromBase58String(key))
+        .fold[Either[ValidationError, Option[PublicKeyAccount]]](Right(None))(_.map(k => Some(k)))
+      tx <- toTxFrom(sender, sponsor)
     } yield tx
 
   def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransactionT]

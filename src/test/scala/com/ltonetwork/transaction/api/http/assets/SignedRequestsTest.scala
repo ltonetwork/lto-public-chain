@@ -8,7 +8,7 @@ import play.api.libs.json.Json
 
 class SignedRequestsTest extends FunSuite with Matchers {
 
-  test("AssetTransfer json parsing works") {
+  test("TransferRequest json parsing works") {
     val json =
       """
         |{
