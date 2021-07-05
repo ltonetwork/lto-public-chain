@@ -139,7 +139,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
   property("sponsored transaction") {
     forAll(setup) {
       case (genesis, _, _, transfer, sponsor) =>
-        val sponsoredTransfer = transfer.copy(sponsor = Some(sponsor)).signWith(sponsor)
+        val sponsoredTransfer = transfer.sponsorWith(sponsor)
 
         assertDiffAndState(Seq(block(genesis)), block(sponsoredTransfer)) {
           case (d, b) =>
@@ -155,7 +155,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
   property("sponsored transaction with sponsored account") {
     forAll(setup2) {
       case (genesis, sponsorship, _, _, transfer, sponsor) =>
-        val sponsoredTransfer = transfer.copy(sponsor = Some(sponsor)).signWith(sponsor)
+        val sponsoredTransfer = transfer.sponsorWith(sponsor)
 
         assertDiffAndState(Seq(block(genesis), block(sponsorship)), block(sponsoredTransfer)) {
           case (d, b) =>

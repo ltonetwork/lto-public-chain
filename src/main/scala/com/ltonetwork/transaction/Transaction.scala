@@ -66,21 +66,25 @@ object Transaction {
   }
 
   case class TxJson(tx: Transaction) {
-    private def commonJson: JsObject = {
-      import tx._
+    import tx._
+
+    private def headerJson: JsObject = {
       Json.obj(
         "type" -> typeId,
         "version" -> version,
-        "id" -> id().toString,
-        "sender" -> sender.address,
-        "senderKeyType" -> sender.keyType.reference,
-        "senderPublicKey" -> Base58.encode(sender.publicKey),
-        "fee" -> fee,
-        "timestamp" -> timestamp,
+        "id" -> id().toString
       )
     }
 
-    private def sponsorJson: JsObject = tx.sponsor.map(
+    private def senderJson: JsObject = {
+      Json.obj(
+        "sender" -> sender.address,
+        "senderKeyType" -> sender.keyType.reference,
+        "senderPublicKey" -> Base58.encode(sender.publicKey),
+      )
+    }
+
+    private def sponsorJson: JsObject = sponsor.map(
       acc => Json.obj(
         "sponsor" -> acc.address,
         "sponsorKeyType" -> acc.keyType.reference,
@@ -95,6 +99,7 @@ object Transaction {
     }
 
     //noinspection ScalaStyle
-    def ++(txSpecificJson: JsObject): JsObject = commonJson ++ sponsorJson ++ txSpecificJson ++ proofsJson
+    def ++(txSpecificJson: JsObject): JsObject = headerJson ++ senderJson ++ sponsorJson ++
+      Json.obj("fee" -> fee, "timestamp" -> timestamp) ++ txSpecificJson ++ proofsJson
   }
 }

@@ -1,11 +1,7 @@
 package com.ltonetwork.transaction
 
-import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.settings.Constants.TransactionNames
-import com.ltonetwork.transaction.Transaction.SigProofsSwitch
-import com.ltonetwork.utils.Base58
-import monix.eval.Coeval
-import play.api.libs.json.{JsArray, JsObject, JsString, Json}
+import play.api.libs.json.JsObject
 
 import scala.util.control.NoStackTrace
 import scala.util.{Failure, Try}

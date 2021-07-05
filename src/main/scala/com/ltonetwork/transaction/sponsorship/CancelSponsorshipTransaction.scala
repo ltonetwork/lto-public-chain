@@ -30,8 +30,8 @@ object CancelSponsorshipTransaction extends TransactionBuilder.For[CancelSponsor
   override def typeId: Byte                 = 19
   override def supportedVersions: Set[Byte] = SponsorshipTransactionBase.supportedVersions
 
-  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())), sponsor = sponsor.fold(tx.sponsor)(Some(_)))
 
   object SerializerV1 extends SponsorshipSerializerV1[CancelSponsorshipTransaction] {
     def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =

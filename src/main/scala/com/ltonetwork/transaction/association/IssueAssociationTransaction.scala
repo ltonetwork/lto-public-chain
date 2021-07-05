@@ -46,8 +46,8 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
   val MaxHashLength: Int    = 64
   val StringHashLength: Int = com.ltonetwork.utils.base58Length(IssueAssociationTransaction.MaxHashLength)
 
-  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())), sponsor = sponsor.fold(tx.sponsor)(Some(_)))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {

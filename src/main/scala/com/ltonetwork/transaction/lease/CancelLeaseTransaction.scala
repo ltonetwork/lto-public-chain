@@ -41,8 +41,8 @@ object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransact
   override val typeId: Byte                 = 9
   override def supportedVersions: Set[Byte] = Set(1, 2)
 
-  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())), sponsor = sponsor.fold(tx.sponsor)(Some(_)))
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => CancelLeaseSerializerV1

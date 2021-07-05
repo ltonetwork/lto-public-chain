@@ -49,7 +49,7 @@ object TransactionParser {
     val keyTypeId = bytes(start)
 
     keyType(keyTypeId) map { kt =>
-      PublicKeyAccount(kt, bytes.slice(1, 1 + kt.length))
+      PublicKeyAccount(kt, bytes.slice(start + 1, start + 1 + kt.length))
     }
   }
 

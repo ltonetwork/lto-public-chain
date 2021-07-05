@@ -19,6 +19,7 @@ object AnchorSerializerV3 extends TransactionSerializer.For[AnchorTransaction] {
     Bytes.concat(
       Array(AnchorTransaction.typeId, version, chainId),
       Longs.toByteArray(timestamp),
+      Array(sender.keyType.id),
       sender.publicKey,
       Longs.toByteArray(fee),
       Deser.serializeArrays(anchors.map(_.arr)),

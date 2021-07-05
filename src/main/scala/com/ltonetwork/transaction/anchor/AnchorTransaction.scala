@@ -29,7 +29,7 @@ case class AnchorTransaction private (version: Byte,
 object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
 
   override val typeId: Byte                 = 15
-  override val supportedVersions: Set[Byte] = Set(1)
+  override val supportedVersions: Set[Byte] = Set(1, 3)
 
   val EntryLength: List[Int] = List(16, 20, 32, 48, 64)
   val NewMaxEntryLength: Int = 64
@@ -38,8 +38,8 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
 
   val MaxAnchorStringSize: Int = base58Length(EntryLength.last)
 
-  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())))
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
+    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())), sponsor = sponsor.fold(tx.sponsor)(Some(_)))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {

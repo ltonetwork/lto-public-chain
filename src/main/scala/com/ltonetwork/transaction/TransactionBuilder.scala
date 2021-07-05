@@ -1,7 +1,8 @@
 package com.ltonetwork.transaction
 
-import com.ltonetwork.account.{AddressScheme, PrivateKeyAccount}
-import scala.util.{Failure, Success, Try}
+import com.ltonetwork.account.{AddressScheme, PrivateKeyAccount, PublicKeyAccount}
+
+import scala.util.Try
 
 trait TransactionBuilder {
   import TransactionParser._
@@ -12,9 +13,12 @@ trait TransactionBuilder {
   def supportedVersions: Set[Byte]
   def networkByte: Byte = AddressScheme.current.chainId
 
-  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT = sign(tx, signer, None)
+  implicit def sign(tx: Either[ValidationError, TransactionT], signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, TransactionT] =
+    tx.map(unsigned => sign(unsigned, signer, sponsor))
   implicit def sign(tx: Either[ValidationError, TransactionT], signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    tx.map(unsigned => sign(unsigned, signer))
+    tx.map(unsigned => sign(unsigned, signer, None))
 
   def serializer(version: Byte): TransactionSerializer.For[TransactionT]
 
