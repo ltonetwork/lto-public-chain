@@ -2,10 +2,9 @@ package com.ltonetwork.transaction.sponsorship
 
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, TransactionBuilder, TransactionSerializer, ValidationError}
 import monix.eval.Coeval
-import play.api.libs.json.JsObject
-import scorex.crypto.signatures.Curve25519.SignatureLength
 
 import scala.util.{Failure, Success, Try}
 
@@ -31,7 +30,7 @@ object CancelSponsorshipTransaction extends TransactionBuilder.For[CancelSponsor
   override def supportedVersions: Set[Byte] = SponsorshipTransactionBase.supportedVersions
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
-    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())), sponsor = sponsor.fold(tx.sponsor)(Some(_)))
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   object SerializerV1 extends SponsorshipSerializerV1[CancelSponsorshipTransaction] {
     def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =

@@ -3,7 +3,7 @@ package com.ltonetwork.transaction.anchor
 import com.google.common.primitives.{Bytes, Longs}
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.serialization.Deser
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, TransactionSerializer}
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.anchor.AnchorTransaction.create

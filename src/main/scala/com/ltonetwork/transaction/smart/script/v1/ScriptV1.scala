@@ -5,7 +5,7 @@ import com.ltonetwork.lang.ScriptVersion.Versions.V1
 import com.ltonetwork.lang.v1.compiler.Terms._
 import com.ltonetwork.lang.v1.evaluator.FunctionIds._
 import com.ltonetwork.lang.v1.{FunctionHeader, ScriptEstimator, Serde}
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state._
 import com.ltonetwork.utils.functionCosts
 import monix.eval.Coeval
 import com.ltonetwork.transaction.smart.script.Script

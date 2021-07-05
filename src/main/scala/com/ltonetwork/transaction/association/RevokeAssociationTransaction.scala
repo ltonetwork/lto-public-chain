@@ -3,8 +3,8 @@ package com.ltonetwork.transaction.association
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
-import com.ltonetwork.state.ByteStr
-import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
+import com.ltonetwork.state._
+import com.ltonetwork.transaction.{Proofs, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
 
@@ -45,7 +45,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
   val StringHashLength: Int = IssueAssociationTransaction.StringHashLength
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
-    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())), sponsor = sponsor.fold(tx.sponsor)(Some(_)))
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {

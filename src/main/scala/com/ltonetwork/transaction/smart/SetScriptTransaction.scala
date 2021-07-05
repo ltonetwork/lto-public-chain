@@ -4,6 +4,7 @@ import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account._
 import com.ltonetwork.crypto
 import com.ltonetwork.serialization.Deser
+import com.ltonetwork.state._
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.smart.script.{Script, ScriptReader}
 import monix.eval.Coeval
@@ -45,7 +46,7 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
   }
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
-    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())), sponsor = sponsor.fold(tx.sponsor)(Some(_)))
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {

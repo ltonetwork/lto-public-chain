@@ -3,7 +3,7 @@ package com.ltonetwork.transaction.smart.script
 import com.ltonetwork.lang.ScriptVersion.Versions.V1
 import com.ltonetwork.lang.Versioned
 import com.ltonetwork.lang.v1.compiler.Terms
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state._
 import monix.eval.Coeval
 import com.ltonetwork.utils.Base64
 import com.ltonetwork.transaction.ValidationError.ScriptParseError

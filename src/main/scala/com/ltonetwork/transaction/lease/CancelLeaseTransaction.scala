@@ -3,7 +3,7 @@ package com.ltonetwork.transaction.lease
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
 import com.ltonetwork.transaction.TransactionParser.{HardcodedVersion1, MultipleVersions}
 import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
@@ -42,7 +42,7 @@ object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransact
   override def supportedVersions: Set[Byte] = Set(1, 2)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
-    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())), sponsor = sponsor.fold(tx.sponsor)(Some(_)))
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => CancelLeaseSerializerV1

@@ -3,7 +3,7 @@ package com.ltonetwork.transaction.association
 import com.google.common.primitives.{Bytes, Ints, Longs}
 import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.serialization.Deser
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, TransactionSerializer, ValidationError}
 import scorex.crypto.signatures.Curve25519.KeyLength
 

@@ -4,7 +4,7 @@ import com.google.common.base.Throwables
 import com.ltonetwork.account.Address
 import com.ltonetwork.block.{Block, MicroBlock}
 import com.ltonetwork.lang.ExprEvaluator.Log
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state._
 
 import scala.util.Either
 

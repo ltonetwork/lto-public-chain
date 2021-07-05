@@ -3,7 +3,7 @@ package com.ltonetwork.transaction.lease
 import com.google.common.primitives.{Bytes, Longs}
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.crypto
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.TransactionSerializer
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}

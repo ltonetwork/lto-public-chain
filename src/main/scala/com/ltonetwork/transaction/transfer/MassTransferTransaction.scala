@@ -4,6 +4,7 @@ import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
@@ -56,7 +57,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
   case class ParsedTransfer(address: Address, amount: Long)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
-    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())), sponsor = sponsor.fold(tx.sponsor)(Some(_)))
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   implicit object Validator extends TxValidator[TransactionT] {
     private def validateTotalAmount(tx: TransactionT): ValidatedNel[ValidationError, None.type] =

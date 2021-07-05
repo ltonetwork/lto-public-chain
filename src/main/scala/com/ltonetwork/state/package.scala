@@ -28,6 +28,10 @@ package object state {
     }
   }
 
+  implicit class OptionExt[A](opt: Option[A]) {
+    def otherwise(alt: Option[A]): Option[A] = opt.fold(alt)(Some(_))
+  }
+
   implicit class Cast[A](a: A) {
     def cast[B: ClassTag]: Option[B] = {
       a match {

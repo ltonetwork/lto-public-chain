@@ -1,7 +1,7 @@
 package com.ltonetwork.transaction
 
 import com.ltonetwork.network.{BlockCheckpoint, Checkpoint}
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state._
 
 trait CheckpointService {
 

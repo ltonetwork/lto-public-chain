@@ -2,14 +2,10 @@ package com.ltonetwork
 
 import cats.data.ValidatedNel
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.utils.base58Length
 import com.ltonetwork.block.{Block, MicroBlock}
 
 package object transaction {
   type AssetId = com.ltonetwork.state.ByteStr
-
-  val AssetIdLength: Int       = com.ltonetwork.crypto.DigestLength
-  val AssetIdStringLength: Int = base58Length(AssetIdLength)
 
   type DiscardedTransactions = Seq[Transaction]
   type DiscardedBlocks       = Seq[Block]

@@ -10,6 +10,8 @@ import scala.util.{Failure, Success}
 sealed trait PrivateKeyAccount extends PublicKeyAccount {
   def seed: Array[Byte]
   def privateKey: Array[Byte]
+
+  def sign(message: Array[Byte]): Array[Byte] = crypto.sign(this, message)
 }
 
 object PrivateKeyAccount {

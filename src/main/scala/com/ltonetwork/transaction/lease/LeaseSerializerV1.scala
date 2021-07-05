@@ -1,7 +1,7 @@
 package com.ltonetwork.transaction.lease
 
 import com.google.common.primitives.Bytes
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.Proofs
 import monix.eval.Coeval
 import scorex.crypto.signatures.Curve25519.SignatureLength

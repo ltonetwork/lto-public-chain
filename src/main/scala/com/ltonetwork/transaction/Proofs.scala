@@ -16,6 +16,8 @@ case class Proofs private (proofs: Seq[ByteStr]) {
   override def toString: String   = s"Proofs(${proofs.mkString(", ")})"
 
   def ++(other: Proofs): Proofs = Proofs(this.proofs ++ other.proofs)
+  def +(proof: ByteStr): Proofs = Proofs(this.proofs ++ Seq(proof))
+  def +(proof: Array[Byte]): Proofs = Proofs(this.proofs ++ Seq(ByteStr(proof)))
 }
 
 object Proofs {

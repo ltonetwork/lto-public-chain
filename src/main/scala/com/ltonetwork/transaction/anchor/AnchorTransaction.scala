@@ -2,7 +2,6 @@ package com.ltonetwork.transaction.anchor
 
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.utils.base58Length
 import com.ltonetwork.transaction._
@@ -39,7 +38,7 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
   val MaxAnchorStringSize: Int = base58Length(EntryLength.last)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
-    tx.copy(proofs = tx.proofs ++ Proofs(crypto.sign(signer, tx.bodyBytes())), sponsor = sponsor.fold(tx.sponsor)(Some(_)))
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {

@@ -2,11 +2,9 @@ package com.ltonetwork.transaction.anchor
 
 import com.google.common.primitives.{Bytes, Longs}
 import com.ltonetwork.serialization.Deser
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.{Proofs, TransactionParser, TransactionSerializer}
-import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json}
 
 import scala.util.{Failure, Success, Try}
 
