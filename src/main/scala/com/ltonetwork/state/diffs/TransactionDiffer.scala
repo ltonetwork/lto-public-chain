@@ -54,7 +54,7 @@ object TransactionDiffer {
             val feePayer: Address = blockchain
               .sponsorOf(feeAccount)
               .find(a => blockchain.portfolio(a).spendableBalance >= tx.fee)
-              .getOrElse(tx.sender.toAddress)
+              .getOrElse(feeAccount)
 
             // Effective fee sponsor. None if the fee is paid by the sender.
             val feeSponsor = if (feePayer == tx.sender.toAddress) None else Some(feePayer)

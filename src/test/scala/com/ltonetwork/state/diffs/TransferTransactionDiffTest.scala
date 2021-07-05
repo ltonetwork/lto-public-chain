@@ -24,10 +24,10 @@ class TransferTransactionDiffTest extends PropSpec with PropertyChecks with Matc
 
   property("transfers assets to recipient preserving lto invariant") {
     forAll(preconditionsAndTransfer) {
-      case ((genesis, transfer)) =>
+      case (genesis, transfer) =>
         assertDiffAndState(Seq(TestBlock.create(Seq(genesis))), TestBlock.create(Seq(transfer))) {
           case (totalDiff, newState) =>
-            val recipient: Address = transfer.recipient.asInstanceOf[Address]
+            val recipient: Address = transfer.recipient
             val recipientPortfolio = newState.portfolio(recipient)
             if (transfer.sender.toAddress != recipient) {
               recipientPortfolio shouldBe Portfolio(transfer.amount, LeaseBalance.empty)

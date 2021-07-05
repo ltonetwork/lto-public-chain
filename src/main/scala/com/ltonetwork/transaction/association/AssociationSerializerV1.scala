@@ -5,8 +5,6 @@ import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.serialization.Deser
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.{Proofs, TransactionSerializer, ValidationError}
-import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json}
 import scorex.crypto.signatures.Curve25519.KeyLength
 
 abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction] extends TransactionSerializer.For[AssociationTransactionT] {
