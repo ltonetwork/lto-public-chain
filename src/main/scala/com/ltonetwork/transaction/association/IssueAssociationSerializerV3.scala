@@ -9,7 +9,7 @@ import com.ltonetwork.transaction.{Proofs, TransactionParser, TransactionSeriali
 
 import scala.util.{Failure, Success, Try}
 
-class IssueAssociationSerializerV3 extends TransactionSerializer.For[IssueAssociationTransaction] {
+object IssueAssociationSerializerV3 extends TransactionSerializer.For[IssueAssociationTransaction] {
   import TransactionParser._
 
   override def bodyBytes(tx: IssueAssociationTransaction): Array[Byte] = {

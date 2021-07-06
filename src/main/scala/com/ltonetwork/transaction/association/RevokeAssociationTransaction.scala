@@ -2,7 +2,6 @@ package com.ltonetwork.transaction.association
 
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import monix.eval.Coeval
@@ -65,19 +64,21 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
   }
 
   object SerializerV1 extends AssociationSerializerV1[RevokeAssociationTransaction] {
-    override def parseBytes(version: Byte, bytes: Array[Byte]): Try[RevokeAssociationTransaction] =
-      Try {
-        val chainId = bytes(0)
-        (for {
-          parsed <- parse(version, bytes)
-          (version, timestamp, sender, fee, recipient, assocType, hashOpt, proofs) = parsed
-          tx <- create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, hashOpt, None, proofs)
-        } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-      }.flatten
+    protected def createTx(version: Byte,
+                           chainId: Byte,
+                           timestamp: Long,
+                           sender: PublicKeyAccount,
+                           fee: Long,
+                           recipient: Address,
+                           assocType: Int,
+                           hash: Option[ByteStr],
+                           proofs: Proofs): Either[ValidationError, TransactionT] =
+      create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, hash, None, proofs)
   }
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => SerializerV1
+    case 3 => RevokeAssociationSerializerV3
     case _ => UnknownSerializer
   }
 
@@ -90,7 +91,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
              assocType: Int,
              hash: Option[ByteStr],
              sponsor: Option[PublicKeyAccount],
-             proofs: Proofs): Either[ValidationError, RevokeAssociationTransaction] =
+             proofs: Proofs): Either[ValidationError, TransactionT] =
     RevokeAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, assocType, hash, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
@@ -102,7 +103,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
              hash: Option[ByteStr],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs,
-             signer: PrivateKeyAccount): Either[ValidationError, RevokeAssociationTransaction] =
+             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
     create(version, None, timestamp, sender, fee, recipient, assocType, hash, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
@@ -111,6 +112,6 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
                  fee: Long,
                  recipient: Address,
                  assocType: Int,
-                 hash: Option[ByteStr]): Either[ValidationError, RevokeAssociationTransaction] =
+                 hash: Option[ByteStr]): Either[ValidationError, TransactionT] =
     signed(version, timestamp, sender, fee, recipient, assocType, hash, None, Proofs.empty, sender)
 }

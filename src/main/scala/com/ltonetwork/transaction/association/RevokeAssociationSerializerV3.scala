@@ -9,7 +9,7 @@ import com.ltonetwork.transaction.{Proofs, TransactionParser, TransactionSeriali
 
 import scala.util.{Failure, Success, Try}
 
-class RevokeAssociationSerializerV3 extends TransactionSerializer.For[RevokeAssociationTransaction] {
+object RevokeAssociationSerializerV3 extends TransactionSerializer.For[RevokeAssociationTransaction] {
   import TransactionParser._
 
   override def bodyBytes(tx: RevokeAssociationTransaction): Array[Byte] = {
