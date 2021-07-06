@@ -33,7 +33,7 @@ object AnchorSerializerV3 extends TransactionSerializer.For[AnchorTransaction] {
         anchors = r._1
         pos     = r._2
         sponsor <- parseSponsor(bytes, end + pos)
-        sponsorKeyLength: Short = sponsor.map(account => account.keyType.length).getOrElse(0)
+        sponsorKeyLength: Short = sponsor.fold(0: Short)(account => account.keyType.length)
         proofs <- Proofs.fromBytes(bytes.drop(end + pos + 1 + sponsorKeyLength))
         tx     <- AnchorTransaction.create(version, Some(chainId), timestamp, sender, fee, anchors.map(ByteStr(_)).toList, sponsor, proofs)
       } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))

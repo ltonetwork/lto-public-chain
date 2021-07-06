@@ -16,7 +16,7 @@ abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTra
       sender.publicKey,
       recipient.bytes.arr,
       Ints.toByteArray(assocType),
-      hash.map(a => (1: Byte) +: Deser.serializeArray(a.arr)).getOrElse(Array(0: Byte)),
+      hash.fold(Array(0: Byte))(a => (1: Byte) +: Deser.serializeArray(a.arr)),
       Longs.toByteArray(timestamp),
       Longs.toByteArray(fee)
     )
@@ -31,8 +31,7 @@ abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTra
       recipient <- Address.fromBytes(bytes.slice(p0 + 1, p0 + 1 + Address.AddressLength))
       recipientEnd  = p0 + 1 + Address.AddressLength
       assocType     = Ints.fromByteArray(bytes.slice(recipientEnd, recipientEnd + 4))
-      (hashOpt, s0) = Deser.parseOption(bytes, recipientEnd + 4)(ByteStr(_))
-      s1            = s0
+      (hashOpt, s1) = Deser.parseOption(bytes, recipientEnd + 4)(ByteStr(_))
       timestamp     = Longs.fromByteArray(bytes.drop(s1))
       fee           = Longs.fromByteArray(bytes.drop(s1 + 8))
       proofs <- Proofs.fromBytes(bytes.drop(s1 + 16))

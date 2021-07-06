@@ -2,7 +2,6 @@ package com.ltonetwork.transaction.association
 
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import monix.eval.Coeval
@@ -83,6 +82,7 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => SerializerV1
+    case 3 =>
     case _ => UnknownSerializer
   }
 
