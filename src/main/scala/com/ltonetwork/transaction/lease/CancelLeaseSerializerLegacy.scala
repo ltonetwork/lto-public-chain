@@ -2,12 +2,11 @@ package com.ltonetwork.transaction.lease
 
 import com.google.common.primitives.{Bytes, Longs}
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.crypto
+import com.ltonetwork.serialization._
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.TransactionSerializer
-import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json}
-import scorex.crypto.signatures.Curve25519.KeyLength
+
+import java.nio.ByteBuffer
 
 // Common methods for CancelLeaseSerializer v1 and v2
 trait CancelLeaseSerializerLegacy extends TransactionSerializer.For[CancelLeaseTransaction] {
@@ -21,12 +20,11 @@ trait CancelLeaseSerializerLegacy extends TransactionSerializer.For[CancelLeaseT
     )
   }
 
-  def parseBase(bytes: Array[Byte], start: Int): (PublicKeyAccount, Long, Long, ByteStr, Int) = {
-    val sender    = PublicKeyAccount(bytes.slice(start, start + KeyLength))
-    val fee       = Longs.fromByteArray(bytes.slice(start + KeyLength, start + KeyLength + 8))
-    val timestamp = Longs.fromByteArray(bytes.slice(start + KeyLength + 8, start + KeyLength + 16))
-    val end       = start + KeyLength + 16 + crypto.DigestLength
-    val leaseId   = ByteStr(bytes.slice(start + KeyLength + 16, end))
-    (sender, fee, timestamp, leaseId, end)
+  def parseBase(buf: ByteBuffer): (PublicKeyAccount, Long, Long, ByteStr) = {
+    val sender    = buf.getPublicKey
+    val fee       = buf.getLong
+    val timestamp = buf.getLong
+    val leaseId   = ByteStr(buf.getByteArray(16))
+    (sender, fee, timestamp, leaseId)
   }
 }

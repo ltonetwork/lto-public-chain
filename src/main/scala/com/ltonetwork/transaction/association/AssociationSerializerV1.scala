@@ -2,12 +2,11 @@ package com.ltonetwork.transaction.association
 
 import com.google.common.primitives.{Bytes, Ints, Longs}
 import com.ltonetwork.account.{Address, PublicKeyAccount}
-import com.ltonetwork.serialization.Deser
+import com.ltonetwork.serialization._
 import com.ltonetwork.state._
-import com.ltonetwork.transaction.ValidationError.Validation
-import com.ltonetwork.transaction.{Proofs, TransactionSerializer}
-import scorex.crypto.signatures.Curve25519.KeyLength
+import com.ltonetwork.transaction.{Proofs, TransactionSerializer, ValidationError}
 
+import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
 trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction] extends TransactionSerializer.For[AssociationTransactionT] {
@@ -19,7 +18,7 @@ trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction]
                          recipient: Address,
                          assocType: Int,
                          hash: Option[ByteStr],
-                         proofs: Proofs): Validation[AssociationTransactionT]
+                         proofs: Proofs): Either[ValidationError, AssociationTransactionT]
 
   override def bodyBytes(tx: AssociationTransactionT): Array[Byte] = {
     import tx._
@@ -36,19 +35,18 @@ trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction]
   }
 
   def parseBytes(version: Byte, bytes: Array[Byte]): Try[AssociationTransactionT] = Try {
-    val chainId = bytes(0)
-    val p0      = KeyLength
-    val sender  = PublicKeyAccount(bytes.slice(1, p0 + 1))
+    val buf = ByteBuffer.wrap(bytes)
 
-    (for {
-      recipient <- Address.fromBytes(bytes.slice(p0 + 1, p0 + 1 + Address.AddressLength))
-      recipientEnd  = p0 + 1 + Address.AddressLength
-      assocType     = Ints.fromByteArray(bytes.slice(recipientEnd, recipientEnd + 4))
-      (hashOpt, s1) = Deser.parseOption(bytes, recipientEnd + 4)(ByteStr(_))
-      timestamp     = Longs.fromByteArray(bytes.drop(s1))
-      fee           = Longs.fromByteArray(bytes.drop(s1 + 8))
-      proofs <- Proofs.fromBytes(bytes.drop(s1 + 16))
-      tx     <- createTx(version, chainId, timestamp, sender, fee, recipient, assocType, hashOpt, proofs)
-    } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    val chainId   = buf.getByte
+    val sender    = buf.getPublicKey
+    val recipient = buf.getAddress
+    val assocType = buf.getInt
+    val hashOpt   = buf.getOptionalByteArray.map(ByteStr(_))
+    val timestamp = buf.getLong
+    val fee       = buf.getLong
+    val proofs    = buf.getProofs
+
+    createTx(version, chainId, timestamp, sender, fee, recipient, assocType, hashOpt, proofs)
+      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
 }

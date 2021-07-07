@@ -33,14 +33,14 @@ object SponsorshipTransaction extends TransactionBuilder.For[SponsorshipTransact
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   object SerializerV1 extends SponsorshipSerializerV1[TransactionT] {
-    def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
-      Try {
-        (for {
-          parsed <- parseBase(bytes)
-          (chainId, timestamp, sender, fee, recipient, proofs) = parsed
-          tx <- create(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
-        } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-      }.flatten
+    def createTx(version: Byte,
+                 chainId: Byte,
+                 timestamp: Long,
+                 sender: PublicKeyAccount,
+                 fee: Long,
+                 recipient: Address,
+                 proofs: Proofs): Either[ValidationError, TransactionT] =
+      create(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
   }
 
   implicit object Validator extends SponsorshipTransactionBase.Validator[TransactionT]

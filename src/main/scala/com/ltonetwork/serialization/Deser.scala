@@ -2,6 +2,7 @@ package com.ltonetwork.serialization
 
 import com.google.common.primitives.{Bytes, Shorts}
 
+// Todo remove parse methods and only use ByteBuffer with methods from package
 object Deser {
 
   def serializeBoolean(b: Boolean): Array[Byte] = if (b) Array(1: Byte) else Array(0: Byte)

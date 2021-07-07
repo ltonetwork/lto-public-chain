@@ -1,11 +1,12 @@
 package com.ltonetwork.transaction.anchor
 
 import com.google.common.primitives.{Bytes, Longs}
-import com.ltonetwork.serialization.Deser
+import com.ltonetwork.serialization._
 import com.ltonetwork.state._
-import com.ltonetwork.transaction.ValidationError.GenericError
-import com.ltonetwork.transaction.{Proofs, TransactionParser, TransactionSerializer}
+import com.ltonetwork.transaction.anchor.AnchorTransaction.create
+import com.ltonetwork.transaction.{TransactionParser, TransactionSerializer}
 
+import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
 object AnchorSerializerV3 extends TransactionSerializer.For[AnchorTransaction] {
@@ -24,18 +25,15 @@ object AnchorSerializerV3 extends TransactionSerializer.For[AnchorTransaction] {
     )
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[AnchorTransaction] =
-    Try {
-      (for {
-        parsed <- parseBase(bytes)
-        (chainId, timestamp, sender, fee, end) = parsed
-        r <- Try(Deser.parseArraysPos(bytes.drop(end))).toEither.left.map(x => GenericError(x.toString))
-        anchors = r._1
-        pos     = r._2
-        sponsor <- parseSponsor(bytes, end + pos)
-        sponsorKeyLength: Short = sponsor.fold(0: Short)(account => account.keyType.length)
-        proofs <- Proofs.fromBytes(bytes.drop(end + pos + 1 + sponsorKeyLength))
-        tx     <- AnchorTransaction.create(version, Some(chainId), timestamp, sender, fee, anchors.map(ByteStr(_)).toList, sponsor, proofs)
-      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[AnchorTransaction] = Try {
+    val buf = ByteBuffer.wrap(bytes)
+
+    val (chainId, timestamp, sender, fee) = parseBase(buf)
+    val anchors = buf.getArrays.map(ByteStr(_)).toList
+    val sponsor = parseSponsor(buf)
+    val proofs  = buf.getProofs
+
+    create(version, Some(chainId), timestamp, sender, fee, anchors, sponsor, proofs)
+      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+  }.flatten
 }

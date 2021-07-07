@@ -30,6 +30,8 @@ object DataEntry {
     val String  = Value(3)
   }
 
+  def parse(bytes: Array[Byte]): (DataEntry[_], Int) = parse(bytes, 0)
+
   def parse(bytes: Array[Byte], p: Int): (DataEntry[_], Int) = {
     val keyLength = Shorts.fromByteArray(bytes.drop(p))
     val key       = new String(bytes, p + 2, keyLength, UTF_8)

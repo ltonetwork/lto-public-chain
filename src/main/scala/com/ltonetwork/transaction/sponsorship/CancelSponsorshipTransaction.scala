@@ -32,15 +32,15 @@ object CancelSponsorshipTransaction extends TransactionBuilder.For[CancelSponsor
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
-  object SerializerV1 extends SponsorshipSerializerV1[CancelSponsorshipTransaction] {
-    def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
-      Try {
-        (for {
-          parsed <- parseBase(bytes)
-          (chainId, timestamp, sender, fee, recipient, proofs) = parsed
-          tx <- create(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
-        } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-      }.flatten
+  object SerializerV1 extends SponsorshipSerializerV1[TransactionT] {
+    def createTx(version: Byte,
+                 chainId: Byte,
+                 timestamp: Long,
+                 sender: PublicKeyAccount,
+                 fee: Long,
+                 recipient: Address,
+                 proofs: Proofs): Either[ValidationError, TransactionT] =
+      create(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
   }
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {

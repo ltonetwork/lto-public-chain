@@ -2,13 +2,23 @@ package com.ltonetwork.transaction.sponsorship
 
 import com.google.common.primitives.{Bytes, Longs}
 import com.ltonetwork.account.{Address, PublicKeyAccount}
+import com.ltonetwork.serialization._
 import com.ltonetwork.transaction.{Proofs, TransactionSerializer, ValidationError}
-import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json}
-import scorex.crypto.signatures.Curve25519.KeyLength
 
-abstract class SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTransactionBase]
+import java.nio.ByteBuffer
+import scala.util.{Failure, Success, Try}
+
+trait SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTransactionBase]
     extends TransactionSerializer.For[SponsorshipTransactionT] {
+
+  def createTx(version: Byte,
+               chainId: Byte,
+               timestamp: Long,
+               sender: PublicKeyAccount,
+               fee: Long,
+               recipient: Address,
+               proofs: Proofs): Either[ValidationError, SponsorshipTransactionT]
+
   override def bodyBytes(tx: SponsorshipTransactionT): Array[Byte] = {
     import tx._
 
@@ -21,18 +31,17 @@ abstract class SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTra
     )
   }
 
-  protected def parseBase(bytes: Array[Byte]): Either[ValidationError, (Byte, Long, PublicKeyAccount, Long, Address, Proofs)] = {
-    val chainId = bytes(0)
-    val p0      = KeyLength
-    val sender  = PublicKeyAccount(bytes.slice(1, p0 + 1))
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
+    val buf = ByteBuffer.wrap(bytes)
 
-    for {
-      recipient <- Address.fromBytes(bytes.slice(p0 + 1, p0 + 1 + Address.AddressLength))
-      recipientEnd = p0 + 1 + Address.AddressLength
-      s1           = recipientEnd
-      timestamp    = Longs.fromByteArray(bytes.drop(s1))
-      fee          = Longs.fromByteArray(bytes.drop(s1 + 8))
-      proofs <- Proofs.fromBytes(bytes.drop(s1 + 16))
-    } yield (chainId, timestamp, sender, fee, recipient, proofs)
-  }
+    val chainId   = buf.getByte
+    val sender    = buf.getPublicKey
+    val recipient = buf.getAddress
+    val timestamp = buf.getLong
+    val fee       = buf.getLong
+    val proofs    = buf.getProofs
+
+    createTx(version, chainId, timestamp, sender, fee, recipient, proofs)
+      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+  }.flatten
 }

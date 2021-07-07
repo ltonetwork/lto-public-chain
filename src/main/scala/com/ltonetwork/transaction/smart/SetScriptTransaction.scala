@@ -2,13 +2,14 @@ package com.ltonetwork.transaction.smart
 
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account._
-import com.ltonetwork.crypto
-import com.ltonetwork.serialization.Deser
+import com.ltonetwork.serialization._
 import com.ltonetwork.state._
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.smart.script.{Script, ScriptReader}
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
+
+import java.nio.ByteBuffer
 
 case class SetScriptTransaction private (version: Byte,
                                          chainId: Byte,
@@ -32,17 +33,15 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
   override val typeId: Byte                 = 13
   override val supportedVersions: Set[Byte] = Set(1)
 
-  def parseScript(bytes: Array[Byte], start: Int): (Either[ValidationError.ScriptParseError, Option[Script]], Int) = {
-    val (scriptOptEi: Option[Either[ValidationError.ScriptParseError, Script]], scriptEnd) =
-      Deser.parseOption(bytes, start)(ScriptReader.fromBytes)
+  def parseScript(buf: ByteBuffer): Either[ValidationError.ScriptParseError, Option[Script]] = {
+    val scriptOptEi: Option[Either[ValidationError.ScriptParseError, Script]] =
+      buf.getOptionalByteArray.map(ScriptReader.fromBytes)
 
-    val scriptOpt = scriptOptEi match {
+    scriptOptEi match {
       case None            => Right(None)
       case Some(Right(sc)) => Right(Some(sc))
       case Some(Left(err)) => Left(err)
     }
-
-    (scriptOpt, scriptEnd)
   }
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =

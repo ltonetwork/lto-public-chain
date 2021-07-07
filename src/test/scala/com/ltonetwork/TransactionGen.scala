@@ -394,23 +394,28 @@ trait TransactionGenBase extends ScriptGen {
     anchors = data.map(ByteStr(_))
   } yield AnchorTransaction.selfSigned(version, timestamp, sender, fee, anchors).sponsorWith(sponsor).explicitGet()
 
-  val assocTransactionGen: Gen[AssociationTransaction] = for {
+  def issueAssocTransactionGen: Gen[IssueAssociationTransaction] = versionGen(IssueAssociationTransaction).flatMap(issueAssocTransactionGen)
+  def issueAssocTransactionGen(version: Byte): Gen[IssueAssociationTransaction] = for {
     sender <- accountGen
     timestamp <- timestampGen
-    version <- Gen.oneOf(IssueAssociationTransaction.supportedVersions.toSeq)
     recipient <- accountGen
     assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
-    builder <- Gen.oneOf(IssueAssociationTransaction, RevokeAssociationTransaction)
+    expires   <- if (version < 3) Gen.const(None) else Gen.option(timestampGen)
     fee <- smallFeeGen
     hashOpt <- Gen.option(genBoundedBytes(0, IssueAssociationTransaction.MaxHashLength).map(ByteStr(_)))
-  } yield {
-    builder match {
-      case IssueAssociationTransaction =>
-        IssueAssociationTransaction.selfSigned(version, timestamp, sender, fee, recipient, assocType, None, hashOpt).explicitGet()
-      case RevokeAssociationTransaction =>
-        RevokeAssociationTransaction.selfSigned(version, timestamp, sender, fee, recipient, assocType, hashOpt).explicitGet()
-    }
-  }
+  } yield IssueAssociationTransaction.selfSigned(version, timestamp, sender, fee, recipient, assocType, expires, hashOpt).explicitGet()
+
+  def revokeAssocTransactionGen: Gen[RevokeAssociationTransaction] = versionGen(RevokeAssociationTransaction).flatMap(revokeAssocTransactionGen)
+  def revokeAssocTransactionGen(version: Byte): Gen[RevokeAssociationTransaction] = for {
+    sender <- accountGen
+    timestamp <- timestampGen
+    recipient <- accountGen
+    assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
+    fee <- smallFeeGen
+    hashOpt <- Gen.option(genBoundedBytes(0, RevokeAssociationTransaction.MaxHashLength).map(ByteStr(_)))
+  } yield RevokeAssociationTransaction.selfSigned(version, timestamp, sender, fee, recipient, assocType, hashOpt).explicitGet()
+
+  def assocTransactionGen: Gen[AssociationTransaction] = Gen.oneOf(issueAssocTransactionGen, revokeAssocTransactionGen)
 
   val sponsorshipGen: Gen[SponsorshipTransaction] = for {
     sender <- accountGen

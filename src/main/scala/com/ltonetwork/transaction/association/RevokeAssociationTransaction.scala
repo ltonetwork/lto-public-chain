@@ -5,9 +5,7 @@ import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json}
-
-import scala.util.{Failure, Success, Try}
+import play.api.libs.json._
 
 case class RevokeAssociationTransaction private (version: Byte,
                                                  chainId: Byte,
@@ -38,7 +36,7 @@ case class RevokeAssociationTransaction private (version: Byte,
 object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssociationTransaction] {
 
   override def typeId: Byte                 = 17
-  override def supportedVersions: Set[Byte] = Set(1: Byte)
+  override def supportedVersions: Set[Byte] = IssueAssociationTransaction.supportedVersions
 
   val MaxHashLength: Int    = IssueAssociationTransaction.MaxHashLength
   val StringHashLength: Int = IssueAssociationTransaction.StringHashLength

@@ -1,16 +1,12 @@
 package com.ltonetwork.transaction.anchor
 
 import com.google.common.primitives.{Bytes, Longs}
-import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.serialization.Deser
+import com.ltonetwork.serialization._
 import com.ltonetwork.state._
-import com.ltonetwork.transaction.{Proofs, TransactionSerializer}
-import com.ltonetwork.transaction.ValidationError.GenericError
+import com.ltonetwork.transaction.TransactionSerializer
 import com.ltonetwork.transaction.anchor.AnchorTransaction.create
-import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json}
-import scorex.crypto.signatures.Curve25519.KeyLength
 
+import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
 object AnchorSerializerV1 extends TransactionSerializer.For[AnchorTransaction] {
@@ -26,19 +22,16 @@ object AnchorSerializerV1 extends TransactionSerializer.For[AnchorTransaction] {
     )
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[AnchorTransaction] =
-    Try {
-      val sender = PublicKeyAccount(bytes.take(KeyLength))
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[AnchorTransaction] = Try {
+    val buf = ByteBuffer.wrap(bytes)
 
-      (for {
-        r <- Try(Deser.parseArraysPos(bytes.drop(KeyLength))).toEither.left.map(x => GenericError(x.toString))
-        arrays    = r._1
-        pos       = r._2
-        timestamp = Longs.fromByteArray(bytes.drop(KeyLength + pos))
-        fee       = Longs.fromByteArray(bytes.drop(KeyLength + pos + Longs.BYTES))
+    val sender    = buf.getPublicKey
+    val anchors   = buf.getArrays.map(ByteStr(_)).toList
+    val timestamp = buf.getLong
+    val fee       = buf.getLong
+    val proofs    = buf.getProofs
 
-        proofs <- Proofs.fromBytes(bytes.drop(KeyLength + pos + Longs.BYTES + Longs.BYTES))
-        tx     <- create(version, None, timestamp, sender, fee, arrays.map(ByteStr(_)).toList, None, proofs)
-      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
+    create(version, None, timestamp, sender, fee, anchors, None, proofs)
+      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+  }.flatten
 }

@@ -8,7 +8,7 @@ import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAsso
 import com.ltonetwork.utils.Base58
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.Json
 
 import scala.util.Try
 
@@ -20,27 +20,22 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
     parsed.sender.address shouldEqual tx.sender.address
     parsed.timestamp shouldEqual tx.timestamp
     parsed.fee shouldEqual tx.fee
-    parsed.assoc shouldEqual tx.assoc
+    parsed.recipient shouldEqual tx.recipient
+    parsed.assocType shouldEqual tx.assocType
+    parsed.hash shouldEqual tx.hash
+
+    (parsed, tx) match {
+      case (ip: IssueAssociationTransaction, itx: IssueAssociationTransaction) => ip.expires shouldEqual itx.expires
+      case _ =>
+    }
 
     parsed.bytes() shouldEqual tx.bytes()
   }
-  val issueGen  = assocTransactionGen suchThat (_.isInstanceOf[IssueAssociationTransaction]) map (_.asInstanceOf[IssueAssociationTransaction])
-  val revokeGen = assocTransactionGen suchThat (_.isInstanceOf[RevokeAssociationTransaction]) map (_.asInstanceOf[RevokeAssociationTransaction])
 
   property("serialization roundtrip") {
-    forAll(issueGen)(tx => checkSerialization(tx, IssueAssociationTransaction.parseBytes))
-    forAll(revokeGen)(tx => checkSerialization(tx, RevokeAssociationTransaction.parseBytes))
-  }
-
-  property("serialization from TypedTransaction") {
-    forAll(issueGen) { tx: AssociationTransaction =>
-      val recovered = IssueAssociationTransaction.parseBytes(tx.bytes()).get
-      recovered.bytes() shouldEqual tx.bytes()
-    }
-
-    forAll(revokeGen) { tx: AssociationTransaction =>
-      val recovered = RevokeAssociationTransaction.parseBytes(tx.bytes()).get
-      recovered.bytes() shouldEqual tx.bytes()
+    forEvery(versionTable(IssueAssociationTransaction)) { version: Byte =>
+      forAll(issueAssocTransactionGen(version))(tx => checkSerialization(tx, IssueAssociationTransaction.parseBytes))
+      forAll(revokeAssocTransactionGen(version))(tx => checkSerialization(tx, RevokeAssociationTransaction.parseBytes))
     }
   }
 
@@ -61,7 +56,7 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
     }
   }
 
-  property(testName = "JSON format validation") {
+  property(testName = "JSON format validation v1") {
     val p  = PrivateKeyAccount.fromSeed("xxx").explicitGet().toAddress
     val js = Json.parse(s"""{
                        "type": 16,
@@ -73,7 +68,7 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
                        "fee": 100000,
                        "timestamp": 1526911531530,
                        "associationType" : 420,
-                       "party" : "$p",
+                       "recipient" : "$p",
                        "proofs": [
                          "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
                        ]
@@ -94,6 +89,55 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
         expires = None,
         sponsor = None,
         proofs = Proofs(Seq(arr))
+      )
+      .explicitGet()
+
+    tx.json() shouldEqual js
+  }
+
+  property(testName = "JSON format validation v3") {
+    val p  = PrivateKeyAccount.fromSeed("xxx").explicitGet().toAddress
+    val js = Json.parse(s"""{
+                       "type": 16,
+                       "version": 3,
+                       "id": "B9Dxy4fUfUaxqCGLdMU6Gs5QNzGxU78Z5cjRVbKBU6Vx",
+                       "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+                       "senderKeyType": "ed25519",
+                       "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
+                       "sponsor": "3Mw6BfpSRkgCi8LQMQRKayvEb1fqKpDbaVY",
+                       "sponsorKeyType": "ed25519",
+                       "sponsorPublicKey": "22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz",
+                       "fee": 100000,
+                       "timestamp": 1526911531530,
+                       "recipient": "$p",
+                       "associationType": 420,
+                       "expires": 1558447531530,
+                       "hash": "264h1cUrahDxWCPJBAPgtf6A9f3dNhkrLAeBUdHU8A5NDtksaumZ4WmsAU2NiF4eTCubLpYAd9D6xgBosPv34inu",
+                       "proofs": [
+                         "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94",
+                         "2z2S3W9n9AatLQ4XmR5mPfZdGY3o27JY7Bf9c7GeD3GDhGykxuSEjKMkwh2yALDcBhdduFGLT1pXJww4Dg6eMHRx"
+                       ]
+                       }
+  """)
+
+    val hash = ByteStr.decodeBase58("264h1cUrahDxWCPJBAPgtf6A9f3dNhkrLAeBUdHU8A5NDtksaumZ4WmsAU2NiF4eTCubLpYAd9D6xgBosPv34inu").get
+    val proofs = Seq(
+      ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get,
+      ByteStr.decodeBase58("2z2S3W9n9AatLQ4XmR5mPfZdGY3o27JY7Bf9c7GeD3GDhGykxuSEjKMkwh2yALDcBhdduFGLT1pXJww4Dg6eMHRx").get
+    )
+    val tx = IssueAssociationTransaction
+      .create(
+        version = 3,
+        chainId = None,
+        sender = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
+        recipient = p,
+        assocType = 420,
+        hash = Some(hash),
+        fee = 100000,
+        timestamp = 1526911531530L,
+        expires = Some(1558447531530L),
+        sponsor = Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
+        proofs = Proofs(proofs)
       )
       .explicitGet()
 

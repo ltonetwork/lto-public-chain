@@ -3,15 +3,16 @@ package com.ltonetwork.transaction.transfer
 import cats.implicits._
 import com.google.common.primitives.{Bytes, Longs, Shorts}
 import com.ltonetwork.account.{Address, PublicKeyAccount}
-import com.ltonetwork.serialization.Deser
+import com.ltonetwork.serialization._
 import com.ltonetwork.transaction.{Proofs, TransactionParser, TransactionSerializer, ValidationError}
 import com.ltonetwork.transaction.ValidationError.Validation
-import com.ltonetwork.transaction.transfer.MassTransferTransaction.{ParsedTransfer, Transfer}
+import com.ltonetwork.transaction.transfer.MassTransferTransaction.{ParsedTransfer, Transfer, create}
 import com.ltonetwork.utils.Base58
 import monix.eval.Coeval
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import scorex.crypto.signatures.Curve25519.KeyLength
 
+import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
 object MassTransferSerializerV1 extends TransactionSerializer.For[MassTransferTransaction] {
@@ -35,32 +36,29 @@ object MassTransferSerializerV1 extends TransactionSerializer.For[MassTransferTr
     )
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
-    Try {
-      val sender        = PublicKeyAccount(bytes.take(KeyLength))
-      val transferCount = Shorts.fromByteArray(bytes.slice(KeyLength, KeyLength + Shorts.BYTES))
+  private def parseTransfer(buf: ByteBuffer): ParsedTransfer = {
+    val address = buf.getAddress
+    val amount  = buf.getLong
 
-      def readTransfer(offset: Int): (Validation[ParsedTransfer], Int) = {
-        Address.fromBytes(bytes, offset) match {
-          case Right((addr, ofs)) =>
-            val amount = Longs.fromByteArray(bytes.slice(ofs, ofs + Longs.BYTES))
-            (Right[ValidationError, ParsedTransfer](ParsedTransfer(addr, amount)), ofs + Longs.BYTES)
-          case Left(e) => (Left(e), offset)
-        }
-      }
+    ParsedTransfer(address, amount)
+  }
 
-      def s0 = KeyLength + Shorts.BYTES
-      val transfersList: List[(Validation[ParsedTransfer], Int)] =
-        List.iterate(readTransfer(s0), transferCount) { case (_, offset) => readTransfer(offset) }
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
+    val buf = ByteBuffer.wrap(bytes)
 
-      val s1 = transfersList.lastOption.map(_._2).getOrElse(s0)
-      (for {
-        transfers <- transfersList.map { case (ei, _) => ei }.sequence
-        timestamp               = Longs.fromByteArray(bytes.slice(s1, s1 + Longs.BYTES))
-        fee                     = Longs.fromByteArray(bytes.slice(s1 + Longs.BYTES, s1 + 2 * Longs.BYTES))
-        (attachment, attachEnd) = Deser.parseArraySize(bytes, s1 + 2 * Longs.BYTES)
-        proofs <- Proofs.fromBytes(bytes.drop(attachEnd))
-        tx     <- MassTransferTransaction.create(version, None, timestamp, sender, fee, transfers, attachment, None, proofs)
-      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
+    val sender        = buf.getPublicKey
+    val transferCount = buf.getShort
+
+    val transfers = (0 until transferCount).foldLeft(List.empty[ParsedTransfer]) {
+      case (acc, _) => acc :+ parseTransfer(buf)
+    }
+
+    val timestamp  = buf.getLong
+    val fee        = buf.getLong
+    val attachment = buf.getByteArrayWithLength
+    val proofs     = buf.getProofs
+
+    create(version, None, timestamp, sender, fee, transfers, attachment, None, proofs)
+      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+  }.flatten
 }

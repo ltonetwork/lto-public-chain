@@ -3,13 +3,11 @@ package com.ltonetwork.transaction
 import com.google.common.primitives.Bytes
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.crypto
-import com.ltonetwork.state._
-import monix.eval.Coeval
 import com.ltonetwork.serialization.{BytesSerializable, JsonSerializable}
-import com.ltonetwork.transaction.Transaction.SigProofsSwitch
+import com.ltonetwork.state._
 import com.ltonetwork.utils.Base58
-import play.api.libs.json.Json.JsValueWrapper
-import play.api.libs.json.{JsArray, JsObject, JsString, JsValue, Json}
+import monix.eval.Coeval
+import play.api.libs.json.{JsArray, JsObject, JsString, Json}
 
 trait Transaction extends BytesSerializable with JsonSerializable {
   def builder: TransactionBuilder

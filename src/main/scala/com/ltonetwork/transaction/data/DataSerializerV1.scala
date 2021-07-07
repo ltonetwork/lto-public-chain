@@ -2,12 +2,13 @@ package com.ltonetwork.transaction.data
 
 import com.google.common.primitives.{Bytes, Longs, Shorts}
 import com.ltonetwork.account.PublicKeyAccount
+import com.ltonetwork.serialization._
 import com.ltonetwork.state.DataEntry
 import com.ltonetwork.transaction.data.DataTransaction.create
 import com.ltonetwork.transaction.{Proofs, TransactionSerializer}
-import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json}
 import scorex.crypto.signatures.Curve25519.KeyLength
+
+import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
 object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
@@ -24,23 +25,28 @@ object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
     )
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
-    Try {
-      val p0     = KeyLength
-      val sender = PublicKeyAccount(bytes.slice(0, p0))
+  private def parseData(bytes: Array[Byte], pos: Int): (List[DataEntry[_]], Int) = {
+    val entryCount = Shorts.fromByteArray(bytes.drop(pos))
 
-      val entryCount = Shorts.fromByteArray(bytes.drop(p0))
-      val (entries, p1) =
-        if (entryCount > 0) {
-          val parsed = List.iterate(DataEntry.parse(bytes, p0 + 2), entryCount) { case (e, p) => DataEntry.parse(bytes, p) }
-          (parsed.map(_._1), parsed.last._2)
-        } else (List.empty, p0 + 2)
+    if (entryCount > 0) {
+      val parsed = List.iterate(DataEntry.parse(bytes, pos + Shorts.BYTES), entryCount) { case (_, p) => DataEntry.parse(bytes, p) }
+      (parsed.map(_._1), parsed.last._2)
+    } else (List.empty, pos + Shorts.BYTES)
+  }
 
-      val timestamp = Longs.fromByteArray(bytes.drop(p1))
-      val fee       = Longs.fromByteArray(bytes.drop(p1 + 8))
-      (for {
-        proofs <- Proofs.fromBytes(bytes.drop(p1 + 16))
-        tx     <- create(version, None, timestamp, sender, fee, entries, None, proofs)
-      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
+    val buf = ByteBuffer.wrap(bytes)
+
+    val sender = buf.getPublicKey
+
+    val (entries, entriesEnd) = parseData(bytes, buf.position)
+    buf.position(entriesEnd)
+
+    val timestamp = buf.getLong
+    val fee       = buf.getLong
+    val proofs    = buf.getProofs
+
+    create(version, None, timestamp, sender, fee, entries, None, proofs)
+      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+  }.flatten
 }

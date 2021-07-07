@@ -28,7 +28,7 @@ case class IssueAssociationTransaction private (version: Byte,
   val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase ++
     Json.obj(
       "associationType" -> assocType,
-      "party"           -> recipient.stringRepr,
+      "recipient"       -> recipient.stringRepr,
     ) ++
     expires.fold(Json.obj())(e => Json.obj("expires" -> e)) ++
     hash.fold(Json.obj())(h => Json.obj("hash" -> h.base58))
@@ -38,7 +38,7 @@ case class IssueAssociationTransaction private (version: Byte,
 object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociationTransaction] {
 
   override def typeId: Byte                 = 16
-  override def supportedVersions: Set[Byte] = Set(1: Byte)
+  override def supportedVersions: Set[Byte] = Set(1, 3)
 
   val MaxHashLength: Int    = 64
   val StringHashLength: Int = com.ltonetwork.utils.base58Length(IssueAssociationTransaction.MaxHashLength)

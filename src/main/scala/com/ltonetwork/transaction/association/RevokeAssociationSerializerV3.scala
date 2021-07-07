@@ -1,12 +1,12 @@
 package com.ltonetwork.transaction.association
 
 import com.google.common.primitives.{Bytes, Ints, Longs}
-import com.ltonetwork.account.Address
-import com.ltonetwork.serialization.Deser
+import com.ltonetwork.serialization._
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.association.RevokeAssociationTransaction.create
-import com.ltonetwork.transaction.{Proofs, TransactionParser, TransactionSerializer}
+import com.ltonetwork.transaction.{TransactionParser, TransactionSerializer}
 
+import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
 object RevokeAssociationSerializerV3 extends TransactionSerializer.For[RevokeAssociationTransaction] {
@@ -26,20 +26,17 @@ object RevokeAssociationSerializerV3 extends TransactionSerializer.For[RevokeAss
     )
   }
 
-  def parseBytes(version: Byte, bytes: Array[Byte]): Try[RevokeAssociationTransaction] =
-    Try {
-      (for {
-        parsed <- parseBase(bytes)
-        (chainId, timestamp, sender, fee, end) = parsed
-        recipient <- Address.fromBytes(bytes.slice(end, end + Address.AddressLength))
-        recipientEnd    = end + Address.AddressLength
-        assocType       = Ints.fromByteArray(bytes.slice(recipientEnd, recipientEnd + Ints.BYTES))
-        (hashBytes, s1) = Deser.parseArraySize(bytes, recipientEnd + Ints.BYTES + Longs.BYTES)
-        hashOpt         = Some(ByteStr(hashBytes)).noneIfEmpty
-        sponsor <- parseSponsor(bytes, s1)
-        s2              = s1 + sponsor.fold(0)(account => account.keyType.length)
-        proofs  <- Proofs.fromBytes(bytes.drop(s2))
-        tx      <- create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, hashOpt, sponsor, proofs)
-      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[RevokeAssociationTransaction] = Try {
+    val buf = ByteBuffer.wrap(bytes)
+
+    val (chainId, timestamp, sender, fee) = parseBase(buf)
+    val recipient = buf.getAddress
+    val assocType = buf.getInt
+    val hash      = Some(buf.getByteArrayWithLength).map(ByteStr(_)).noneIfEmpty
+    val sponsor   = parseSponsor(buf)
+    val proofs    = buf.getProofs
+
+    create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, hash, sponsor, proofs)
+      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+  }.flatten
 }

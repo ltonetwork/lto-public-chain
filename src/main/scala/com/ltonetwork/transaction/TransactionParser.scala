@@ -2,10 +2,12 @@ package com.ltonetwork.transaction
 
 import com.google.common.primitives.Longs
 import com.ltonetwork.account.KeyTypes.keyType
+import com.ltonetwork.serialization._
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.transaction.ValidationError.InvalidPublicKey
 
-import scala.util.Try
+import java.nio.ByteBuffer
+import scala.util.{Failure, Success, Try}
 
 object TransactionParser {
   case class HardcodedVersion1(typeId: Byte) {
@@ -45,11 +47,14 @@ object TransactionParser {
     }
   }
 
+  // === OLD ===
+
   private def parsePublicKeyAccount(bytes: Array[Byte], start: Int): Option[PublicKeyAccount] = {
     val keyTypeId = bytes(start)
 
-    keyType(keyTypeId) map { kt =>
-      PublicKeyAccount(kt, bytes.slice(start + 1, start + 1 + kt.length))
+    keyType(keyTypeId) match {
+      case Failure(_) => None
+      case Success(kt) => Some(PublicKeyAccount(kt, bytes.slice(start + 1, start + 1 + kt.length)))
     }
   }
 
@@ -77,5 +82,24 @@ object TransactionParser {
 
         (chainId, timestamp, sender, fee, s1 + Longs.BYTES)
       })
+  }
+
+  // ===============
+
+  def parseSponsor(buf: ByteBuffer): Option[PublicKeyAccount] =
+    try { buf.getOptPublicKey } catch {
+      case e: Exception => throw new Exception("Invalid sponsor public key", e)
+    }
+
+  // Base structure for transactions v3 and up
+  def parseBase(buf: ByteBuffer): (Byte, Long, PublicKeyAccount, Long) = {
+    val chainId   = buf.getByte
+    val timestamp = buf.getLong
+    val sender    = try { buf.getTypedPublicKey } catch {
+      case e: Exception => throw new Exception("Invalid sender public key", e)
+    }
+    val fee       = buf.getLong
+
+    (chainId, timestamp, sender, fee)
   }
 }

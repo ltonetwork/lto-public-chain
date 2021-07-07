@@ -2,11 +2,12 @@ package com.ltonetwork.transaction.association
 
 import com.google.common.primitives.{Bytes, Ints, Longs}
 import com.ltonetwork.account.Address
-import com.ltonetwork.serialization.Deser
+import com.ltonetwork.serialization._
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.association.IssueAssociationTransaction.create
-import com.ltonetwork.transaction.{Proofs, TransactionParser, TransactionSerializer}
+import com.ltonetwork.transaction.{TransactionParser, TransactionSerializer}
 
+import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
 object IssueAssociationSerializerV3 extends TransactionSerializer.For[IssueAssociationTransaction] {
@@ -27,22 +28,18 @@ object IssueAssociationSerializerV3 extends TransactionSerializer.For[IssueAssoc
     )
   }
 
-  def parseBytes(version: Byte, bytes: Array[Byte]): Try[IssueAssociationTransaction] =
-    Try {
-      (for {
-        parsed <- parseBase(bytes)
-        (chainId, timestamp, sender, fee, end) = parsed
-        recipient <- Address.fromBytes(bytes.slice(end, end + Address.AddressLength))
-        recipientEnd    = end + Address.AddressLength
-        assocType       = Ints.fromByteArray(bytes.slice(recipientEnd, recipientEnd + Ints.BYTES))
-        expires         = Longs.fromByteArray(bytes.slice(recipientEnd + Ints.BYTES, recipientEnd + Ints.BYTES + Longs.BYTES))
-        expiresOpt      = Some(expires).noneIf(0)
-        (hashBytes, s1) = Deser.parseArraySize(bytes, recipientEnd + Ints.BYTES + Longs.BYTES)
-        hashOpt         = Some(ByteStr(hashBytes)).noneIfEmpty
-        sponsor <- parseSponsor(bytes, s1)
-        s2              = s1 + sponsor.fold(0)(account => account.keyType.length)
-        proofs  <- Proofs.fromBytes(bytes.drop(s2))
-        tx      <- create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, expiresOpt, hashOpt, sponsor, proofs)
-      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[IssueAssociationTransaction] = Try {
+    val buf = ByteBuffer.wrap(bytes)
+
+    val (chainId, timestamp, sender, fee) = parseBase(buf)
+    val recipient = buf.getAddress
+    val assocType = buf.getInt
+    val expires   = Some(buf.getLong).noneIf(0)
+    val hash      = Some(buf.getByteArrayWithLength).map(ByteStr(_)).noneIfEmpty
+    val sponsor   = parseSponsor(buf)
+    val proofs    = buf.getProofs
+
+    create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, expires, hash, sponsor, proofs)
+      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 }

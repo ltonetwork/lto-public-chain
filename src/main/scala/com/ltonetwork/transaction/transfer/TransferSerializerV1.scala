@@ -1,11 +1,11 @@
 package com.ltonetwork.transaction.transfer
 
 import com.google.common.primitives.{Bytes, Longs}
-import com.ltonetwork.serialization.Deser
-import com.ltonetwork.state._
+import com.ltonetwork.serialization._
 import com.ltonetwork.transaction.Proofs
-import scorex.crypto.signatures.Curve25519.SignatureLength
+import com.ltonetwork.transaction.transfer.TransferTransaction.create
 
+import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
 object TransferSerializerV1 extends TransferSerializerLegacy {
@@ -23,17 +23,17 @@ object TransferSerializerV1 extends TransferSerializerLegacy {
     )
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
-    Try {
-      val signature = ByteStr(bytes.take(SignatureLength))
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
+    val buf = ByteBuffer.wrap(bytes)
 
-      val txTypeId = bytes(SignatureLength)
-      require(txTypeId == TransferTransaction.typeId, s"Signed tx type ($txTypeId) doesn't match")
+    val signature = buf.getSignature
 
-      (for {
-        parsed <- parseBase(bytes, SignatureLength + 1)
-        (sender, timestamp, amount, fee, recipient, attachment, _) = parsed
-        tx <- TransferTransaction.create(version, None, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.fromSignature(signature))
-      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
+    val txTypeId  = buf.getByte
+    require(txTypeId == TransferTransaction.typeId, s"Signed tx type ($txTypeId) doesn't match")
+
+    val (sender, timestamp, amount, fee, recipient, attachment) = parseBase(buf)
+
+    create(version, None, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.fromSignature(signature))
+      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+  }.flatten
 }
