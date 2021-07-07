@@ -64,25 +64,16 @@ package object serialization {
 
     def getPublicKey: PublicKeyAccount = PublicKeyAccount(getByteArray(KeyLength))
 
-    def getTypedPublicKey: PublicKeyAccount = {
-      val keyTypeId = buf.get
-
+    private def getAccountWithKeyType(keyTypeId: Byte, buf: ByteBuffer): PublicKeyAccount =
       keyType(keyTypeId) match {
         case Failure(exception) => throw exception
         case Success(kt) => PublicKeyAccount(kt, buf.getByteArray(kt.length))
       }
-    }
 
-    def getOptPublicKey: Option[PublicKeyAccount] = {
-      val keyTypeId = buf.get
-
-      if (keyTypeId == 0)
-        None
-      else
-        keyType(keyTypeId) match {
-          case Failure(exception) => throw exception
-          case Success(kt) => Some(PublicKeyAccount(kt, buf.getByteArray(kt.length)))
-        }
+    def getAccount: PublicKeyAccount = getAccountWithKeyType(buf.get, buf)
+    def getOptAccount: Option[PublicKeyAccount] = {
+      val kt = buf.get
+      if (kt == 0) None else Some(getAccountWithKeyType(kt, buf))
     }
 
     def getProofs: Proofs = Proofs.fromBytes(buf.getByteArray(buf.remaining())).explicitGet()

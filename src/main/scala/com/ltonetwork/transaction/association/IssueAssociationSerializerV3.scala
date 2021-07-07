@@ -1,7 +1,6 @@
 package com.ltonetwork.transaction.association
 
-import com.google.common.primitives.{Bytes, Ints, Longs}
-import com.ltonetwork.account.Address
+import com.google.common.primitives.{Bytes, Ints, Longs, Shorts}
 import com.ltonetwork.serialization._
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.association.IssueAssociationTransaction.create
@@ -19,12 +18,12 @@ object IssueAssociationSerializerV3 extends TransactionSerializer.For[IssueAssoc
     Bytes.concat(
       Array(builder.typeId, version, chainId),
       Longs.toByteArray(timestamp),
-      sender.publicKey,
+      Deser.serializeAccount(sender),
       Longs.toByteArray(fee),
       recipient.bytes.arr,
       Ints.toByteArray(assocType),
       Longs.toByteArray(expires.getOrElse(0)),
-      hash.fold(Array(0: Byte))(a => Deser.serializeArray(a.arr))
+      Deser.serializeArray(hash.fold(Array.emptyByteArray)(_.arr))
     )
   }
 
@@ -41,5 +40,5 @@ object IssueAssociationSerializerV3 extends TransactionSerializer.For[IssueAssoc
 
     create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, expires, hash, sponsor, proofs)
       .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-    }.flatten
+  }.flatten
 }

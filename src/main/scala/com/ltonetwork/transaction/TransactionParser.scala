@@ -87,7 +87,7 @@ object TransactionParser {
   // ===============
 
   def parseSponsor(buf: ByteBuffer): Option[PublicKeyAccount] =
-    try { buf.getOptPublicKey } catch {
+    try { buf.getOptAccount } catch {
       case e: Exception => throw new Exception("Invalid sponsor public key", e)
     }
 
@@ -95,7 +95,7 @@ object TransactionParser {
   def parseBase(buf: ByteBuffer): (Byte, Long, PublicKeyAccount, Long) = {
     val chainId   = buf.getByte
     val timestamp = buf.getLong
-    val sender    = try { buf.getTypedPublicKey } catch {
+    val sender    = try { buf.getAccount } catch {
       case e: Exception => throw new Exception("Invalid sender public key", e)
     }
     val fee       = buf.getLong

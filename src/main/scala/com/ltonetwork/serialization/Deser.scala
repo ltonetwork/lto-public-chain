@@ -1,6 +1,7 @@
 package com.ltonetwork.serialization
 
 import com.google.common.primitives.{Bytes, Shorts}
+import com.ltonetwork.account.PublicKeyAccount
 
 // Todo remove parse methods and only use ByteBuffer with methods from package
 object Deser {
@@ -51,4 +52,6 @@ object Deser {
   def serializeOption[T](b: Option[T])(ser: T => Array[Byte]): Array[Byte] = b.map(a => (1: Byte) +: serializeArray(ser(a))).getOrElse(Array(0: Byte))
 
   def serializeArrays(bs: Seq[Array[Byte]]): Array[Byte] = Shorts.toByteArray(bs.length.toShort) ++ Bytes.concat(bs.map(serializeArray): _*)
+
+  def serializeAccount(account: PublicKeyAccount): Array[Byte] = Bytes.concat(Array(account.keyType.id), account.publicKey)
 }

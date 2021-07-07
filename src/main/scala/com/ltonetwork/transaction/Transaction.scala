@@ -3,7 +3,7 @@ package com.ltonetwork.transaction
 import com.google.common.primitives.Bytes
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.crypto
-import com.ltonetwork.serialization.{BytesSerializable, JsonSerializable}
+import com.ltonetwork.serialization._
 import com.ltonetwork.state._
 import com.ltonetwork.utils.Base58
 import monix.eval.Coeval
@@ -27,7 +27,7 @@ trait Transaction extends BytesSerializable with JsonSerializable {
 
   protected def prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(Array(0: Byte))
   private def sponsorBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
-    if (version >= 3) sponsor.map(account => Bytes.concat(Array(account.keyType.id), account.publicKey)).getOrElse(Array(0: Byte))
+    if (version >= 3) sponsor.fold(Array(0: Byte))(Deser.serializeAccount)
     else Array.emptyByteArray
   )
   protected def footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(sponsorBytes(), proofs.bytes()))

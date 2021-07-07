@@ -1,6 +1,6 @@
 package com.ltonetwork.transaction.association
 
-import com.google.common.primitives.{Bytes, Ints, Longs}
+import com.google.common.primitives.{Bytes, Ints, Longs, Shorts}
 import com.ltonetwork.serialization._
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.association.RevokeAssociationTransaction.create
@@ -18,11 +18,11 @@ object RevokeAssociationSerializerV3 extends TransactionSerializer.For[RevokeAss
     Bytes.concat(
       Array(builder.typeId, version, chainId),
       Longs.toByteArray(timestamp),
-      sender.publicKey,
+      Deser.serializeAccount(sender),
       Longs.toByteArray(fee),
       recipient.bytes.arr,
       Ints.toByteArray(assocType),
-      hash.fold(Array(0: Byte))(a => Deser.serializeArray(a.arr))
+      Deser.serializeArray(hash.fold(Array.emptyByteArray)(_.arr))
     )
   }
 

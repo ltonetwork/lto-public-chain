@@ -15,7 +15,8 @@ import scala.util.Try
 class AssociationTransactionSpecification extends PropSpec with PropertyChecks with OptionValues with Matchers with TransactionGen {
 
   private def checkSerialization(tx: AssociationTransaction, parser: Array[Byte] => Try[AssociationTransaction]): Assertion = {
-    val parsed = parser(tx.bytes()).get
+    val bytes = tx.bytes()
+    val parsed = parser(bytes).get
 
     parsed.sender.address shouldEqual tx.sender.address
     parsed.timestamp shouldEqual tx.timestamp
@@ -100,7 +101,7 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
     val js = Json.parse(s"""{
                        "type": 16,
                        "version": 3,
-                       "id": "B9Dxy4fUfUaxqCGLdMU6Gs5QNzGxU78Z5cjRVbKBU6Vx",
+                       "id": "Hj7ravc74WgLc7bQh8nFAa7LrNGQr88CDYRDZxzWZZbg",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",

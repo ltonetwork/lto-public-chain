@@ -25,14 +25,14 @@ case class IssueAssociationTransaction private (version: Byte,
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
 
-  val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase ++
+  val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase ++ (
     Json.obj(
       "associationType" -> assocType,
       "recipient"       -> recipient.stringRepr,
     ) ++
     expires.fold(Json.obj())(e => Json.obj("expires" -> e)) ++
     hash.fold(Json.obj())(h => Json.obj("hash" -> h.base58))
-  )
+  ))
 }
 
 object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociationTransaction] {
@@ -52,6 +52,9 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
+        Validated.condNel(version < 3 || !hash.exists(_.arr.length == 0),
+                          None,
+                          ValidationError.GenericError("Hash length must not be 0 bytes")),
         Validated.condNel(!hash.exists(_.arr.length > MaxHashLength),
                           None,
                           ValidationError.GenericError(s"Hash length must be <= $MaxHashLength bytes")),

@@ -402,7 +402,8 @@ trait TransactionGenBase extends ScriptGen {
     assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
     expires   <- if (version < 3) Gen.const(None) else Gen.option(timestampGen)
     fee <- smallFeeGen
-    hashOpt <- Gen.option(genBoundedBytes(0, IssueAssociationTransaction.MaxHashLength).map(ByteStr(_)))
+    minHashLength = if (version < 3) 0 else 1
+    hashOpt <- Gen.option(genBoundedBytes(minHashLength, IssueAssociationTransaction.MaxHashLength).map(ByteStr(_)))
   } yield IssueAssociationTransaction.selfSigned(version, timestamp, sender, fee, recipient, assocType, expires, hashOpt).explicitGet()
 
   def revokeAssocTransactionGen: Gen[RevokeAssociationTransaction] = versionGen(RevokeAssociationTransaction).flatMap(revokeAssocTransactionGen)
@@ -412,7 +413,8 @@ trait TransactionGenBase extends ScriptGen {
     recipient <- accountGen
     assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
     fee <- smallFeeGen
-    hashOpt <- Gen.option(genBoundedBytes(0, RevokeAssociationTransaction.MaxHashLength).map(ByteStr(_)))
+    minHashLength = if (version < 3) 0 else 1
+    hashOpt <- Gen.option(genBoundedBytes(minHashLength, RevokeAssociationTransaction.MaxHashLength).map(ByteStr(_)))
   } yield RevokeAssociationTransaction.selfSigned(version, timestamp, sender, fee, recipient, assocType, hashOpt).explicitGet()
 
   def assocTransactionGen: Gen[AssociationTransaction] = Gen.oneOf(issueAssocTransactionGen, revokeAssocTransactionGen)
