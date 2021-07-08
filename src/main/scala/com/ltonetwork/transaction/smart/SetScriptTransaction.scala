@@ -62,8 +62,8 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
   }
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
-    case 1 => SetTransactionSerializerV1
-    case 3 => SetTransactionSerializerV3
+    case 1 => SetScriptSerializerV1
+    case 3 => SetScriptSerializerV3
     case _ => UnknownSerializer
   }
 

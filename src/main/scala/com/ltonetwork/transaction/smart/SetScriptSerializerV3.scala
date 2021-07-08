@@ -8,7 +8,7 @@ import com.ltonetwork.transaction.smart.SetScriptTransaction.{create, parseScrip
 import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
-object SetTransactionSerializerV3 extends TransactionSerializer.For[SetScriptTransaction] {
+object SetScriptSerializerV3 extends TransactionSerializer.For[SetScriptTransaction] {
   import TransactionParser._
 
   override def bodyBytes(tx: SetScriptTransaction): Array[Byte] = {
