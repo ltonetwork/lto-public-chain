@@ -9,9 +9,8 @@ import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
 object LeaseSerializerV1 extends LeaseSerializerLegacy {
-  override def bodyBytes(tx: TransactionT): Array[Byte] = {
+  override def bodyBytes(tx: TransactionT): Array[Byte] =
     Bytes.concat(Array(LeaseTransaction.typeId), bytesBase(tx))
-  }
 
   override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
     val buf = ByteBuffer.wrap(bytes)

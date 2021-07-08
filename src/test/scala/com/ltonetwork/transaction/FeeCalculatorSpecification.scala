@@ -96,7 +96,7 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
 
   property("Lease cancel transaction") {
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(leaseCancelGen) { tx: CancelLeaseTransaction =>
+    forAll(cancelLeaseGen) { tx: CancelLeaseTransaction =>
       feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 500000)
     }
   }

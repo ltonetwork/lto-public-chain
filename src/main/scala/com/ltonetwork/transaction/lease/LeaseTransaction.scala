@@ -38,7 +38,7 @@ case class LeaseTransaction private (version: Byte,
 object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
 
   override val typeId: Byte                 = 8
-  override def supportedVersions: Set[Byte] = Set(1, 2)
+  override def supportedVersions: Set[Byte] = Set(1, 2, 3)
 
   object Status {
     val Active   = "active"
@@ -51,6 +51,7 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => LeaseSerializerV1
     case 2 => LeaseSerializerV2
+    case 3 => LeaseSerializerV3
     case _ => UnknownSerializer
   }
 

@@ -52,6 +52,6 @@ trait RequestGen extends TransactionGen { _: Suite =>
 
   val leaseCancelReq: G[CancelLeaseRequest] = for {
     _signature <- signatureGen
-    _cancel    <- leaseCancelGen
+    _cancel    <- cancelLeaseGen
   } yield CancelLeaseRequest(Some(1), Some(_cancel.timestamp), Some(_cancel.sender.toString), None, _cancel.fee, _cancel.leaseId, signature = Some(_signature))
 }

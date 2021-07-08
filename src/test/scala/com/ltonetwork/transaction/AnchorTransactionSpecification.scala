@@ -36,6 +36,13 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
     }
   }
 
+  property("from TransactionParser") {
+    forAll(anchorTransactionGen) { tx: AnchorTransaction =>
+      val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
+      recovered.bytes() shouldEqual tx.bytes()
+    }
+  }
+
   property("JSON roundtrip") {
     forAll(anchorTransactionGen) { tx =>
       val json = tx.json()

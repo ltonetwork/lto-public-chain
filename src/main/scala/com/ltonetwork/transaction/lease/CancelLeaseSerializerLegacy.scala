@@ -12,6 +12,8 @@ import java.nio.ByteBuffer
 trait CancelLeaseSerializerLegacy extends TransactionSerializer.For[CancelLeaseTransaction] {
   def bytesBase(tx: TransactionT): Array[Byte] = {
     import tx._
+    require(leaseId.arr.length == 32)
+
     Bytes.concat(
       sender.publicKey,
       Longs.toByteArray(fee),
@@ -24,7 +26,7 @@ trait CancelLeaseSerializerLegacy extends TransactionSerializer.For[CancelLeaseT
     val sender    = buf.getPublicKey
     val fee       = buf.getLong
     val timestamp = buf.getLong
-    val leaseId   = ByteStr(buf.getByteArray(16))
+    val leaseId   = ByteStr(buf.getByteArray(32))
     (sender, fee, timestamp, leaseId)
   }
 }

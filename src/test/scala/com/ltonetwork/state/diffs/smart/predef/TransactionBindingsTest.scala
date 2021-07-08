@@ -71,7 +71,7 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
   }
 
   property("LeaseCancelTransaction binding") {
-    forAll(leaseCancelGen) { t =>
+    forAll(cancelLeaseGen) { t =>
       val result = runScript[Boolean](
         s"""
           |match tx {

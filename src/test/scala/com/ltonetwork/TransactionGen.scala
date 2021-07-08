@@ -84,6 +84,12 @@ trait TransactionGenBase extends ScriptGen {
 
   val ltoAssetGen: Gen[Option[ByteStr]] = Gen.const(None)
 
+  def versionGen(builder: TransactionBuilder): Gen[Byte] =
+    Gen.oneOf(builder.supportedVersions.toSeq)
+
+  def versionTable(builder: TransactionBuilder): TableFor1[Byte] =
+    Table("version", builder.supportedVersions.toList: _*)
+
   val proofsGen: Gen[Proofs] = for {
     proofsAmount <- Gen.choose(1, 8)
     proofs <- Gen.listOfN(proofsAmount, genBoundedBytes(0, 50))
@@ -120,20 +126,21 @@ trait TransactionGenBase extends ScriptGen {
   } yield (sender, amount, fee, timestamp, recipient)
 
   def createLease(sender: PrivateKeyAccount, amount: Long, fee: Long, timestamp: Long, recipient: Address): Gen[LeaseTransaction] =
-    for {
-      version <- Gen.oneOf(LeaseTransaction.supportedVersions.toSeq)
-    } yield LeaseTransaction.selfSigned(version, timestamp, sender, fee, recipient, amount).explicitGet()
+    versionGen(LeaseTransaction).flatMap(createLease(_, sender, amount, fee, timestamp, recipient))
+  def createLease(version: Byte, sender: PrivateKeyAccount, amount: Long, fee: Long, timestamp: Long, recipient: Address): Gen[LeaseTransaction] =
+    LeaseTransaction.selfSigned(version, timestamp, sender, fee, recipient, amount).explicitGet()
 
   def createLeaseCancel(sender: PrivateKeyAccount, leaseId: ByteStr, fee: Long, timestamp: Long): Gen[CancelLeaseTransaction] =
-    for {
-      version <- Gen.oneOf(LeaseTransaction.supportedVersions.toSeq)
-    } yield CancelLeaseTransaction.selfSigned(version, timestamp, sender, fee, leaseId).explicitGet()
+    versionGen(LeaseTransaction).flatMap(createLeaseCancel(_, sender, leaseId, fee, timestamp))
+  def createLeaseCancel(version: Byte, sender: PrivateKeyAccount, leaseId: ByteStr, fee: Long, timestamp: Long): Gen[CancelLeaseTransaction] =
+    CancelLeaseTransaction.selfSigned(version, timestamp, sender, fee, leaseId).explicitGet()
 
-  val leaseAndCancelGen: Gen[(LeaseTransaction, CancelLeaseTransaction)] = for {
+  def leaseAndCancelGen: Gen[(LeaseTransaction, CancelLeaseTransaction)] = versionGen(LeaseTransaction).flatMap(leaseAndCancelGen)
+  def leaseAndCancelGen(version: Byte): Gen[(LeaseTransaction, CancelLeaseTransaction)] = for {
     (sender, amount, fee, timestamp, recipient) <- leaseParamGen
-    lease <- createLease(sender, amount, fee, timestamp, recipient)
+    lease <- createLease(version, sender, amount, fee, timestamp, recipient)
     cancelFee <- smallFeeGen
-    leaseCancel <- createLeaseCancel(sender, lease.id(), cancelFee, timestamp + 1)
+    leaseCancel <- createLeaseCancel(version, sender, lease.id(), cancelFee, timestamp + 1)
   } yield (lease, leaseCancel)
 
   def leaseAndCancelGeneratorP(leaseSender: PrivateKeyAccount,
@@ -165,8 +172,11 @@ trait TransactionGenBase extends ScriptGen {
     leaseCancel <- createLeaseCancel(otherSender, lease.id(), fee2, timestamp2)
   } yield (lease, leaseCancel)
 
-  val leaseGen: Gen[LeaseTransaction] = leaseAndCancelGen.map(_._1)
-  val leaseCancelGen: Gen[CancelLeaseTransaction] = leaseAndCancelGen.map(_._2)
+  def leaseGen: Gen[LeaseTransaction] = versionGen(LeaseTransaction).flatMap(leaseGen)
+  def leaseGen(version: Byte): Gen[LeaseTransaction] = leaseAndCancelGen(version).map(_._1)
+
+  def cancelLeaseGen: Gen[CancelLeaseTransaction] = versionGen(CancelLeaseTransaction).flatMap(cancelLeaseGen)
+  def cancelLeaseGen(version: Byte): Gen[CancelLeaseTransaction] = leaseAndCancelGen(version).map(_._2)
 
   val transferParamGen: Gen[(PrivateKeyAccount, Address, Long, Long, Long, Array[Byte])] = for {
     amount <- positiveLongGen
@@ -278,12 +288,6 @@ trait TransactionGenBase extends ScriptGen {
 
   val MinIssueFee = 100000000
 
-  def versionGen(builder: TransactionBuilder): Gen[Byte] =
-    Gen.oneOf(builder.supportedVersions.toSeq)
-
-  def versionTable(builder: TransactionBuilder): TableFor1[Byte] =
-    Table("version", builder.supportedVersions.toList: _*)
-
   val randomTransactionGen: Gen[Transaction] = (for {
     tr <- transferV1Gen
   } yield tr).label("random transaction")
@@ -382,7 +386,6 @@ trait TransactionGenBase extends ScriptGen {
     } yield (genesis, setScript, lease, transfer)
 
   def anchorTransactionGen: Gen[AnchorTransaction] = versionGen(AnchorTransaction).flatMap(anchorTransactionGen)
-
   def anchorTransactionGen(version: Byte): Gen[AnchorTransaction] = for {
     sender <- accountGen
     timestamp <- timestampGen

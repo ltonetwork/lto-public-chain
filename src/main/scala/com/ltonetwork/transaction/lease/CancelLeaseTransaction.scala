@@ -29,7 +29,6 @@ case class CancelLeaseTransaction private (version: Byte,
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
   val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj(
-    "chainId"   -> chainId,
     "version"   -> version,
     "fee"       -> fee,
     "timestamp" -> timestamp,
@@ -39,7 +38,7 @@ case class CancelLeaseTransaction private (version: Byte,
 
 object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransaction] {
   override val typeId: Byte                 = 9
-  override def supportedVersions: Set[Byte] = Set(1, 2)
+  override def supportedVersions: Set[Byte] = Set(1, 2, 3)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
@@ -47,6 +46,7 @@ object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransact
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => CancelLeaseSerializerV1
     case 2 => CancelLeaseSerializerV2
+    case 3 => CancelLeaseSerializerV3
     case _ => UnknownSerializer
   }
 
