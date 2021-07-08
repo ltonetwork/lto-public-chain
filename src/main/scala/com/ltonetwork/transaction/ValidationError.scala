@@ -55,4 +55,6 @@ object ValidationError {
     override def toString: String = s"MicroBlockAppendError($err, ${microBlock.totalResBlockSig} ~> ${microBlock.prevResBlockSig.trim}])"
   }
 
+  def valid[T](v: T): Validation[T] = Right(v)
+
 }

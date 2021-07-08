@@ -1,13 +1,19 @@
 package com.ltonetwork.state.diffs
 
-import com.ltonetwork.account.{Address, PrivateKeyAccount}
+import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.block.Block
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
+import com.ltonetwork.lang.v1.compiler.Terms.{EXPR, FALSE, TRUE}
 import com.ltonetwork.state.EitherExt2
+import com.ltonetwork.state.diffs.smart.smartEnabledFS
 import com.ltonetwork.transaction.genesis.GenesisTransaction
-import com.ltonetwork.transaction.transfer.TransferTransaction
+import com.ltonetwork.transaction.smart.SetScriptTransaction
+import com.ltonetwork.transaction.smart.script.Script
+import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
+import com.ltonetwork.transaction.transfer.TransferTransaction
+import com.ltonetwork.utils._
 import com.ltonetwork.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
@@ -36,7 +42,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
     sponsorship = SponsorshipTransaction.selfSigned(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
     cancel      = CancelSponsorshipTransaction.selfSigned(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
     transfer    = TransferTransaction.selfSigned(2, ts + 1, sender, transferTxFee, other, transferAmt, Array.emptyByteArray).explicitGet()
-  } yield (List(g1, g2), sponsorship, cancel, transfer, sponsor)
+  } yield (List(g1, g2), sponsorship, cancel, transfer, sponsor, sender)
 
   val setup2 = for {
     sponsor  <- accountGen
@@ -60,7 +66,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
 
   property("sponsored account") {
     forAll(setup) {
-      case (genesis, sponsorship, _, transfer, _) =>
+      case (genesis, sponsorship, _, transfer, _, _) =>
         assertDiffAndState(Seq(block(genesis), block(sponsorship)), block(transfer)) {
           case (d, b) =>
             d.portfolios(sponsorship.sender.toAddress).balance shouldBe (-transfer.fee)
@@ -75,7 +81,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
 
   property("cancel sponsorship and transfer in one block") {
     forAll(setup) {
-      case (genesis, sponsorship, cancel, transfer, _) =>
+      case (genesis, sponsorship, cancel, transfer, _, _) =>
         assertDiffAndState(Seq(block(genesis), block(sponsorship)), block(cancel, transfer)) {
           case (d, b) =>
             d.portfolios(sponsorship.sender.toAddress).balance shouldBe (-cancel.fee)
@@ -88,7 +94,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
 
   property("cancel sponsorship and transfer in different blocks") {
     forAll(setup) {
-      case (genesis, sponsorship, cancel, transfer, _) =>
+      case (genesis, sponsorship, cancel, transfer, _, _) =>
         assertDiffAndState(Seq(block(genesis), block(sponsorship), block(cancel)), block(transfer)) {
           case (d, b) =>
             d.portfolios(transfer.sender.toAddress).balance shouldBe (-transfer.fee - transfer.amount)
@@ -138,7 +144,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
 
   property("sponsored transaction") {
     forAll(setup) {
-      case (genesis, _, _, transfer, sponsor) =>
+      case (genesis, _, _, transfer, sponsor, _) =>
         val sponsoredTransfer = transfer.sponsorWith(sponsor)
 
         assertDiffAndState(Seq(block(genesis)), block(sponsoredTransfer)) {
@@ -166,6 +172,51 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
             d.portfolios(TestBlock.defaultSigner).balance shouldBe fees
             b.sponsorOf(transfer.sender.toAddress) shouldBe List(sponsorship.sender.toAddress)
         }
+    }
+  }
+
+  property("sponsored transaction for smart account that accepts tx") {
+    forAll(setup) {
+      case (genesis, _, _, transfer, sponsor, sender) =>
+        val script = ScriptV1(TRUE).explicitGet()
+        val setScript = SetScriptTransaction.selfSigned(1, transfer.timestamp, sender, 10.lto, Some(script)).explicitGet()
+
+        val sponsoredTransfer = transfer.sponsorWith(sponsor)
+
+        assertDiffAndState(Seq(block(genesis), block(setScript)), block(sponsoredTransfer), smartEnabledFS) {
+          case (d, _) =>
+            d.portfolios(sponsor.toAddress).balance shouldBe (-transfer.fee)
+            d.portfolios(sponsoredTransfer.sender.toAddress).balance shouldBe (-transfer.amount)
+            d.portfolios(sponsoredTransfer.recipient).balance shouldBe transfer.amount
+            val fees = Block.CurrentBlockFeePart(transfer.fee) + setScript.fee - Block.CurrentBlockFeePart(setScript.fee)
+            d.portfolios(TestBlock.defaultSigner).balance shouldBe fees
+        }
+    }
+  }
+
+  property("sponsored transaction for smart account that rejects tx") {
+    forAll(setup) {
+      case (genesis, _, _, transfer, sponsor, sender) =>
+        val script = ScriptV1(FALSE).explicitGet()
+        val setScript = SetScriptTransaction.selfSigned(1, transfer.timestamp, sender, 10.lto, Some(script)).explicitGet()
+
+        val sponsoredTransfer = transfer.sponsorWith(sponsor)
+
+        assertDiffEi(Seq(block(genesis), block(setScript)), block(sponsoredTransfer), smartEnabledFS)(totalDiffEi =>
+          totalDiffEi should produce("TransactionNotAllowedByScript"))
+    }
+  }
+
+  property("smart account that sponsors a transaction") {
+    forAll(setup) {
+      case (genesis, _, _, transfer, sponsor, _) =>
+        val script = ScriptV1(TRUE).explicitGet()
+        val setScript = SetScriptTransaction.selfSigned(1, transfer.timestamp, sponsor, 10.lto, Some(script)).explicitGet()
+
+        val sponsoredTransfer = transfer.sponsorWith(sponsor)
+
+        assertDiffEi(Seq(block(genesis), block(setScript)), block(sponsoredTransfer), smartEnabledFS)(totalDiffEi =>
+          totalDiffEi should produce("Transaction can't be sponsored by a scripted account"))
     }
   }
 }

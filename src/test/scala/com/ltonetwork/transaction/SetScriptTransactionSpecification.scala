@@ -5,11 +5,11 @@ import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.api.http.requests.SetScriptRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
+import com.ltonetwork.transaction.smart.script.ScriptCompilerV1Test.compiledScript
 import com.ltonetwork.utils.Base58
-import com.ltonetwork.transaction.smart.script.ScriptCompilerV1Test
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.Json
 
 class SetScriptTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
   property("serialization roundtrip") {
@@ -66,7 +66,7 @@ class SetScriptTransactionSpecification extends PropSpec with PropertyChecks wit
         1526911531530L,
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         100000,
-        Some(ScriptCompilerV1Test.compiledScript),
+        Some(compiledScript),
         None,
         Proofs(Seq(arr))
       )
