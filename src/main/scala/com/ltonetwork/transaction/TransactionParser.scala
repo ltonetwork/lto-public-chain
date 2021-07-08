@@ -47,49 +47,19 @@ object TransactionParser {
     }
   }
 
-  // === OLD ===
-
-  private def parsePublicKeyAccount(bytes: Array[Byte], start: Int): Option[PublicKeyAccount] = {
-    val keyTypeId = bytes(start)
-
-    keyType(keyTypeId) match {
-      case Failure(_) => None
-      case Success(kt) => Some(PublicKeyAccount(kt, bytes.slice(start + 1, start + 1 + kt.length)))
-    }
-  }
-
-  def parseSponsor(bytes: Array[Byte], start: Int): Either[ValidationError, Option[PublicKeyAccount]] = {
-    val keyTypeId = bytes(start)
-
-    if (keyTypeId == 0)
-      Right(None)
-    else
-      parsePublicKeyAccount(bytes, start)
-        .toRight(InvalidPublicKey("Invalid sponsor key type"))
-        .map(sponsor => Some(sponsor))
-  }
-
-  // Base structure for transactions v3 and up
-  def parseBase(bytes: Array[Byte]): Either[ValidationError, (Byte, Long, PublicKeyAccount, Long, Int)] = {
-    val chainId   = bytes.head
-    val timestamp = Longs.fromByteArray(bytes.slice(1, 1 + Longs.BYTES))
-
-    parsePublicKeyAccount(bytes, 1 + Longs.BYTES)
-      .toRight(InvalidPublicKey("Invalid sender key type"))
-      .map(sender => {
-        val s1  = 1 + Longs.BYTES + 1 + sender.keyType.length
-        val fee = Longs.fromByteArray(bytes.slice(s1, s1 + Longs.BYTES))
-
-        (chainId, timestamp, sender, fee, s1 + Longs.BYTES)
-      })
-  }
-
-  // ===============
-
   def parseSponsor(buf: ByteBuffer): Option[PublicKeyAccount] =
     try { buf.getOptAccount } catch {
       case e: Exception => throw new Exception("Invalid sponsor public key", e)
     }
+
+  def parseFooter(buf: ByteBuffer): (Option[PublicKeyAccount], Proofs) = {
+    val sponsor = try { buf.getOptAccount } catch {
+      case e: Exception => throw new Exception("Invalid sponsor public key", e)
+    }
+    val proofs = buf.getProofs
+
+    (sponsor, proofs)
+  }
 
   // Base structure for transactions v3 and up
   def parseBase(buf: ByteBuffer): (Byte, Long, PublicKeyAccount, Long) = {

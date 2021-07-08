@@ -3,6 +3,7 @@ package com.ltonetwork.transaction.sponsorship
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
+import com.ltonetwork.transaction.sponsorship.SponsorshipTransaction.SerializerV1
 import com.ltonetwork.transaction.{Proofs, TransactionBuilder, TransactionSerializer, ValidationError}
 import monix.eval.Coeval
 
@@ -33,20 +34,17 @@ object SponsorshipTransaction extends TransactionBuilder.For[SponsorshipTransact
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   object SerializerV1 extends SponsorshipSerializerV1[TransactionT] {
-    def createTx(version: Byte,
-                 chainId: Byte,
-                 timestamp: Long,
-                 sender: PublicKeyAccount,
-                 fee: Long,
-                 recipient: Address,
-                 proofs: Proofs): Either[ValidationError, TransactionT] =
-      create(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
+    protected val createTx = create
+  }
+  object SerializerV3 extends SponsorshipSerializerV3[TransactionT] {
+    protected val createTx = create
   }
 
   implicit object Validator extends SponsorshipTransactionBase.Validator[TransactionT]
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => SerializerV1
+    case 3 => SerializerV3
     case _ => UnknownSerializer
   }
 

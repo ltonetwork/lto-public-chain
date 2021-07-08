@@ -3,13 +3,15 @@ package com.ltonetwork.transaction.sponsorship
 import com.google.common.primitives.{Bytes, Longs}
 import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.serialization._
-import com.ltonetwork.transaction.{Proofs, TransactionSerializer, ValidationError}
+import com.ltonetwork.transaction.{Proofs, TransactionParser, TransactionSerializer, ValidationError}
 
 import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
-trait SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTransactionBase]
+trait SponsorshipSerializerV3[SponsorshipTransactionT <: SponsorshipTransactionBase]
     extends TransactionSerializer.For[SponsorshipTransactionT] {
+
+  import TransactionParser._
 
   type CreateCtor = (Byte, Option[Byte], Long, PublicKeyAccount, Long, Address, Option[PublicKeyAccount], Proofs) => Either[ValidationError, SponsorshipTransactionT]
   protected val createTx: CreateCtor
@@ -19,24 +21,21 @@ trait SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTransactionB
 
     Bytes.concat(
       Array(builder.typeId, version, chainId),
-      sender.publicKey,
-      recipient.bytes.arr,
       Longs.toByteArray(timestamp),
-      Longs.toByteArray(fee)
+      Deser.serializeAccount(sender),
+      Longs.toByteArray(fee),
+      recipient.bytes.arr,
     )
   }
 
   def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
     val buf = ByteBuffer.wrap(bytes)
 
-    val chainId   = buf.getByte
-    val sender    = buf.getPublicKey
+    val (chainId, timestamp, sender, fee) = parseBase(buf)
     val recipient = buf.getAddress
-    val timestamp = buf.getLong
-    val fee       = buf.getLong
-    val proofs    = buf.getProofs
+    val (sponsor, proofs) = parseFooter(buf)
 
-    createTx.apply(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
+    createTx(version, Some(chainId), timestamp, sender, fee, recipient, sponsor, proofs)
       .fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
 }

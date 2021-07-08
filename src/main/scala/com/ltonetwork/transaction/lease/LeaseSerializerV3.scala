@@ -29,8 +29,7 @@ object LeaseSerializerV3 extends TransactionSerializer.For[LeaseTransaction] {
     val (chainId, timestamp, sender, fee) = parseBase(buf)
     val recipient = buf.getAddress
     val amount    = buf.getLong
-    val sponsor   = parseSponsor(buf)
-    val proofs    = buf.getProofs
+    val (sponsor, proofs) = parseFooter(buf)
 
     create(version, Some(chainId), timestamp, sender, fee, recipient, amount, sponsor, proofs)
       .fold(left => Failure(new Exception(left.toString)), right => Success(right))

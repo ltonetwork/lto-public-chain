@@ -65,15 +65,7 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
   }
 
   object SerializerV1 extends AssociationSerializerV1[RevokeAssociationTransaction] {
-    protected def createTx(version: Byte,
-                           chainId: Byte,
-                           timestamp: Long,
-                           sender: PublicKeyAccount,
-                           fee: Long,
-                           recipient: Address,
-                           assocType: Int,
-                           hash: Option[ByteStr],
-                           proofs: Proofs): Either[ValidationError, TransactionT] =
+    protected val createTx = (version, chainId, timestamp, sender, fee, recipient, assocType, hash, proofs) =>
       create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, hash, None, proofs)
   }
 

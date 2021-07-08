@@ -30,8 +30,7 @@ object CancelLeaseSerializerV3 extends TransactionSerializer.For[CancelLeaseTran
 
     val (chainId, timestamp, sender, fee) = parseBase(buf)
     val leaseId = ByteStr(buf.getByteArray(32))
-    val sponsor = parseSponsor(buf)
-    val proofs  = buf.getProofs
+    val (sponsor, proofs) = parseFooter(buf)
 
     create(version, Some(chainId), timestamp, sender, fee, leaseId, sponsor, proofs)
       .fold(left => Failure(new Exception(left.toString)), right => Success(right))

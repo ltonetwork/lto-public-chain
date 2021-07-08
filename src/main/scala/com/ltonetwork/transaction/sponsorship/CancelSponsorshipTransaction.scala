@@ -33,18 +33,15 @@ object CancelSponsorshipTransaction extends TransactionBuilder.For[CancelSponsor
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   object SerializerV1 extends SponsorshipSerializerV1[TransactionT] {
-    def createTx(version: Byte,
-                 chainId: Byte,
-                 timestamp: Long,
-                 sender: PublicKeyAccount,
-                 fee: Long,
-                 recipient: Address,
-                 proofs: Proofs): Either[ValidationError, TransactionT] =
-      create(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
+    protected val createTx = create
+  }
+  object SerializerV3 extends SponsorshipSerializerV3[TransactionT] {
+    protected val createTx = create
   }
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => SerializerV1
+    case 3 => SerializerV3
     case _ => UnknownSerializer
   }
 

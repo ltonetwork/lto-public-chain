@@ -35,8 +35,7 @@ object IssueAssociationSerializerV3 extends TransactionSerializer.For[IssueAssoc
     val assocType = buf.getInt
     val expires   = Some(buf.getLong).noneIf(0)
     val hash      = Some(buf.getByteArrayWithLength).map(ByteStr(_)).noneIfEmpty
-    val sponsor   = parseSponsor(buf)
-    val proofs    = buf.getProofs
+    val (sponsor, proofs) = parseFooter(buf)
 
     create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, expires, hash, sponsor, proofs)
       .fold(left => Failure(new Exception(left.toString)), right => Success(right))

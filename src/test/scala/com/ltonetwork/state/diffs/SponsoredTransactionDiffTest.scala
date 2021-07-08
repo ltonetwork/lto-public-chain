@@ -4,12 +4,11 @@ import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.block.Block
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
-import com.ltonetwork.lang.v1.compiler.Terms.{EXPR, FALSE, TRUE}
+import com.ltonetwork.lang.v1.compiler.Terms.{FALSE, TRUE}
 import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.state.diffs.smart.smartEnabledFS
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
-import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer.TransferTransaction

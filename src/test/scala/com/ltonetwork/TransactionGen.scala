@@ -422,18 +422,18 @@ trait TransactionGenBase extends ScriptGen {
 
   def assocTransactionGen: Gen[AssociationTransaction] = Gen.oneOf(issueAssocTransactionGen, revokeAssocTransactionGen)
 
-  val sponsorshipGen: Gen[SponsorshipTransaction] = for {
+  def sponsorshipGen: Gen[SponsorshipTransaction] = versionGen(SponsorshipTransaction).flatMap(sponsorshipGen)
+  def sponsorshipGen(version: Byte): Gen[SponsorshipTransaction] = for {
     sender <- accountGen
     timestamp <- timestampGen
-    version <- Gen.oneOf(SponsorshipTransaction.supportedVersions.toSeq)
     recipient <- accountGen
     fee <- smallFeeGen
   } yield SponsorshipTransaction.selfSigned(version, timestamp, sender, fee, recipient).explicitGet()
 
-  val cancelSponsorshipGen: Gen[CancelSponsorshipTransaction] = for {
+  def cancelSponsorshipGen: Gen[CancelSponsorshipTransaction] = versionGen(CancelSponsorshipTransaction).flatMap(cancelSponsorshipGen)
+  def cancelSponsorshipGen(version: Byte): Gen[CancelSponsorshipTransaction] = for {
     sender <- accountGen
     timestamp <- timestampGen
-    version <- Gen.oneOf(CancelSponsorshipTransaction.supportedVersions.toSeq)
     recipient <- accountGen
     fee <- smallFeeGen
   } yield CancelSponsorshipTransaction.selfSigned(version, timestamp, sender, fee, recipient).explicitGet()

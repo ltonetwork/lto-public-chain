@@ -29,8 +29,7 @@ object AnchorSerializerV3 extends TransactionSerializer.For[AnchorTransaction] {
 
     val (chainId, timestamp, sender, fee) = parseBase(buf)
     val anchors = buf.getArrays.map(ByteStr(_)).toList
-    val sponsor = parseSponsor(buf)
-    val proofs  = buf.getProofs
+    val (sponsor, proofs) = parseFooter(buf)
 
     create(version, Some(chainId), timestamp, sender, fee, anchors, sponsor, proofs)
       .fold(left => Failure(new Exception(left.toString)), right => Success(right))

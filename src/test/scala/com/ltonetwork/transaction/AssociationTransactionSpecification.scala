@@ -1,7 +1,7 @@
 package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
-import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.IssueAssociationRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
@@ -111,7 +111,6 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
   }
 
   property(testName = "JSON format validation v3") {
-    val p  = PrivateKeyAccount.fromSeed("xxx").explicitGet().toAddress
     val js = Json.parse(s"""{
                        "type": 16,
                        "version": 3,
@@ -124,7 +123,7 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
                        "sponsorPublicKey": "22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz",
                        "fee": 100000,
                        "timestamp": 1526911531530,
-                       "recipient": "$p",
+                       "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt",
                        "associationType": 420,
                        "expires": 1558447531530,
                        "hash": "264h1cUrahDxWCPJBAPgtf6A9f3dNhkrLAeBUdHU8A5NDtksaumZ4WmsAU2NiF4eTCubLpYAd9D6xgBosPv34inu",
@@ -145,7 +144,7 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
         version = 3,
         chainId = None,
         sender = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
-        recipient = p,
+        recipient = Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet(),
         assocType = 420,
         hash = Some(hash),
         fee = 100000,

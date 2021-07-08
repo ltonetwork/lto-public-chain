@@ -9,16 +9,11 @@ import com.ltonetwork.transaction.{Proofs, TransactionSerializer, ValidationErro
 import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
-trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction] extends TransactionSerializer.For[AssociationTransactionT] {
-  protected def createTx(version: Byte,
-                         chainId: Byte,
-                         timestamp: Long,
-                         sender: PublicKeyAccount,
-                         fee: Long,
-                         recipient: Address,
-                         assocType: Int,
-                         hash: Option[ByteStr],
-                         proofs: Proofs): Either[ValidationError, AssociationTransactionT]
+trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction]
+  extends TransactionSerializer.For[AssociationTransactionT] {
+
+  type CreateCtor = (Byte, Byte, Long, PublicKeyAccount, Long, Address, Int, Option[ByteStr], Proofs) => Either[ValidationError, AssociationTransactionT]
+  protected val createTx: CreateCtor
 
   override def bodyBytes(tx: AssociationTransactionT): Array[Byte] = {
     import tx._

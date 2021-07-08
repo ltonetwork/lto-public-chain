@@ -28,8 +28,7 @@ object SetScriptSerializerV3 extends TransactionSerializer.For[SetScriptTransact
 
     val (chainId, timestamp, sender, fee) = parseBase(buf)
     val scriptOptEi = parseScript(buf)
-    val sponsor = parseSponsor(buf)
-    val proofs  = buf.getProofs
+    val (sponsor, proofs) = parseFooter(buf)
 
     (for {
       scriptOpt <- scriptOptEi

@@ -13,7 +13,7 @@ import scorex.crypto.signatures.Curve25519.KeyLength
 import scala.util.{Failure, Success, Try}
 
 // Base class for Sponsorship and CancelSponsorship transaction
-abstract class SponsorshipTransactionBase extends Transaction {
+trait SponsorshipTransactionBase extends Transaction {
   def recipient: Address
 
   val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase ++ Json.obj("recipient" -> recipient.stringRepr))
@@ -21,7 +21,7 @@ abstract class SponsorshipTransactionBase extends Transaction {
 
 object SponsorshipTransactionBase {
 
-  val supportedVersions: Set[Byte] = Set(1)
+  val supportedVersions: Set[Byte] = Set(1, 3)
   val HashLength                   = 64
   def networkByte: Byte            = AddressScheme.current.chainId
 
