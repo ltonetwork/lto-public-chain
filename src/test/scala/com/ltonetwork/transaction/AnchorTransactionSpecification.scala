@@ -36,7 +36,7 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
     }
   }
 
-  property("from TransactionParser") {
+  property("from TransactionBuilder") {
     forAll(anchorTransactionGen) { tx: AnchorTransaction =>
       val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()

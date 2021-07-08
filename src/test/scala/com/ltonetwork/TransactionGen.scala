@@ -102,8 +102,8 @@ trait TransactionGenBase extends ScriptGen {
       ScriptV1(typed._1).explicitGet()
   }
 
-  val setScriptTransactionGen: Gen[SetScriptTransaction] = for {
-    version <- Gen.oneOf(SetScriptTransaction.supportedVersions.toSeq)
+  def setScriptTransactionGen: Gen[SetScriptTransaction] = versionGen(SetScriptTransaction).flatMap(setScriptTransactionGen)
+  def setScriptTransactionGen(version: Byte): Gen[SetScriptTransaction] = for {
     sender: PrivateKeyAccount <- accountGen
     fee <- smallFeeGen
     timestamp <- timestampGen

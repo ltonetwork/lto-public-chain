@@ -31,7 +31,7 @@ case class SetScriptTransaction private (version: Byte,
 object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction] {
 
   override val typeId: Byte                 = 13
-  override val supportedVersions: Set[Byte] = Set(1)
+  override val supportedVersions: Set[Byte] = Set(1, 3)
 
   def parseScript(buf: ByteBuffer): Either[ValidationError.ScriptParseError, Option[Script]] = {
     val scriptOptEi: Option[Either[ValidationError.ScriptParseError, Script]] =
@@ -63,6 +63,7 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => SetTransactionSerializerV1
+    case 3 => SetTransactionSerializerV3
     case _ => UnknownSerializer
   }
 

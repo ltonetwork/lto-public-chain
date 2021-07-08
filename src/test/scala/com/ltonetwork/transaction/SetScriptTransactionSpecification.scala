@@ -13,15 +13,24 @@ import play.api.libs.json.Json
 
 class SetScriptTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
   property("serialization roundtrip") {
+    forEvery(versionTable(SetScriptTransaction)) { version =>
+      forAll(setScriptTransactionGen(version)) { tx: SetScriptTransaction =>
+        val parsed = SetScriptTransaction.parseBytes(tx.bytes()).get
+
+        parsed.sender.address shouldEqual tx.sender.address
+        parsed.timestamp shouldEqual tx.timestamp
+        parsed.fee shouldEqual tx.fee
+        parsed.script shouldEqual tx.script
+
+        parsed.bytes() shouldEqual tx.bytes()
+      }
+    }
+  }
+
+  property("from TransactionBuilder") {
     forAll(setScriptTransactionGen) { tx: SetScriptTransaction =>
-      val parsed = SetScriptTransaction.parseBytes(tx.bytes()).get
-
-      parsed.sender.address shouldEqual tx.sender.address
-      parsed.timestamp shouldEqual tx.timestamp
-      parsed.fee shouldEqual tx.fee
-      parsed.script shouldEqual tx.script
-
-      parsed.bytes() shouldEqual tx.bytes()
+      val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
+      recovered.bytes() shouldEqual tx.bytes()
     }
   }
 
@@ -41,7 +50,7 @@ class SetScriptTransactionSpecification extends PropSpec with PropertyChecks wit
     }
   }
 
-  property(testName = "JSON format validation") {
+  property(testName = "JSON format validation V1") {
     val js = Json.parse("""{
                        "type": 13,
                        "version": 1,
@@ -76,4 +85,46 @@ class SetScriptTransactionSpecification extends PropSpec with PropertyChecks wit
     tx.json() shouldEqual js
   }
 
+
+  property(testName = "JSON format validation V3") {
+    val js = Json.parse("""{
+                       "type": 13,
+                       "version": 3,
+                       "id": "3b5QYi7QnGZZTQ2Z7GFe25Tf3jL7Yb8wMtTc1Tkk7aCg",
+                       "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+                       "senderKeyType": "ed25519",
+                       "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
+                       "sponsor": "3Mw6BfpSRkgCi8LQMQRKayvEb1fqKpDbaVY",
+                       "sponsorKeyType": "ed25519",
+                       "sponsorPublicKey": "22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz",
+                       "fee": 100000,
+                       "timestamp": 1526911531530,
+                       "script": "base64:AQQAAAABeAAAAAAAAAAACgkAAAAAAAACAAAAAAAAAAAUCQAAZAAAAAIFAAAAAXgFAAAAAXgY49ib",
+                       "proofs": [
+                         "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94",
+                         "2z2S3W9n9AatLQ4XmR5mPfZdGY3o27JY7Bf9c7GeD3GDhGykxuSEjKMkwh2yALDcBhdduFGLT1pXJww4Dg6eMHRx"
+                       ]
+                       }
+  """)
+
+    val proofs = Seq(
+      ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get,
+      ByteStr.decodeBase58("2z2S3W9n9AatLQ4XmR5mPfZdGY3o27JY7Bf9c7GeD3GDhGykxuSEjKMkwh2yALDcBhdduFGLT1pXJww4Dg6eMHRx").get
+    )
+    val tx = SetScriptTransaction
+      .create(
+        3,
+        None,
+        1526911531530L,
+        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
+        100000,
+        Some(compiledScript),
+        Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
+        Proofs(proofs)
+      )
+      .right
+      .get
+
+    tx.json() shouldEqual js
+  }
 }

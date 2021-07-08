@@ -40,14 +40,14 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
     }
   }
 
-  property("issue assoc from TransactionParser") {
+  property("issue assoc from TransactionBuilder") {
     forAll(issueAssocTransactionGen) { tx: IssueAssociationTransaction =>
       val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
     }
   }
 
-  property("revoke assoc from TransactionParser") {
+  property("revoke assoc from TransactionBuilder") {
     forAll(revokeAssocTransactionGen) { tx: RevokeAssociationTransaction =>
       val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
