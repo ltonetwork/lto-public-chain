@@ -22,7 +22,7 @@ package object serialization {
       Address.fromBytes(getByteArray(Address.AddressLength)).explicitGet()
     }
 
-    def skip(i: Int): Unit = buf.position(buf.position + i)
+    def skip(i: Int): Unit = buf.position(buf.position() + i)
 
     // More explicit name
     def getByte: Byte = buf.get()
