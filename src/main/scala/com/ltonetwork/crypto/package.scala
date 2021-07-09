@@ -44,13 +44,27 @@ package object crypto {
     case KeyTypes.ED25519 =>
       new Ed25519().verify(message, signature, publicKey)
     case KeyTypes.SECP256K1 =>
-      new ECDSA("secp256r1").verify(message, signature, publicKey)
+      new ECDSA("secp256k1").verify(message, signature, publicKey)
     case KeyTypes.SECP256R1 =>
       new ECDSA("secp256r1").verify(message, signature, publicKey)
   }
 
-  def createKeyPair(seed: Array[Byte]): (Array[Byte], Array[Byte]) = {
-    val kp = SigningKeyPair(Sha256.hash(seed))
-    (kp.privateKey, kp.publicKey)
+  def createKeyPair(seed: Array[Byte]): (Array[Byte], Array[Byte]) =
+    createKeyPair(seed, KeyTypes.ED25519)
+
+  def createKeyPair(seed: Array[Byte], keyType: KeyType): (Array[Byte], Array[Byte]) = keyType match {
+    case KeyTypes.ED25519 => {
+      val kp = new Ed25519().keyPairFromSeed(seed)
+      (kp.getPrivateKey.getBytes, kp.getPublicKey.getBytes)
+    }
+    case KeyTypes.SECP256K1 =>{
+      val kp = new ECDSA("secp256k1").keyPairFromSeed(seed)
+      (kp.getPrivateKey.getBytes, kp.getPublicKey.getBytes)
+    }
+    case KeyTypes.SECP256R1 =>{
+      val kp = new ECDSA("secp256r1").keyPairFromSeed(seed)
+      (kp.getPrivateKey.getBytes, kp.getPublicKey.getBytes)
+    }
+
   }
 }
