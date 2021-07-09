@@ -22,23 +22,32 @@ package object crypto {
   def sign(account: PrivateKeyAccount, message: Array[Byte]): Array[Byte] =
     sign(account.privateKey, account.keyType, message)
 
-  def sign(privateKeyBytes: Array[Byte], message: Array[Byte]): Array[Byte] =
-    sign(privateKeyBytes, KeyTypes.ED25519, message)
+  def sign(privateKey: Array[Byte], message: Array[Byte]): Array[Byte] =
+    sign(privateKey, KeyTypes.ED25519, message)
 
-  def sign(privateKeyBytes: Array[Byte], keyType: KeyType, message: Array[Byte]): Array[Byte] = keyType match {
+  def sign(privateKey: Array[Byte], keyType: KeyType, message: Array[Byte]): Array[Byte] = keyType match {
     case KeyTypes.ED25519 =>
-      new Ed25519().signDetached(message, privateKeyBytes).getBytes
+      new Ed25519().signDetached(message, privateKey).getBytes
     case KeyTypes.SECP256K1 =>
-      new ECDSA("secp256k1").signDetached(message, privateKeyBytes).getBytes
+      new ECDSA("secp256k1").signDetached(message, privateKey).getBytes
     case KeyTypes.SECP256R1 =>
-      new ECDSA("secp256r1").signDetached(message, privateKeyBytes).getBytes
+      new ECDSA("secp256r1").signDetached(message, privateKey).getBytes
   }
 
   def verify(signature: Array[Byte], message: Array[Byte], publicKey: Array[Byte]): Boolean =
-    Try(VerifyKey(publicKey).verify(message, signature)).fold(_ => false, _ => true)
+    verify(signature, message, publicKey, KeyTypes.ED25519)
 
   def verify(signature: Array[Byte], message: Array[Byte], account: PublicKeyAccount): Boolean =
-    verify(signature, message, account.publicKey)
+    verify(signature, message, account.publicKey, account.keyType)
+
+  def verify(signature: Array[Byte], message: Array[Byte], publicKey: Array[Byte], keyType: KeyType): Boolean = keyType match {
+    case KeyTypes.ED25519 =>
+      new Ed25519().verify(message, signature, publicKey)
+    case KeyTypes.SECP256K1 =>
+      new ECDSA("secp256r1").verify(message, signature, publicKey)
+    case KeyTypes.SECP256R1 =>
+      new ECDSA("secp256r1").verify(message, signature, publicKey)
+  }
 
   def createKeyPair(seed: Array[Byte]): (Array[Byte], Array[Byte]) = {
     val kp = SigningKeyPair(Sha256.hash(seed))
