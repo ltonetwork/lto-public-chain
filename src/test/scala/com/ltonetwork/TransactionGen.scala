@@ -81,8 +81,6 @@ trait TransactionGenBase extends ScriptGen {
 
   val timestampGen: Gen[Long] = Gen.choose(1, Long.MaxValue - 100)
 
-  val ltoAssetGen: Gen[Option[ByteStr]] = Gen.const(None)
-
   def versionGen(builder: TransactionBuilder): Gen[Byte] = Gen.oneOf(builder.supportedVersions.toSeq)
   def versionTable(builder: TransactionBuilder): TableFor1[Byte] = Table("version", builder.supportedVersions.toList: _*)
 
@@ -105,7 +103,8 @@ trait TransactionGenBase extends ScriptGen {
     timestamp <- timestampGen
     proofs <- proofsGen
     script <- Gen.option(scriptGen)
-  } yield SetScriptTransaction.create(version, None, timestamp, sender, fee, script, None, proofs).explicitGet()
+    sponsor <- sponsorGen(version)
+  } yield SetScriptTransaction.create(version, None, timestamp, sender, fee, script, sponsor, proofs).explicitGet()
 
   def selfSignedSetScriptTransactionGenP(sender: PrivateKeyAccount, script: Script, timestamp: Long): Gen[SetScriptTransaction] =
     for {
@@ -270,10 +269,12 @@ trait TransactionGenBase extends ScriptGen {
 
   val MinIssueFee = 100000000
 
-  val randomTransactionGen: Gen[Transaction] = (for {
-    tr <- transferV1Gen
-  } yield tr).label("random transaction")
-
+  val randomTransactionGen: Gen[Transaction] = Gen.oneOf(
+    transferGen,
+    anchorTransactionGen,
+    assocTransactionGen,
+    leaseGen
+  )
   def randomTransactionsGen(count: Int): Gen[Seq[Transaction]] =
     for {
       transactions <- Gen.listOfN(count, randomTransactionGen)
@@ -333,7 +334,7 @@ trait TransactionGenBase extends ScriptGen {
   val dataTransactionGen: Gen[DataTransaction] = dataTransactionGen(DataTransaction.MaxEntryCount)
 
   def dataTransactionGen(maxEntryCount: Int, useForScript: Boolean = false): Gen[DataTransaction] =
-    (for {
+    for {
       sender <- accountGen
       timestamp <- timestampGen
       size <- Gen.choose(0, maxEntryCount)
@@ -344,7 +345,7 @@ trait TransactionGenBase extends ScriptGen {
         if (es.exists(_.key == e.key)) es else e :: es
       }
       version <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
-    } yield DataTransaction.selfSigned(version, timestamp, sender, fee, uniq).explicitGet())
+    } yield DataTransaction.selfSigned(version, timestamp, sender, fee, uniq).explicitGet()
 
   def dataTransactionGenP(sender: PrivateKeyAccount, data: List[DataEntry[_]]): Gen[DataTransaction] =
     (for {
@@ -387,7 +388,8 @@ trait TransactionGenBase extends ScriptGen {
     fee <- smallFeeGen
     minHashLength = if (version < 3) 0 else 1
     hashOpt <- Gen.option(genBoundedBytes(minHashLength, IssueAssociationTransaction.MaxHashLength).map(ByteStr(_)))
-  } yield IssueAssociationTransaction.selfSigned(version, timestamp, sender, fee, recipient, assocType, expires, hashOpt).explicitGet()
+    sponsor <- sponsorGen(version)
+  } yield IssueAssociationTransaction.selfSigned(version, timestamp, sender, fee, recipient, assocType, expires, hashOpt).sponsorWith(sponsor).explicitGet()
 
   def revokeAssocTransactionGen: Gen[RevokeAssociationTransaction] = versionGen(RevokeAssociationTransaction).flatMap(revokeAssocTransactionGen)
   def revokeAssocTransactionGen(version: Byte): Gen[RevokeAssociationTransaction] = for {
@@ -398,7 +400,8 @@ trait TransactionGenBase extends ScriptGen {
     fee <- smallFeeGen
     minHashLength = if (version < 3) 0 else 1
     hashOpt <- Gen.option(genBoundedBytes(minHashLength, RevokeAssociationTransaction.MaxHashLength).map(ByteStr(_)))
-  } yield RevokeAssociationTransaction.selfSigned(version, timestamp, sender, fee, recipient, assocType, hashOpt).explicitGet()
+    sponsor <- sponsorGen(version)
+  } yield RevokeAssociationTransaction.selfSigned(version, timestamp, sender, fee, recipient, assocType, hashOpt).sponsorWith(sponsor).explicitGet()
 
   def assocTransactionGen: Gen[AssociationTransaction] = Gen.oneOf(issueAssocTransactionGen, revokeAssocTransactionGen)
 
@@ -408,7 +411,8 @@ trait TransactionGenBase extends ScriptGen {
     timestamp <- timestampGen
     recipient <- accountGen
     fee <- smallFeeGen
-  } yield SponsorshipTransaction.selfSigned(version, timestamp, sender, fee, recipient).explicitGet()
+    sponsor <- sponsorGen(version)
+  } yield SponsorshipTransaction.selfSigned(version, timestamp, sender, fee, recipient).sponsorWith(sponsor).explicitGet()
 
   def cancelSponsorshipGen: Gen[CancelSponsorshipTransaction] = versionGen(CancelSponsorshipTransaction).flatMap(cancelSponsorshipGen)
   def cancelSponsorshipGen(version: Byte): Gen[CancelSponsorshipTransaction] = for {
@@ -416,5 +420,6 @@ trait TransactionGenBase extends ScriptGen {
     timestamp <- timestampGen
     recipient <- accountGen
     fee <- smallFeeGen
-  } yield CancelSponsorshipTransaction.selfSigned(version, timestamp, sender, fee, recipient).explicitGet()
+    sponsor <- sponsorGen(version)
+  } yield CancelSponsorshipTransaction.selfSigned(version, timestamp, sender, fee, recipient).sponsorWith(sponsor).explicitGet()
 }
