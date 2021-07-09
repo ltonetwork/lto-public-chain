@@ -4,7 +4,7 @@ organization := "com.github.emstlk"
 
 version := "1.1.0-SNAPSHOT"
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.12.7"
 
 scalacOptions ++= Seq(
   "-encoding",
