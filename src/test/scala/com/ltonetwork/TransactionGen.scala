@@ -72,8 +72,7 @@ trait TransactionGenBase extends ScriptGen {
   def otherAccountGen(candidate: PrivateKeyAccount): Gen[PrivateKeyAccount] = accountGen.flatMap(Gen.oneOf(candidate, _))
 
   def sponsorGen(version: Byte): Gen[Option[PrivateKeyAccount]] = if (version < 3) Gen.const(None) else Gen.option(accountGen)
-
-  val sponsorGen: Gen[Option[PrivateKeyAccount]] = Gen.option(accountGen)
+  def sponsorGen: Gen[Option[PrivateKeyAccount]] = Gen.option(accountGen)
 
   val positiveLongGen: Gen[Long] = Gen.choose(1, 100000000L * 100000000L / 100)
   val positiveIntGen: Gen[Int] = Gen.choose(1, Int.MaxValue / 100)
@@ -84,11 +83,8 @@ trait TransactionGenBase extends ScriptGen {
 
   val ltoAssetGen: Gen[Option[ByteStr]] = Gen.const(None)
 
-  def versionGen(builder: TransactionBuilder): Gen[Byte] =
-    Gen.oneOf(builder.supportedVersions.toSeq)
-
-  def versionTable(builder: TransactionBuilder): TableFor1[Byte] =
-    Table("version", builder.supportedVersions.toList: _*)
+  def versionGen(builder: TransactionBuilder): Gen[Byte] = Gen.oneOf(builder.supportedVersions.toSeq)
+  def versionTable(builder: TransactionBuilder): TableFor1[Byte] = Table("version", builder.supportedVersions.toList: _*)
 
   val proofsGen: Gen[Proofs] = for {
     proofsAmount <- Gen.choose(1, 8)
@@ -236,41 +232,27 @@ trait TransactionGenBase extends ScriptGen {
                         timestamp: Long): Either[ValidationError, TransferTransaction] =
     TransferTransaction.selfSigned(1, timestamp, sender, fee, recipient, amount, Array())
 
-  val transferGen: Gen[TransferTransaction] = (for {
-    version <- Gen.oneOf(TransferTransaction.supportedVersions.toSeq)
+  def transferGen: Gen[TransferTransaction] = versionGen(TransferTransaction).flatMap(transferGen)
+  def transferGen(version: Byte): Gen[TransferTransaction] = for {
     (sender, recipient, amount, timestamp, fee, attachment) <- transferParamGen
-  } yield TransferTransaction.selfSigned(version, timestamp, sender, fee, recipient, amount, attachment).explicitGet())
-    .label("TransferTransaction")
+    sponsor <- sponsorGen(version)
+  } yield TransferTransaction.selfSigned(version, timestamp, sender, fee, recipient, amount, attachment).sponsorWith(sponsor).explicitGet()
 
-  val transferV1Gen: Gen[TransferTransaction] = (for {
-    (sender, recipient, amount, timestamp, fee, attachment) <- transferParamGen
-  } yield TransferTransaction.selfSigned(1, timestamp, sender, fee, recipient, amount, attachment).explicitGet())
-    .label("TransferTransactionV1")
-
-  val transferV2Gen: Gen[TransferTransaction] = (for {
-    (sender, recipient, amount, timestamp, fee, attachment) <- transferParamGen
-    proofs <- proofsGen
-  } yield
-    TransferTransaction
-      .create(2, None, timestamp, sender, fee, recipient, amount, attachment, None, proofs)
-      .explicitGet())
-    .label("TransferTransactionV2")
+  val transferV1Gen: Gen[TransferTransaction] = transferGen(1)
+  val transferV2Gen: Gen[TransferTransaction] = transferGen(2)
+  val selfTransferGen: Gen[TransferTransaction] = transferV1Gen
 
   def versionedTransferGenP(sender: PublicKeyAccount, recipient: Address, proofs: Proofs): Gen[TransferTransaction] =
-    (for {
+    for {
       version <- Gen.oneOf(TransferTransaction.supportedVersions.toSeq)
       amount <- positiveLongGen
       fee <- smallFeeGen
       timestamp <- timestampGen
-    } yield TransferTransaction.create(version, None, timestamp, sender, fee, recipient, amount, Array.emptyByteArray, None, proofs).explicitGet())
-      .label("VersionedTransferTransactionP")
+    } yield TransferTransaction.create(version, None, timestamp, sender, fee, recipient, amount, Array.emptyByteArray, None, proofs).explicitGet()
 
-  val selfTransferGen: Gen[TransferTransaction] = for {
+   for {
     (sender, _, amount, timestamp, fee, attachment) <- transferParamGen
   } yield TransferTransaction.selfSigned(1, timestamp, sender, fee, sender, amount, attachment).explicitGet()
-
-  val transferWithLtoFeeGen: Gen[TransferTransaction] = transferV1Gen
-  val selfTransferWithLtoFeeGen: Gen[TransferTransaction] = selfTransferGen
 
   val massTransferGen: Gen[MassTransferTransaction] = massTransferGen(MaxTransferCount)
 
@@ -363,7 +345,6 @@ trait TransactionGenBase extends ScriptGen {
       }
       version <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
     } yield DataTransaction.selfSigned(version, timestamp, sender, fee, uniq).explicitGet())
-      .label("DataTransaction")
 
   def dataTransactionGenP(sender: PrivateKeyAccount, data: List[DataEntry[_]]): Gen[DataTransaction] =
     (for {
@@ -371,7 +352,6 @@ trait TransactionGenBase extends ScriptGen {
       timestamp <- timestampGen
       fee = 150000000
     } yield DataTransaction.selfSigned(version, timestamp, sender, fee, data).explicitGet())
-      .label("DataTransactionP")
 
   def preconditionsTransferAndLease(typed: EXPR): Gen[(GenesisTransaction, SetScriptTransaction, LeaseTransaction, TransferTransaction)] =
     for {

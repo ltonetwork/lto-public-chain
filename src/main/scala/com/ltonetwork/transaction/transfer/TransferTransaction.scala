@@ -38,13 +38,14 @@ case class TransferTransaction private (version: Byte,
     "attachment" -> Base58.encode(attachment)
   ))
 
-  // Special case for transfer tx v1: signature is prepended (after type) instead of appended
+  // Special case for transfer tx v1: signature is prepended instead of appended
   override protected def prefixByte: Coeval[Array[Byte]] =
     Coeval.evalOnce(version match {
       case 1 if proofs.isEmpty => throw new Exception("Transaction not signed")
       case 1                   => Bytes.concat(Array(builder.typeId), proofs.toSignature.arr)
       case _                   => Array(0: Byte)
     })
+
   override protected def footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
     if (version == 1) Array.emptyByteArray
     else super[Transaction].footerBytes()
@@ -54,7 +55,7 @@ case class TransferTransaction private (version: Byte,
 object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
 
   override val typeId: Byte                 = 4
-  override val supportedVersions: Set[Byte] = Set(1, 2)
+  override val supportedVersions: Set[Byte] = Set(1, 2, 3)
 
   val MaxAttachmentSize: Int       = 140
   val MaxAttachmentStringSize: Int = base58Length(MaxAttachmentSize)
@@ -65,6 +66,7 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => TransferSerializerV1
     case 2 => TransferSerializerV2
+    case 3 => TransferSerializerV3
     case _ => UnknownSerializer
   }
 
