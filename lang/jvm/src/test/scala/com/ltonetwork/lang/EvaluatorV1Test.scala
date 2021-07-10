@@ -19,11 +19,11 @@ import com.ltonetwork.lang.v1.testing.ScriptGen
 import com.ltonetwork.lang.v1.traits.Environment
 import com.ltonetwork.lang.v1.{CTX, FunctionHeader}
 import com.ltonetwork.utils.{Base58, Base64}
+import com.ltonetwork.seasalt.hash.Hasher
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 import scodec.bits.ByteVector
-import scorex.crypto.hash.{Blake2b256, Keccak256, Sha256}
 import scorex.crypto.signatures.{Curve25519, PublicKey, Signature}
 
 import scala.util.Try
@@ -698,9 +698,9 @@ class EvaluatorV1Test extends PropSpec with PropertyChecks with Matchers with Sc
   property("checking a hash of some message by crypto function invoking") {
     val bodyText      = "some text for test"
     val bodyBytes     = bodyText.getBytes()
-    val hashFunctions = Map(SHA256 -> Sha256, BLAKE256 -> Blake2b256, KECCAK256 -> Keccak256)
+    val hashFunctions = Map(SHA256 -> new Hasher("SHA-256"), BLAKE256 -> new Hasher("Blake2b-256"), KECCAK256 -> new Hasher("Keccak-256"))
 
-    for ((funcName, funcClass) <- hashFunctions) hashFuncTest(bodyBytes, funcName) shouldBe Right(ByteVector(funcClass.hash(bodyText)))
+    for ((funcName, funcClass) <- hashFunctions) hashFuncTest(bodyBytes, funcName) shouldBe Right(ByteVector(funcClass.hash(bodyText).getBytes))
   }
 
   private def hashFuncTest(bodyBytes: Array[Byte], funcName: Short): Either[ExecutionError, ByteVector] = {

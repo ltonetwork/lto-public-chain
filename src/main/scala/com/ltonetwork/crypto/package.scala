@@ -1,18 +1,17 @@
 package com.ltonetwork
 
 import com.ltonetwork.account.{KeyType, KeyTypes, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.seasalt.hash.Hasher
 import com.ltonetwork.seasalt.sign.{ECDSA, Ed25519}
-import scorex.crypto.hash.{Blake2b256, Sha256}
-import scorex.crypto.signatures.Curve25519
 
 package object crypto {
-  val SignatureLength: Int = Curve25519.SignatureLength
-  val KeyLength: Int       = Curve25519.KeyLength
+  val SignatureLength: Int = 64 //Curve25519
+  val KeyLength: Int       = 32 //Curve25519
   val DigestLength: Int    = 32
 
-  def fastHash(m: Array[Byte]): Array[Byte] = Blake2b256.hash(m)
+  def fastHash(m: Array[Byte]): Array[Byte] = new Hasher("Blake2b-256").hash(m).getBytes
   def fastHash(s: String): Array[Byte] = fastHash(s.getBytes())
-  def secureHash(m: Array[Byte]): Array[Byte] = Sha256.hash(Blake2b256.hash(m))
+  def secureHash(m: Array[Byte]): Array[Byte] = new Hasher("SHA-256").hash(fastHash(m)).getBytes
   def secureHash(s: String): Array[Byte] = secureHash(s.getBytes())
 
   def sign(account: PrivateKeyAccount, message: Array[Byte]): Array[Byte] =
