@@ -1,13 +1,9 @@
 package com.ltonetwork
 
-import com.emstlk.nacl4s.crypto.SigningKeyPair
-import com.emstlk.nacl4s.{SigningKey, VerifyKey}
 import com.ltonetwork.account.{KeyType, KeyTypes, PrivateKeyAccount, PublicKeyAccount}
 import scorex.crypto.hash.{Blake2b256, Sha256}
 import scorex.crypto.signatures.Curve25519
-import com.ltonetwork.seasalt.sign.{ECDSA, Ed25519, Signer}
-
-import scala.util.Try
+import com.ltonetwork.seasalt.sign.{ECDSA, Ed25519}
 
 package object crypto {
   val SignatureLength: Int = Curve25519.SignatureLength

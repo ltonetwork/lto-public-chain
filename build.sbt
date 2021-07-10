@@ -204,8 +204,6 @@ checkPRRaw in Global := {
   }
 }
 
-lazy val nacl4s = project
-
 lazy val lang =
   crossProject(JSPlatform, JVMPlatform)
     .withoutSuffixFor(JVMPlatform)
@@ -224,7 +222,8 @@ lazy val lang =
           Dependencies.scalactic ++
           Dependencies.monix.value ++
           Dependencies.scodec.value ++
-          Dependencies.fastparse.value,
+          Dependencies.fastparse.value ++
+          Dependencies.seasalt,
       resolvers += Resolver.bintrayIvyRepo("portable-scala", "sbt-plugins")
     )
     .jsSettings(
@@ -239,7 +238,7 @@ lazy val lang =
     )
 
 lazy val langJS  = lang.js
-lazy val langJVM = lang.jvm.dependsOn(nacl4s)
+lazy val langJVM = lang.jvm
 
 lazy val node = project
   .in(file("."))
@@ -260,11 +259,9 @@ lazy val node = project
         Dependencies.ficus ++
         Dependencies.scorex ++
         Dependencies.commons_net ++
-        Dependencies.seasalt ++
         Dependencies.monix.value
   )
   .dependsOn(langJVM)
-  .dependsOn(nacl4s)
 
 lazy val it = project
   .dependsOn(node)
