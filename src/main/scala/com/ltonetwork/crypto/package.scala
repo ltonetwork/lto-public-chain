@@ -1,9 +1,9 @@
 package com.ltonetwork
 
 import com.ltonetwork.account.{KeyType, KeyTypes, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.seasalt.sign.{ECDSA, Ed25519}
 import scorex.crypto.hash.{Blake2b256, Sha256}
 import scorex.crypto.signatures.Curve25519
-import com.ltonetwork.seasalt.sign.{ECDSA, Ed25519}
 
 package object crypto {
   val SignatureLength: Int = Curve25519.SignatureLength
@@ -49,18 +49,14 @@ package object crypto {
     createKeyPair(seed, KeyTypes.ED25519)
 
   def createKeyPair(seed: Array[Byte], keyType: KeyType): (Array[Byte], Array[Byte]) = keyType match {
-    case KeyTypes.ED25519 => {
+    case KeyTypes.ED25519 =>
       val kp = new Ed25519().keyPairFromSeed(seed)
       (kp.getPrivateKey.getBytes, kp.getPublicKey.getBytes)
-    }
-    case KeyTypes.SECP256K1 =>{
+    case KeyTypes.SECP256K1 =>
       val kp = new ECDSA("secp256k1").keyPairFromSeed(seed)
       (kp.getPrivateKey.getBytes, kp.getPublicKey.getBytes)
-    }
-    case KeyTypes.SECP256R1 =>{
+    case KeyTypes.SECP256R1 =>
       val kp = new ECDSA("secp256r1").keyPairFromSeed(seed)
       (kp.getPrivateKey.getBytes, kp.getPublicKey.getBytes)
-    }
-
   }
 }
