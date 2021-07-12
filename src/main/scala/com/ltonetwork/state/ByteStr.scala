@@ -14,9 +14,7 @@ case class ByteStr(arr: Array[Byte]) {
   override def hashCode(): Int = java.util.Arrays.hashCode(arr)
 
   lazy val base58: String = Base58.encode(arr)
-
   lazy val base64: String = "base64:" + Base64.encode(arr)
-
   lazy val trim: String = base58.toString.take(7) + "..."
 
   override lazy val toString: String = base58
@@ -35,4 +33,5 @@ object ByteStr {
     }
   }
 
+  implicit def toArr(byteStr: ByteStr): Array[Byte] = byteStr.arr
 }

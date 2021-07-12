@@ -47,8 +47,7 @@ object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] {
   override val typeId: Byte                 = 1
   override val supportedVersions: Set[Byte] = Set(1)
 
-  val RECIPIENT_LENGTH: Int = Address.AddressLength
-  val BASE_LENGTH: Int      = TimestampLength + RECIPIENT_LENGTH + AmountLength
+  val BASE_LENGTH: Int      = TimestampLength + Address.AddressLength + AmountLength
 
   override implicit def sign(tx: GenesisTransaction, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): GenesisTransaction =
     throw new Exception("Genesis transactions have a generated signature")

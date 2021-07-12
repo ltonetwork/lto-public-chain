@@ -1,5 +1,6 @@
 package com.ltonetwork.transaction
 
+import com.google.common.primitives.Longs
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
@@ -15,8 +16,8 @@ import scala.util.{Failure, Success, Try}
 
 object TransactionBuilders {
 
-  val TimestampLength            = 8
-  val AmountLength               = 8
+  val TimestampLength            = Longs.BYTES
+  val AmountLength               = Longs.BYTES
   val TypeLength                 = 1
   val SignatureStringLength: Int = base58Length(Curve25519.SignatureLength)
 
