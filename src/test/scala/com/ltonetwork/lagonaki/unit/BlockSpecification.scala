@@ -21,8 +21,6 @@ class BlockSpecification extends PropSpec with PropertyChecks with TransactionGe
     baseTarget          <- arbitrary[Long]
     reference           <- byteArrayGen(Block.BlockIdLength).map(r => ByteStr(r))
     generationSignature <- byteArrayGen(Block.GeneratorSignatureLength)
-    assetBytes          <- byteArrayGen(AssetIdLength)
-    assetId = Some(ByteStr(assetBytes))
     sender                    <- accountGen
     recipient                 <- accountGen
     paymentTransaction        <- ltoTransferGeneratorP(time, sender, recipient)

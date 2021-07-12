@@ -2,13 +2,10 @@ package com.ltonetwork.transaction.association
 
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import monix.eval.Coeval
 import play.api.libs.json._
-
-import scala.util.{Failure, Success, Try}
 
 case class IssueAssociationTransaction private (version: Byte,
                                                 chainId: Byte,
@@ -26,20 +23,28 @@ case class IssueAssociationTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[IssueAssociationTransaction]      = IssueAssociationTransaction
   private def serializer: TransactionSerializer.For[IssueAssociationTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+
+  val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase ++ (
+    Json.obj(
+      "associationType" -> assocType,
+      "recipient"       -> recipient.stringRepr,
+    ) ++
+    expires.fold(Json.obj())(e => Json.obj("expires" -> e)) ++
+    hash.fold(Json.obj())(h => Json.obj("hash" -> h.base58))
+  ))
 }
 
 object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociationTransaction] {
 
   override def typeId: Byte                 = 16
-  override def supportedVersions: Set[Byte] = Set(1: Byte)
+  override def supportedVersions: Set[Byte] = Set(1, 3)
 
   val MaxHashLength: Int    = 64
   val StringHashLength: Int = com.ltonetwork.utils.base58Length(IssueAssociationTransaction.MaxHashLength)
 
-  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
@@ -47,6 +52,9 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
+        Validated.condNel(version < 3 || !hash.exists(_.arr.length == 0),
+                          None,
+                          ValidationError.GenericError("Hash length must not be 0 bytes")),
         Validated.condNel(!hash.exists(_.arr.length > MaxHashLength),
                           None,
                           ValidationError.GenericError(s"Hash length must be <= $MaxHashLength bytes")),
@@ -62,19 +70,21 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
   }
 
   object SerializerV1 extends AssociationSerializerV1[IssueAssociationTransaction] {
-    override def parseBytes(version: Byte, bytes: Array[Byte]): Try[IssueAssociationTransaction] =
-      Try {
-        val chainId = bytes(0)
-        (for {
-          parsed <- parse(version, bytes)
-          (version, timestamp, sender, fee, recipient, assocType, hashOpt, proofs) = parsed
-          tx <- create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, None, hashOpt, None, proofs)
-        } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-      }.flatten
+    protected def createTx(version: Byte,
+                           chainId: Byte,
+                           timestamp: Long,
+                           sender: PublicKeyAccount,
+                           fee: Long,
+                           recipient: Address,
+                           assocType: Int,
+                           hash: Option[ByteStr],
+                           proofs: Proofs): Either[ValidationError, TransactionT] =
+      create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, None, hash, None, proofs)
   }
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => SerializerV1
+    case 3 => IssueAssociationSerializerV3
     case _ => UnknownSerializer
   }
 
@@ -88,7 +98,7 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
              expires: Option[Long],
              hash: Option[ByteStr],
              sponsor: Option[PublicKeyAccount],
-             proofs: Proofs): Either[ValidationError, IssueAssociationTransaction] =
+             proofs: Proofs): Either[ValidationError, TransactionT] =
     IssueAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, assocType, expires, hash, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
@@ -99,8 +109,10 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
              assocType: Int,
              expires: Option[Long],
              hash: Option[ByteStr],
-             signer: PrivateKeyAccount): Either[ValidationError, IssueAssociationTransaction] =
-    create(version, None, timestamp, sender, fee, recipient, assocType, expires, hash, None, Proofs.empty).signWith(signer)
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
+             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, recipient, assocType, expires, hash, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
@@ -109,6 +121,6 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
                  recipient: Address,
                  assocType: Int,
                  expires: Option[Long],
-                 hash: Option[ByteStr]): Either[ValidationError, IssueAssociationTransaction] =
-    signed(version, timestamp, sender, fee, recipient, assocType, expires, hash, sender)
+                 hash: Option[ByteStr]): Either[ValidationError, TransactionT] =
+    signed(version, timestamp, sender, fee, recipient, assocType, expires, hash, None, Proofs.empty, sender)
 }

@@ -10,7 +10,7 @@ import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.{Format, Json}
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.requests.data.SignedDataV1Request
+import com.ltonetwork.api.http.requests.DataRequest
 import com.ltonetwork.transaction.data.DataTransaction
 import scorex.crypto.encode.Base64
 
@@ -61,16 +61,16 @@ class DataTransactionSpecification extends PropSpec with PropertyChecks with Mat
   }
 
   property("JSON roundtrip") {
-    implicit val signedFormat: Format[SignedDataV1Request] = Json.format[SignedDataV1Request]
-
     forAll(dataTransactionGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
-      val req = json.as[SignedDataV1Request]
-      req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
+      val req = json.as[DataRequest]
+      req.senderPublicKey should be ('defined)
+      req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp shouldEqual tx.timestamp
+      req.timestamp should be ('defined)
+      req.timestamp.get shouldEqual tx.timestamp
 
       req.data zip tx.data foreach {
         case (re, te) =>
@@ -147,31 +147,32 @@ class DataTransactionSpecification extends PropSpec with PropertyChecks with Mat
   property(testName = "JSON format validation") {
     val js = Json.parse("""{
                        "type": 12,
+                       "version": 1,
                        "id": "87SfuGJXH1cki2RGDH7WMTGnTXeunkc5mEjNKmmMdRzM",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+                       "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
                        "timestamp": 1526911531530,
-                       "proofs": [
-                       "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
-                       ],
-                       "version": 1,
                        "data": [
-                       {
-                       "key": "int",
-                       "type": "integer",
-                       "value": 24
-                       },
-                       {
-                       "key": "bool",
-                       "type": "boolean",
-                       "value": true
-                       },
-                       {
-                       "key": "blob",
-                       "type": "binary",
-                       "value": "base64:YWxpY2U="
-                       }
+                         {
+                           "key": "int",
+                           "type": "integer",
+                           "value": 24
+                           },
+                         {
+                           "key": "bool",
+                           "type": "boolean",
+                           "value": true
+                           },
+                         {
+                           "key": "blob",
+                           "type": "binary",
+                           "value": "base64:YWxpY2U="
+                           }
+                       ],
+                       "proofs": [
+                         "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
                        ]
                        }
   """)

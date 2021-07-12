@@ -1,11 +1,7 @@
 package com.ltonetwork.transaction
 
-import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.settings.Constants.TransactionNames
-import com.ltonetwork.transaction.Transaction.SigProofsSwitch
-import com.ltonetwork.utils.Base58
-import monix.eval.Coeval
-import play.api.libs.json.{JsArray, JsObject, JsString, Json}
+import play.api.libs.json.JsObject
 
 import scala.util.control.NoStackTrace
 import scala.util.{Failure, Try}
@@ -15,40 +11,6 @@ trait TransactionSerializer {
 
   def bodyBytes(tx: TransactionT): Array[Byte]
   def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT]
-
-  def toJson(tx: TransactionT): JsObject
-
-  private def jsonSponsor(sponsor: Option[PublicKeyAccount]): JsObject =
-    sponsor
-      .map(
-        acc =>
-          Json.obj(
-            "sponsor" -> acc.address,
-            //"sponsorKeyType" -> acc.reference,
-            "sponsorPublicKey" -> Base58.encode(acc.publicKey)
-        ))
-      .getOrElse(Json.obj())
-
-  protected def jsonBase(tx: Transaction, txJson: JsObject): JsObject = {
-    import tx._
-    Json.obj(
-      "type"    -> typeId,
-      "version" -> version,
-      "id"      -> id().toString,
-      "sender"  -> sender.address,
-      //"senderKeyType"   -> sender.keyType.reference,
-      "senderPublicKey" -> Base58.encode(sender.publicKey),
-      "fee"             -> fee,
-      "timestamp"       -> timestamp,
-    ) ++
-      jsonSponsor(sponsor) ++
-      txJson ++
-      (tx match {
-        case s: SigProofsSwitch if s.usesLegacySignature => Json.obj("signature" -> s.signature.toString)
-        case _ if proofs.proofs.nonEmpty                 => Json.obj("proofs" -> JsArray(proofs.proofs.map(p => JsString(p.toString))))
-        case _                                           => Json.obj()
-      })
-  }
 }
 
 object TransactionSerializer {

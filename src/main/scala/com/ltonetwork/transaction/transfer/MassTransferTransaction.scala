@@ -4,9 +4,11 @@ import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
+import com.ltonetwork.utils.Base58
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, JsValue, Json, OFormat}
 
@@ -27,8 +29,13 @@ case class MassTransferTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[MassTransferTransaction]      = MassTransferTransaction
   private def serializer: TransactionSerializer.For[MassTransferTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj(
+    "attachment"    -> Base58.encode(attachment),
+    "transferCount" -> transfers.size,
+    "totalAmount"   -> transfers.map(_.amount).sum,
+    "transfers"     -> MassTransferTransaction.toJson(transfers)
+  ))
 
   def compactJson(recipients: Set[Address]): JsObject =
     json() ++ Json.obj("transfers" -> MassTransferTransaction.toJson(transfers.filter(t => recipients.contains(t.address))))
@@ -49,8 +56,8 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
 
   case class ParsedTransfer(address: Address, amount: Long)
 
-  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   implicit object Validator extends TxValidator[TransactionT] {
     private def validateTotalAmount(tx: TransactionT): ValidatedNel[ValidationError, None.type] =
@@ -106,8 +113,10 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
              fee: Long,
              transfers: List[ParsedTransfer],
              attachment: Array[Byte],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, transfers, attachment, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, transfers, attachment, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
@@ -115,7 +124,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
                  fee: Long,
                  transfers: List[ParsedTransfer],
                  attachment: Array[Byte]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, transfers, attachment, sender)
+    signed(version, timestamp, sender, fee, transfers, attachment, None, Proofs.empty, sender)
 
   def parseTransfersList(transfers: List[Transfer]): Validation[List[ParsedTransfer]] = {
     transfers.traverse {

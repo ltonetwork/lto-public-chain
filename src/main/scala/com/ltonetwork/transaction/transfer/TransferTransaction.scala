@@ -4,13 +4,13 @@ import cats.data.{Validated, ValidatedNel}
 import com.google.common.primitives.Bytes
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.TransactionParser.{HardcodedVersion1, MultipleVersions}
 import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
 import com.ltonetwork.transaction._
-import com.ltonetwork.utils.base58Length
+import com.ltonetwork.utils.{Base58, base58Length}
 import monix.eval.Coeval
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 
 import scala.util.Try
 
@@ -31,8 +31,12 @@ case class TransferTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[TransferTransaction]      = TransferTransaction
   private def serializer: TransactionSerializer.For[TransferTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj(
+    "recipient"  -> recipient.stringRepr,
+    "amount"     -> amount,
+    "attachment" -> Base58.encode(attachment)
+  ))
 
   // Special case for transfer tx v1: signature is prepended (after type) instead of appended
   override protected def prefixByte: Coeval[Array[Byte]] =
@@ -55,8 +59,8 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
   val MaxAttachmentSize: Int       = 140
   val MaxAttachmentStringSize: Int = base58Length(MaxAttachmentSize)
 
-  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => TransferSerializerV1
@@ -104,8 +108,10 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
              recipient: Address,
              amount: Long,
              attachment: Array[Byte],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, recipient, amount, attachment, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
@@ -114,5 +120,5 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
                  recipient: Address,
                  amount: Long,
                  attachment: Array[Byte]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, recipient, amount, attachment, sender)
+    signed(version, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.empty, sender)
 }

@@ -2,14 +2,24 @@ package com.ltonetwork.transaction.association
 
 import com.google.common.primitives.{Bytes, Ints, Longs}
 import com.ltonetwork.account.{Address, PublicKeyAccount}
-import com.ltonetwork.serialization.Deser
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.serialization._
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, TransactionSerializer, ValidationError}
-import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json}
-import scorex.crypto.signatures.Curve25519.KeyLength
 
-abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction] extends TransactionSerializer.For[AssociationTransactionT] {
+import java.nio.ByteBuffer
+import scala.util.{Failure, Success, Try}
+
+trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction] extends TransactionSerializer.For[AssociationTransactionT] {
+  protected def createTx(version: Byte,
+                         chainId: Byte,
+                         timestamp: Long,
+                         sender: PublicKeyAccount,
+                         fee: Long,
+                         recipient: Address,
+                         assocType: Int,
+                         hash: Option[ByteStr],
+                         proofs: Proofs): Either[ValidationError, AssociationTransactionT]
+
   override def bodyBytes(tx: AssociationTransactionT): Array[Byte] = {
     import tx._
 
@@ -18,36 +28,25 @@ abstract class AssociationSerializerV1[AssociationTransactionT <: AssociationTra
       sender.publicKey,
       recipient.bytes.arr,
       Ints.toByteArray(assocType),
-      hash.map(a => (1: Byte) +: Deser.serializeArray(a.arr)).getOrElse(Array(0: Byte)),
+      hash.fold(Array(0: Byte))(a => (1: Byte) +: Deser.serializeArray(a.arr)),
       Longs.toByteArray(timestamp),
       Longs.toByteArray(fee)
     )
   }
 
-  def parse(version: Byte,
-            bytes: Array[Byte]): Either[ValidationError, (Byte, Long, PublicKeyAccount, Long, Address, Int, Option[ByteStr], Proofs)] = {
-    val p0     = KeyLength
-    val sender = PublicKeyAccount(bytes.slice(1, p0 + 1))
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[AssociationTransactionT] = Try {
+    val buf = ByteBuffer.wrap(bytes)
 
-    for {
-      recipient <- Address.fromBytes(bytes.slice(p0 + 1, p0 + 1 + Address.AddressLength))
-      recipientEnd  = p0 + 1 + Address.AddressLength
-      assocType     = Ints.fromByteArray(bytes.slice(recipientEnd, recipientEnd + 4))
-      (hashOpt, s0) = Deser.parseOption(bytes, recipientEnd + 4)(ByteStr(_))
-      s1            = s0
-      timestamp     = Longs.fromByteArray(bytes.drop(s1))
-      fee           = Longs.fromByteArray(bytes.drop(s1 + 8))
-      proofs <- Proofs.fromBytes(bytes.drop(s1 + 16))
-      result = (version, timestamp, sender, fee, recipient, assocType, hashOpt, proofs)
-    } yield result
-  }
+    val chainId   = buf.getByte
+    val sender    = buf.getPublicKey
+    val recipient = buf.getAddress
+    val assocType = buf.getInt
+    val hashOpt   = buf.getOptionalByteArray.map(ByteStr(_))
+    val timestamp = buf.getLong
+    val fee       = buf.getLong
+    val proofs    = buf.getProofs
 
-  override def toJson(tx: AssociationTransactionT): JsObject = jsonBase(
-    tx,
-    Json.obj(
-      "version"         -> tx.version,
-      "associationType" -> tx.assocType,
-      "party"           -> tx.recipient.stringRepr,
-    ) ++ tx.hash.map(hash => Json.obj("hash" -> hash.base58)).getOrElse(Json.obj())
-  )
+    createTx(version, chainId, timestamp, sender, fee, recipient, assocType, hashOpt, proofs)
+      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+  }.flatten
 }

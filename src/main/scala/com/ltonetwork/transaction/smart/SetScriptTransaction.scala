@@ -2,12 +2,14 @@ package com.ltonetwork.transaction.smart
 
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account._
-import com.ltonetwork.crypto
-import com.ltonetwork.serialization.Deser
+import com.ltonetwork.serialization._
+import com.ltonetwork.state._
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.smart.script.{Script, ScriptReader}
 import monix.eval.Coeval
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
+
+import java.nio.ByteBuffer
 
 case class SetScriptTransaction private (version: Byte,
                                          chainId: Byte,
@@ -22,8 +24,8 @@ case class SetScriptTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[SetScriptTransaction]      = SetScriptTransaction
   private def serializer: TransactionSerializer.For[SetScriptTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj("script" -> script.map(_.bytes().base64)))
 }
 
 object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction] {
@@ -31,21 +33,19 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
   override val typeId: Byte                 = 13
   override val supportedVersions: Set[Byte] = Set(1)
 
-  def parseScript(bytes: Array[Byte], start: Int): (Either[ValidationError.ScriptParseError, Option[Script]], Int) = {
-    val (scriptOptEi: Option[Either[ValidationError.ScriptParseError, Script]], scriptEnd) =
-      Deser.parseOption(bytes, start)(ScriptReader.fromBytes)
+  def parseScript(buf: ByteBuffer): Either[ValidationError.ScriptParseError, Option[Script]] = {
+    val scriptOptEi: Option[Either[ValidationError.ScriptParseError, Script]] =
+      buf.getOptionalByteArray.map(ScriptReader.fromBytes)
 
-    val scriptOpt = scriptOptEi match {
+    scriptOptEi match {
       case None            => Right(None)
       case Some(Right(sc)) => Right(Some(sc))
       case Some(Left(err)) => Left(err)
     }
-
-    (scriptOpt, scriptEnd)
   }
 
-  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
@@ -81,13 +81,15 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
              sender: PublicKeyAccount,
              fee: Long,
              script: Option[Script],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, script, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, script, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
                  sender: PrivateKeyAccount,
                  fee: Long,
                  script: Option[Script]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, script, sender)
+    signed(version, timestamp, sender, fee, script, None, Proofs.empty, sender)
 }

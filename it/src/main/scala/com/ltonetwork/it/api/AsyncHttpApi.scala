@@ -6,9 +6,7 @@ import java.util.concurrent.TimeoutException
 import com.ltonetwork.api.http.AddressApiRoute._
 import com.ltonetwork.api.http.AssociationsApiRoute.AssociationsInfo
 import com.ltonetwork.api.http.PeersApiRoute.{ConnectReq, connectFormat}
-import com.ltonetwork.api.http.requests.data.DataV1Request
-import com.ltonetwork.api.http.requests.lease.{CancelLeaseV1Request, LeaseV1Request, SignedCancelLeaseV1Request, SignedLeaseV1Request}
-import com.ltonetwork.api.http.requests.transfer.{MassTransferV1Request, SignedTransferV1Request, SignedTransferV2Request, TransferV1Request}
+import com.ltonetwork.api.http.requests._
 import com.ltonetwork.api.http.{AddressApiRoute, SponsorshipApiRoute}
 import com.ltonetwork.features.api.ActivationStatus
 import com.ltonetwork.http.DebugApiRoute._
@@ -17,7 +15,7 @@ import com.ltonetwork.http.{DebugMessage, RollbackParams, api_key}
 import com.ltonetwork.it.Node
 import com.ltonetwork.it.util.GlobalTimer.{instance => timer}
 import com.ltonetwork.it.util._
-import com.ltonetwork.state.{DataEntry, Portfolio}
+import com.ltonetwork.state.{ByteStr, DataEntry, Portfolio}
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.Transfer
 import com.ltonetwork.transaction.transfer._
 import org.asynchttpclient.Dsl.{get => _get, post => _post}
@@ -183,14 +181,11 @@ object AsyncHttpApi extends Assertions {
 
     def effectiveBalance(address: String): Future[Balance] = get(s"/addresses/effectiveBalance/$address").as[Balance]
 
-    def payment(sourceAddress: String, recipient: String, amount: Long, fee: Long): Future[Transaction] =
-      postJson("/lto/payment", PaymentRequest(amount, fee, sourceAddress, recipient)).as[Transaction]
-
     def lease(sourceAddress: String, recipient: String, amount: Long, fee: Long): Future[Transaction] =
-      postJson("/leasing/lease", LeaseV1Request(sourceAddress, amount, fee, recipient)).as[Transaction]
+      postJson("/leasing/lease", LeaseRequest(sender = Some(sourceAddress), amount = amount, fee = fee, recipient = recipient)).as[Transaction]
 
     def cancelLease(sourceAddress: String, leaseId: String, fee: Long): Future[Transaction] =
-      postJson("/leasing/cancel", CancelLeaseV1Request(sourceAddress, leaseId, fee)).as[Transaction]
+      postJson("/leasing/cancel", CancelLeaseRequest(sender = Some(sourceAddress), leaseId = ByteStr.decodeBase58(leaseId).get, fee = fee)).as[Transaction]
 
     def activeLeases(sourceAddress: String) = get(s"/leasing/active/$sourceAddress").as[Seq[Transaction]]
 
@@ -206,23 +201,23 @@ object AsyncHttpApi extends Assertions {
       get(s"/assets/details/$assetId").as[AssetInfo]
 
     def transfer(sourceAddress: String, recipient: String, amount: Long, fee: Long): Future[Transaction] = {
-      val value    = toJson(TransferV1Request(None, None, amount, fee, sourceAddress, None, recipient))
+      val value    = toJson(TransferRequest(Some(1), None, Some(sourceAddress), None, fee, recipient, amount))
       val jsObject = value.as[JsObject]
       val r        = jsObject + ("type" -> JsNumber(TransferTransaction.typeId.toInt))
       signAndBroadcast(r)
     }
 
-    def massTransfer(sourceAddress: String, transfers: List[Transfer], fee: Long, assetId: Option[String] = None): Future[Transaction] = {
-      implicit val w: Writes[MassTransferV1Request] = Json.writes[MassTransferV1Request]
-      val value                                     = toJson(MassTransferV1Request(1, sourceAddress, transfers, fee, None))
-      val jsObject                                  = value.as[JsObject]
-      val r                                         = jsObject + ("type" -> JsNumber(MassTransferTransaction.typeId.toInt))
+    def massTransfer(sourceAddress: String, transfers: List[Transfer], fee: Long): Future[Transaction] = {
+      implicit val w: Writes[MassTransferRequest] = Json.writes[MassTransferRequest]
+      val value                                   = toJson(MassTransferRequest(Some(1), None, Some(sourceAddress), None, fee, transfers))
+      val jsObject                                = value.as[JsObject]
+      val r                                       = jsObject + ("type" -> JsNumber(MassTransferTransaction.typeId.toInt))
       signAndBroadcast(r)
     }
 
     def putData(sourceAddress: String, data: List[DataEntry[_]], fee: Long): Future[Transaction] = {
-      implicit val w: Writes[DataV1Request] = Json.writes[DataV1Request]
-      postJson("/addresses/data", DataV1Request(1, sourceAddress, data, fee)).as[Transaction]
+      implicit val w: Writes[DataRequest] = Json.writes[DataRequest]
+      postJson("/addresses/data", DataRequest(Some(1), None, Some(sourceAddress), None, fee, data)).as[Transaction]
     }
 
     def getData(address: String): Future[List[DataEntry[_]]] = get(s"/addresses/data/$address").as[List[DataEntry[_]]]
@@ -234,13 +229,13 @@ object AsyncHttpApi extends Assertions {
     def getSponsorship(address: String): Future[SponsorshipApiRoute.SponsorshipInfo] =
       get(s"/sponsorship/status/$address").as[SponsorshipApiRoute.SponsorshipInfo]
 
-    def signedTransfer(transfer: SignedTransferV1Request): Future[Transaction] =
+    def signedTransfer(transfer: TransferRequest): Future[Transaction] =
       postJson("/assets/broadcast/transfer", transfer).as[Transaction]
 
-    def signedLease(lease: SignedLeaseV1Request): Future[Transaction] =
+    def signedLease(lease: LeaseRequest): Future[Transaction] =
       postJson("/leasing/broadcast/lease", lease).as[Transaction]
 
-    def signedLeaseCancel(leaseCancel: SignedCancelLeaseV1Request): Future[Transaction] =
+    def signedLeaseCancel(leaseCancel: CancelLeaseRequest): Future[Transaction] =
       postJson("/leasing/broadcast/cancel", leaseCancel).as[Transaction]
 
     def broadcastRequest[A: Writes](req: A): Future[Transaction] = postJson("/transactions/broadcast", req).as[Transaction]
@@ -253,7 +248,7 @@ object AsyncHttpApi extends Assertions {
 
     def signAndBroadcast(jsobj: JsObject): Future[Transaction] = sign(jsobj).flatMap(signedBroadcast)
 
-    def batchSignedTransfer(transfers: Seq[SignedTransferV2Request], timeout: FiniteDuration = 1.minute): Future[Seq[Transaction]] = {
+    def batchSignedTransfer(transfers: Seq[TransferRequest], timeout: FiniteDuration = 1.minute): Future[Seq[Transaction]] = {
       val request = _post(s"${n.nodeApiEndpoint}/assets/broadcast/batch-transfer")
         .setHeader("Content-type", "application/json")
         .withApiKey(n.apiKey)

@@ -224,9 +224,9 @@ class PoSSuite extends FunSuite with Matchers with NodesFromDocker with WaitForH
   }
 
   private def generatorSignature(signature: Array[Byte], publicKey: Array[Byte]): Array[Byte] = {
-    val s = new Array[Byte](crypto.DigestSize * 2)
-    System.arraycopy(signature, 0, s, 0, crypto.DigestSize)
-    System.arraycopy(publicKey, 0, s, crypto.DigestSize, crypto.DigestSize)
+    val s = new Array[Byte](crypto.DigestLength * 2)
+    System.arraycopy(signature, 0, s, 0, crypto.DigestLength)
+    System.arraycopy(publicKey, 0, s, crypto.DigestLength, crypto.DigestLength)
     crypto.fastHash(s)
   }
 

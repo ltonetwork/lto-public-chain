@@ -1,6 +1,6 @@
 package com.ltonetwork.transaction
 
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state._
 import monix.reactive.Observable
 import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.block.{Block, MicroBlock}

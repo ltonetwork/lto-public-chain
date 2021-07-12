@@ -1,10 +1,12 @@
 package com.ltonetwork.it.sync.transactions
 
-import com.ltonetwork.api.http.requests.transfer.{MassTransferV1Request, SignedMassTransferV1Request}
+import com.ltonetwork.api.http.requests.MassTransferRequest
 import com.ltonetwork.it.api.SyncHttpApi._
 import com.ltonetwork.it.sync._
 import com.ltonetwork.it.transactions.BaseTransactionSuite
 import com.ltonetwork.it.util._
+import com.ltonetwork.state.ByteStr
+import com.ltonetwork.transaction.Proofs
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.{MaxTransferCount, Transfer}
 import com.ltonetwork.transaction.transfer.TransferTransaction.MaxAttachmentSize
 import com.ltonetwork.transaction.transfer._
@@ -17,7 +19,7 @@ import scala.util.Random
 
 class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
 
-  private def fakeSignature = Base58.encode(Array.fill(64)(Random.nextInt.toByte))
+  private def fakeSignature = ByteStr(Array.fill(64)(Random.nextInt.toByte))
 
   test("lto mass transfer changes lto balances") {
 
@@ -82,27 +84,24 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
                 transfers: List[Transfer] = List(Transfer(secondAddress, transferAmount)),
                 fee: Long = calcMassTransferFee(1),
                 timestamp: Long = System.currentTimeMillis,
-                attachment: Array[Byte] = Array.emptyByteArray) = {
+                attachment: Array[Byte] = Array.emptyByteArray): (MassTransferRequest, Option[ByteStr]) = {
       val txEi = for {
         parsedTransfers <- MassTransferTransaction.parseTransfersList(transfers)
         tx              <- MassTransferTransaction.selfSigned(version, timestamp, sender.privateKey, fee, parsedTransfers, attachment)
       } yield tx
 
-      val (signature, idOpt) = txEi.fold(_ => (List(fakeSignature), None), tx => (tx.proofs.base58().toList, Some(tx.id())))
+      val (signature, idOpt) = txEi.fold(_ => (Proofs.fromSignature(fakeSignature), None), tx => (tx.proofs, Some(tx.id())))
 
-      val req = SignedMassTransferV1Request(version,
-                                          Base58.encode(sender.publicKey.publicKey),
-                                          transfers,
-                                          fee,
-                                          timestamp,
-                                          attachment.headOption.map(_ => Base58.encode(attachment)),
-                                          signature)
-
+      val req = MassTransferRequest(
+        version = Some(version),
+        senderPublicKey = Some(Base58.encode(sender.publicKey.publicKey)),
+        transfers = transfers,
+        fee = fee,
+        timestamp = Some(timestamp),
+        attachment = attachment.headOption.map(_ => ByteStr(attachment)),
+        proofs = Some(signature))
       (req, idOpt)
     }
-
-    implicit val w =
-      Json.writes[SignedMassTransferV1Request].transform((jsobj: JsObject) => jsobj + ("type" -> JsNumber(MassTransferTransaction.typeId.toInt)))
 
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
     val invalidTransfers = Seq(
@@ -175,14 +174,12 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
   }
 
   test("reporting MassTransfer transactions") {
-    implicit val mtFormat: Format[MassTransferV1Request] = Json.format[MassTransferV1Request]
-
     val transfers = List(Transfer(firstAddress, 5.lto), Transfer(secondAddress, 2.lto), Transfer(thirdAddress, 3.lto))
     val txId      = sender.massTransfer(firstAddress, transfers, 130000000).id
     nodes.waitForHeightAriseAndTxPresent(txId)
 
     // /transactions/info/txID should return complete list of transfers
-    val txInfo = Json.parse(sender.get(s"/transactions/info/$txId").getResponseBody).as[MassTransferV1Request]
+    val txInfo = Json.parse(sender.get(s"/transactions/info/$txId").getResponseBody).as[MassTransferRequest]
     assert(txInfo.transfers.size == 3)
 
     // /transactions/address should return complete transfers list for the sender...
@@ -192,10 +189,10 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
       .value
       .map(js => extractTransactionByType(js, 11).head)
       .head
-    assert(txSender.as[MassTransferV1Request].transfers.size == 3)
+    assert(txSender.as[MassTransferRequest].transfers.size == 3)
     assert((txSender \ "transferCount").as[Int] == 3)
     assert((txSender \ "totalAmount").as[Long] == 10.lto)
-    val transfersAfterTrans = txSender.as[MassTransferV1Request].transfers
+    val transfersAfterTrans = txSender.as[MassTransferRequest].transfers
     assert(transfers.equals(transfersAfterTrans))
 
     // ...and compact list for recipients
@@ -209,10 +206,10 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
       .map(js => extractTransactionByType(js, 11).head)
       .head
 
-    assert(txRecipient.as[MassTransferV1Request].transfers.size == 1)
+    assert(txRecipient.as[MassTransferRequest].transfers.size == 1)
     assert((txRecipient \ "transferCount").as[Int] == 3)
     assert((txRecipient \ "totalAmount").as[Long] == 10.lto)
-    val transferToSecond = txRecipient.as[MassTransferV1Request].transfers.head
+    val transferToSecond = txRecipient.as[MassTransferRequest].transfers.head
     assert(transfers contains transferToSecond)
   }
 }

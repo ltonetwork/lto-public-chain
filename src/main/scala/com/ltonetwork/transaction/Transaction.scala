@@ -3,10 +3,11 @@ package com.ltonetwork.transaction
 import com.google.common.primitives.Bytes
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.crypto
+import com.ltonetwork.serialization._
 import com.ltonetwork.state._
+import com.ltonetwork.utils.Base58
 import monix.eval.Coeval
-import com.ltonetwork.serialization.{BytesSerializable, JsonSerializable}
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsArray, JsObject, JsString, Json}
 
 trait Transaction extends BytesSerializable with JsonSerializable {
   def builder: TransactionBuilder
@@ -26,11 +27,13 @@ trait Transaction extends BytesSerializable with JsonSerializable {
 
   protected def prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(Array(0: Byte))
   private def sponsorBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
-    if (version >= 3) sponsor.map(account => Bytes.concat(Array(account.keyType.id), account.publicKey)).getOrElse(Array(0: Byte))
+    if (version >= 3) sponsor.fold(Array(0: Byte))(Deser.serializeAccount)
     else Array.emptyByteArray
   )
   protected def footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(sponsorBytes(), proofs.bytes()))
   val bytes: Coeval[Array[Byte]]                 = Coeval.evalOnce(Bytes.concat(prefixByte(), bodyBytes(), footerBytes()))
+
+  protected def jsonBase: Transaction.TxJson = Transaction.TxJson(this)
 
   override def toString: String = json().toString()
 
@@ -58,5 +61,43 @@ object Transaction {
       if (this.version == 1) proofs.toSignature.arr
       else super.footerBytes()
     )
+  }
+
+  case class TxJson(tx: Transaction) {
+    import tx._
+
+    private def headerJson: JsObject = {
+      Json.obj(
+        "type" -> typeId,
+        "version" -> version,
+        "id" -> id().toString
+      )
+    }
+
+    private def senderJson: JsObject = {
+      Json.obj(
+        "sender" -> sender.address,
+        "senderKeyType" -> sender.keyType.reference,
+        "senderPublicKey" -> Base58.encode(sender.publicKey),
+      )
+    }
+
+    private def sponsorJson: JsObject = sponsor.map(
+      acc => Json.obj(
+        "sponsor" -> acc.address,
+        "sponsorKeyType" -> acc.keyType.reference,
+        "sponsorPublicKey" -> Base58.encode(acc.publicKey)
+      )
+    ).getOrElse(Json.obj())
+
+    private def proofsJson: JsObject = tx match {
+      case s: SigProofsSwitch if s.usesLegacySignature => Json.obj("signature" -> s.signature.toString)
+      case _ if tx.proofs.proofs.nonEmpty              => Json.obj("proofs" -> JsArray(tx.proofs.proofs.map(p => JsString(p.toString))))
+      case _                                           => Json.obj()
+    }
+
+    //noinspection ScalaStyle
+    def ++(txSpecificJson: JsObject): JsObject = headerJson ++ senderJson ++ sponsorJson ++
+      Json.obj("fee" -> fee, "timestamp" -> timestamp) ++ txSpecificJson ++ proofsJson
   }
 }

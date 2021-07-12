@@ -30,6 +30,7 @@ object TransactionBuilders {
     x.typeId -> x
   }(collection.breakOut)
 
+  // TODO index only by type, not by version
   private val modern: Map[(Byte, Byte), TransactionBuilder] = Seq[TransactionBuilder](
     AnchorTransaction,
     DataTransaction,
@@ -55,6 +56,8 @@ object TransactionBuilders {
   } ++ modern
 
   def by(typeId: Byte, version: Byte): Option[TransactionBuilder] = all.get((typeId, version))
+
+  def by(typeId: Byte): Option[TransactionBuilder] = all.get((typeId, 1))
 
   def parseBytes(data: Array[Byte]): Try[Transaction] =
     data.headOption

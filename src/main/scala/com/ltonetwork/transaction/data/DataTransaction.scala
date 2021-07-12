@@ -23,8 +23,8 @@ case class DataTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[DataTransaction]      = DataTransaction
   private def serializer: TransactionSerializer.For[DataTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj("data" -> Json.toJson(data)))
 
   implicit val dataItemFormat: Format[DataEntry[_]] = DataEntry.Format
 }
@@ -37,8 +37,8 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
   val MaxBytes: Int      = 150 * 1024
   val MaxEntryCount: Int = 100
 
-  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
@@ -79,13 +79,15 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
              sender: PublicKeyAccount,
              fee: Long,
              data: List[DataEntry[_]],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, data, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, data, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
                  sender: PrivateKeyAccount,
                  fee: Long,
                  data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, data, sender)
+    signed(version, timestamp, sender, fee, data, None, Proofs.empty, sender)
 }

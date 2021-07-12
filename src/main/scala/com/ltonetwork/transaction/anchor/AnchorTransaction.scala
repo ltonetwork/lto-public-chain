@@ -2,7 +2,6 @@ package com.ltonetwork.transaction.anchor
 
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.utils.base58Length
 import com.ltonetwork.transaction._
@@ -22,14 +21,14 @@ case class AnchorTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[AnchorTransaction]      = AnchorTransaction
   private def serializer: TransactionSerializer.For[AnchorTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj("anchors" -> Json.toJson(anchors)))
 }
 
 object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
 
   override val typeId: Byte                 = 15
-  override val supportedVersions: Set[Byte] = Set(1)
+  override val supportedVersions: Set[Byte] = Set(1, 3)
 
   val EntryLength: List[Int] = List(16, 20, 32, 48, 64)
   val NewMaxEntryLength: Int = 64
@@ -38,8 +37,8 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
 
   val MaxAnchorStringSize: Int = base58Length(EntryLength.last)
 
-  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
@@ -62,7 +61,7 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => AnchorSerializerV1
-    //case 3 => AnchorSerializerV3
+    case 3 => AnchorSerializerV3
     case _ => UnknownSerializer
   }
 
@@ -80,10 +79,12 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             data: List[ByteStr],
+             anchors: List[ByteStr],
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, data, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, anchors, sponsor, proofs).signWith(signer)
 
-  def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, data: List[ByteStr]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, data, sender)
+  def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, anchors: List[ByteStr]): Either[ValidationError, TransactionT] =
+    signed(version, timestamp, sender, fee, anchors, None, Proofs.empty, sender)
 }

@@ -28,6 +28,15 @@ package object state {
     }
   }
 
+  implicit class OptionExt[A](opt: Option[A]) {
+    def otherwise(alt: Option[A]): Option[A] = opt.fold(alt)(Some(_))
+    def noneIf(value: A): Option[A] = opt.collect { case v if v != value => v }
+  }
+
+  implicit class OptionByteStrExt[T <: ByteStr](val opt: Option[T]) extends AnyVal {
+    def noneIfEmpty: Option[ByteStr] = opt.collect { case h if h.toString.nonEmpty => h }
+  }
+
   implicit class Cast[A](a: A) {
     def cast[B: ClassTag]: Option[B] = {
       a match {
@@ -84,5 +93,4 @@ package object state {
         .getOrElse(throw new IllegalStateException(s"Can't find a block: $id"))
 
   }
-
 }

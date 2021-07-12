@@ -10,7 +10,8 @@ case class Portfolio(balance: Long, lease: LeaseBalance) {
 }
 
 object Portfolio {
-  val empty = Portfolio(0L, Monoid[LeaseBalance].empty)
+  val empty: Portfolio = Portfolio(0L, Monoid[LeaseBalance].empty)
+  def apply(balance: Long): Portfolio = Portfolio(balance, LeaseBalance.empty)
 
   implicit val longSemigroup: Semigroup[Long] = (x: Long, y: Long) => safeSum(x, y)
 

@@ -3,11 +3,12 @@ package com.ltonetwork.transaction.lease
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
 import com.ltonetwork.transaction.TransactionParser.{HardcodedVersion1, MultipleVersions}
 import monix.eval.Coeval
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 
 import scala.util.{Either, Try}
 
@@ -27,8 +28,11 @@ case class LeaseTransaction private (version: Byte,
   override def builder: TransactionBuilder.For[LeaseTransaction]      = LeaseTransaction
   private def serializer: TransactionSerializer.For[LeaseTransaction] = builder.serializer(version)
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  override val json: Coeval[JsObject]         = Coeval.evalOnce(serializer.toJson(this))
+  val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj(
+    "recipient" -> recipient.stringRepr,
+    "amount"    -> amount
+  ))
 }
 
 object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
@@ -41,8 +45,8 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
     val Canceled = "canceled"
   }
 
-  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT =
-    tx.copy(proofs = Proofs(crypto.sign(signer, tx.bodyBytes())))
+  implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
+    tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => LeaseSerializerV1
@@ -89,8 +93,10 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
              fee: Long,
              recipient: Address,
              amount: Long,
+             sponsor: Option[PublicKeyAccount],
+             proofs: Proofs,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, amount, None, Proofs.empty).signWith(signer)
+    create(version, None, timestamp, sender, fee, recipient, amount, sponsor, proofs).signWith(signer)
 
   def selfSigned(version: Byte,
                  timestamp: Long,
@@ -98,5 +104,5 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
                  fee: Long,
                  recipient: Address,
                  amount: Long): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, recipient, amount, sender)
+    signed(version, timestamp, sender, fee, recipient, amount, None, Proofs.empty, sender)
 }

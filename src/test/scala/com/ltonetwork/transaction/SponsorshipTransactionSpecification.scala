@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.api.http.requests.sponsorship.SignedSponsorshipV1Request
+import com.ltonetwork.api.http.requests.SponsorshipRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
 import com.ltonetwork.utils.Base58
@@ -43,16 +43,16 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
   }
 
   property("JSON roundtrip") {
-    implicit val signedFormat: Format[SignedSponsorshipV1Request] = Json.format[SignedSponsorshipV1Request]
-
     forAll(sponsorshipGen) { tx =>
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
-      val req = json.as[SignedSponsorshipV1Request]
-      req.senderPublicKey shouldEqual Base58.encode(tx.sender.publicKey)
+      val req = json.as[SponsorshipRequest]
+      req.senderPublicKey should be ('defined)
+      req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp shouldEqual tx.timestamp
+      req.timestamp should be ('defined)
+      req.timestamp.get shouldEqual tx.timestamp
       req.recipient shouldEqual tx.recipient.stringRepr
     }
   }
@@ -61,16 +61,17 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
     val p  = PrivateKeyAccount.fromSeed("xxx").explicitGet().toAddress
     val js = Json.parse(s"""{
                        "type": 18,
+                       "version": 1,
                        "id": "6Cet5iVQ6STk4HxcRL2p5A9vQKnaPwoJxZZyAAo6SwQa",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+                       "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
                        "timestamp": 1526911531530,
+                       "recipient" : "$p",
                        "proofs": [
-                       "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
-                       ],
-                       "version": 1,
-                       "recipient" : "$p"
+                         "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
+                       ]
                        }
   """)
 

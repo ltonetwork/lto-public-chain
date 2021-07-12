@@ -1,6 +1,7 @@
 package com.ltonetwork.account
 
 import com.ltonetwork.account.KeyTypes._
+import com.ltonetwork.crypto
 import com.ltonetwork.utils.base58Length
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.transaction.ValidationError.InvalidAddress
@@ -17,6 +18,8 @@ trait PublicKeyAccount {
   override def hashCode(): Int = publicKey.hashCode()
 
   override lazy val toString: String = this.toAddress.address
+
+  def verify(signature: Array[Byte], message: Array[Byte]): Boolean = crypto.verify(signature, message, this)
 }
 
 object PublicKeyAccount {

@@ -15,6 +15,8 @@ import scala.util.{Failure, Success, Try}
 // Base class for Sponsorship and CancelSponsorship transaction
 abstract class SponsorshipTransactionBase extends Transaction {
   def recipient: Address
+
+  val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase ++ Json.obj("recipient" -> recipient.stringRepr))
 }
 
 object SponsorshipTransactionBase {
@@ -37,5 +39,4 @@ object SponsorshipTransactionBase {
       )
     }
   }
-
 }

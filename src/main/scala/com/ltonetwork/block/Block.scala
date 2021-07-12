@@ -123,7 +123,7 @@ case class Block private (override val timestamp: Long,
 
   import Block._
 
-  val sender = signerData.generator
+  val sender: PublicKeyAccount = signerData.generator
 
   private val transactionField = TransactionsBlockField(version.toInt, transactionData)
 
@@ -244,7 +244,7 @@ object Block extends ScorexLogging {
     (for {
       _ <- Either.cond(reference.arr.length == SignatureLength, (), "Incorrect reference")
       _ <- Either.cond(consensusData.generationSignature.arr.length == GeneratorSignatureLength, (), "Incorrect consensusData.generationSignature")
-      _ <- Either.cond(signerData.generator.publicKey.length == KeyLength, (), "Incorrect signer.publicKey")
+      _ <- Either.cond(signerData.generator.publicKey.length == signerData.generator.keyType.length, (), "Incorrect signer.publicKey")
       _ <- Either.cond(version > 2 || featureVotes.isEmpty, (), s"Block version $version could not contain feature votes")
       _ <- Either.cond(featureVotes.size <= MaxFeaturesInBlock, (), s"Block could not contain more than $MaxFeaturesInBlock feature votes")
     } yield Block(timestamp, version, reference, signerData, consensusData, transactionData, featureVotes)).left.map(GenericError(_))
@@ -273,7 +273,7 @@ object Block extends ScorexLogging {
 
     val transactionGenesisData      = genesisTransactions(genesisSettings)
     val transactionGenesisDataField = TransactionsBlockField.Version1or2(transactionGenesisData)
-    val consensusGenesisData        = NxtLikeConsensusBlockData(genesisSettings.initialBaseTarget, ByteStr(Array.fill(crypto.DigestSize)(0: Byte)))
+    val consensusGenesisData        = NxtLikeConsensusBlockData(genesisSettings.initialBaseTarget, ByteStr(Array.fill(crypto.DigestLength)(0: Byte)))
     val consensusGenesisDataField   = NxtConsensusBlockField(consensusGenesisData)
     val txBytesSize                 = transactionGenesisDataField.bytes().length
     val txBytes                     = Bytes.ensureCapacity(Ints.toByteArray(txBytesSize), 4, 0) ++ transactionGenesisDataField.bytes()
