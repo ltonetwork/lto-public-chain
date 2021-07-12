@@ -215,7 +215,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
         val sponsoredTransfer = transfer.sponsorWith(sponsor)
 
         assertDiffEi(Seq(block(genesis), block(setScript)), block(sponsoredTransfer), smartEnabledFS)(totalDiffEi =>
-          totalDiffEi should produce("Transaction can't be sponsored by a scripted account"))
+          totalDiffEi should produce("Transactions can't be sponsored by a scripted account"))
     }
   }
 }

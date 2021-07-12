@@ -18,8 +18,8 @@ object GenesisSerializer extends TransactionSerializer.For[GenesisTransaction] {
     Bytes.concat(
       Array(GenesisTransaction.typeId),
       Longs.toByteArray(timestamp),
-      Longs.toByteArray(amount),
       recipient.bytes.arr,
+      Longs.toByteArray(amount),
     )
   }
 

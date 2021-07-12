@@ -165,6 +165,7 @@ class TransactionsRouteSpec
       forAll(g) { txs =>
         (utx.all _).expects().returns(txs).once()
         Get(routePath("/unconfirmed")) ~> route ~> check {
+          status shouldEqual StatusCodes.OK
           val resp = responseAs[Seq[JsValue]]
           for ((r, t) <- resp.zip(txs)) {
             (r \ "signature").as[String] shouldEqual t.proofs.toSignature.base58 // Todo: also test with proofs
