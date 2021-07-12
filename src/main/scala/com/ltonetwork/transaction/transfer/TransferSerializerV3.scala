@@ -34,7 +34,7 @@ object TransferSerializerV3 extends TransactionSerializer.For[TransferTransactio
     val attachment = buf.getByteArrayWithLength
     val (sponsor, proofs) = parseFooter(buf)
 
-    create(version, None, timestamp, sender, fee, recipient, amount, attachment, sponsor, proofs)
+    create(version, Some(chainId), timestamp, sender, fee, recipient, amount, attachment, sponsor, proofs)
       .fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
 }

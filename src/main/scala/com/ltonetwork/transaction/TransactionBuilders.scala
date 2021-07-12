@@ -36,6 +36,7 @@ object TransactionBuilders {
     AnchorTransaction,
     DataTransaction,
     TransferTransaction,
+    MassTransferTransaction,
     SetScriptTransaction,
     LeaseTransaction,
     CancelLeaseTransaction,

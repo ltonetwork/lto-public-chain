@@ -15,25 +15,26 @@ import com.ltonetwork.utils.Base58
 class MassTransferTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
   property("serialization roundtrip") {
-    forAll(massTransferGen) { tx: MassTransferTransaction =>
-      require(tx.bytes().head == MassTransferTransaction.typeId)
-      val recovered = MassTransferTransaction.parseBytes(tx.bytes()).get
+    forEvery(versionTable(MassTransferTransaction)) { version =>
+      forAll(massTransferGen(version, MassTransferTransaction.MaxTransferCount)) { tx: MassTransferTransaction =>
+        val recovered = MassTransferTransaction.parseBytes(tx.bytes()).get
 
-      recovered.sender.address shouldEqual tx.sender.address
-      recovered.timestamp shouldEqual tx.timestamp
-      recovered.fee shouldEqual tx.fee
+        recovered.sender.address shouldEqual tx.sender.address
+        recovered.timestamp shouldEqual tx.timestamp
+        recovered.fee shouldEqual tx.fee
 
-      recovered.transfers.zip(tx.transfers).foreach {
-        case (ParsedTransfer(rr, ra), ParsedTransfer(tr, ta)) =>
-          rr shouldEqual tr
-          ra shouldEqual ta
+        recovered.transfers.zip(tx.transfers).foreach {
+          case (ParsedTransfer(rr, ra), ParsedTransfer(tr, ta)) =>
+            rr shouldEqual tr
+            ra shouldEqual ta
+        }
+
+        recovered.bytes() shouldEqual tx.bytes()
       }
-
-      recovered.bytes() shouldEqual tx.bytes()
     }
   }
 
-  property("serialization from TypedTransaction") {
+  property("serialization from TransactionBuilders") {
     forAll(massTransferGen) { tx: MassTransferTransaction =>
       val recovered = TransactionBuilders.parseBytes(tx.bytes()).get
       recovered.bytes() shouldEqual tx.bytes()
@@ -78,7 +79,7 @@ class MassTransferTransactionSpecification extends PropSpec with PropertyChecks 
     }
   }
 
-  property(testName = "JSON format validation") {
+  property(testName = "JSON format validation v1") {
     val js = Json.parse("""{
                        "type": 11,
                        "version": 1,
@@ -110,8 +111,7 @@ class MassTransferTransactionSpecification extends PropSpec with PropertyChecks 
     val transfers = MassTransferTransaction
       .parseTransfersList(
         List(Transfer("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt", 100000000L), Transfer("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt", 200000000L)))
-      .right
-      .get
+      .explicitGet()
 
     val tx = MassTransferTransaction
       .create(
@@ -124,9 +124,67 @@ class MassTransferTransactionSpecification extends PropSpec with PropertyChecks 
         Base58.decode("59QuUcqP6p").get,
         None,
         Proofs(Seq(ByteStr.decodeBase58("FXMNu3ecy5zBjn9b69VtpuYRwxjCbxdkZ3xZpLzB8ZeFDvcgTkmEDrD29wtGYRPtyLS3LPYrL2d5UM6TpFBMUGQ").get))
-      )
-      .right
-      .get
+      ).explicitGet()
+
+    tx.json() shouldEqual js
+  }
+
+
+  property(testName = "JSON format validation v3") {
+    val js = Json.parse("""{
+                       "type": 11,
+                       "version": 3,
+                       "id": "2qXsH3HAvH95MS2Mdp26iTYskkQdCGfUcpfbTgFkyHRU",
+                       "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+                       "senderKeyType": "ed25519",
+                       "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
+                       "sponsor": "3Mw6BfpSRkgCi8LQMQRKayvEb1fqKpDbaVY",
+                       "sponsorKeyType": "ed25519",
+                       "sponsorPublicKey": "22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz",
+                       "fee": 200000,
+                       "timestamp": 1518091313964,
+                       "attachment": "59QuUcqP6p",
+                       "transferCount": 2,
+                       "totalAmount": 300000000,
+                       "transfers": [
+                         {
+                           "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt",
+                           "amount": 100000000
+                         },
+                         {
+                           "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt",
+                           "amount": 200000000
+                         }
+                       ],
+                       "proofs": [
+                         "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94",
+                         "2z2S3W9n9AatLQ4XmR5mPfZdGY3o27JY7Bf9c7GeD3GDhGykxuSEjKMkwh2yALDcBhdduFGLT1pXJww4Dg6eMHRx"
+                       ]
+                       }
+  """)
+
+    val transfers = MassTransferTransaction
+      .parseTransfersList(
+        List(Transfer("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt", 100000000L), Transfer("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt", 200000000L)))
+      .explicitGet()
+
+    val proofs = Seq(
+      ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get,
+      ByteStr.decodeBase58("2z2S3W9n9AatLQ4XmR5mPfZdGY3o27JY7Bf9c7GeD3GDhGykxuSEjKMkwh2yALDcBhdduFGLT1pXJww4Dg6eMHRx").get
+    )
+
+    val tx = MassTransferTransaction
+      .create(
+        3,
+        None,
+        1518091313964L,
+        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
+        200000,
+        transfers,
+        Base58.decode("59QuUcqP6p").get,
+        Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
+        Proofs(proofs)
+      ).explicitGet()
 
     tx.json() shouldEqual js
   }

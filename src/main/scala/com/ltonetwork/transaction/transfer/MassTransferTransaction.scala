@@ -45,7 +45,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
   import TransactionParser._
 
   override val typeId: Byte                 = 11
-  override val supportedVersions: Set[Byte] = Set(1)
+  override val supportedVersions: Set[Byte] = Set(1, 3)
 
   val MaxTransferCount = 100
 
@@ -89,6 +89,7 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => MassTransferSerializerV1
+    case 3 => MassTransferSerializerV3
     case _ => UnknownSerializer
   }
 

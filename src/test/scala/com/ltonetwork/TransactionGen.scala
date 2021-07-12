@@ -253,11 +253,11 @@ trait TransactionGenBase extends ScriptGen {
     (sender, _, amount, timestamp, fee, attachment) <- transferParamGen
   } yield TransferTransaction.selfSigned(1, timestamp, sender, fee, sender, amount, attachment).explicitGet()
 
-  val massTransferGen: Gen[MassTransferTransaction] = massTransferGen(MaxTransferCount)
 
-  def massTransferGen(maxTransfersCount: Int): Gen[MassTransferTransaction] =
+  def massTransferGen: Gen[MassTransferTransaction] = versionGen(MassTransferTransaction).flatMap(massTransferGen(_, MaxTransferCount))
+  def massTransferGen(maxTransfersCount: Int): Gen[MassTransferTransaction] = versionGen(MassTransferTransaction).flatMap(massTransferGen(_, maxTransfersCount))
+  def massTransferGen(version: Byte, maxTransfersCount: Int): Gen[MassTransferTransaction] =
     for {
-      version <- Gen.oneOf(MassTransferTransaction.supportedVersions.toSeq)
       (sender, _, _, timestamp, fee, attachment) <- transferParamGen
       transferCount <- Gen.choose(0, maxTransfersCount)
       transferGen = for {
