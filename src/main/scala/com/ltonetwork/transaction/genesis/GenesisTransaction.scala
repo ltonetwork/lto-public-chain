@@ -47,8 +47,6 @@ object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] {
   override val typeId: Byte                 = 1
   override val supportedVersions: Set[Byte] = Set(1)
 
-  val BASE_LENGTH: Int      = TimestampLength + Address.AddressLength + AmountLength
-
   override implicit def sign(tx: GenesisTransaction, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): GenesisTransaction =
     throw new Exception("Genesis transactions have a generated signature")
 
@@ -57,12 +55,12 @@ object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] {
   override def parseHeader(bytes: Array[Byte]): Try[(Byte, Int)] = HardcodedVersion1(typeId).parseHeader(bytes)
 
   def generateSignature(recipient: Address, amount: Long, timestamp: Long): Array[Byte] = {
-    val typeBytes      = Bytes.ensureCapacity(Ints.toByteArray(typeId), TypeLength, 0)
-    val timestampBytes = Bytes.ensureCapacity(Longs.toByteArray(timestamp), TimestampLength, 0)
-    val amountBytes    = Longs.toByteArray(amount)
-    val amountFill     = new Array[Byte](AmountLength - amountBytes.length)
-
-    val data = Bytes.concat(typeBytes, timestampBytes, recipient.bytes.arr, Bytes.concat(amountFill, amountBytes))
+    val data = Bytes.concat(
+      Ints.toByteArray(typeId),
+      Longs.toByteArray(timestamp),
+      recipient.bytes.arr,
+      Longs.toByteArray(amount)
+    )
 
     val h = crypto.fastHash(data)
     Bytes.concat(h, h)

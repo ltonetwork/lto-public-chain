@@ -24,7 +24,7 @@ object GenesisSerializer extends TransactionSerializer.For[GenesisTransaction] {
   }
 
   override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-    require(bytes.length >= GenesisTransaction.BASE_LENGTH, "Data does not match base length")
+    require(bytes.length >= Longs.BYTES + Address.AddressLength + Longs.BYTES, "Data does not match base length")
 
     val buf = ByteBuffer.wrap(bytes)
 
