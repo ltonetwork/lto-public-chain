@@ -89,29 +89,30 @@ package object requests {
 
   private[requests] def defaultTimestamp = 0L
 
-  implicit val fetchKeyTypeRead: Format[KeyType] = {
-    val readStringFromInt: Reads[String] = implicitly[Reads[Int]]
-      .map(x => x.toString)
+//  implicit val fetchKeyTypeRead: Format[KeyType] = {
+//    val readStringFromInt: Reads[String] = implicitly[Reads[Int]]
+//      .map(x => x.toString)
+//
+//    Format[KeyType](
+//      Reads { js =>
+//        val kt = (JsPath \ "senderKeyType").read[String].orElse(readStringFromInt).reads(js)
+//        kt.fold(
+//          _ => JsError("senderKeyType incorrect"), {
+//            case "ed25519"   => JsSuccess(ED25519)
+//            case "1"   => JsSuccess(ED25519)
+//            case "secp256k1"  => JsSuccess(SECP256K1)
+//            case "2"   => JsSuccess(SECP256K1)
+//            case "secp256r1" => JsSuccess(SECP256R1)
+//            case "3"   => JsSuccess(SECP256R1)
+//          }
+//        )
+//      },
+//      Writes {
+//        case ED25519  => JsObject(Seq("senderKeyType" -> JsString("ed25519")))
+//        case SECP256K1 => JsObject(Seq("senderKeyType" -> JsString("secp256k1")))
+//        case SECP256R1 => JsObject(Seq("senderKeyType" -> JsString("secp256r1")))
+//      }
+//    )
+//  }
 
-    Format[KeyType](
-      Reads { js =>
-        val kt = (JsPath \ "senderKeyType").read[String].orElse(readStringFromInt).reads(js)
-        kt.fold(
-          _ => JsError("senderKeyType incorrect"), {
-            case "ed25519"   => JsSuccess(ED25519)
-            case "1"   => JsSuccess(ED25519)
-            case "secp256k1"  => JsSuccess(SECP256K1)
-            case "2"   => JsSuccess(SECP256K1)
-            case "secp256r1" => JsSuccess(SECP256R1)
-            case "3"   => JsSuccess(SECP256R1)
-          }
-        )
-      },
-      Writes {
-        case ED25519  => JsObject(Seq("senderKeyType" -> JsString("ed25519")))
-        case SECP256K1 => JsObject(Seq("senderKeyType" -> JsString("secp256k1")))
-        case SECP256R1 => JsObject(Seq("senderKeyType" -> JsString("secp256r1")))
-      }
-    )
-  }
 }

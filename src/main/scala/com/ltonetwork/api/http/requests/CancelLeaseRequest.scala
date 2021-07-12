@@ -12,12 +12,12 @@ import play.api.libs.json._
 case class CancelLeaseRequest(version: Option[Byte] = None,
                               timestamp: Option[Long] = None,
                               sender: Option[String] = None,
-                              senderKeyType: Option[KeyType] = None,
+                              senderKeyType: Option[String] = None,
                               senderPublicKey: Option[String] = None,
                               fee: Long,
                               leaseId: ByteStr,
                               sponsor: Option[String] = None,
-                              sponsorKeyType: Option[KeyType] = None,
+                              sponsorKeyType: Option[String] = None,
                               sponsorPublicKey: Option[String] = None,
                               signature: Option[ByteStr] = None,
                               proofs: Option[Proofs] = None
@@ -60,12 +60,12 @@ object CancelLeaseRequest {
     ((JsPath \ "version").readNullable[Byte] and
       (JsPath \ "timestamp").readNullable[Long] and
       (JsPath \ "sender").readNullable[String] and
-      (JsPath \ "senderKeyType").readNullable[KeyType](fetchKeyTypeRead) and
+      (JsPath \ "senderKeyType").readNullable[String] and
       (JsPath \ "senderPublicKey").readNullable[String] and
       (JsPath \ "fee").read[Long] and
       (JsPath \ "leaseId").read[ByteStr].orElse((JsPath \ "txId").read[ByteStr]) and
       (JsPath \ "sponsor").readNullable[String] and
-      (JsPath \ "sponsorKeyType").readNullable[KeyType](fetchKeyTypeRead) and
+      (JsPath \ "sponsorKeyType").readNullable[String] and
       (JsPath \ "sponsorPublicKey").readNullable[String] and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(CancelLeaseRequest.apply _),
