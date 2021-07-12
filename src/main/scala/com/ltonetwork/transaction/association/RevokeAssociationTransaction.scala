@@ -1,6 +1,7 @@
 package com.ltonetwork.transaction.association
 
 import cats.data.{Validated, ValidatedNel}
+import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
@@ -60,6 +61,9 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
         Validated.condNel(sponsor.isEmpty || version >= 3,
                           None,
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sender.keyType == ED25519 || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
       )
     }
   }

@@ -1,8 +1,7 @@
 package com.ltonetwork.api.http.requests
 
-import com.ltonetwork.account.PublicKeyAccount
+import com.ltonetwork.account.{KeyType, PublicKeyAccount}
 import com.ltonetwork.state.ByteStr
-import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.{Proofs, ValidationError}
@@ -13,10 +12,12 @@ import play.api.libs.json.{Format, JsObject, Json, OWrites}
 case class SetScriptRequest(version: Option[Byte] = None,
                             timestamp: Option[Long] = None,
                             sender: Option[String] = None,
+                            senderKeyType: Option[KeyType] = None,
                             senderPublicKey: Option[String] = None,
                             fee: Long,
                             script: Option[String],
                             sponsor: Option[String] = None,
+                            sponsorKeyType: Option[KeyType] = None,
                             sponsorPublicKey: Option[String] = None,
                             signature: Option[ByteStr] = None,
                             proofs: Option[Proofs] = None

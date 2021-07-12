@@ -8,8 +8,8 @@ case class KeyType private (id: Byte, length: Short, reference: String)  {
 
 object KeyTypes {
   val ED25519: KeyType = KeyType(1, 32, "ed25519")
-  val SECP256K1: KeyType = KeyType(1, 33, "SECP256k1")
-  val SECP256R1: KeyType = KeyType(1, 33, "SECP256r1")
+  val SECP256K1: KeyType = KeyType(2, 33, "SECP256k1")
+  val SECP256R1: KeyType = KeyType(3, 33, "SECP256r1")
 
   private val dict = Seq(
     ED25519,

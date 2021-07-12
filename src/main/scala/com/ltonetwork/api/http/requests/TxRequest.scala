@@ -1,15 +1,19 @@
 package com.ltonetwork.api.http.requests
 
-import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{KeyType, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.KeyTypes.{ED25519, SECP256K1, SECP256R1}
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.{Transaction, ValidationError}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
+import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsString, JsSuccess, Reads, Writes}
 
 trait TxRequest[TransactionT <: Transaction] {
   val sender: Option[String]
+  val senderKeyType: Option[KeyType]
   val senderPublicKey: Option[String]
   val sponsor: Option[String]
+  val sponsorKeyType: Option[KeyType]
   val sponsorPublicKey: Option[String]
 
   def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, TransactionT]
@@ -20,10 +24,10 @@ trait TxRequest[TransactionT <: Transaction] {
   def toTx: Either[ValidationError, TransactionT] =
     for {
       sender <- senderPublicKey match {
-        case Some(key) => PublicKeyAccount.fromBase58String(key)
+        case Some(key) => PublicKeyAccount.fromBase58String(senderKeyType.getOrElse(ED25519), key)
         case None      => Left(ValidationError.InvalidPublicKey("invalid.senderPublicKey"))
       }
-      sponsor <- sponsorPublicKey.map(key => PublicKeyAccount.fromBase58String(key))
+      sponsor <- sponsorPublicKey.map(key => PublicKeyAccount.fromBase58String(senderKeyType.getOrElse(ED25519), key))
         .fold[Either[ValidationError, Option[PublicKeyAccount]]](Right(None))(_.map(k => Some(k)))
       tx <- toTxFrom(sender, sponsor)
     } yield tx

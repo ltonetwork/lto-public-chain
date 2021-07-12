@@ -1,22 +1,25 @@
 package com.ltonetwork.api.http.requests
 
 import cats.implicits._
-import com.ltonetwork.account.PublicKeyAccount
+import com.ltonetwork.account.KeyTypes.{ED25519, SECP256K1, SECP256R1}
+import com.ltonetwork.account.{KeyType, PublicKeyAccount}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
-import play.api.libs.json.{Format, JsNumber, JsObject, Json, OWrites}
+import play.api.libs.json.{Format, JsError, JsNumber, JsObject, JsPath, JsString, JsSuccess, Json, OWrites, Reads, Writes}
 
 case class AnchorRequest(version: Option[Byte] = None,
                          timestamp: Option[Long] = None,
                          sender: Option[String] = None,
+                         senderKeyType: Option[KeyType] = None,
                          senderPublicKey: Option[String] = None,
                          fee: Long,
                          anchors: List[String],
                          sponsor: Option[String] = None,
+                         sponsorKeyType: Option[KeyType],
                          sponsorPublicKey: Option[String] = None,
                          signature: Option[ByteStr] = None,
                          proofs: Option[Proofs] = None,

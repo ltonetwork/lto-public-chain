@@ -1,8 +1,7 @@
 package com.ltonetwork.api.http.requests
 
-import com.ltonetwork.account.{Address, PublicKeyAccount}
+import com.ltonetwork.account.{Address, KeyType, PublicKeyAccount}
 import com.ltonetwork.state.ByteStr
-import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.association.RevokeAssociationTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import com.ltonetwork.utils.Time
@@ -13,12 +12,14 @@ import play.api.libs.json._
 case class RevokeAssociationRequest(version: Option[Byte] = None,
                                     timestamp: Option[Long] = None,
                                     sender: Option[String] = None,
+                                    senderKeyType: Option[KeyType] = None,
                                     senderPublicKey: Option[String] = None,
                                     fee: Long,
                                     recipient: String,
                                     associationType: Int,
                                     hash: Option[ByteStr] = None,
                                     sponsor: Option[String] = None,
+                                    sponsorKeyType: Option[KeyType] = None,
                                     sponsorPublicKey: Option[String] = None,
                                     signature: Option[ByteStr] = None,
                                     proofs: Option[Proofs] = None,
@@ -67,12 +68,14 @@ object RevokeAssociationRequest {
     ((JsPath \ "version").readNullable[Byte] and
       (JsPath \ "timestamp").readNullable[Long] and
       (JsPath \ "sender").readNullable[String] and
+      (JsPath \ "senderKeyType").readNullable[KeyType](fetchKeyTypeRead) and
       (JsPath \ "senderPublicKey").readNullable[String] and
       (JsPath \ "fee").read[Long] and
       (JsPath \ "recipient").read[String].orElse((JsPath \ "party").read[String]) and
       (JsPath \ "associationType").read[Int] and
       (JsPath \ "hash").readNullable[ByteStr] and
       (JsPath \ "sponsor").readNullable[String] and
+      (JsPath \ "sponsorKeyType").readNullable[KeyType](fetchKeyTypeRead) and
       (JsPath \ "sponsorPublicKey").readNullable[String] and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(RevokeAssociationRequest.apply _),
