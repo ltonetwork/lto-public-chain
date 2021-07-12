@@ -32,6 +32,7 @@ object ValidationError {
   case class SenderIsBlacklisted(addr: String)                 extends ValidationError
   case class Mistiming(err: String)                            extends ValidationError
   case class BlockAppendError(err: String, b: Block)           extends ValidationError
+  case class NotActivated(err: String)                         extends ValidationError
   case class ActivationError(err: String)                      extends ValidationError
   case class UnsupportedVersion(version: Int)                  extends ValidationError
   case class GenericError(err: String)                         extends ValidationError

@@ -11,7 +11,7 @@ import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.diffs.CommonValidation
 import com.ltonetwork.state.{Blockchain, ByteStr}
-import com.ltonetwork.transaction.ValidationError.{ActivationError, GenericError}
+import com.ltonetwork.transaction.ValidationError.{NotActivated, GenericError}
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
@@ -328,7 +328,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           case Right(tx)
               if tx.typeId == SetScriptTransaction.typeId &&
                 !blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, blockchain.height) =>
-            Left(ActivationError("SmartAccounts feature has not been activated yet"))
+            Left(NotActivated("SmartAccounts feature has not been activated yet"))
           case x => x
         }
         doBroadcast(r0)

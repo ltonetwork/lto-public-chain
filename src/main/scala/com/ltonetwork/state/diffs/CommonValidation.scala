@@ -9,7 +9,7 @@ import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransaction
-import com.ltonetwork.transaction.association.IssueAssociationTransaction
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
@@ -67,13 +67,13 @@ object CommonValidation {
       Either.cond(
         blockchain.isFeatureActivated(b, height),
         tx,
-        ValidationError.ActivationError(s"${tx.getClass.getSimpleName} transaction has not been activated yet")
+        NotActivated(s"${tx.getClass.getSimpleName} transaction has not been activated yet")
       )
     def deactivationBarrier(b: BlockchainFeature) =
       Either.cond(
         !blockchain.isFeatureActivated(b, height),
         tx,
-        ValidationError.ActivationError(s"${tx.getClass.getSimpleName} transaction has been deactivated")
+        NotActivated(s"${tx.getClass.getSimpleName} transaction has been deactivated")
       )
 
     (tx, tx.version) match {
@@ -90,7 +90,17 @@ object CommonValidation {
       case (_: AnchorTransaction, 1)           => Right(tx)
       case (_: IssueAssociationTransaction, 1) => activationBarrier(BlockchainFeatures.AssociationTransaction)
       case (_: SponsorshipTransactionBase, 1)  => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
-      case _                                   => Left(GenericError("Unknown transaction must be explicitly activated"))
+
+      // Needs to be behind a feature flag
+      case (_: AnchorTransaction, 3)           => Right(tx)
+      case (_: AssociationTransaction, 3)      => Right(tx)
+      case (_: LeaseTransaction, 3)            => Right(tx)
+      case (_: CancelLeaseTransaction, 3)      => Right(tx)
+      case (_: SetScriptTransaction, 3)        => Right(tx)
+      case (_: SponsorshipTransactionBase, 3)  => Right(tx)
+      case (_: TransferTransaction, 3)         => Right(tx)
+      case (_: MassTransferTransaction, 3)     => Right(tx)
+      case _                                   => Left(ActivationError(s"Version ${tx.version} of transaction type ${tx.typeId} must be explicitly activated"))
     }
   }
 
