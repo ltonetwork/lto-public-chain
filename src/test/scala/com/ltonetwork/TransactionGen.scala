@@ -272,8 +272,8 @@ trait TransactionGenBase extends ScriptGen {
   val randomTransactionGen: Gen[Transaction] = Gen.oneOf(
     transferGen,
     anchorTransactionGen,
-    assocTransactionGen,
-    leaseGen
+    assocTransactionGen
+//    leaseGen
   )
   def randomTransactionsGen(count: Int): Gen[Seq[Transaction]] =
     for {
