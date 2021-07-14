@@ -2,8 +2,8 @@ package com.ltonetwork.transaction.transfer
 
 import cats.data.{Validated, ValidatedNel}
 import com.google.common.primitives.Bytes
+import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.TransactionParser.{HardcodedVersion1, MultipleVersions}
 import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
@@ -83,6 +83,9 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
                           None,
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
         Validated.condNel(proofs.length <= 1 || version > 1, None, ValidationError.UnsupportedFeature(s"Multiple proofs not supported for tx v1")),
+        Validated.condNel(sender.keyType == ED25519 || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
       )
     }
   }

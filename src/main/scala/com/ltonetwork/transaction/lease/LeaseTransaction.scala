@@ -1,6 +1,7 @@
 package com.ltonetwork.transaction.lease
 
 import cats.data.{Validated, ValidatedNel}
+import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
@@ -69,6 +70,9 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
                           None,
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
         Validated.condNel(proofs.length <= 1 || version > 1, None, ValidationError.UnsupportedFeature(s"Multiple proofs not supported for tx v1")),
+        Validated.condNel(sender.keyType == ED25519 || version >= 3,
+          None,
+          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
       )
     }
   }

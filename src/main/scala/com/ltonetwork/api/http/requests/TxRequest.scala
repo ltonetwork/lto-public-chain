@@ -1,6 +1,7 @@
 package com.ltonetwork.api.http.requests
 
-import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{KeyType, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.KeyTypes.{ED25519, SECP256K1, SECP256R1}
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.{Transaction, ValidationError}
 import com.ltonetwork.utils.Time
@@ -8,8 +9,10 @@ import com.ltonetwork.wallet.Wallet
 
 trait TxRequest[TransactionT <: Transaction] {
   val sender: Option[String]
+  val senderKeyType: Option[String]
   val senderPublicKey: Option[String]
   val sponsor: Option[String]
+  val sponsorKeyType: Option[String]
   val sponsorPublicKey: Option[String]
 
   def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, TransactionT]
@@ -20,10 +23,10 @@ trait TxRequest[TransactionT <: Transaction] {
   def toTx: Either[ValidationError, TransactionT] =
     for {
       sender <- senderPublicKey match {
-        case Some(key) => PublicKeyAccount.fromBase58String(key)
+        case Some(key) => PublicKeyAccount.fromBase58String(fetchKeyTypeRead(senderKeyType), key)
         case None      => Left(ValidationError.InvalidPublicKey("invalid.senderPublicKey"))
       }
-      sponsor <- sponsorPublicKey.map(key => PublicKeyAccount.fromBase58String(key))
+      sponsor <- sponsorPublicKey.map(key => PublicKeyAccount.fromBase58String(fetchKeyTypeRead(sponsorKeyType), key))
         .fold[Either[ValidationError, Option[PublicKeyAccount]]](Right(None))(_.map(k => Some(k)))
       tx <- toTxFrom(sender, sponsor)
     } yield tx
@@ -51,4 +54,12 @@ trait TxRequest[TransactionT <: Transaction] {
       else wallet.findPrivateKey(signerAddress)
   } yield (senderAccount, sponsorAccount, signerAccount)
 
+  def fetchKeyTypeRead(str: Option[String]): KeyType = str.getOrElse("ed25519").toLowerCase() match{
+    case "ed25519" | "1" =>
+      ED25519
+    case "secp256k1" | "2" =>
+      SECP256K1
+    case "secp256r1" | "3" =>
+      SECP256R1
+  }
 }

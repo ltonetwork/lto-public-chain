@@ -7,7 +7,6 @@ import com.ltonetwork.account.AddressScheme
 import com.ltonetwork.db.{Storage, VersionedStorage}
 import com.ltonetwork.lang.Global
 import com.ltonetwork.state._
-import com.ltonetwork.state.ByteStr._
 import com.ltonetwork.lang.v1.compiler.CompilerContext
 import com.ltonetwork.lang.v1.compiler.CompilerContext._
 import com.ltonetwork.lang.v1.evaluator.ctx._
@@ -20,7 +19,6 @@ import monix.eval.Coeval
 import monix.execution.UncaughtExceptionReporter
 import org.joda.time.Duration
 import org.joda.time.format.PeriodFormat
-import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
