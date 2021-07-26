@@ -9,12 +9,12 @@ import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransaction
-import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction}
+import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.SetScriptTransaction
-import com.ltonetwork.transaction.sponsorship.SponsorshipTransactionBase
+import com.ltonetwork.transaction.sponsorship._
 import com.ltonetwork.transaction.transfer._
 
 import scala.concurrent.duration._
@@ -116,7 +116,7 @@ object CommonValidation {
       case _ => Right(tx)
     }
 
-  private def oldFeeInUnits(blockchain: Blockchain, height: Int, tx: Transaction): Either[ValidationError, Long] = tx match {
+  private def feeInUnitsVersion1(blockchain: Blockchain, height: Int, tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: GenesisTransaction       => Right(0)
     case _: TransferTransaction      => Right(1)
     case tx: MassTransferTransaction => Right(1 + (tx.transfers.size + 1) / 2)
@@ -130,35 +130,50 @@ object CommonValidation {
     case _                       => Left(UnsupportedTransactionType)
   }
 
-  private def newFeeInUnits(tx: Transaction): Either[ValidationError, Long] = tx match {
-    case _: GenesisTransaction          => Right(0)
-    case _: TransferTransaction         => Right(1000)
-    case _: LeaseTransaction            => Right(1000)
-    case _: SetScriptTransaction        => Right(1000)
-    case _: CancelLeaseTransaction      => Right(1000)
-    case tx: MassTransferTransaction    => Right(1000 + tx.transfers.size * 100)
-    case _: AnchorTransaction           => Right(100)
-    case _: IssueAssociationTransaction => Right(1000)
-    case _: SponsorshipTransactionBase  => Right(5000)
-    case _                              => Left(UnsupportedTransactionType)
+  private def feeInUnitsVersion2(tx: Transaction): Either[ValidationError, Long] = tx match {
+    case _: GenesisTransaction         => Right(0)
+    case _: TransferTransaction        => Right(1000)
+    case _: LeaseTransaction           => Right(1000)
+    case _: SetScriptTransaction       => Right(1000)
+    case _: CancelLeaseTransaction     => Right(1000)
+    case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
+    case _: AnchorTransaction          => Right(100)
+    case _: AssociationTransaction     => Right(1000)
+    case _: SponsorshipTransactionBase => Right(5000)
+    case _                             => Left(UnsupportedTransactionType)
   }
 
-  private def superNewFeeInUnits(tx: Transaction): Either[ValidationError, Long] = tx match {
-    case _: GenesisTransaction          => Right(0)
-    case _: TransferTransaction         => Right(1000)
-    case _: LeaseTransaction            => Right(1000)
-    case _: SetScriptTransaction        => Right(1000)
-    case _: CancelLeaseTransaction      => Right(1000)
-    case tx: MassTransferTransaction    => Right(1000 + tx.transfers.size * 100)
-    case _: AnchorTransaction           => Right(350)
-    case _: IssueAssociationTransaction => Right(1000)
-    case _: SponsorshipTransactionBase  => Right(5000)
-    case _                              => Left(UnsupportedTransactionType)
+  private def feeInUnitsVersion3(tx: Transaction): Either[ValidationError, Long] = tx match {
+    case _: GenesisTransaction         => Right(0)
+    case _: TransferTransaction        => Right(1000)
+    case _: LeaseTransaction           => Right(1000)
+    case _: SetScriptTransaction       => Right(1000)
+    case _: CancelLeaseTransaction     => Right(1000)
+    case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
+    case _: AnchorTransaction          => Right(350)
+    case _: AssociationTransaction     => Right(1000)
+    case _: SponsorshipTransactionBase => Right(5000)
+    case _                             => Left(UnsupportedTransactionType)
+  }
+
+  private def feeInUnitsVersion4(tx: Transaction): Either[ValidationError, Long] = tx match {
+    case _: GenesisTransaction           => Right(0)
+    case _: TransferTransaction          => Right(10)
+    case _: LeaseTransaction             => Right(10)
+    case _: SetScriptTransaction         => Right(100)
+    case _: CancelLeaseTransaction       => Right(10)
+    case tx: MassTransferTransaction     => Right(10 + tx.transfers.size * 1)
+    case tx: AnchorTransaction           => Right(10 + tx.anchors.size * 1)
+    case _: AssociationTransaction       => Right(10)
+    case _: SponsorshipTransaction       => Right(100)
+    case _: CancelSponsorshipTransaction => Right(10)
+    case _                               => Left(UnsupportedTransactionType)
   }
 
   def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Long] = {
 
-    def oldFees() = {
+    // TODO: smart accounts were not activated, so why the check in fees V1?
+    def feesV1() = {
       type FeeInfo = Long
 
       def hasSmartAccountScript: Boolean = tx match {
@@ -171,26 +186,30 @@ object CommonValidation {
           inputFee + ScriptExtraFee
         } else inputFee
 
-      oldFeeInUnits(blockchain, height, tx)
+      feeInUnitsVersion1(blockchain, height, tx)
         .map(_ * Sponsorship.FeeUnit)
         .map(feeAfterSmartAccounts)
     }
-    def newFees()      = newFeeInUnits(tx).map(_ * Sponsorship.FeeUnit)
-    def superNewFees() = superNewFeeInUnits(tx).map(_ * Sponsorship.FeeUnit)
+    def feesV2() = feeInUnitsVersion2(tx).map(_ * Sponsorship.FeeUnit)
+    def feesV3() = feeInUnitsVersion3(tx).map(_ * Sponsorship.FeeUnit)
+    def feesV4() = feeInUnitsVersion4(tx).map(_ * Sponsorship.FeeUnit)
+
+    if (blockchain.isFeatureActivated(BlockchainFeatures.TransactionsV3, height))
+      feesV4()
     if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
-      superNewFees()
+      feesV3()
     else if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
-      newFees()
-    else oldFees()
+      feesV2()
+    else feesV1()
   }
 
   def checkFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Unit] = {
-    def oldFees() = {
+    def feesV1() = {
       def restFee(inputFee: Long): Either[ValidationError, (Option[AssetId], Long)] = {
         val txName    = Constants.TransactionNames(tx.typeId)
         val feeAmount = inputFee
         for {
-          feeInUnits <- oldFeeInUnits(blockchain, height, tx)
+          feeInUnits <- feeInUnitsVersion1(blockchain, height, tx)
           minimumFee    = feeInUnits * Sponsorship.FeeUnit
           restFeeAmount = feeAmount - minimumFee
           _ <- Either.cond(
@@ -224,14 +243,28 @@ object CommonValidation {
         .map(_ => ())
     }
 
-    def newFees() =
-      newFeeInUnits(tx)
+    def feesV2() =
+      feeInUnitsVersion2(tx)
         .map(_ * Sponsorship.FeeUnit)
         .flatMap(minFee => Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
 
-    if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
-      newFees()
-    else oldFees()
+    def feesV3() =
+      feeInUnitsVersion3(tx)
+        .map(_ * Sponsorship.FeeUnit)
+        .flatMap(minFee => Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
+
+    def feesV4() =
+      feeInUnitsVersion4(tx)
+        .map(_ * Sponsorship.FeeUnit)
+        .flatMap(minFee => Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
+
+    if (blockchain.isFeatureActivated(BlockchainFeatures.TransactionsV3, height))
+      feesV4()
+    if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
+      feesV3()
+    else if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
+      feesV2()
+    else feesV1()
   }
 
 }
