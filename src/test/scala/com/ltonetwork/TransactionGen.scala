@@ -108,9 +108,8 @@ trait TransactionGenBase extends ScriptGen {
 
   def selfSignedSetScriptTransactionGenP(sender: PrivateKeyAccount, script: Script, timestamp: Long): Gen[SetScriptTransaction] =
     for {
-      version <- Gen.oneOf(SetScriptTransaction.supportedVersions.toSeq)
       fee <- smallFeeGen
-    } yield SetScriptTransaction.selfSigned(version, timestamp, sender, fee, Some(script)).explicitGet()
+    } yield SetScriptTransaction.selfSigned(1, timestamp, sender, fee, Some(script)).explicitGet()
 
   private val leaseParamGen = for {
     sender <- accountGen
@@ -144,9 +143,9 @@ trait TransactionGenBase extends ScriptGen {
                                timestamp: Long): Gen[(LeaseTransaction, CancelLeaseTransaction)] =
     for {
       (_, amount, fee, _, _) <- leaseParamGen
-      lease <- createLease(leaseSender, amount, fee, timestamp, recipient)
+      lease <- createLease(1, leaseSender, amount, fee, timestamp, recipient)
       fee2 <- smallFeeGen
-      unlease <- createLeaseCancel(unleaseSender, lease.id(), fee2, timestamp + 1)
+      unlease <- createLeaseCancel(1, unleaseSender, lease.id(), fee2, timestamp + 1)
     } yield (lease, unlease)
 
   val twoLeasesGen: Gen[(LeaseTransaction, LeaseTransaction)] = for {

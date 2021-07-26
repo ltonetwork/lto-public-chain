@@ -67,40 +67,39 @@ object CommonValidation {
       Either.cond(
         blockchain.isFeatureActivated(b, height),
         tx,
-        NotActivated(s"${tx.getClass.getSimpleName} transaction has not been activated yet")
+        NotActivated(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) has not been activated yet")
       )
     def deactivationBarrier(b: BlockchainFeature) =
       Either.cond(
         !blockchain.isFeatureActivated(b, height),
         tx,
-        NotActivated(s"${tx.getClass.getSimpleName} transaction has been deactivated")
+        NotActivated(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) has been deactivated")
       )
 
     (tx, tx.version) match {
       case (_: GenesisTransaction, 1)          => Right(tx)
       case (_: TransferTransaction, 1)         => Right(tx)
       case (_: TransferTransaction, 2)         => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: TransferTransaction, 3)         => activationBarrier(BlockchainFeatures.TransactionsV3)
       case (_: LeaseTransaction, 1)            => Right(tx)
       case (_: LeaseTransaction, 2)            => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: LeaseTransaction, 3)            => activationBarrier(BlockchainFeatures.TransactionsV3)
       case (_: CancelLeaseTransaction, 1)      => Right(tx)
       case (_: CancelLeaseTransaction, 2)      => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: CancelLeaseTransaction, 3)      => activationBarrier(BlockchainFeatures.TransactionsV3)
       case (_: MassTransferTransaction, 1)     => Right(tx)
+      case (_: MassTransferTransaction, 3)     => activationBarrier(BlockchainFeatures.TransactionsV3)
       case (_: DataTransaction, 1)             => deactivationBarrier(BlockchainFeatures.SmartAccounts)
       case (_: SetScriptTransaction, 1)        => Right(tx)
+      case (_: SetScriptTransaction, 3)        => activationBarrier(BlockchainFeatures.TransactionsV3)
       case (_: AnchorTransaction, 1)           => Right(tx)
-      case (_: IssueAssociationTransaction, 1) => activationBarrier(BlockchainFeatures.AssociationTransaction)
+      case (_: AnchorTransaction, 3)           => activationBarrier(BlockchainFeatures.TransactionsV3)
+      case (_: AssociationTransaction, 1)      => activationBarrier(BlockchainFeatures.AssociationTransaction)
+      case (_: AssociationTransaction, 3)      => activationBarrier(BlockchainFeatures.TransactionsV3)
       case (_: SponsorshipTransactionBase, 1)  => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
+      case (_: SponsorshipTransactionBase, 3)  => activationBarrier(BlockchainFeatures.TransactionsV3)
 
-      // Needs to be behind a feature flag
-      case (_: AnchorTransaction, 3)           => Right(tx)
-      case (_: AssociationTransaction, 3)      => Right(tx)
-      case (_: LeaseTransaction, 3)            => Right(tx)
-      case (_: CancelLeaseTransaction, 3)      => Right(tx)
-      case (_: SetScriptTransaction, 3)        => Right(tx)
-      case (_: SponsorshipTransactionBase, 3)  => Right(tx)
-      case (_: TransferTransaction, 3)         => Right(tx)
-      case (_: MassTransferTransaction, 3)     => Right(tx)
-      case _                                   => Left(ActivationError(s"Version ${tx.version} of transaction type ${tx.typeId} must be explicitly activated"))
+      case _                                   => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
     }
   }
 
