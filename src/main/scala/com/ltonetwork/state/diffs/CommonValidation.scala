@@ -4,7 +4,7 @@ import cats._
 import com.ltonetwork.account.Address
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.features.{BlockchainFeature, BlockchainFeatures}
-import com.ltonetwork.settings.{Constants, FunctionalitySettings}
+import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction._
@@ -116,18 +116,16 @@ object CommonValidation {
       case _ => Right(tx)
     }
 
-  private def feeInUnitsVersion1(blockchain: Blockchain, height: Int, tx: Transaction): Either[ValidationError, Long] = tx match {
+  private def feeInUnitsVersion1(tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: GenesisTransaction       => Right(0)
     case _: TransferTransaction      => Right(1)
     case tx: MassTransferTransaction => Right(1 + (tx.transfers.size + 1) / 2)
     case _: LeaseTransaction         => Right(1)
     case _: CancelLeaseTransaction   => Right(1)
-    case tx: DataTransaction =>
-      val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
-      Right(1 + (base.length - 1) / 1024)
-    case tx: AnchorTransaction   => Right(1 + (tx.bodyBytes().length - 1) / 1024)
-    case _: SetScriptTransaction => Right(1)
-    case _                       => Left(UnsupportedTransactionType)
+    case tx: DataTransaction         => Right(1 + (tx.bodyBytes().length - 1) / 1024)
+    case tx: AnchorTransaction       => Right(1 + (tx.bodyBytes().length - 1) / 1024)
+    case _: SetScriptTransaction     => Right(1)
+    case _                           => Left(UnsupportedTransactionType)
   }
 
   private def feeInUnitsVersion2(tx: Transaction): Either[ValidationError, Long] = tx match {
@@ -171,100 +169,17 @@ object CommonValidation {
   }
 
   def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Long] = {
-
-    // TODO: smart accounts were not activated, so why the check in fees V1?
-    def feesV1() = {
-      type FeeInfo = Long
-
-      def hasSmartAccountScript: Boolean = tx match {
-        case _: GenesisTransaction => false
-        case _                     => blockchain.hasScript(tx.sender)
-      }
-
-      def feeAfterSmartAccounts(inputFee: FeeInfo): FeeInfo =
-        if (hasSmartAccountScript) {
-          inputFee + ScriptExtraFee
-        } else inputFee
-
-      feeInUnitsVersion1(blockchain, height, tx)
-        .map(_ * Sponsorship.FeeUnit)
-        .map(feeAfterSmartAccounts)
-    }
-    def feesV2() = feeInUnitsVersion2(tx).map(_ * Sponsorship.FeeUnit)
-    def feesV3() = feeInUnitsVersion3(tx).map(_ * Sponsorship.FeeUnit)
-    def feesV4() = feeInUnitsVersion4(tx).map(_ * Sponsorship.FeeUnit)
-
     if (blockchain.isFeatureActivated(BlockchainFeatures.TransactionsV3, height))
-      feesV4()
-    if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
-      feesV3()
-    else if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
-      feesV2()
-    else feesV1()
-  }
-
-  def checkFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Unit] = {
-    def feesV1() = {
-      def restFee(inputFee: Long): Either[ValidationError, (Option[AssetId], Long)] = {
-        val txName    = Constants.TransactionNames(tx.typeId)
-        val feeAmount = inputFee
-        for {
-          feeInUnits <- feeInUnitsVersion1(blockchain, height, tx)
-          minimumFee    = feeInUnits * Sponsorship.FeeUnit
-          restFeeAmount = feeAmount - minimumFee
-          _ <- Either.cond(
-            restFeeAmount >= 0,
-            (),
-            GenericError(s"Fee in LTO for ${txName} does not exceed minimal value of $minimumFee LTOs: $feeAmount")
-          )
-        } yield (None, restFeeAmount)
-      }
-
-      def hasSmartAccountScript: Boolean = tx match {
-        case _: GenesisTransaction => false
-        case _                     => blockchain.hasScript(tx.sender)
-      }
-
-      def restFeeAfterSmartAccounts(inputFee: (Option[AssetId], Long)): Either[ValidationError, (Option[AssetId], Long)] =
-        if (hasSmartAccountScript) {
-          val (feeAssetId, feeAmount) = inputFee
-          for {
-            _ <- Either.cond(feeAssetId.isEmpty, (), GenericError("Transactions from scripted accounts require LTO as fee"))
-            _ <- Either.cond(
-              feeAmount >= 0,
-              (),
-              InsufficientFee()
-            )
-          } yield (feeAssetId, feeAmount)
-        } else Right(inputFee)
-
-      restFee(tx.fee)
-        .flatMap(restFeeAfterSmartAccounts)
-        .map(_ => ())
-    }
-
-    def feesV2() =
-      feeInUnitsVersion2(tx)
-        .map(_ * Sponsorship.FeeUnit)
-        .flatMap(minFee => Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
-
-    def feesV3() =
-      feeInUnitsVersion3(tx)
-        .map(_ * Sponsorship.FeeUnit)
-        .flatMap(minFee => Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
-
-    def feesV4() =
       feeInUnitsVersion4(tx)
-        .map(_ * Sponsorship.FeeUnit)
-        .flatMap(minFee => Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
-
-    if (blockchain.isFeatureActivated(BlockchainFeatures.TransactionsV3, height))
-      feesV4()
-    if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
-      feesV3()
+    else if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
+      feeInUnitsVersion3(tx)
     else if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
-      feesV2()
-    else feesV1()
-  }
+      feeInUnitsVersion2(tx)
+    else
+      feeInUnitsVersion1(tx)
+  }.map(_ * Sponsorship.FeeUnit)
 
+  def checkFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Unit] =
+    getMinFee(blockchain, fs, height, tx)
+      .flatMap(minFee => Either.cond(tx.fee >= minFee, (), InsufficientFee(s"Not enough fee, actual: ${tx.fee} required: $minFee")))
 }

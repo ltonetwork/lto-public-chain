@@ -176,14 +176,11 @@ case class TransactionsApiRoute(settings: RestAPISettings,
             "sender" -> senderPk
           )
           createTransaction(senderPk, enrichedJsv) { tx =>
-            CommonValidation.getMinFee(blockchain, functionalitySettings, blockchain.height, tx).map {
-              assetAmount =>
-                val utxMinFee = new FeeCalculator(feesSettings, blockchain).map.getOrElse(tx.builder.typeId.toInt.toString, 0L)
-                val minFee = Math.max(utxMinFee, assetAmount)
-                Json.obj(
-                  "feeAmount" -> minFee
-                )
-            }
+            for {
+              commonMinFee <- CommonValidation.getMinFee(blockchain, functionalitySettings, blockchain.height, tx)
+              utxMinFee <- new FeeCalculator(feesSettings, blockchain).minFee(tx)
+              minFee = Math.max(commonMinFee, utxMinFee)
+            } yield Json.obj("feeAmount" -> minFee)
           }
         }
       }

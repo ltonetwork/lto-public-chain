@@ -11,6 +11,7 @@ import com.ltonetwork.utils.Base58
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import com.ltonetwork.{BlockGen, NoShrink, TestTime, TransactionGen}
+import com.ltonetwork.utils._
 import io.netty.channel.group.ChannelGroup
 import org.scalacheck.Gen._
 import org.scalamock.scalatest.MockFactory
@@ -35,7 +36,10 @@ class TransactionsRouteSpec
   private val blockchain   = mock[Blockchain]
   private val utx          = mock[UtxPool]
   private val allChannels  = mock[ChannelGroup]
-  private val feesSettings = FeesSettings(List(1, 2, 3).map(x => (x, Seq(FeeSettings("LTO", 100000000L)))).toMap)
+  private val feesSettings = FeesSettings(Map[Int, Seq[FeeSettings]](
+    4 -> Seq(FeeSettings("BASE", 1.lto)),
+    11 -> Seq(FeeSettings("BASE", 1.lto), FeeSettings("VAR", 0.1.lto))
+  ))
   private val route =
     TransactionsApiRoute(restAPISettings, TestFunctionalitySettings.Stub, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
   routePath("/calculateFee") - {
