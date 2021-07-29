@@ -15,9 +15,8 @@ trait BroadcastRoute {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  protected def doBroadcast(v: Either[ValidationError, Transaction]): Future[Either[ApiError, Transaction]] = Future {
+  protected def doBroadcast(tx: Transaction): Future[Either[ApiError, Transaction]] = Future {
     val r = for {
-      tx <- v
       r  <- utx.putIfNew(tx)
     } yield {
       val (added, _) = r

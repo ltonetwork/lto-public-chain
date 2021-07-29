@@ -9,7 +9,7 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
     val config = ConfigFactory.parseString("""lto {
         |  network.file = "xxx"
         |  fees {
-        |    transfer.LTO = 100000
+        |    transfer.BASE = 100000
         |  }
         |  miner.timeout = 10
         |}
@@ -17,20 +17,20 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
 
     val settings = FeesSettings.fromConfig(config)
     settings.fees.size should be(1)
-    settings.fees(4) should be(List(FeeSettings("LTO", 100000)))
+    settings.fees(4) should be(List(FeeSettings("BASE", 100000)))
   }
 
   it should "combine read few fees for one transaction type" in {
     val config = ConfigFactory.parseString("""lto.fees {
         |  transfer {
-        |    LTO4 = 444
+        |    VAR = 444
         |  }
         |}
       """.stripMargin).resolve()
 
     val settings = FeesSettings.fromConfig(config)
     settings.fees.size should be(1)
-    settings.fees(4).toSet should equal(Set(FeeSettings("LTO4", 444)))
+    settings.fees(4).toSet should equal(Set(FeeSettings("VAR", 444)))
   }
 
   it should "allow empty list" in {
@@ -42,10 +42,10 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
 
   it should "override values" in {
     val config = ConfigFactory
-      .parseString("lto.fees.transfer.LTO = 100001")
+      .parseString("lto.fees.transfer.BASE = 100001")
       .withFallback(
         ConfigFactory.parseString("""lto.fees {
-          |  transfer.LTO = 100000
+          |  transfer.BASE = 100000
           |}
         """.stripMargin)
       )
@@ -53,12 +53,12 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
 
     val settings = FeesSettings.fromConfig(config)
     settings.fees.size should be(1)
-    settings.fees(4).toSet should equal(Set(FeeSettings("LTO", 100001)))
+    settings.fees(4).toSet should equal(Set(FeeSettings("BASE", 100001)))
   }
 
   it should "fail on incorrect long values" in {
     val config = ConfigFactory.parseString("""lto.fees {
-        |  transfer.LTO=N/A
+        |  transfer.BASE=N/A
         |}""".stripMargin).resolve()
     intercept[WrongType] {
       FeesSettings.fromConfig(config)
@@ -67,15 +67,15 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
 
   it should "not fail on long values as strings" in {
     val config   = ConfigFactory.parseString("""lto.fees {
-        |  transfer.LTO="1000"
+        |  transfer.BASE="1000"
         |}""".stripMargin).resolve()
     val settings = FeesSettings.fromConfig(config)
-    settings.fees(4).toSet should equal(Set(FeeSettings("LTO", 1000)))
+    settings.fees(4).toSet should equal(Set(FeeSettings("BASE", 1000)))
   }
 
   it should "fail on unknown transaction type" in {
     val config = ConfigFactory.parseString("""lto.fees {
-        |  shmayment.LTO=100
+        |  shmayment.BASE=100
         |}""".stripMargin).resolve()
     intercept[NoSuchElementException] {
       FeesSettings.fromConfig(config)
@@ -87,31 +87,31 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
     val config        = ConfigFactory.parseString("""
         |lto.fees {
         |  transfer {
-        |    LTO = 300000
-        |    "6MPKrD5B7GrfbciHECg1MwdvRUhRETApgNZspreBJ8JL" = 1
+        |    BASE = 300000
         |  }
         |  lease {
-        |    LTO = 700000
+        |    BASE = 700000
         |  }
-        |  lease-cancel {
-        |    LTO = 800000
+        |  cancel-lease {
+        |    BASE = 800000
         |  }
         |  mass-transfer {
-        |    LTO = 10000
+        |    BASE = 10000
+        |    VAR  = 5000
         |  }
         |  data {
-        |    LTO = 200000
+        |    BASE = 200000
         |  }
         |  # set-script {
-        |  #  LTO = 300000
+        |  #  BASE = 300000
         |  # }
         |}
       """.stripMargin).withFallback(defaultConfig).resolve()
     val settings      = FeesSettings.fromConfig(config)
-    settings.fees(4).toSet should equal(Set(FeeSettings("LTO", 300000), FeeSettings("6MPKrD5B7GrfbciHECg1MwdvRUhRETApgNZspreBJ8JL", 1)))
-    settings.fees(8).toSet should equal(Set(FeeSettings("LTO", 700000)))
-    settings.fees(9).toSet should equal(Set(FeeSettings("LTO", 800000)))
-    settings.fees(11).toSet should equal(Set(FeeSettings("LTO", 10000)))
-    settings.fees(12).toSet should equal(Set(FeeSettings("LTO", 200000)))
+    settings.fees(4).toSet should equal(Set(FeeSettings("BASE", 300000)))
+    settings.fees(8).toSet should equal(Set(FeeSettings("BASE", 700000)))
+    settings.fees(9).toSet should equal(Set(FeeSettings("BASE", 800000)))
+    settings.fees(11).toSet should equal(Set(FeeSettings("BASE", 10000), FeeSettings("VAR", 5000)))
+    settings.fees(12).toSet should equal(Set(FeeSettings("BASE", 200000)))
   }
 }

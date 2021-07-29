@@ -25,8 +25,8 @@ class AssociationTransactionSuite extends BaseTransactionSuite with CancelAfterF
   def build(builder: TransactionBuilder, from: PrivateKeyAccount, to: Address, id: Int) = {
     val ts = System.currentTimeMillis()
     (builder match {
-      case RevokeAssociationTransaction => RevokeAssociationTransaction.selfSigned(1, ts, from, fee, to, id, None)
-      case IssueAssociationTransaction  => IssueAssociationTransaction.selfSigned(1, ts, from, fee, to, id, None, None)
+      case RevokeAssociationTransaction => RevokeAssociationTransaction.signed(1, ts, from, fee, to, id, None)
+      case IssueAssociationTransaction  => IssueAssociationTransaction.signed(1, ts, from, fee, to, id, None, None)
     }).explicitGet()
   }
   def postAssoc(assocTx: AssociationTransaction) = {

@@ -11,7 +11,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
 
   private val Kb = 1024
 
-  private val map: Map[Int, Long] = {
+  private val map: Map[Byte, Long] = {
     settings.fees.flatMap { fs =>
       val transactionType = fs._1
       fs._2.filter(v => v.asset.toUpperCase() == "BASE").map { v =>
@@ -20,7 +20,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     }
   }
 
-  private val mapVar: Map[Int, Long] = {
+  private val mapVar: Map[Byte, Long] = {
     settings.fees.flatMap { fs =>
       val transactionType = fs._1
       fs._2.filter(v => v.asset.toUpperCase() == "VAR").map { v =>

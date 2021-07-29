@@ -20,7 +20,7 @@ class AnchorTransactionDiffTest extends PropSpec with PropertyChecks with Matche
   } yield (genesis, master, ts)
 
   def anchor(version: Byte, sender: PrivateKeyAccount, data: List[ByteStr], fee: Long, timestamp: Long): AnchorTransaction =
-    AnchorTransaction.selfSigned(version, timestamp, sender, fee, data).explicitGet()
+    AnchorTransaction.signed(version, timestamp, sender, fee, data).explicitGet()
 
   property("cannot overspend funds") {
     val setup = for {

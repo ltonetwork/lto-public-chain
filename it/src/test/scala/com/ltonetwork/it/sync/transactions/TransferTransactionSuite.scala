@@ -31,7 +31,7 @@ class TransferTransactionSuite extends BaseTransactionSuite with CancelAfterFail
   test("invalid signed lto transfer should not be in UTX or blockchain") {
     def invalidTx(timestamp: Long = System.currentTimeMillis, fee: Long = com.ltonetwork.it.STD_FEE) =
       TransferTransaction
-        .selfSigned(1, timestamp, sender.privateKey, fee, Address.fromString(sender.address).explicitGet(), 1, Array.emptyByteArray)
+        .signed(1, timestamp, sender.privateKey, fee, Address.fromString(sender.address).explicitGet(), 1, Array.emptyByteArray)
         .right
         .get
 

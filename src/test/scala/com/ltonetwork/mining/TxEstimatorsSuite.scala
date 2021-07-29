@@ -33,7 +33,7 @@ class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with
   private val script  = ScriptV1(Terms.TRUE, checkSize = false).explicitGet()
 
   private val transferLtoTx = TransferTransaction
-    .selfSigned(
+    .signed(
       version = 1,
       sender = PrivateKeyAccount("sender".getBytes()),
       recipient = PrivateKeyAccount("recipient".getBytes()),
@@ -45,7 +45,7 @@ class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with
     .explicitGet()
 
   private val transferAssetsTx = TransferTransaction
-    .selfSigned(
+    .signed(
       version = 1,
       sender = PrivateKeyAccount("sender".getBytes()),
       recipient = PrivateKeyAccount("recipient".getBytes()),

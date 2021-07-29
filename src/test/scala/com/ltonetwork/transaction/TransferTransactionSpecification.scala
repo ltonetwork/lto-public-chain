@@ -46,7 +46,7 @@ class TransferTransactionSpecification extends PropSpec with PropertyChecks with
     for {
       (_, recipient, amount, timestamp, fee, attachment) <- transferParamGen
       sender                                             <- accountGen
-    } yield TransferTransaction.selfSigned(1, timestamp, sender, fee, recipient, amount, attachment) should produce("insufficient fee")
+    } yield TransferTransaction.signed(1, timestamp, sender, fee, recipient, amount, attachment) should produce("insufficient fee")
   }
 
   private val fastIdVersionGen: Gen[Byte] = Gen.oneOf(TransferTransaction.supportedVersions.toSeq) filter (_ != 1)

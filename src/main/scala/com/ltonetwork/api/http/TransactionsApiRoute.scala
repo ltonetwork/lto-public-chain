@@ -1,34 +1,27 @@
 package com.ltonetwork.api.http
 
-import java.util.NoSuchElementException
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
-import com.ltonetwork.account.{Address, PublicKeyAccount}
-import com.ltonetwork.api.http.requests._
-import com.ltonetwork.features.BlockchainFeatures
+import com.ltonetwork.account.Address
+import com.ltonetwork.api.http.requests.TxRequest
 import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.diffs.CommonValidation
 import com.ltonetwork.state.{Blockchain, ByteStr}
-import com.ltonetwork.transaction.ValidationError.{NotActivated, GenericError}
+import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.anchor.AnchorTransaction
-import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
-import com.ltonetwork.transaction.data.DataTransaction
+import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.lease._
-import com.ltonetwork.transaction.smart.SetScriptTransaction
-import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
-import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils._
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
-
-import javax.ws.rs.Path
 import play.api.libs.json._
 
+import java.util.NoSuchElementException
+import javax.ws.rs.Path
 import scala.util.Success
 import scala.util.control.Exception
 
@@ -169,13 +162,11 @@ case class TransactionsApiRoute(settings: RestAPISettings,
       handleExceptions(jsonExceptionHandler) {
         json[JsObject] { jsv =>
           val enoughFee = 1000.lto
-          val senderPk = (jsv \ "senderPublicKey").as[String]
           // Just for converting the request to the transaction
           val enrichedJsv = jsv ++ Json.obj(
             "fee"    -> enoughFee,
-            "sender" -> senderPk
           )
-          createTransaction(senderPk, enrichedJsv) { tx =>
+          createTransaction(enrichedJsv) { tx =>
             for {
               commonMinFee <- CommonValidation.getMinFee(blockchain, functionalitySettings, blockchain.height, tx)
               utxMinFee <- new FeeCalculator(feesSettings, blockchain).minFee(tx)
@@ -227,62 +218,54 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   }
 
   private def signTransaction(signerAddress: String, jsv: JsObject): ToResponseMarshallable = {
-    val typeId = (jsv \ "type").as[Byte]
-
-    (TransactionBuilders.by(typeId) match {
-      case None => Left(GenericError(s"Bad transaction type ($typeId)"))
-      case Some(x) =>
-        x match {
-          case AnchorTransaction => jsv.as[AnchorRequest].signTx(wallet, signerAddress, time)
-          case IssueAssociationTransaction =>
-            jsv.as[IssueAssociationRequest].signTx(wallet, signerAddress, time)
-              .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-          case RevokeAssociationTransaction =>
-            jsv.as[IssueAssociationRequest].signTx(wallet, signerAddress, time)
-              .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-          case SponsorshipTransaction       => jsv.as[SponsorshipRequest].signTx(wallet, signerAddress, time)
-          case CancelSponsorshipTransaction => jsv.as[SponsorshipRequest].signTx(wallet, signerAddress, time)
-          case TransferTransaction          => jsv.as[TransferRequest].signTx(wallet, signerAddress, time)
-          case MassTransferTransaction      => jsv.as[MassTransferRequest].signTx(wallet, signerAddress, time)
-          case LeaseTransaction             => jsv.as[LeaseRequest].signTx(wallet, signerAddress, time)
-          case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].signTx(wallet, signerAddress, time)
-          case DataTransaction              => jsv.as[DataRequest].signTx(wallet, signerAddress, time)
-          case SetScriptTransaction         => jsv.as[SetScriptRequest].signTx(wallet, signerAddress, time)
-          case _                            => Left(GenericError(s"Unsupported transaction type ($typeId)"))
-        }
-    }).fold(ApiError.fromValidationError, _.json())
+    TxRequest.fromJson(jsv)
+      .flatMap(_.signTx(wallet, signerAddress, time))
+      .fold(ApiError.fromValidationError, _.json())
   }
 
-  private def createTransaction(senderPk: String, jsv: JsObject)(f: Transaction => ToResponseMarshallable): ToResponseMarshallable = {
-    val typeId = (jsv \ "type").as[Byte]
-
-    PublicKeyAccount
-      .fromBase58String(senderPk)
-      .flatMap { senderPk =>
-        TransactionBuilders.by(typeId) match {
-          case None => Left(GenericError(s"Bad transaction type ($typeId)"))
-          case Some(x) =>
-            x match {
-              case AnchorTransaction => jsv.as[AnchorRequest].toTxFrom(senderPk)
-              case IssueAssociationTransaction =>
-                jsv.as[IssueAssociationRequest].toTxFrom(senderPk)
-                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-              case RevokeAssociationTransaction =>
-                jsv.as[RevokeAssociationRequest].toTxFrom(senderPk)
-                  .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-              case SponsorshipTransaction       => jsv.as[SponsorshipRequest].toTxFrom(senderPk)
-              case CancelSponsorshipTransaction => jsv.as[SponsorshipRequest].toTxFrom(senderPk)
-              case TransferTransaction          => jsv.as[TransferRequest].toTxFrom(senderPk)
-              case MassTransferTransaction      => jsv.as[MassTransferRequest].toTxFrom(senderPk)
-              case LeaseTransaction             => jsv.as[LeaseRequest].toTxFrom(senderPk)
-              case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].toTxFrom(senderPk)
-              case DataTransaction              => jsv.as[DataRequest].toTxFrom(senderPk)
-              case SetScriptTransaction         => jsv.as[SetScriptRequest].toTxFrom(senderPk)
-              case _                            => Left(GenericError(s"Unsupported transaction type ($typeId)"))
-            }
+  @Path("/sponsor")
+  @ApiOperation(value = "Sponsor a transaction", notes = "Sponsor a transaction", httpMethod = "POST")
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(name = "json",
+        required = true,
+        dataType = "string",
+        paramType = "body",
+        value = "Transaction data including type and optional timestamp in milliseconds")
+    ))
+  def sponsor: Route = (pathPrefix("sign") & post & withAuth) {
+    pathEndOrSingleSlash {
+      handleExceptions(jsonExceptionHandler) {
+        json[JsObject] { jsv =>
+          sponsorTransaction((jsv \ "sponsor").as[String], jsv)
         }
       }
-      .fold(ApiError.fromValidationError, tx => f(tx))
+    } ~ signWithSigner
+  }
+
+  @Path("/sponsor/{signerAddress}")
+  @ApiOperation(value = "Sponsor a transaction by a private key of signer address", notes = "Sponsor a transaction", httpMethod = "POST")
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(name = "signerAddress", value = "Wallet address", required = true, dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "json",
+        required = true,
+        dataType = "string",
+        paramType = "body",
+        value = "Transaction data including type and optional timestamp in milliseconds")
+    ))
+  def sponsorWithSigner: Route = pathPrefix(Segment) { signerAddress =>
+    handleExceptions(jsonExceptionHandler) {
+      json[JsObject] { jsv =>
+        sponsorTransaction(signerAddress, jsv)
+      }
+    }
+  }
+
+  private def sponsorTransaction(signerAddress: String, jsv: JsObject): ToResponseMarshallable = {
+    TxRequest.fromJson(jsv)
+      .flatMap(_.sponsorTx(wallet, signerAddress, time))
+      .fold(ApiError.fromValidationError, _.json())
   }
 
   @Path("/broadcast")
@@ -297,40 +280,15 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     ))
   def broadcast: Route = (pathPrefix("broadcast") & post) {
     handleExceptions(jsonExceptionHandler) {
-      json[JsObject] { jsv =>
-        val typeId  = (jsv \ "type").as[Byte]
-
-        val r: Either[ValidationError, Transaction] = TransactionBuilders.by(typeId) match {
-          case None => Left(GenericError(s"Bad transaction type ($typeId)"))
-          case Some(x) =>
-            x match {
-              case AnchorTransaction => jsv.as[AnchorRequest].toTx
-              case IssueAssociationTransaction =>
-                jsv.as[IssueAssociationRequest].toTx.flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-              case RevokeAssociationTransaction =>
-                jsv.as[RevokeAssociationRequest].toTx.flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
-              case SponsorshipTransaction       => jsv.as[SponsorshipRequest].toTx
-              case CancelSponsorshipTransaction => jsv.as[SponsorshipRequest].toTx
-              case TransferTransaction          => jsv.as[TransferRequest].toTx
-              case MassTransferTransaction      => jsv.as[MassTransferRequest].toTx
-              case LeaseTransaction             => jsv.as[LeaseRequest].toTx
-              case CancelLeaseTransaction       => jsv.as[CancelLeaseRequest].toTx
-              case DataTransaction              => jsv.as[DataRequest].toTx
-              case SetScriptTransaction         => jsv.as[SetScriptRequest].toTx
-              case _                            => Left(GenericError(s"Unsupported transaction type ($typeId)"))
-            }
-        }
-        import com.ltonetwork.features.FeatureProvider._
-        val r0 = r match {
-          case Right(tx)
-              if tx.typeId == SetScriptTransaction.typeId &&
-                !blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, blockchain.height) =>
-            Left(NotActivated("SmartAccounts feature has not been activated yet"))
-          case x => x
-        }
-        doBroadcast(r0)
-      }
+      json[JsObject] { createTransaction(_) { tx => doBroadcast(tx) } }
     }
+  }
+
+  private def createTransaction(jsv: JsObject)(f: Transaction => ToResponseMarshallable): ToResponseMarshallable = {
+    TxRequest.fromJson(jsv)
+      .flatMap(_.toTx)
+      .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+      .fold(ApiError.fromValidationError, tx => f(tx))
   }
 
   private def txToExtendedJson(tx: Transaction): JsObject = {
@@ -366,12 +324,15 @@ case class TransactionsApiRoute(settings: RestAPISettings,
 
 object TransactionsApiRoute {
   val MaxTransactionsPerRequest = 10000
-  def ifPossible(bc: Blockchain, tx: AssociationTransaction): Either[GenericError, AssociationTransaction] = {
+  def ifPossible[T <: Transaction](bc: Blockchain, tx: T): Either[GenericError, T] = {
     tx match {
-      case _: IssueAssociationTransaction =>
-        if (bc.assocExists(tx)) Left(GenericError("The exact same association already exists")) else Right(tx)
-      case _: RevokeAssociationTransaction =>
-        if (!bc.assocExists(tx)) Left(GenericError("The association doesn't exist")) else Right(tx)
+      case atx: IssueAssociationTransaction =>
+        Either.cond(!bc.assocExists(atx), tx, GenericError("The exact same association already exists"))
+      case atx: RevokeAssociationTransaction =>
+        Either.cond(bc.assocExists(atx), tx, GenericError("The association doesn't exist"))
+      case ltx: CancelLeaseTransaction =>
+        Either.cond(bc.leaseDetails(ltx.leaseId).exists(_.isActive), tx, GenericError("The lease is not active"))
+      case _ => Right(tx)
     }
   }
 }

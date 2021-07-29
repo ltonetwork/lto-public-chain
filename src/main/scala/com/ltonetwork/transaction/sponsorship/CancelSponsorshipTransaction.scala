@@ -57,16 +57,6 @@ object CancelSponsorshipTransaction extends TransactionBuilder.For[CancelSponsor
              proofs: Proofs): Either[ValidationError, TransactionT] =
     CancelSponsorshipTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, sponsor, proofs).validatedEither
 
-  def signed(version: Byte,
-             timestamp: Long,
-             sender: PublicKeyAccount,
-             fee: Long,
-             recipient: Address,
-             sponsor: Option[PublicKeyAccount],
-             proofs: Proofs,
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, sponsor, proofs).signWith(signer)
-
-  def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, recipient: Address): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, recipient, None, Proofs.empty, sender)
+  def signed(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, recipient: Address): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, recipient, None, Proofs.empty).signWith(sender)
 }

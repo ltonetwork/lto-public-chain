@@ -7,13 +7,13 @@ import com.ltonetwork.settings.Constants.TransactionNames
 import scala.collection.JavaConverters._
 
 case class FeeSettings(asset: String, fee: Long)
-case class FeesSettings(fees: Map[Int, Seq[FeeSettings]])
+case class FeesSettings(fees: Map[Byte, Seq[FeeSettings]])
 
 object FeesSettings {
   val configPath: String = "lto.fees"
 
   def fromConfig(config: Config): FeesSettings = {
-    val fees: Map[Int, Seq[FeeSettings]] = config
+    val fees: Map[Byte, Seq[FeeSettings]] = config
       .getObject(configPath)
       .entrySet()
       .asScala
@@ -29,9 +29,9 @@ object FeesSettings {
     FeesSettings(fees)
   }
 
-  private def txTypes: Map[String, Int] = {
+  private def txTypes: Map[String, Byte] = {
     val types = TransactionNames.map {
-      case (typeId, name) => name.replace(" ", "-") -> typeId.toInt
+      case (typeId, name) => name.replace(" ", "-") -> typeId
     }
 
     // Support old application.conf settings

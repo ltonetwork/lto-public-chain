@@ -79,18 +79,8 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
 
   def signed(version: Byte,
              timestamp: Long,
-             sender: PublicKeyAccount,
+             sender: PrivateKeyAccount,
              fee: Long,
-             script: Option[Script],
-             sponsor: Option[PublicKeyAccount],
-             proofs: Proofs,
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, script, sponsor, proofs).signWith(signer)
-
-  def selfSigned(version: Byte,
-                 timestamp: Long,
-                 sender: PrivateKeyAccount,
-                 fee: Long,
-                 script: Option[Script]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, script, None, Proofs.empty, sender)
+             script: Option[Script]): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, script, None, Proofs.empty).signWith(sender)
 }

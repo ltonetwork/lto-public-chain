@@ -32,14 +32,12 @@ import scala.concurrent.duration._
 
 class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with PropertyChecks with TransactionGen with NoShrink with WithDB {
 
-  private val calculatorSettings = FeesSettings(
-    Seq(
-      GenesisTransaction,
-      TransferTransaction,
-      MassTransferTransaction,
-      SetScriptTransaction
-    ).map(_.typeId.toInt -> List(FeeSettings("LTO", 0))).toMap
-  )
+  private val calculatorSettings = FeesSettings(Map[Byte, Seq[FeeSettings]](
+    GenesisTransaction.typeId      -> Seq(FeeSettings("BASE", 0)),
+    TransferTransaction.typeId     -> Seq(FeeSettings("BASE", 0)),
+    MassTransferTransaction.typeId -> Seq(FeeSettings("BASE", 0), FeeSettings("VAR", 0)),
+    SetScriptTransaction.typeId    -> Seq(FeeSettings("BASE", 0))
+  ))
   import CommonValidation.{ScriptExtraFee => extraFee}
 
   private def mkBlockchain(senderAccount: Address, senderBalance: Long) = {
@@ -69,14 +67,14 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
       amount    <- chooseNum(1, (maxAmount * 0.9).toLong)
       recipient <- accountGen
       fee       <- chooseNum(extraFee, (maxAmount * 0.1).toLong)
-    } yield TransferTransaction.selfSigned(1, time.getTimestamp(), sender, fee, recipient, amount, Array.empty[Byte]).explicitGet())
+    } yield TransferTransaction.signed(1, time.getTimestamp(), sender, fee, recipient, amount, Array.empty[Byte]).explicitGet())
       .label("transferTransaction")
 
   private def transferWithRecipient(sender: PrivateKeyAccount, recipient: PublicKeyAccount, maxAmount: Long, time: Time) =
     (for {
       amount <- chooseNum(1, (maxAmount * 0.9).toLong)
       fee    <- chooseNum(extraFee, (maxAmount * 0.1).toLong)
-    } yield TransferTransaction.selfSigned(1, time.getTimestamp(), sender, fee, recipient, amount, Array.empty[Byte]).explicitGet())
+    } yield TransferTransaction.signed(1, time.getTimestamp(), sender, fee, recipient, amount, Array.empty[Byte]).explicitGet())
       .label("transferWithRecipient")
 
   private def massTransferWithRecipients(sender: PrivateKeyAccount, recipients: List[PublicKeyAccount], maxAmount: Long, time: Time) = {
@@ -85,7 +83,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
     val txs = for {
       version <- Gen.oneOf(MassTransferTransaction.supportedVersions.toSeq)
       fee = extraFee + amount * extraFee / 10
-    } yield MassTransferTransaction.selfSigned(version, time.getTimestamp(), sender, fee, transfers, Array.empty[Byte]).explicitGet()
+    } yield MassTransferTransaction.signed(version, time.getTimestamp(), sender, fee, transfers, Array.empty[Byte]).explicitGet()
     txs.label("massTransferWithRecipients")
   }
 
@@ -230,10 +228,9 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
 
   private def preconditionsGen(lastBlockId: ByteStr, master: PrivateKeyAccount): Gen[Seq[Block]] =
     for {
-      version <- Gen.oneOf(SetScriptTransaction.supportedVersions.toSeq)
-      ts      <- timestampGen
+      ts <- timestampGen
     } yield {
-      val setScript = SetScriptTransaction.selfSigned(version, ts + 1, master, 100000000, Some(script)).explicitGet()
+      val setScript = SetScriptTransaction.signed(1, ts + 1, master, 100000000, Some(script)).explicitGet()
       Seq(TestBlock.create(ts + 1, lastBlockId, Seq(setScript)))
     }
 
@@ -255,7 +252,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
   }
 
   private def transactionGen(sender: PrivateKeyAccount, ts: Long, fee: Long): Gen[TransferTransaction] = accountGen.map { recipient =>
-    TransferTransaction.selfSigned(2: Byte, ts, sender, fee, recipient, lto(1), Array.emptyByteArray).explicitGet()
+    TransferTransaction.signed(2: Byte, ts, sender, fee, recipient, lto(1), Array.emptyByteArray).explicitGet()
   }
 
   private val notEnoughFeeTxWithScriptedAccount = for {
@@ -265,9 +262,9 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
   } yield (utx, tx)
 
   private val enoughFeeTxWithScriptedAccount = for {
-    (sender, senderBalance, utx, ts) <- withScriptedAccount
-    fee                              <- choose(100 * 1000 * 1000, 2 * 100 * 1000 * 1000)
-    tx                               <- transactionGen(sender, ts + 1, fee)
+    (sender, _, utx, ts) <- withScriptedAccount
+    fee                  <- choose(100 * 1000 * 1000, 2 * 100 * 1000 * 1000)
+    tx                   <- transactionGen(sender, ts + 1, fee)
   } yield (utx, tx)
 
   "UTX Pool" - {
@@ -294,7 +291,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
     }
 
     "packUnconfirmed result is limited by constraint" in forAll(dualTxGen) {
-      case (utx, time, txs, _, _) =>
+      case (utx, _, txs, _, _) =>
         all(txs.map(utx.putIfNew)) shouldBe 'right
         utx.all.size shouldEqual txs.size
 

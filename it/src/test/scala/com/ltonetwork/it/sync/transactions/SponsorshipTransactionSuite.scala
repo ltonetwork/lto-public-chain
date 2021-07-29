@@ -25,12 +25,12 @@ class SponsorshipTransactionSuite extends BaseTransactionSuite with CancelAfterF
   test("sponsor pays for sender") {
 
     val topUpPayer =
-      TransferTransaction.selfSigned(2, System.currentTimeMillis(), sender.privateKey, fee, payer, 10.lto, Array.emptyByteArray).explicitGet()
+      TransferTransaction.signed(2, System.currentTimeMillis(), sender.privateKey, fee, payer, 10.lto, Array.emptyByteArray).explicitGet()
     val topUpSponsor =
-      TransferTransaction.selfSigned(2, System.currentTimeMillis(), sender.privateKey, fee, sponsor, 10.lto, Array.emptyByteArray).explicitGet()
-    val becomeSponsor = SponsorshipTransaction.selfSigned(1, System.currentTimeMillis(), sponsor, 5 * fee, payer).explicitGet()
+      TransferTransaction.signed(2, System.currentTimeMillis(), sender.privateKey, fee, sponsor, 10.lto, Array.emptyByteArray).explicitGet()
+    val becomeSponsor = SponsorshipTransaction.signed(1, System.currentTimeMillis(), sponsor, 5 * fee, payer).explicitGet()
     val makePayment =
-      TransferTransaction.selfSigned(2, System.currentTimeMillis(), payer, fee, recipient, 4.lto, Array.emptyByteArray).explicitGet()
+      TransferTransaction.signed(2, System.currentTimeMillis(), payer, fee, recipient, 4.lto, Array.emptyByteArray).explicitGet()
 
     val topUpPayerId = sender.signedBroadcast(topUpPayer.json()).id
     nodes.waitForHeightAriseAndTxPresent(topUpPayerId)

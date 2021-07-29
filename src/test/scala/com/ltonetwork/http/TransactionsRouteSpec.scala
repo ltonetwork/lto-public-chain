@@ -7,6 +7,7 @@ import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.http.ApiMarshallers._
 import com.ltonetwork.settings.{FeeSettings, FeesSettings, TestFunctionalitySettings, WalletSettings}
 import com.ltonetwork.state.Blockchain
+import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransaction}
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
@@ -36,9 +37,9 @@ class TransactionsRouteSpec
   private val blockchain   = mock[Blockchain]
   private val utx          = mock[UtxPool]
   private val allChannels  = mock[ChannelGroup]
-  private val feesSettings = FeesSettings(Map[Int, Seq[FeeSettings]](
-    4 -> Seq(FeeSettings("BASE", 1.lto)),
-    11 -> Seq(FeeSettings("BASE", 1.lto), FeeSettings("VAR", 0.1.lto))
+  private val feesSettings = FeesSettings(Map[Byte, Seq[FeeSettings]](
+    TransferTransaction.typeId -> Seq(FeeSettings("BASE", 1.lto)),
+    MassTransferTransaction.typeId -> Seq(FeeSettings("BASE", 1.lto), FeeSettings("VAR", 0.1.lto))
   ))
   private val route =
     TransactionsApiRoute(restAPISettings, TestFunctionalitySettings.Stub, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route

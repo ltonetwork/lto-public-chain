@@ -110,22 +110,11 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
 
   def signed(version: Byte,
              timestamp: Long,
-             sender: PublicKeyAccount,
+             sender: PrivateKeyAccount,
              fee: Long,
              transfers: List[ParsedTransfer],
-             attachment: Array[Byte],
-             sponsor: Option[PublicKeyAccount],
-             proofs: Proofs,
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, transfers, attachment, sponsor, proofs).signWith(signer)
-
-  def selfSigned(version: Byte,
-                 timestamp: Long,
-                 sender: PrivateKeyAccount,
-                 fee: Long,
-                 transfers: List[ParsedTransfer],
-                 attachment: Array[Byte]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, transfers, attachment, None, Proofs.empty, sender)
+             attachment: Array[Byte]): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, transfers, attachment, None, Proofs.empty).signWith(sender)
 
   def parseTransfersList(transfers: List[Transfer]): Validation[List[ParsedTransfer]] = {
     transfers.traverse {

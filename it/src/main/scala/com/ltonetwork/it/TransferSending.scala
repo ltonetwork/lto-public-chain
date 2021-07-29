@@ -111,7 +111,7 @@ trait TransferSending extends ScorexLogging {
         case (x, i) =>
           createSignedTransferRequest(
             TransferTransaction
-              .selfSigned(
+              .signed(
                 sender = PrivateKeyAccount.fromSeed(x.senderSeed).explicitGet(),
                 recipient = Address.fromString(x.targetAddress).explicitGet(),
                 amount = x.amount,
@@ -138,7 +138,8 @@ trait TransferSending extends ScorexLogging {
     requests.TransferRequest(
       version = Some(2),
       timestamp = Some(timestamp),
-      sender = Some(Base58.encode(sender.publicKey)),
+      senderKeyType = Some(sender.keyType.reference),
+      senderPublicKey = Some(Base58.encode(sender.publicKey)),
       fee = fee,
       recipient = recipient.stringRepr,
       amount = amount,

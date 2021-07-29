@@ -42,7 +42,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
     val tradeAssetDistribution = {
       accounts.map(acc => {
         TransferTransaction
-          .selfSigned(1, System.currentTimeMillis(), issueTransactionSender, 5, acc, 100000, Array.fill(r.nextInt(100))(r.nextInt().toByte))
+          .signed(1, System.currentTimeMillis(), issueTransactionSender, 5, acc, 100000, Array.fill(r.nextInt(100))(r.nextInt().toByte))
           .right
           .get
       })
@@ -64,7 +64,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
             val recipient = randomFrom(accounts).get.toAddress
             val sender    = randomFrom(accounts).get
             logOption(
-              TransferTransaction.selfSigned(1,
+              TransferTransaction.signed(1,
                                              ts,
                                              sender,
                                              moreThatStandardFee,
@@ -76,11 +76,11 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
           case LeaseTransaction =>
             val sender       = randomFrom(accounts).get
             val recipientOpt = randomFrom(accounts.filter(_ != sender).map(_.toAddress))
-            recipientOpt.flatMap(recipient => logOption(LeaseTransaction.selfSigned(1, ts, sender, moreThatStandardFee * 3, recipient, 1)))
+            recipientOpt.flatMap(recipient => logOption(LeaseTransaction.signed(1, ts, sender, moreThatStandardFee * 3, recipient, 1)))
           case CancelLeaseTransaction =>
             randomFrom(activeLeaseTransactions).flatMap(lease => {
               val sender = accounts.find(_.address == lease.sender.address).get
-              logOption(CancelLeaseTransaction.selfSigned(1, ts, sender, moreThatStandardFee * 3, lease.id()))
+              logOption(CancelLeaseTransaction.signed(1, ts, sender, moreThatStandardFee * 3, lease.id()))
             })
           case MassTransferTransaction =>
             val transferCount = r.nextInt(MassTransferTransaction.MaxTransferCount)
@@ -92,7 +92,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
             val sender = randomFrom(accounts).get
             logOption(
               MassTransferTransaction
-                .selfSigned(1, ts, sender, 100000 + 50000 * transferCount, transfers.toList, Array.fill(r.nextInt(100))(r.nextInt().toByte)))
+                .signed(1, ts, sender, 100000 + 50000 * transferCount, transfers.toList, Array.fill(r.nextInt(100))(r.nextInt().toByte)))
           case DataTransaction =>
             val sender = randomFrom(accounts).get
             val count  = r.nextInt(10)
@@ -115,7 +115,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
               }
             val size = 128 + data.map(_.toBytes.length).sum
             val fee  = 100000 * (size / 1024 + 1)
-            logOption(DataTransaction.selfSigned(1, ts, sender, fee, data.toList))
+            logOption(DataTransaction.signed(1, ts, sender, fee, data.toList))
         }
 
         (tx.map(tx => allTxsWithValid :+ tx).getOrElse(allTxsWithValid), tx match {
