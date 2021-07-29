@@ -2,8 +2,9 @@ package com.ltonetwork.transaction.smart
 
 import com.google.common.primitives.{Bytes, Longs}
 import com.ltonetwork.serialization._
-import com.ltonetwork.transaction.TransactionSerializer
-import com.ltonetwork.transaction.smart.SetScriptTransaction.{create, parseScript}
+import com.ltonetwork.transaction.{TransactionSerializer, ValidationError}
+import com.ltonetwork.transaction.smart.SetScriptTransaction.create
+import com.ltonetwork.transaction.smart.script.{Script, ScriptReader}
 
 import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
@@ -19,6 +20,17 @@ object SetScriptSerializerV1 extends TransactionSerializer.For[SetScriptTransact
       Longs.toByteArray(fee),
       Longs.toByteArray(timestamp),
     )
+  }
+
+  def parseScript(buf: ByteBuffer): Either[ValidationError.ScriptParseError, Option[Script]] = {
+    val scriptOptEi: Option[Either[ValidationError.ScriptParseError, Script]] =
+      buf.getOptionalByteArray.map(ScriptReader.fromBytes)
+
+    scriptOptEi match {
+      case None            => Right(None)
+      case Some(Right(sc)) => Right(Some(sc))
+      case Some(Left(err)) => Left(err)
+    }
   }
 
   override def parseBytes(version: Byte, bytes: Array[Byte]): Try[SetScriptTransaction] = Try {

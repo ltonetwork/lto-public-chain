@@ -33,17 +33,6 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
   override val typeId: Byte                 = 13
   override val supportedVersions: Set[Byte] = Set(1, 3)
 
-  def parseScript(buf: ByteBuffer): Either[ValidationError.ScriptParseError, Option[Script]] = {
-    val scriptOptEi: Option[Either[ValidationError.ScriptParseError, Script]] =
-      buf.getOptionalByteArray.map(ScriptReader.fromBytes)
-
-    scriptOptEi match {
-      case None            => Right(None)
-      case Some(Right(sc)) => Right(Some(sc))
-      case Some(Left(err)) => Left(err)
-    }
-  }
-
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 

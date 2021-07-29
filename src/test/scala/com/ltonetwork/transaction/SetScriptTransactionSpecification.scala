@@ -90,7 +90,7 @@ class SetScriptTransactionSpecification extends PropSpec with PropertyChecks wit
     val js = Json.parse("""{
                        "type": 13,
                        "version": 3,
-                       "id": "3b5QYi7QnGZZTQ2Z7GFe25Tf3jL7Yb8wMtTc1Tkk7aCg",
+                       "id": "FF1oXmxVaEHv7vw4JmQrv23kKqSfmuVccLLBxJof9cWx",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
