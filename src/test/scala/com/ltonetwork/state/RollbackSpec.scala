@@ -36,20 +36,20 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
 
   private val enoughFee = 100000000L
   private def transfer(sender: PrivateKeyAccount, recipient: Address, amount: Long) =
-    TransferTransaction.selfSigned(1, nextTs, sender, enoughFee, recipient, amount, Array.empty[Byte]).explicitGet()
+    TransferTransaction.signed(1, nextTs, sender, enoughFee, recipient, amount, Array.empty[Byte]).explicitGet()
 
   private def randomOp(sender: PrivateKeyAccount, recipient: Address, amount: Long, op: Int) = {
     import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
     op match {
       case 1 =>
-        val lease = LeaseTransaction.selfSigned(1, nextTs, sender, enoughFee, recipient, amount).explicitGet()
-        List(lease, CancelLeaseTransaction.selfSigned(1, nextTs, sender, enoughFee, lease.id()).explicitGet())
+        val lease = LeaseTransaction.signed(1, nextTs, sender, enoughFee, recipient, amount).explicitGet()
+        List(lease, CancelLeaseTransaction.signed(1, nextTs, sender, enoughFee, lease.id()).explicitGet())
       case 2 =>
         List(
           MassTransferTransaction
-            .selfSigned(1, nextTs, sender, enoughFee, List(ParsedTransfer(recipient, amount), ParsedTransfer(recipient, amount)), Array.empty[Byte])
+            .signed(1, nextTs, sender, enoughFee, List(ParsedTransfer(recipient, amount), ParsedTransfer(recipient, amount)), Array.empty[Byte])
             .explicitGet())
-      case _ => List(TransferTransaction.selfSigned(1, nextTs, sender, enoughFee, recipient, amount, Array.empty[Byte]).explicitGet())
+      case _ => List(TransferTransaction.signed(1, nextTs, sender, enoughFee, recipient, amount, Array.empty[Byte]).explicitGet())
     }
   }
 
@@ -158,7 +158,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
           val genesisBlockId = d.lastBlockId
 
           val leaseAmount = initialBalance - enoughFee * 2
-          val lt          = LeaseTransaction.selfSigned(1, nextTs, sender, enoughFee, recipient, leaseAmount).explicitGet()
+          val lt          = LeaseTransaction.signed(1, nextTs, sender, enoughFee, recipient, leaseAmount).explicitGet()
           d.appendBlock(TestBlock.create(nextTs, genesisBlockId, Seq(lt)))
           val blockWithLeaseId = d.lastBlockId
           d.blockchainUpdater.leaseDetails(lt.id()) should contain(LeaseDetails(sender, recipient, 2, leaseAmount, true))
@@ -169,7 +169,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
             TestBlock.create(
               nextTs,
               blockWithLeaseId,
-              Seq(CancelLeaseTransaction.selfSigned(1, nextTs, sender, enoughFee, lt.id()).explicitGet())
+              Seq(CancelLeaseTransaction.signed(1, nextTs, sender, enoughFee, lt.id()).explicitGet())
             ))
           d.blockchainUpdater.leaseDetails(lt.id()) should contain(LeaseDetails(sender, recipient, 2, leaseAmount, false))
           d.portfolio(sender).lease.out shouldEqual 0
@@ -197,7 +197,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
             TestBlock.create(
               nextTs,
               genesisBlockId,
-              Seq(DataTransaction.selfSigned(1, nextTs, sender, enoughFee, List(dataEntry)).explicitGet())
+              Seq(DataTransaction.signed(1, nextTs, sender, enoughFee, List(dataEntry)).explicitGet())
             ))
 
           d.blockchainUpdater.accountData(sender, dataEntry.key) should contain(dataEntry)
@@ -213,7 +213,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
           d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
           val genesisBlockId = d.lastBlockId
 
-          val tx = AnchorTransaction.selfSigned(1, nextTs, sender, enoughFee, anchors.map(ByteStr(_))).explicitGet()
+          val tx = AnchorTransaction.signed(1, nextTs, sender, enoughFee, anchors.map(ByteStr(_))).explicitGet()
           d.appendBlock(
             TestBlock.create(
               nextTs,
@@ -236,8 +236,8 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
         val settings = createSettings(BlockchainFeatures.SponsorshipTransaction -> 0, BlockchainFeatures.SmartAccounts -> 0)
         val ltoSettings =
           history.DefaultLtoSettings.copy(blockchainSettings = history.DefaultLtoSettings.blockchainSettings.copy(functionalitySettings = settings))
-        val tx  = SponsorshipTransaction.selfSigned(1, nextTs, sponsor, 5 * 100000000L, sender).explicitGet()
-        val tx2 = CancelSponsorshipTransaction.selfSigned(1, nextTs, sponsor, 5 * 100000000L, sender).explicitGet()
+        val tx  = SponsorshipTransaction.signed(1, nextTs, sponsor, 5 * 100000000L, sender).explicitGet()
+        val tx2 = CancelSponsorshipTransaction.signed(1, nextTs, sponsor, 5 * 100000000L, sender).explicitGet()
 
         withDomain(ltoSettings) { d =>
           d.appendBlock(genesisBlock(nextTs, Seq((sponsor, ENOUGH_AMT), (sender, ENOUGH_AMT))))
@@ -283,7 +283,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
               TestBlock.create(
                 nextTs,
                 genesisBlockId,
-                Seq(SetScriptTransaction.selfSigned(1, nextTs, sender, 1, Some(script)).explicitGet())
+                Seq(SetScriptTransaction.signed(1, nextTs, sender, 1, Some(script)).explicitGet())
               ))
 
             val blockWithScriptId = d.lastBlockId
@@ -294,7 +294,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
               TestBlock.create(
                 nextTs,
                 genesisBlockId,
-                Seq(SetScriptTransaction.selfSigned(1, nextTs, sender, 1, None).explicitGet())
+                Seq(SetScriptTransaction.signed(1, nextTs, sender, 1, None).explicitGet())
               ))
 
             d.blockchainUpdater.accountScript(sender) shouldBe 'empty

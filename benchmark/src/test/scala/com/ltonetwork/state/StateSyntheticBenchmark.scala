@@ -39,7 +39,7 @@ object StateSyntheticBenchmark {
       for {
         amount    <- Gen.choose(1, lto(1))
         recipient <- accountGen
-      } yield TransferTransaction.selfSigned(1, ts, sender, 100000, recipient, amount, Array.emptyByteArray).explicitGet()
+      } yield TransferTransaction.signed(1, ts, sender, 100000, recipient, amount, Array.emptyByteArray).explicitGet()
   }
 
   @State(Scope.Benchmark)
@@ -55,7 +55,7 @@ object StateSyntheticBenchmark {
         amount                       <- Gen.choose(1, lto(1))
       } yield
         TransferTransaction
-          .selfSigned(
+          .signed(
             2,
             ts,
             sender,
@@ -77,7 +77,7 @@ object StateSyntheticBenchmark {
       val setScriptBlock = nextBlock(
         Seq(
           SetScriptTransaction
-            .selfSigned(
+            .signed(
               1,
               System.currentTimeMillis(),
               richAccount,

@@ -13,7 +13,6 @@ class LeaseRequestsTests extends FunSuite with Matchers {
         {
           "amount": 100000,
           "recipient": "3Myss6gmMckKYtka3cKCM563TBJofnxvfD7",
-          "sender": "3MwKzMxUKaDaS4CXM8KNowCJJUnTSHDFGMb",
           "fee": 1000
         }
       """
@@ -21,7 +20,6 @@ class LeaseRequestsTests extends FunSuite with Matchers {
     val req = Json.parse(json).validate[LeaseRequest].get
 
     req shouldBe LeaseRequest(
-      sender = Some("3MwKzMxUKaDaS4CXM8KNowCJJUnTSHDFGMb"),
       amount = 100000,
       fee = 1000,
       recipient = "3Myss6gmMckKYtka3cKCM563TBJofnxvfD7"
@@ -32,7 +30,6 @@ class LeaseRequestsTests extends FunSuite with Matchers {
     val json =
       """
         {
-          "sender": "3Myss6gmMckKYtka3cKCM563TBJofnxvfD7",
           "txId": "ABMZDPY4MyQz7kKNAevw5P9eNmRErMutJoV9UNeCtqRV",
           "fee": 10000000
         }
@@ -41,7 +38,6 @@ class LeaseRequestsTests extends FunSuite with Matchers {
     val req = Json.parse(json).validate[CancelLeaseRequest].get
 
     req shouldBe CancelLeaseRequest(
-      sender = Some("3Myss6gmMckKYtka3cKCM563TBJofnxvfD7"),
       leaseId = ByteStr.decodeBase58("ABMZDPY4MyQz7kKNAevw5P9eNmRErMutJoV9UNeCtqRV").get,
       fee = 10000000
     )

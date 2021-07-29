@@ -34,17 +34,6 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
   override val typeId: Byte                 = 13
   override val supportedVersions: Set[Byte] = Set(1, 3)
 
-  def parseScript(buf: ByteBuffer): Either[ValidationError.ScriptParseError, Option[Script]] = {
-    val scriptOptEi: Option[Either[ValidationError.ScriptParseError, Script]] =
-      buf.getOptionalByteArray.map(ScriptReader.fromBytes)
-
-    scriptOptEi match {
-      case None            => Right(None)
-      case Some(Right(sc)) => Right(Some(sc))
-      case Some(Left(err)) => Left(err)
-    }
-  }
-
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
 
@@ -83,18 +72,8 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
 
   def signed(version: Byte,
              timestamp: Long,
-             sender: PublicKeyAccount,
+             sender: PrivateKeyAccount,
              fee: Long,
-             script: Option[Script],
-             sponsor: Option[PublicKeyAccount],
-             proofs: Proofs,
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, script, sponsor, proofs).signWith(signer)
-
-  def selfSigned(version: Byte,
-                 timestamp: Long,
-                 sender: PrivateKeyAccount,
-                 fee: Long,
-                 script: Option[Script]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, script, None, Proofs.empty, sender)
+             script: Option[Script]): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, script, None, Proofs.empty).signWith(sender)
 }

@@ -5,19 +5,20 @@ import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.api.http.{InvalidAddress, InvalidSignature, TooBigArrayAllocation, TransactionsApiRoute}
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.http.ApiMarshallers._
-import com.ltonetwork.lang.v1.compiler.Terms.TRUE
 import com.ltonetwork.settings.{FeeSettings, FeesSettings, TestFunctionalitySettings, WalletSettings}
-import com.ltonetwork.state.{Blockchain, ByteStr}
-import com.ltonetwork.transaction.smart.script.v1.ScriptV1
+import com.ltonetwork.state.Blockchain
+import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransaction}
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import com.ltonetwork.{BlockGen, NoShrink, TestTime, TransactionGen}
+import com.ltonetwork.utils._
 import io.netty.channel.group.ChannelGroup
 import org.scalacheck.Gen._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
+import play.api.libs.json.JsValue.jsValueToJsLookup
 import play.api.libs.json._
 
 class TransactionsRouteSpec
@@ -36,7 +37,10 @@ class TransactionsRouteSpec
   private val blockchain   = mock[Blockchain]
   private val utx          = mock[UtxPool]
   private val allChannels  = mock[ChannelGroup]
-  private val feesSettings = FeesSettings(List(1, 2, 3).map(x => (x, Seq(FeeSettings("LTO", 100000000L)))).toMap)
+  private val feesSettings = FeesSettings(Map[Byte, Seq[FeeSettings]](
+    TransferTransaction.typeId -> Seq(FeeSettings("BASE", 1.lto)),
+    MassTransferTransaction.typeId -> Seq(FeeSettings("BASE", 1.lto), FeeSettings("VAR", 0.1.lto))
+  ))
   private val route =
     TransactionsApiRoute(restAPISettings, TestFunctionalitySettings.Stub, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
   routePath("/calculateFee") - {
@@ -168,7 +172,8 @@ class TransactionsRouteSpec
           status shouldEqual StatusCodes.OK
           val resp = responseAs[Seq[JsValue]]
           for ((r, t) <- resp.zip(txs)) {
-            (r \ "signature").as[String] shouldEqual t.proofs.toSignature.base58 // Todo: also test with proofs
+            if((r \ "signature").isDefined) (r \ "signature").as[String] shouldEqual t.proofs.toSignature.base58
+            else (r \ "proofs").as[List[String]].head shouldEqual t.proofs.toSignature.toString
           }
         }
       }

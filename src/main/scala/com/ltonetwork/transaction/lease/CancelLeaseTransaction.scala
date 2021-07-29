@@ -84,16 +84,6 @@ object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransact
              proofs: Proofs): Either[ValidationError, TransactionT] =
     CancelLeaseTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, leaseId, sponsor, proofs).validatedEither
 
-  def signed(version: Byte,
-             timestamp: Long,
-             sender: PublicKeyAccount,
-             fee: Long,
-             leaseId: ByteStr,
-             sponsor: Option[PublicKeyAccount],
-             proofs: Proofs,
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, leaseId, sponsor, proofs).signWith(signer)
-
-  def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, leaseId: ByteStr): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, leaseId, None, Proofs.empty, sender)
+  def signed(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, leaseId: ByteStr): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, leaseId, None, Proofs.empty).signWith(sender)
 }

@@ -43,9 +43,9 @@ class StateReaderEffectiveBalancePropertyTest extends PropSpec with PropertyChec
       genesis = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
       leaser <- accountGen
       xfer1  <- transferGeneratorPV2(ts + 1, master, leaser.toAddress, ENOUGH_AMT / 3)
-      lease1 = LeaseTransaction.selfSigned(2, ts + 2, leaser, Fee, master.toAddress, xfer1.amount - Fee).explicitGet()
+      lease1 = LeaseTransaction.signed(2, ts + 2, leaser, Fee, master.toAddress, xfer1.amount - Fee).explicitGet()
       xfer2 <- transferGeneratorPV2(ts + 3, master, leaser.toAddress, ENOUGH_AMT / 3)
-      lease2 = LeaseTransaction.selfSigned(2, ts + 4, leaser, Fee, master.toAddress, xfer2.amount - Fee).explicitGet()
+      lease2 = LeaseTransaction.signed(2, ts + 4, leaser, Fee, master.toAddress, xfer2.amount - Fee).explicitGet()
     } yield (leaser, genesis, xfer1, lease1, xfer2, lease2)
 
     forAll(setup) {

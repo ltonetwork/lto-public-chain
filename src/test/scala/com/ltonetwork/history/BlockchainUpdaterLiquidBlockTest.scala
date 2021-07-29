@@ -81,7 +81,7 @@ class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with
       amount    <- smallFeeGen
       fee       <- smallFeeGen
       recipient <- accountGen
-    } yield TransferTransaction.selfSigned(1, timestamp, from, fee, recipient, amount, Array.empty).explicitGet()
+    } yield TransferTransaction.signed(1, timestamp, from, fee, recipient, amount, Array.empty).explicitGet()
 
   private def unsafeChainBaseAndMicro(totalRefTo: ByteStr,
                                       base: Seq[Transaction],

@@ -27,7 +27,7 @@ class IssueAssociationTransactionDiffTest extends PropSpec with PropertyChecks w
       feeOverhead           <- Gen.choose[Long](0, ENOUGH_AMT)
       version               <- Gen.oneOf(IssueAssociationTransaction.supportedVersions.toSeq)
       tx = IssueAssociationTransaction
-        .selfSigned(version, ts + 10000, master, Constants.UnitsInLTO + feeOverhead, party, 42, None, None)
+        .signed(version, ts + 10000, master, Constants.UnitsInLTO + feeOverhead, party, 42, None, None)
         .explicitGet()
     } yield (genesis, tx)
 
@@ -52,7 +52,7 @@ class IssueAssociationTransactionDiffTest extends PropSpec with PropertyChecks w
       genesis2 = GenesisTransaction.create(master2, ENOUGH_AMT, ts).explicitGet()
       feeOverhead <- Gen.choose[Long](0, 100)
       tx1 = IssueAssociationTransaction
-        .selfSigned(
+        .signed(
           version,
           ts + 1,
           master,
@@ -64,10 +64,10 @@ class IssueAssociationTransactionDiffTest extends PropSpec with PropertyChecks w
         )
         .explicitGet()
       tx2 = IssueAssociationTransaction
-        .selfSigned(version, ts + 2, master, Constants.UnitsInLTO + feeOverhead, party, 11, None, None)
+        .signed(version, ts + 2, master, Constants.UnitsInLTO + feeOverhead, party, 11, None, None)
         .explicitGet()
       tx3 = IssueAssociationTransaction
-        .selfSigned(version, ts + 3, master2, Constants.UnitsInLTO + feeOverhead, party, 11, None, None)
+        .signed(version, ts + 3, master2, Constants.UnitsInLTO + feeOverhead, party, 11, None, None)
         .explicitGet()
     } yield (genesis1, genesis2, tx1, tx2, tx3)
 

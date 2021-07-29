@@ -99,24 +99,11 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
 
   def signed(version: Byte,
              timestamp: Long,
-             sender: PublicKeyAccount,
+             sender: PrivateKeyAccount,
              fee: Long,
              recipient: Address,
              assocType: Int,
              expires: Option[Long],
-             hash: Option[ByteStr],
-             sponsor: Option[PublicKeyAccount],
-             proofs: Proofs,
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, assocType, expires, hash, sponsor, proofs).signWith(signer)
-
-  def selfSigned(version: Byte,
-                 timestamp: Long,
-                 sender: PrivateKeyAccount,
-                 fee: Long,
-                 recipient: Address,
-                 assocType: Int,
-                 expires: Option[Long],
-                 hash: Option[ByteStr]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, recipient, assocType, expires, hash, None, Proofs.empty, sender)
+             hash: Option[ByteStr]): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, recipient, assocType, expires, hash, None, Proofs.empty).signWith(sender)
 }

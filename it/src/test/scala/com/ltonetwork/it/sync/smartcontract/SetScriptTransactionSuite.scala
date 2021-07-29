@@ -27,7 +27,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
   test("setup acc0 with 1 lto") {
     val tx =
       TransferTransaction
-        .selfSigned(
+        .signed(
           version = 2,
           sender = sender.privateKey,
           recipient = acc0,
@@ -62,7 +62,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
 
     val script = ScriptV1(scriptText).explicitGet()
     val setScriptTransaction = SetScriptTransaction
-      .selfSigned(1, System.currentTimeMillis(), acc0, minFee, Some(script))
+      .signed(1, System.currentTimeMillis(), acc0, minFee, Some(script))
       .explicitGet()
 
     val setScriptId = sender
@@ -84,7 +84,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
   test("can't send from acc0 using old pk") {
     val tx =
       TransferTransaction
-        .selfSigned(
+        .signed(
           version = 2,
           sender = acc0,
           recipient = acc3,
@@ -151,7 +151,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
   test("can send using old pk of acc0") {
     val tx =
       TransferTransaction
-        .selfSigned(
+        .signed(
           version = 2,
           sender = acc0,
           recipient = acc3,

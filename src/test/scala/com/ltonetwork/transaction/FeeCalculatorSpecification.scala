@@ -21,30 +21,33 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
     """lto {
       |  fees {
       |    transfer {
-      |      LTO = 100000
-      |      "JAudr64y6YxTgLn9T5giKKqWGkbMfzhdRAxmNNfn6FJN" = 2
+      |      BASE = 100000
+      |    }
+      |    mass-transfer {
+      |      BASE = 100000
+      |      VAR  = 10000
       |    }
       |    lease {
-      |      LTO = 400000
+      |      BASE = 400000
       |    }
-      |    lease-cancel {
-      |      LTO = 500000
+      |    cancel-lease {
+      |      BASE = 500000
       |    }
       |    data {
-      |      LTO = 100000
+      |      BASE = 100000
       |    }
       |    issue-association {
-      |      LTO = 100000000
+      |      BASE = 100000000
       |    }
       |    revoke-association {
-      |      LTO = 100000000
+      |      BASE = 100000000
       |    }
       |
       |    sponsorship {
-      |      LTO = 600000000
+      |      BASE = 600000000
       |    }
-      |    sponsorship-cancel {
-      |      LTO = 600000000
+      |    cancel-sponsorship {
+      |      BASE = 600000000
       |    }
       |  }
       |}""".stripMargin
@@ -52,8 +55,6 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
   private val config = ConfigFactory.parseString(configString)
 
   private val mySettings = FeesSettings.fromConfig(config)
-
-  private val WhitelistedAsset = ByteStr.decodeBase58("JAudr64y6YxTgLn9T5giKKqWGkbMfzhdRAxmNNfn6FJN").get
 
   implicit class ConditionalAssert(v: Either[_, _]) {
 
@@ -66,10 +67,17 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
     }
   }
 
-  property("Transfer transaction ") {
+  property("Transfer transaction") {
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
-    forAll(transferV1Gen) { tx: TransferTransaction =>
+    forAll(transferGen) { tx: TransferTransaction =>
       feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 100000)
+    }
+  }
+
+  property("Mass Transfer transaction") {
+    val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
+    forAll(massTransferGen) { tx: MassTransferTransaction =>
+      feeCalc.enoughFee(tx) shouldBeRightIf (tx.fee >= 100000 + (tx.transfers.size * 10000))
     }
   }
 

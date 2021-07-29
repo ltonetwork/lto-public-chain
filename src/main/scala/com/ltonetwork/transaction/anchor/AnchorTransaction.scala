@@ -79,16 +79,6 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
              proofs: Proofs): Either[ValidationError, TransactionT] =
     AnchorTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, anchors, sponsor, proofs).validatedEither
 
-  def signed(version: Byte,
-             timestamp: Long,
-             sender: PublicKeyAccount,
-             fee: Long,
-             anchors: List[ByteStr],
-             sponsor: Option[PublicKeyAccount],
-             proofs: Proofs,
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, anchors, sponsor, proofs).signWith(signer)
-
-  def selfSigned(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, anchors: List[ByteStr]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, anchors, None, Proofs.empty, sender)
+  def signed(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, anchors: List[ByteStr]): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, anchors, None, Proofs.empty).signWith(sender)
 }

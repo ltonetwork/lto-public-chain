@@ -81,18 +81,8 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
 
   def signed(version: Byte,
              timestamp: Long,
-             sender: PublicKeyAccount,
+             sender: PrivateKeyAccount,
              fee: Long,
-             data: List[DataEntry[_]],
-             sponsor: Option[PublicKeyAccount],
-             proofs: Proofs,
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, data, sponsor, proofs).signWith(signer)
-
-  def selfSigned(version: Byte,
-                 timestamp: Long,
-                 sender: PrivateKeyAccount,
-                 fee: Long,
-                 data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, data, None, Proofs.empty, sender)
+             data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, data, None, Proofs.empty).signWith(sender)
 }

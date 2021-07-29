@@ -28,7 +28,7 @@ class MultisigTransactionGenerator(settings: MultisigTransactionGenerator.Settin
 
     val script: Script = Gen.multiSigScript(owners, 3)
 
-    val setScript = SetScriptTransaction.selfSigned(1, System.currentTimeMillis(), bank, enoughFee, Some(script)).explicitGet()
+    val setScript = SetScriptTransaction.signed(1, System.currentTimeMillis(), bank, enoughFee, Some(script)).explicitGet()
 
     val res = Range(0, settings.transactions).map { i =>
       val tx = TransferTransaction

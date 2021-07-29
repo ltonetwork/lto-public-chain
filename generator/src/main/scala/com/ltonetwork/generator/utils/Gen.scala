@@ -64,7 +64,7 @@ object Gen {
       .zip(feeGen)
       .map {
         case ((src, dst), fee) =>
-          TransferTransaction.selfSigned(1, System.currentTimeMillis(), src, fee, dst, fee, Array.emptyByteArray)
+          TransferTransaction.signed(1, System.currentTimeMillis(), src, fee, dst, fee, Array.emptyByteArray)
       }
       .collect { case Right(x) => x }
   }
@@ -77,7 +77,7 @@ object Gen {
         case (sender, count) =>
           val transfers = List.tabulate(count)(_ => ParsedTransfer(recipientGen.next(), amountGen.next()))
           val fee       = 100000 + count * 50000
-          MassTransferTransaction.selfSigned(1, System.currentTimeMillis, sender, fee, transfers, Array.emptyByteArray)
+          MassTransferTransaction.signed(1, System.currentTimeMillis, sender, fee, transfers, Array.emptyByteArray)
       }
       .collect { case Right(tx) => tx }
   }

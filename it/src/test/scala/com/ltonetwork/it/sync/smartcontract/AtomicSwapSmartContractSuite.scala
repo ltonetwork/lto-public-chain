@@ -81,7 +81,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
     val pkSwapBC1 = pkByAddress(swapBC1)
     val script    = ScriptV1(sc1).explicitGet()
     val sc1SetTx = SetScriptTransaction
-      .selfSigned(version = SetScriptTransaction.supportedVersions.head,
+      .signed(version = SetScriptTransaction.supportedVersions.head,
                   sender = pkSwapBC1,
                   script = Some(script),
                   fee = minFee,
@@ -103,7 +103,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
   test("step3: Alice makes transfer to swapBC1") {
     val txToSwapBC1 =
       TransferTransaction
-        .selfSigned(
+        .signed(
           version = 2,
           sender = pkByAddress(AliceBC1),
           recipient = Address.fromString(swapBC1).explicitGet(),
@@ -123,7 +123,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
   test("step4: Alice cannot make transfer from swapBC1 if height is incorrect") {
     val txToSwapBC1 =
       TransferTransaction
-        .selfSigned(
+        .signed(
           version = 2,
           sender = pkByAddress(swapBC1),
           recipient = Address.fromString(AliceBC1).explicitGet(),
@@ -180,7 +180,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
     assertNotFoundAndMessage(notMiner.transactionInfo(versionedTransferId), "Transaction is not in blockchain")
 
     val selfSignedToAlice = TransferTransaction
-      .selfSigned(
+      .signed(
         version = 2,
         sender = pkByAddress(swapBC1),
         recipient = Address.fromString(AliceBC1).explicitGet(),

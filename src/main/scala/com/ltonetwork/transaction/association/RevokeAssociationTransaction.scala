@@ -93,22 +93,10 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
 
   def signed(version: Byte,
              timestamp: Long,
-             sender: PublicKeyAccount,
+             sender: PrivateKeyAccount,
              fee: Long,
              recipient: Address,
              assocType: Int,
-             hash: Option[ByteStr],
-             sponsor: Option[PublicKeyAccount],
-             proofs: Proofs,
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, assocType, hash, sponsor, proofs).signWith(signer)
-
-  def selfSigned(version: Byte,
-                 timestamp: Long,
-                 sender: PrivateKeyAccount,
-                 fee: Long,
-                 recipient: Address,
-                 assocType: Int,
-                 hash: Option[ByteStr]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, recipient, assocType, hash, None, Proofs.empty, sender)
+             hash: Option[ByteStr]): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, recipient, assocType, hash, None, Proofs.empty).signWith(sender)
 }

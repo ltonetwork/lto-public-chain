@@ -33,6 +33,7 @@ import scala.concurrent.Future.traverse
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
+// TODO Most POST endpoints have been removed and should be replaced with sign + broadcast
 object AsyncHttpApi extends Assertions {
 
   implicit class NodeAsyncHttpApi(n: Node) extends Assertions with Matchers {
@@ -182,10 +183,10 @@ object AsyncHttpApi extends Assertions {
     def effectiveBalance(address: String): Future[Balance] = get(s"/addresses/effectiveBalance/$address").as[Balance]
 
     def lease(sourceAddress: String, recipient: String, amount: Long, fee: Long): Future[Transaction] =
-      postJson("/leasing/lease", LeaseRequest(sender = Some(sourceAddress), amount = amount, fee = fee, recipient = recipient)).as[Transaction]
+      postJson("/leasing/lease", LeaseRequest(/*sender = Some(sourceAddress),*/ amount = amount, fee = fee, recipient = recipient)).as[Transaction]
 
     def cancelLease(sourceAddress: String, leaseId: String, fee: Long): Future[Transaction] =
-      postJson("/leasing/cancel", CancelLeaseRequest(sender = Some(sourceAddress), leaseId = ByteStr.decodeBase58(leaseId).get, fee = fee)).as[Transaction]
+      postJson("/leasing/cancel", CancelLeaseRequest(/*sender = Some(sourceAddress),*/ leaseId = ByteStr.decodeBase58(leaseId).get, fee = fee)).as[Transaction]
 
     def activeLeases(sourceAddress: String) = get(s"/leasing/active/$sourceAddress").as[Seq[Transaction]]
 

@@ -108,22 +108,10 @@ object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {
 
   def signed(version: Byte,
              timestamp: Long,
-             sender: PublicKeyAccount,
+             sender: PrivateKeyAccount,
              fee: Long,
              recipient: Address,
              amount: Long,
-             attachment: Array[Byte],
-             sponsor: Option[PublicKeyAccount],
-             proofs: Proofs,
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, amount, attachment, sponsor, proofs).signWith(signer)
-
-  def selfSigned(version: Byte,
-                 timestamp: Long,
-                 sender: PrivateKeyAccount,
-                 fee: Long,
-                 recipient: Address,
-                 amount: Long,
-                 attachment: Array[Byte]): Either[ValidationError, TransactionT] =
-    signed(version, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.empty, sender)
+             attachment: Array[Byte]): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.empty).signWith(sender)
 }

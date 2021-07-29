@@ -38,9 +38,9 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
     g2 = GenesisTransaction.create(sender, ENOUGH_AMT, ts).explicitGet()
 
     version <- Gen.oneOf(SponsorshipTransaction.supportedVersions.toSeq)
-    sponsorship = SponsorshipTransaction.selfSigned(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
-    cancel      = CancelSponsorshipTransaction.selfSigned(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
-    transfer    = TransferTransaction.selfSigned(2, ts + 1, sender, transferTxFee, other, transferAmt, Array.emptyByteArray).explicitGet()
+    sponsorship = SponsorshipTransaction.signed(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
+    cancel      = CancelSponsorshipTransaction.signed(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
+    transfer    = TransferTransaction.signed(2, ts + 1, sender, transferTxFee, other, transferAmt, Array.emptyByteArray).explicitGet()
   } yield (List(g1, g2), sponsorship, cancel, transfer, sponsor, sender)
 
   val setup2 = for {
@@ -57,10 +57,10 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
     g3 = GenesisTransaction.create(sponsor2, ENOUGH_AMT, ts).explicitGet()
 
     version <- Gen.oneOf(SponsorshipTransaction.supportedVersions.toSeq)
-    sponsorship  = SponsorshipTransaction.selfSigned(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
-    sponsorship2 = SponsorshipTransaction.selfSigned(version, ts + 1, sponsor2, sponsorTxFee, sender).explicitGet()
-    cancel       = CancelSponsorshipTransaction.selfSigned(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
-    transfer     = TransferTransaction.selfSigned(2, ts + 1, sender, transferTxFee, other, transferAmt, Array.emptyByteArray).explicitGet()
+    sponsorship  = SponsorshipTransaction.signed(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
+    sponsorship2 = SponsorshipTransaction.signed(version, ts + 1, sponsor2, sponsorTxFee, sender).explicitGet()
+    cancel       = CancelSponsorshipTransaction.signed(version, ts + 1, sponsor, sponsorTxFee, sender).explicitGet()
+    transfer     = TransferTransaction.signed(2, ts + 1, sender, transferTxFee, other, transferAmt, Array.emptyByteArray).explicitGet()
   } yield (List(g1, g2, g3), sponsorship, sponsorship2, cancel, transfer, sponsor2)
 
   property("sponsored account") {
@@ -120,7 +120,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
   property("2 sponsors go in LIFO with fallthrough") {
     forAll(setup2) {
       case (genesis, sponsorship, sponsorship2, _, transfer, sponsor2) =>
-        val transferSponsor2 = TransferTransaction.selfSigned(
+        val transferSponsor2 = TransferTransaction.signed(
           version = 2,
           sponsorship2.timestamp,
           sponsor2,
@@ -178,7 +178,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
     forAll(setup) {
       case (genesis, _, _, transfer, sponsor, sender) =>
         val script = ScriptV1(TRUE).explicitGet()
-        val setScript = SetScriptTransaction.selfSigned(1, transfer.timestamp, sender, 10.lto, Some(script)).explicitGet()
+        val setScript = SetScriptTransaction.signed(1, transfer.timestamp, sender, 10.lto, Some(script)).explicitGet()
 
         val sponsoredTransfer = transfer.sponsorWith(sponsor)
 
@@ -197,7 +197,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
     forAll(setup) {
       case (genesis, _, _, transfer, sponsor, sender) =>
         val script = ScriptV1(FALSE).explicitGet()
-        val setScript = SetScriptTransaction.selfSigned(1, transfer.timestamp, sender, 10.lto, Some(script)).explicitGet()
+        val setScript = SetScriptTransaction.signed(1, transfer.timestamp, sender, 10.lto, Some(script)).explicitGet()
 
         val sponsoredTransfer = transfer.sponsorWith(sponsor)
 
@@ -210,7 +210,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
     forAll(setup) {
       case (genesis, _, _, transfer, sponsor, _) =>
         val script = ScriptV1(TRUE).explicitGet()
-        val setScript = SetScriptTransaction.selfSigned(1, transfer.timestamp, sponsor, 10.lto, Some(script)).explicitGet()
+        val setScript = SetScriptTransaction.signed(1, transfer.timestamp, sponsor, 10.lto, Some(script)).explicitGet()
 
         val sponsoredTransfer = transfer.sponsorWith(sponsor)
 

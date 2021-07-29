@@ -87,7 +87,7 @@ class SmartTransactionsConstraintsSuite extends FreeSpec with Matchers with Tran
 
   private def setScriptTx(sender: PrivateKeyAccount) =
     SetScriptTransaction
-      .selfSigned(
+      .signed(
         version = 1,
         sender = sender,
         script = Some(ScriptV1(Terms.TRUE, checkSize = false).explicitGet()),

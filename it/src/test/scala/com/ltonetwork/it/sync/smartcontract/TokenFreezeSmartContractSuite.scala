@@ -28,7 +28,7 @@ class TokenFreezeSmartContractSuite extends BaseTransactionSuite with CancelAfte
   test("setup contract account with lto") {
     val tx =
       TransferTransaction
-        .selfSigned(
+        .signed(
           version = 1,
           sender = sender.privateKey,
           recipient = contract,
@@ -56,7 +56,7 @@ class TokenFreezeSmartContractSuite extends BaseTransactionSuite with CancelAfte
 
     val script = ScriptCompiler(scriptText).explicitGet()
     val setScriptTransaction = SetScriptTransaction
-      .selfSigned(1, System.currentTimeMillis(), contract, 100000000, Some(script._1))
+      .signed(1, System.currentTimeMillis(), contract, 100000000, Some(script._1))
       .explicitGet()
 
     val setScriptId = sender
@@ -78,7 +78,7 @@ class TokenFreezeSmartContractSuite extends BaseTransactionSuite with CancelAfte
   test("step3: can't transfer early") {
     val tx =
       TransferTransaction
-        .selfSigned(
+        .signed(
           version = 2,
           sender = contract,
           recipient = other,
@@ -101,7 +101,7 @@ class TokenFreezeSmartContractSuite extends BaseTransactionSuite with CancelAfte
   test("step5: now ok") {
     val tx =
       TransferTransaction
-        .selfSigned(
+        .signed(
           version = 2,
           sender = contract,
           recipient = other,

@@ -9,7 +9,8 @@ object TestFunctionalitySettings {
     preActivatedFeatures = Map(
       BlockchainFeatures.SmartAccounts.id          -> 0,
       BlockchainFeatures.AssociationTransaction.id -> 0,
-      BlockchainFeatures.SponsorshipTransaction.id -> 0
+      BlockchainFeatures.SponsorshipTransaction.id -> 0,
+      BlockchainFeatures.TransactionsV3.id         -> 0
     ),
     doubleFeaturesPeriodsAfterHeight = Int.MaxValue
   )
