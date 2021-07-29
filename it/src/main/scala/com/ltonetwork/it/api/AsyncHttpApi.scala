@@ -202,7 +202,7 @@ object AsyncHttpApi extends Assertions {
       get(s"/assets/details/$assetId").as[AssetInfo]
 
     def transfer(sourceAddress: String, recipient: String, amount: Long, fee: Long): Future[Transaction] = {
-      val value    = toJson(TransferRequest(Some(1), None, Some(sourceAddress), None, fee, recipient, amount))
+      val value    = toJson(TransferRequest(Some(1), None, Some(sourceAddress), None, None, fee, recipient, amount))
       val jsObject = value.as[JsObject]
       val r        = jsObject + ("type" -> JsNumber(TransferTransaction.typeId.toInt))
       signAndBroadcast(r)
@@ -210,7 +210,7 @@ object AsyncHttpApi extends Assertions {
 
     def massTransfer(sourceAddress: String, transfers: List[Transfer], fee: Long): Future[Transaction] = {
       implicit val w: Writes[MassTransferRequest] = Json.writes[MassTransferRequest]
-      val value                                   = toJson(MassTransferRequest(Some(1), None, Some(sourceAddress), None, fee, transfers))
+      val value                                   = toJson(MassTransferRequest(Some(1), None, Some(sourceAddress), None, None, fee, transfers))
       val jsObject                                = value.as[JsObject]
       val r                                       = jsObject + ("type" -> JsNumber(MassTransferTransaction.typeId.toInt))
       signAndBroadcast(r)
@@ -218,7 +218,7 @@ object AsyncHttpApi extends Assertions {
 
     def putData(sourceAddress: String, data: List[DataEntry[_]], fee: Long): Future[Transaction] = {
       implicit val w: Writes[DataRequest] = Json.writes[DataRequest]
-      postJson("/addresses/data", DataRequest(Some(1), None, Some(sourceAddress), None, fee, data)).as[Transaction]
+      postJson("/addresses/data", DataRequest(Some(1), None, Some(sourceAddress), None, None, fee, data)).as[Transaction]
     }
 
     def getData(address: String): Future[List[DataEntry[_]]] = get(s"/addresses/data/$address").as[List[DataEntry[_]]]
