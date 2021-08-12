@@ -1,0 +1,6 @@
+# dev tools
+autopep8
+pylint
+
+# dependencies
+requests

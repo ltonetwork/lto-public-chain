@@ -28,7 +28,6 @@ localsettings.json
 local.conf
 
 # Text files
-*.txt
 *.ods
 *.csv
 *.dat

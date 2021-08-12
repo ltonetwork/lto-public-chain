@@ -16,4 +16,5 @@ def run():
     result = runner.run(suite)
     assert result.wasSuccessful()
 
-run()
+if __name__ == "__main__":
+    run()
