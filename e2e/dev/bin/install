@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -Cue -o pipefail
+
+MODULE_DIR="$(cd "$(dirname "${0}")/../.." ; pwd)" # Absolute path to module
+
+_pip() {
+  "${MODULE_DIR}/.venv/bin/pip" "$@"
+}
+
+(
+  cd "$MODULE_DIR"
+
+  test -d "${MODULE_DIR}/.venv" || {
+    python3 -m venv .venv
+    _pip install --upgrade pip
+  }
+
+  _pip install -r requirements.txt
+)

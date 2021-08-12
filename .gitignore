@@ -42,5 +42,6 @@ package
 native
 .bsp
 
-# python tests
+# python
 *__pycache__*
+.venv
