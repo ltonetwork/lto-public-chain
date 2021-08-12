@@ -4,6 +4,8 @@
 .ensime_cache/
 waves.directory_IS_UNDEFINED/
 lto.directory_IS_UNDEFINED/
+.vscode
+
 # scala build folders and files
 target
 *.tgz
@@ -39,3 +41,6 @@ package
 !src/package
 native
 .bsp
+
+# python tests
+*__pycache__*
