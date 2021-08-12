@@ -4,6 +4,8 @@
 .ensime_cache/
 waves.directory_IS_UNDEFINED/
 lto.directory_IS_UNDEFINED/
+.vscode
+
 # scala build folders and files
 target
 *.tgz
@@ -37,3 +39,6 @@ Dockerfile
 package
 !src/package
 native
+
+# python tests
+*__pycache__*
