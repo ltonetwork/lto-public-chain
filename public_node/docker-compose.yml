@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  public-node:
+    container_name: public-node
+    image: legalthings/public-node
+    ports:
+      - 6869:6869
+      - 6868:6868
+    environment:
+      - LTO_WALLET_SEED=${LTO_WALLET_SEED}
+      - LTO_WALLET_PASSWORD=${LTO_WALLET_PASSWORD}
+      - LTO_API_KEY=${LTO_API_KEY}
