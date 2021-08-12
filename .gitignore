@@ -29,7 +29,6 @@ local.conf
 custom.conf
 
 # Text files
-*.txt
 *.ods
 *.csv
 *.dat
