@@ -40,5 +40,6 @@ package
 !src/package
 native
 
-# python tests
+# python
 *__pycache__*
+.venv

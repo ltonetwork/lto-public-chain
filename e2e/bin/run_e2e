@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -Cue -o pipefail
+
+MODULE_DIR="$(cd "$(dirname "${0}")/.." ; pwd)"  # Absolute path to module
+
+exec "${MODULE_DIR}/bin/python" "${MODULE_DIR}/src/lto_public_chain/e2e.py" "$@"

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -Cue -o pipefail
+
+MODULE_DIR="$(cd "$(dirname "${0}")/.." ; pwd)" # Absolute path to module
+
+export PYTHONPATH="${MODULE_DIR}/src"
+
+(
+  cd "$MODULE_DIR"
+
+  exec .venv/bin/python "$@"
+)
