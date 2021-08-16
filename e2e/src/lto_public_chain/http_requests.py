@@ -5,7 +5,7 @@ def url(endpoint):
     return config.node_url + endpoint
 
 def api_key_header():
-    return {"Authorization": 'Bearer {}'.format(config.api_key)}
+    return {"X-API-Key": '{}'.format(config.api_key)}
 
 def get(endpoint):
     return requests.get(url(endpoint), headers=api_key_header())
