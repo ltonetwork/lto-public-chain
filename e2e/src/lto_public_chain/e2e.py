@@ -144,6 +144,7 @@ class E2eTests(unittest.TestCase):
 
     def lease_and_verify(self):
         amount = 50000
+        balance_before = api.get_address_balance(self.alice.address).json()
 
         lease_tx = api.lease(self.alice, self.validator, amount)
         lease_tx_id = lease_tx['id']
@@ -164,6 +165,18 @@ class E2eTests(unittest.TestCase):
         self.assertEqual(
             alice_lease['recipient'],
             self.validator.address
+        )
+
+        balance_after = api.get_address_balance(self.alice.address).json()
+
+        self.assertEqual(
+            balance_after['regular'],
+            balance_before['regular'] - 100000000
+        )
+
+        self.assertEqual(
+            balance_after['available'],
+            balance_before['available'] - 100000000 + amount
         )
 
         validator_leases = api.list_active_leases(self.validator.address).json()

@@ -59,6 +59,9 @@ def get_tx_polled(id):
 def get_height():
     return pl.height()
 
+def get_address_balance(address):
+    return http_requests.get("/addresses/balance/details/{}".format(address))
+
 def shutdown_node():
     http_requests.post("/node/stop")
 
