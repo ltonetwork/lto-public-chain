@@ -10,8 +10,14 @@ def api_key_header():
 def get(endpoint):
     return requests.get(url(endpoint), headers=api_key_header())
 
-def post(endpoint, payload):
+def post(endpoint, payload=None):
     return requests.post(url(endpoint), headers=api_key_header(), json=payload)
 
 def delete(endpoint):
-    return requests.post(url(endpoint), headers=api_key_header())
+    return requests.delete(url(endpoint), headers=api_key_header())
+
+def get_from_url(url):
+    return requests.get(url, headers=api_key_header())
+
+def post_from_url(url, payload=None):
+    return requests.post(url, headers=api_key_header(), json=payload)
