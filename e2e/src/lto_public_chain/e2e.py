@@ -194,6 +194,55 @@ class E2eTests(unittest.TestCase):
         return lease_tx_id
 
     # Scenario:
+    # 0. Validator gets rewarded with LTO
+    # 1. Validator sends LTO to Alice, Bob and Charlie
+    def test_mass_transfer(self):
+        # Step 1: Validator sends LTO to Alice, Bob and Charlie
+        validator_balance_before = api.get_address_balance(self.validator.address).json()['regular']
+        alice_balance_before = api.get_address_balance(self.alice.address).json()['regular']
+        bob_balance_before = api.get_address_balance(self.bob.address).json()['regular']
+        charlie_balance_before = api.get_address_balance(self.charlie.address).json()['regular']
+        amount = 50000
+
+        transfers = [
+            {
+                'recipient': self.alice.address,
+                'amount' : amount
+            },
+            {
+                'recipient': self.bob.address,
+                'amount' : amount
+            },
+            {
+                'recipient': self.charlie.address,
+                'amount' : amount
+            }
+        ]
+
+        tx = api.mass_transfer(self.validator, transfers)
+        polled_tx = api.get_tx_polled(tx['id'])
+
+        self.assertEqual(
+            polled_tx['id'],
+            tx['id'])
+
+        self.assertEqual(
+            validator_balance_before - (100000000 + 3*(10000000 + amount)),
+            api.get_address_balance(self.validator.address).json()['regular'])
+
+        self.assertEqual(
+            alice_balance_before + amount,
+            api.get_address_balance(self.alice.address).json()['regular'])
+
+        self.assertEqual(
+            bob_balance_before + amount,
+            api.get_address_balance(self.bob.address).json()['regular'])
+
+        self.assertEqual(
+            charlie_balance_before + amount,
+            api.get_address_balance(self.charlie.address).json()['regular'])
+
+    # Scenario:
     # 1. Alice's and Charlie's balances initialisation
     # 2. Create and setup smart contract for Charlie
     # 3. Alice funds Charlie
@@ -236,7 +285,9 @@ def run():
     suite = unittest.TestSuite()
     suite.addTest(E2eTests("test_connectivity"))
     # suite.addTest(E2eTests("test_invoke_and_revoke_association"))
-    suite.addTest(E2eTests("test_lease"))
+    # suite.addTest(E2eTests("test_lease"))
+    # suite.addTest(E2eTests("test_mass_transfer"))
+    suite.addTest(E2eTests("test_sponsorship"))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     assert result.wasSuccessful()
