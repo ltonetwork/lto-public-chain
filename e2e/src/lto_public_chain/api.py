@@ -52,6 +52,14 @@ def mass_transfer(sender, transfers, attachment='e2etests'):
     sender_account = create_account(sender.seed)
     return sender_account.massTransferLTO(transfers, attachment)
 
+def sponsor(sponsor, party):
+    sender_account = create_account(sponsor.seed)
+    return sender_account.sponsor(party)
+
+def cancel_sponsor(sponsor, party):
+    sender_account = create_account(sponsor.seed)
+    return sender_account.cancelSponsor(party)
+
 def get_tx_polled(id):
     return polling.poll(
         lambda: pl.tx(id),

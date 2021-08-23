@@ -13,6 +13,10 @@ class E2eTests(unittest.TestCase):
     bob = api.create_account('home visit certain universe adjust thing estate pyramid age puzzle update ensure fatal crucial hat')
     charlie = api.create_account('loud forum youth tourist discover prosper lawn wisdom cattle twelve rule grow cry music stomach')
 
+    TRANSFER_FEE = 100000000
+    MASS_TRANSFER_FEE_PER_TX = 10000000
+    SPONSOR_FEE = 500000000
+
     def test_connectivity(self):
         self.assertEqual(
             http_requests.get("/").status_code,
@@ -171,12 +175,12 @@ class E2eTests(unittest.TestCase):
 
         self.assertEqual(
             balance_after['regular'],
-            balance_before['regular'] - 100000000
+            balance_before['regular'] - self.TRANSFER_FEE
         )
 
         self.assertEqual(
             balance_after['available'],
-            balance_before['available'] - 100000000 + amount
+            balance_before['available'] - self.TRANSFER_FEE + amount
         )
 
         validator_leases = api.list_active_leases(self.validator.address).json()
@@ -227,7 +231,7 @@ class E2eTests(unittest.TestCase):
             tx['id'])
 
         self.assertEqual(
-            validator_balance_before - (100000000 + 3*(10000000 + amount)),
+            validator_balance_before - (self.TRANSFER_FEE + 3*(self.MASS_TRANSFER_FEE_PER_TX + amount)),
             api.get_address_balance(self.validator.address).json()['regular'])
 
         self.assertEqual(
@@ -240,6 +244,88 @@ class E2eTests(unittest.TestCase):
 
         self.assertEqual(
             charlie_balance_before + amount,
+            api.get_address_balance(self.charlie.address).json()['regular'])
+
+    # Scenario:
+    # 1. Charlie sponsors Alice
+    # 2. Alice makes transfer to Bob, Charlie pays for the transfer costs
+    # 3. Charlie revokes as sponsor of Alice
+    # 4. Alice makes transfer to Bob, Alice pays for the transfer costs
+    def test_sponsorship(self):
+        # Step 1: Charlie sponsors Alice
+        charlie_balance_before_1 = api.get_address_balance(self.charlie.address).json()['regular']
+        sponsor_tx = api.sponsor(self.charlie, self.alice)
+        polled_sponsor_tx = api.get_tx_polled(sponsor_tx['id'])
+
+        self.assertEqual(
+            polled_sponsor_tx['id'],
+            sponsor_tx['id'])
+
+        self.assertEqual(
+            charlie_balance_before_1 - self.SPONSOR_FEE,
+            api.get_address_balance(self.charlie.address).json()['regular'])
+
+        # Step 2: Alice makes transfer to Bob, Charlie pays for the transfer costs
+        amount = 10000
+        charlie_balance_before_2 = api.get_address_balance(self.charlie.address).json()['regular']
+        alice_balance_before_2 = api.get_address_balance(self.alice.address).json()['regular']
+        bob_balance_before_2 = api.get_address_balance(self.bob.address).json()['regular']
+
+        transfer_tx = api.transfer(self.alice, self.bob, 10000)
+        polled_transfer_tx = api.get_tx_polled(transfer_tx['id'])
+
+        self.assertEqual(
+            transfer_tx['id'],
+            polled_transfer_tx['id'])
+
+        self.assertEqual(
+            alice_balance_before_2 - amount,
+            api.get_address_balance(self.alice.address).json()['regular'])
+
+        self.assertEqual(
+            bob_balance_before_2 + amount,
+            api.get_address_balance(self.bob.address).json()['regular'])
+
+        self.assertEqual(
+            charlie_balance_before_2 - self.TRANSFER_FEE,
+            api.get_address_balance(self.charlie.address).json()['regular'])
+
+        # 3. Charlie revokes as sponsor of Alice
+        charlie_balance_before_3 = api.get_address_balance(self.charlie.address).json()['regular']
+        sponsor_tx = api.cancel_sponsor(self.charlie, self.alice)
+        polled_sponsor_tx = api.get_tx_polled(sponsor_tx['id'])
+
+        self.assertEqual(
+            polled_sponsor_tx['id'],
+            sponsor_tx['id'])
+
+        self.assertEqual(
+            charlie_balance_before_3 - self.SPONSOR_FEE,
+            api.get_address_balance(self.charlie.address).json()['regular'])
+
+        # Step 4: Alice makes transfer to Bob, Alice pays for the transfer costs
+        amount = 10000
+        charlie_balance_before_4 = api.get_address_balance(self.charlie.address).json()['regular']
+        alice_balance_before_4 = api.get_address_balance(self.alice.address).json()['regular']
+        bob_balance_before_4 = api.get_address_balance(self.bob.address).json()['regular']
+
+        transfer_tx = api.transfer(self.alice, self.bob, 10000)
+        polled_transfer_tx = api.get_tx_polled(transfer_tx['id'])
+
+        self.assertEqual(
+            transfer_tx['id'],
+            polled_transfer_tx['id'])
+
+        self.assertEqual(
+            alice_balance_before_4 - amount - self.TRANSFER_FEE,
+            api.get_address_balance(self.alice.address).json()['regular'])
+
+        self.assertEqual(
+            bob_balance_before_4 + amount,
+            api.get_address_balance(self.bob.address).json()['regular'])
+
+        self.assertEqual(
+            charlie_balance_before_4,
             api.get_address_balance(self.charlie.address).json()['regular'])
 
     # Scenario:
