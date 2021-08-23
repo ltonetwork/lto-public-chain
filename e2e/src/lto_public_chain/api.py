@@ -60,6 +60,10 @@ def cancel_sponsor(sponsor, party):
     sender_account = create_account(sponsor.seed)
     return sender_account.cancelSponsor(party)
 
+def anchor(sender, hash):
+    sender_account = create_account(sender.seed)
+    return sender_account.anchor(hash)
+
 def get_tx_polled(id):
     return polling.poll(
         lambda: pl.tx(id),

@@ -1,10 +1,11 @@
+import hashlib
 import unittest
-import time
 
-import config
-import http_requests
+import base58
+
 import api
 import api_external
+import http_requests
 import utils
 
 class E2eTests(unittest.TestCase):
@@ -25,7 +26,7 @@ class E2eTests(unittest.TestCase):
     # Scenario:
     # 1. Alice gets associated with Bob
     # 2. Alice revokes her association with Bob
-    def test_invoke_and_revoke_association(self):
+    def test_association(self):
         anchor = utils.random_string()
 
         # Step 1: Alice gets associated with Bob
@@ -329,6 +330,30 @@ class E2eTests(unittest.TestCase):
             api.get_address_balance(self.charlie.address).json()['regular'])
 
     # Scenario:
+    # 1. Alice anchors data
+    # 2. Bob (or anyone) validates the data isn't tempered 
+    def test_anchor(self):
+        # Step 1: Alice anchors data
+        anchor = 'e2etests'
+        anchor_hashed = hashlib.sha256(str(anchor).encode('utf-8')).hexdigest()
+        tx = api.anchor(self.alice, anchor_hashed)
+        
+        # Step 2: Bob (or anyone) validates the data isn't tampered
+        polled_tx = api.get_tx_polled(tx['id'])
+
+        self.assertEqual(
+            polled_tx['id'],
+            tx['id'])
+
+        self.assertEqual(
+            len(polled_tx['anchors']),
+            1)
+        
+        self.assertEqual(
+            base58.b58decode(polled_tx['anchors'][0]).decode('utf-8'),
+            hashlib.sha256(str(anchor).encode('utf-8')).hexdigest())
+
+    # Scenario:
     # 1. Alice's and Charlie's balances initialisation
     # 2. Create and setup smart contract for Charlie
     # 3. Alice funds Charlie
@@ -370,10 +395,11 @@ class E2eTests(unittest.TestCase):
 def run():
     suite = unittest.TestSuite()
     suite.addTest(E2eTests("test_connectivity"))
-    # suite.addTest(E2eTests("test_invoke_and_revoke_association"))
+    # suite.addTest(E2eTests("test_association"))
     # suite.addTest(E2eTests("test_lease"))
     # suite.addTest(E2eTests("test_mass_transfer"))
-    suite.addTest(E2eTests("test_sponsorship"))
+    # suite.addTest(E2eTests("test_sponsorship"))
+    suite.addTest(E2eTests("test_anchor"))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     assert result.wasSuccessful()
