@@ -48,6 +48,10 @@ def set_script(sender, script):
     sender_account = create_account(sender.seed)
     return sender_account.setScript(script)
 
+def mass_transfer(sender, transfers, attachment='e2etests'):
+    sender_account = create_account(sender.seed)
+    return sender_account.massTransferLTO(transfers, attachment)
+
 def get_tx_polled(id):
     return polling.poll(
         lambda: pl.tx(id),
