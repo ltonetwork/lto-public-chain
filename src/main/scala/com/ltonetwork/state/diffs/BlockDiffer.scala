@@ -22,7 +22,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
 
   def maybeBurnFee(bc: Blockchain, tx: Transaction): Portfolio = {
     import com.ltonetwork.features.FeatureProvider._
-    if (bc.isFeatureActivated(BlockchainFeatures.TransactionsV3, bc.height))
+    if (bc.isFeatureActivated(BlockchainFeatures.Cobalt, bc.height))
       Portfolio(balance = (tx.fee * (1 - feeBurnPct)).toLong, lease = LeaseBalance.empty)
     if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, bc.height))
       Portfolio(balance = Math.max(0, tx.fee - feeBurnAmt))

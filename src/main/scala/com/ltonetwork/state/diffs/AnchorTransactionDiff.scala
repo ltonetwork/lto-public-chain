@@ -10,7 +10,7 @@ object AnchorTransactionDiff {
   import com.ltonetwork.features.FeatureProvider._
   def apply(blockchain: Blockchain, height: Int)(tx: AnchorTransaction): Either[ValidationError, Diff] = {
     (
-      if (blockchain.isFeatureActivated(BlockchainFeatures.TransactionsV3, height))
+      if (blockchain.isFeatureActivated(BlockchainFeatures.Cobalt, height))
         for {
           _ <- Either.cond(tx.anchors.head.arr.length <= AnchorTransaction.NewMaxEntryLength, (), GenericError("Anchor should contain <= 64 bytes"))
         } yield ()
