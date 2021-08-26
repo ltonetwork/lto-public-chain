@@ -48,17 +48,17 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
       import tx._
       seq(tx)(
-        Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
-        Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
+        Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
         Validated.condNel(version < 3 || !hash.exists(_.arr.length == 0),
-                          None,
+                          (),
                           ValidationError.GenericError("Hash length must not be 0 bytes")),
         Validated.condNel(!hash.exists(_.arr.length > MaxHashLength),
-                          None,
+                          (),
                           ValidationError.GenericError(s"Hash length must be <= ${MaxHashLength} bytes")),
-        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
-                          None,
+                          (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }

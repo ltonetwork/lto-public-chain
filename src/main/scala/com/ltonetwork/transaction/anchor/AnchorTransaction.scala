@@ -44,16 +44,16 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
       import tx._
       seq(tx)(
-        Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
-        Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(anchors.lengthCompare(MaxEntryCount) <= 0, None, ValidationError.TooBigArray),
+        Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
+        Validated.condNel(anchors.lengthCompare(MaxEntryCount) <= 0, (), ValidationError.TooBigArray),
         Validated.condNel(anchors.forall(a => EntryLength.contains(a.arr.length)),
-                          None,
+                          (),
                           ValidationError.GenericError(s"Anchor can only be of length $EntryLength Bytes")),
-        Validated.condNel(anchors.distinct.lengthCompare(anchors.size) == 0, None, ValidationError.GenericError("Duplicate anchor in one tx found")),
+        Validated.condNel(anchors.distinct.lengthCompare(anchors.size) == 0, (), ValidationError.GenericError("Duplicate anchor in one tx found")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
-                          None,
+                          (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }

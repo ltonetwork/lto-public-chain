@@ -45,15 +45,15 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
       import tx._
 
       seq(tx)(
-        Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
-        Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), None, ValidationError.TooBigArray),
-        Validated.condNel(!data.exists(_.key.isEmpty), None, ValidationError.GenericError("Empty key found")),
-        Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, None, ValidationError.GenericError("Duplicate keys found")),
-        Try { Validated.condNel(bytes().length <= MaxBytes, None, ValidationError.TooBigArray) }.getOrElse(None.validNel),
-        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
+        Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), (), ValidationError.TooBigArray),
+        Validated.condNel(!data.exists(_.key.isEmpty), (), ValidationError.GenericError("Empty key found")),
+        Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, (), ValidationError.GenericError("Duplicate keys found")),
+        Try { Validated.condNel(bytes().length <= MaxBytes, (), ValidationError.TooBigArray) }.getOrElse(().validNel),
+        Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
-                          None,
+                          (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
       )
     }
