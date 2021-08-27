@@ -2,6 +2,7 @@ package com.ltonetwork.transaction.transfer
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
+import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
@@ -83,6 +84,9 @@ object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransa
         Validated.condNel(sponsor.isEmpty || version >= 3,
                           (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sender.keyType == ED25519 || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
       )
     }
   }

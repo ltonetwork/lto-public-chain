@@ -1,6 +1,7 @@
 package com.ltonetwork.transaction.smart
 
 import cats.data.{Validated, ValidatedNel}
+import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account._
 import com.ltonetwork.serialization._
 import com.ltonetwork.state._
@@ -46,6 +47,9 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
         Validated.condNel(sponsor.isEmpty || version >= 3,
                           (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sender.keyType == ED25519 || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
       )
     }
   }

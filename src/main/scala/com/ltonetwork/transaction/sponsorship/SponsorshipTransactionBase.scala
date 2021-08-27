@@ -2,6 +2,7 @@ package com.ltonetwork.transaction.sponsorship
 
 import cats.data.{Validated, ValidatedNel}
 import com.google.common.primitives.{Bytes, Longs}
+import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account.{Address, AddressScheme, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.sponsorship.SponsorshipTransaction.supportedVersions
@@ -36,6 +37,9 @@ object SponsorshipTransactionBase {
         Validated.condNel(sponsor.isEmpty || version >= 3,
                           (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sender.keyType == ED25519 || version >= 3,
+          None,
+          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
       )
     }
   }

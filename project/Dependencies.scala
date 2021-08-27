@@ -103,4 +103,5 @@ object Dependencies {
     "io.github.amrhassan" %% "scalacheck-cats" % "0.4.0" % Test
   )
   lazy val kindProjector = "org.spire-math" %% "kind-projector" % "0.9.6"
+  lazy val seasalt = Seq("com.ltonetwork" % "seasalt" % "0.0.4")
 }
