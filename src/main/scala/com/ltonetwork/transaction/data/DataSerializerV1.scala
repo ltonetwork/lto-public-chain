@@ -26,7 +26,7 @@ object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
   }
 
   private def parseData(bytes: Array[Byte], pos: Int): (List[DataEntry[_]], Int) = {
-    val entryCount = Shorts.fromByteArray(bytes.drop(pos))
+    val entryCount = Shorts.fromByteArray(bytes.slice(pos, pos + Shorts.BYTES))
 
     if (entryCount > 0) {
       val parsed = List.iterate(DataEntry.parse(bytes, pos + Shorts.BYTES), entryCount) { case (_, p) => DataEntry.parse(bytes, p) }

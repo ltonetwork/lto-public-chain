@@ -2,7 +2,7 @@ package com.ltonetwork
 
 import java.security.SecureRandom
 import cats.kernel.Monoid
-import com.google.common.base.Throwables
+import com.google.common.base.{Charsets, Throwables}
 import com.ltonetwork.account.AddressScheme
 import com.ltonetwork.db.{Storage, VersionedStorage}
 import com.ltonetwork.lang.Global
@@ -153,5 +153,9 @@ package object utils extends ScorexLogging {
 
   implicit class DoubleExt(val d: Double) extends AnyVal {
     def lto: Long = (d * Constants.UnitsInLTO).toLong
+  }
+
+  implicit class StringBytes(val s: String) extends AnyVal {
+    def utf8Bytes: Array[Byte] = s.getBytes(Charsets.UTF_8)
   }
 }
