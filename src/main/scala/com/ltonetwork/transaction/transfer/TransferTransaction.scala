@@ -32,11 +32,12 @@ case class TransferTransaction private (version: Byte,
   private def serializer: TransactionSerializer.For[TransferTransaction] = builder.serializer(version)
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj(
-    "recipient"  -> recipient.stringRepr,
-    "amount"     -> amount,
-    "attachment" -> Base58.encode(attachment)
-  ))
+  val json: Coeval[JsObject] = Coeval.evalOnce(
+    jsonBase ++ Json.obj(
+      "recipient"  -> recipient.stringRepr,
+      "amount"     -> amount,
+      "attachment" -> Base58.encode(attachment)
+    ))
 
   // Special case for transfer tx v1: signature is prepended instead of appended
   override protected def prefixByte: Coeval[Array[Byte]] =

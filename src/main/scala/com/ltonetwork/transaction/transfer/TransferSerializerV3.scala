@@ -25,16 +25,17 @@ object TransferSerializerV3 extends TransactionSerializer.For[TransferTransactio
     )
   }
 
-  def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val (chainId, timestamp, sender, fee) = parseBase(buf)
-    val recipient  = buf.getAddress
-    val amount     = buf.getLong
-    val attachment = buf.getByteArrayWithLength
-    val (sponsor, proofs) = parseFooter(buf)
+      val (chainId, timestamp, sender, fee) = parseBase(buf)
+      val recipient                         = buf.getAddress
+      val amount                            = buf.getLong
+      val attachment                        = buf.getByteArrayWithLength
+      val (sponsor, proofs)                 = parseFooter(buf)
 
-    create(version, Some(chainId), timestamp, sender, fee, recipient, amount, attachment, sponsor, proofs)
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      create(version, Some(chainId), timestamp, sender, fee, recipient, amount, attachment, sponsor, proofs)
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

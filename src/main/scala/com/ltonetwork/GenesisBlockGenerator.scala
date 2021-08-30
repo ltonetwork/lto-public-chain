@@ -57,14 +57,14 @@ object GenesisBlockGenerator extends App {
   }
 
   case class FullAddressInfo(
-                              seedText: SeedText,
-                              seed: ByteStr,
-                              accountSeed: ByteStr,
-                              accountPrivateKey: ByteStr,
-                              accountPublicKey: ByteStr,
-                              accountAddress: Address,
-                              account: PrivateKeyAccount,
-                              miner: Boolean
+      seedText: SeedText,
+      seed: ByteStr,
+      accountSeed: ByteStr,
+      accountPrivateKey: ByteStr,
+      accountPublicKey: ByteStr,
+      accountAddress: Address,
+      account: PrivateKeyAccount,
+      miner: Boolean
   )
 
   private def toFullAddressInfo(item: DistributionItem): FullAddressInfo = {

@@ -31,12 +31,13 @@ case class MassTransferTransaction private (version: Byte,
   private def serializer: TransactionSerializer.For[MassTransferTransaction] = builder.serializer(version)
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj(
-    "attachment"    -> Base58.encode(attachment),
-    "transferCount" -> transfers.size,
-    "totalAmount"   -> transfers.map(_.amount).sum,
-    "transfers"     -> MassTransferTransaction.toJson(transfers)
-  ))
+  val json: Coeval[JsObject] = Coeval.evalOnce(
+    jsonBase ++ Json.obj(
+      "attachment"    -> Base58.encode(attachment),
+      "transferCount" -> transfers.size,
+      "totalAmount"   -> transfers.map(_.amount).sum,
+      "transfers"     -> MassTransferTransaction.toJson(transfers)
+    ))
 
   def compactJson(recipients: Set[Address]): JsObject =
     json() ++ Json.obj("transfers" -> MassTransferTransaction.toJson(transfers.filter(t => recipients.contains(t.address))))

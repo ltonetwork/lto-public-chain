@@ -23,15 +23,16 @@ object LeaseSerializerV3 extends TransactionSerializer.For[LeaseTransaction] {
     )
   }
 
-  def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val (chainId, timestamp, sender, fee) = parseBase(buf)
-    val recipient = buf.getAddress
-    val amount    = buf.getLong
-    val (sponsor, proofs) = parseFooter(buf)
+      val (chainId, timestamp, sender, fee) = parseBase(buf)
+      val recipient                         = buf.getAddress
+      val amount                            = buf.getLong
+      val (sponsor, proofs)                 = parseFooter(buf)
 
-    create(version, Some(chainId), timestamp, sender, fee, recipient, amount, sponsor, proofs)
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      create(version, Some(chainId), timestamp, sender, fee, recipient, amount, sponsor, proofs)
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

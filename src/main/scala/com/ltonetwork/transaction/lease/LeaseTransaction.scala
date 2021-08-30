@@ -30,10 +30,11 @@ case class LeaseTransaction private (version: Byte,
   private def serializer: TransactionSerializer.For[LeaseTransaction] = builder.serializer(version)
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj(
-    "recipient" -> recipient.stringRepr,
-    "amount"    -> amount
-  ))
+  val json: Coeval[JsObject] = Coeval.evalOnce(
+    jsonBase ++ Json.obj(
+      "recipient" -> recipient.stringRepr,
+      "amount"    -> amount
+    ))
 }
 
 object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {

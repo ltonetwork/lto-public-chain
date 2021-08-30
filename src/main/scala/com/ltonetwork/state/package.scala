@@ -30,7 +30,7 @@ package object state {
 
   implicit class OptionExt[A](opt: Option[A]) {
     def otherwise(alt: Option[A]): Option[A] = opt.fold(alt)(Some(_))
-    def noneIf(value: A): Option[A] = opt.collect { case v if v != value => v }
+    def noneIf(value: A): Option[A]          = opt.collect { case v if v != value => v }
   }
 
   implicit class OptionByteStrExt[T <: ByteStr](val opt: Option[T]) extends AnyVal {

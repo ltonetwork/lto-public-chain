@@ -24,19 +24,13 @@ object Verifier {
         }
     }
 
-  def verifySmartAccount[T <: Transaction](blockchain: Blockchain,
-                                           script: Script,
-                                           height: Int,
-                                           tx: T): Either[ValidationError, T] =
+  def verifySmartAccount[T <: Transaction](blockchain: Blockchain, script: Script, height: Int, tx: T): Either[ValidationError, T] =
     for {
       _ <- verifyScript(blockchain, script, height, tx)
       _ <- tx.sponsor.fold(valid(tx))(verifySignature(tx, _))
     } yield tx
 
-  private def verifyScript[T <: Transaction](blockchain: Blockchain,
-                                             script: Script,
-                                             height: Int,
-                                             tx: T): Either[ValidationError, T] =
+  private def verifyScript[T <: Transaction](blockchain: Blockchain, script: Script, height: Int, tx: T): Either[ValidationError, T] =
     ScriptRunner[Boolean, T](height, tx, blockchain, script) match {
       case (log, Left(execError)) => Left(ScriptExecutionError(execError, script.text, log, isTokenScript = false))
       case (log, Right(false))    => Left(TransactionNotAllowedByScript(log, script.text, isTokenScript = false))
@@ -47,15 +41,18 @@ object Verifier {
     (tx.sponsor, tx.proofs.length) match {
       case (None, 1) => verifySignature(tx, tx.sender)
       case (None, _) => Left(GenericError("Transactions from non-scripted accounts must have exactly 1 proof"))
-      case (Some(sponsor), 2) => for {
-        _ <- verifySignature(tx, tx.sender)
-        _ <- verifySignature(tx, sponsor)
-      } yield tx
+      case (Some(sponsor), 2) =>
+        for {
+          _ <- verifySignature(tx, tx.sender)
+          _ <- verifySignature(tx, sponsor)
+        } yield tx
       case (Some(_), _) => Left(GenericError("Sponsored transactions from non-scripted accounts must have exactly 2 proofs"))
     }
 
   private def verifySignature[T <: Transaction](tx: T, account: PublicKeyAccount): Either[ValidationError, T] =
-    Either.cond(tx.proofs.exists((proof: ByteStr) => crypto.verify(proof.arr, tx.bodyBytes(), account)),
+    Either.cond(
+      tx.proofs.exists((proof: ByteStr) => crypto.verify(proof.arr, tx.bodyBytes(), account)),
       tx,
-      GenericError(s"Proof doesn't validate as signature of $account for $tx"))
+      GenericError(s"Proof doesn't validate as signature of $account for $tx")
+    )
 }

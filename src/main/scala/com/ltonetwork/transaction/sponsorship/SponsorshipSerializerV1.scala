@@ -8,10 +8,10 @@ import com.ltonetwork.transaction.{Proofs, TransactionSerializer, ValidationErro
 import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
-trait SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTransactionBase]
-    extends TransactionSerializer.For[SponsorshipTransactionT] {
+trait SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTransactionBase] extends TransactionSerializer.For[SponsorshipTransactionT] {
 
-  type CreateCtor = (Byte, Option[Byte], Long, PublicKeyAccount, Long, Address, Option[PublicKeyAccount], Proofs) => Either[ValidationError, SponsorshipTransactionT]
+  type CreateCtor =
+    (Byte, Option[Byte], Long, PublicKeyAccount, Long, Address, Option[PublicKeyAccount], Proofs) => Either[ValidationError, SponsorshipTransactionT]
   protected val createTx: CreateCtor
 
   def bodyBytes(tx: SponsorshipTransactionT): Array[Byte] = {
@@ -26,17 +26,19 @@ trait SponsorshipSerializerV1[SponsorshipTransactionT <: SponsorshipTransactionB
     )
   }
 
-  def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val chainId   = buf.getByte
-    val sender    = buf.getPublicKey
-    val recipient = buf.getAddress
-    val timestamp = buf.getLong
-    val fee       = buf.getLong
-    val proofs    = buf.getProofs
+      val chainId   = buf.getByte
+      val sender    = buf.getPublicKey
+      val recipient = buf.getAddress
+      val timestamp = buf.getLong
+      val fee       = buf.getLong
+      val proofs    = buf.getProofs
 
-    createTx.apply(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      createTx
+        .apply(version, Some(chainId), timestamp, sender, fee, recipient, None, proofs)
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

@@ -16,8 +16,8 @@ case class SetScriptRequest(version: Option[Byte] = None,
                             sponsorKeyType: Option[String] = None,
                             sponsorPublicKey: Option[String] = None,
                             signature: Option[ByteStr] = None,
-                            proofs: Option[Proofs] = None
-    ) extends TxRequest.For[SetScriptTransaction] {
+                            proofs: Option[Proofs] = None)
+    extends TxRequest.For[SetScriptTransaction] {
 
   private def decodedScript: Either[ValidationError, Option[Script]] = script match {
     case None    => Right(None)

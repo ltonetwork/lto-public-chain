@@ -17,8 +17,8 @@ case class TransferRequest(version: Option[Byte] = None,
                            sponsorKeyType: Option[String] = None,
                            sponsorPublicKey: Option[String] = None,
                            signature: Option[ByteStr] = None,
-                           proofs: Option[Proofs] = None
-    ) extends TxRequest.For[TransferTransaction] {
+                           proofs: Option[Proofs] = None)
+    extends TxRequest.For[TransferTransaction] {
 
   protected def sign(tx: TransferTransaction, signer: PrivateKeyAccount): TransferTransaction = tx.signWith(signer)
 

@@ -19,14 +19,14 @@ case class RevokeAssociationRequest(version: Option[Byte] = None,
                                     sponsorPublicKey: Option[String] = None,
                                     signature: Option[ByteStr] = None,
                                     proofs: Option[Proofs] = None,
-    ) extends TxRequest.For[RevokeAssociationTransaction] {
+) extends TxRequest.For[RevokeAssociationTransaction] {
 
   protected def sign(tx: RevokeAssociationTransaction, signer: PrivateKeyAccount): RevokeAssociationTransaction = tx.signWith(signer)
 
   def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, RevokeAssociationTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
-      validProofs <- toProofs(signature, proofs)
+      validProofs    <- toProofs(signature, proofs)
       tx <- RevokeAssociationTransaction.create(
         version.getOrElse(RevokeAssociationTransaction.latestVersion),
         None,

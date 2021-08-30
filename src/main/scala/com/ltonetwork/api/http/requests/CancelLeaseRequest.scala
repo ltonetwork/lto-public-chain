@@ -16,14 +16,14 @@ case class CancelLeaseRequest(version: Option[Byte] = None,
                               sponsorKeyType: Option[String] = None,
                               sponsorPublicKey: Option[String] = None,
                               signature: Option[ByteStr] = None,
-                              proofs: Option[Proofs] = None
-    ) extends TxRequest.For[CancelLeaseTransaction] {
+                              proofs: Option[Proofs] = None)
+    extends TxRequest.For[CancelLeaseTransaction] {
 
   protected def sign(tx: CancelLeaseTransaction, signer: PrivateKeyAccount): CancelLeaseTransaction = tx.signWith(signer)
 
   def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, CancelLeaseTransaction] =
     for {
-      validProofs  <- toProofs(signature, proofs)
+      validProofs <- toProofs(signature, proofs)
       tx <- CancelLeaseTransaction.create(
         version.getOrElse(CancelLeaseTransaction.latestVersion),
         None,

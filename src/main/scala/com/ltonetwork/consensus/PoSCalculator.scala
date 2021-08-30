@@ -14,8 +14,8 @@ trait PoSCalculator {
 }
 
 object PoSCalculator {
-  private[consensus] val HitSize: Int        = 8
-  val MinBaseTarget: Long = 9
+  private[consensus] val HitSize: Int = 8
+  val MinBaseTarget: Long             = 9
 
   def generatorSignature(signature: Array[Byte], publicKey: Array[Byte]): Array[Byte] = {
     val s = new Array[Byte](crypto.DigestLength * 2)

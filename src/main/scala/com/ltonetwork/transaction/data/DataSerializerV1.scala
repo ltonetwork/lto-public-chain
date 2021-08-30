@@ -34,19 +34,20 @@ object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
     } else (List.empty, pos + Shorts.BYTES)
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val sender = buf.getPublicKey
+      val sender = buf.getPublicKey
 
-    val (entries, entriesEnd) = parseData(bytes, buf.position)
-    buf.position(entriesEnd)
+      val (entries, entriesEnd) = parseData(bytes, buf.position)
+      buf.position(entriesEnd)
 
-    val timestamp = buf.getLong
-    val fee       = buf.getLong
-    val proofs    = buf.getProofs
+      val timestamp = buf.getLong
+      val fee       = buf.getLong
+      val proofs    = buf.getProofs
 
-    create(version, None, timestamp, sender, fee, entries, None, proofs)
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      create(version, None, timestamp, sender, fee, entries, None, proofs)
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

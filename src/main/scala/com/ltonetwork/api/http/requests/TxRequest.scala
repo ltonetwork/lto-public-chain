@@ -25,10 +25,11 @@ trait TxRequest {
 
   protected def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT
 
-  private def publicKeyAccount(keyTypeOpt: Option[String], publicKey: String): Either[ValidationError, PublicKeyAccount] = for {
-    kt  <- keyType(keyTypeOpt).fold(t => Left(InvalidPublicKey(t.getMessage)), Right(_))
-    acc <- PublicKeyAccount.fromBase58String(kt, publicKey)
-  } yield acc
+  private def publicKeyAccount(keyTypeOpt: Option[String], publicKey: String): Either[ValidationError, PublicKeyAccount] =
+    for {
+      kt  <- keyType(keyTypeOpt).fold(t => Left(InvalidPublicKey(t.getMessage)), Right(_))
+      acc <- PublicKeyAccount.fromBase58String(kt, publicKey)
+    } yield acc
 
   protected def resolveSender: Either[ValidationError, PublicKeyAccount] =
     senderPublicKey match {
@@ -40,7 +41,8 @@ trait TxRequest {
     senderPublicKey.map(key => PublicKeyAccount.fromBase58String(key)).getOrElse(Right(default))
 
   protected def resolveSponsor: Either[ValidationError, Option[PublicKeyAccount]] =
-    sponsorPublicKey.map(publicKeyAccount(sponsorKeyType, _))
+    sponsorPublicKey
+      .map(publicKeyAccount(sponsorKeyType, _))
       .fold[Either[ValidationError, Option[PublicKeyAccount]]](Right(None))(_.map(k => Some(k)))
 
   protected def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, TransactionT]
@@ -52,18 +54,20 @@ trait TxRequest {
       tx      <- toTxFrom(sender, sponsor)
     } yield tx
 
-  def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransactionT] = for {
-    signer  <- wallet.findPrivateKey(signerAddress)
-    sender  <- resolveSender(signer)
-    sponsor <- resolveSponsor
-    tx      <- toTxFrom(sender, sponsor)
-  } yield sign(tx, signer)
+  def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransactionT] =
+    for {
+      signer  <- wallet.findPrivateKey(signerAddress)
+      sender  <- resolveSender(signer)
+      sponsor <- resolveSponsor
+      tx      <- toTxFrom(sender, sponsor)
+    } yield sign(tx, signer)
 
-  def sponsorTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransactionT] = for {
-    signer   <- wallet.findPrivateKey(signerAddress)
-    sender   <- resolveSender
-    tx       <- toTxFrom(sender, Some(signer))
-  } yield sign(tx, signer)
+  def sponsorTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransactionT] =
+    for {
+      signer <- wallet.findPrivateKey(signerAddress)
+      sender <- resolveSender
+      tx     <- toTxFrom(sender, Some(signer))
+    } yield sign(tx, signer)
 }
 
 object TxRequest {

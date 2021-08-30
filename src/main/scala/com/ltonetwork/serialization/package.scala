@@ -67,7 +67,7 @@ package object serialization {
     private def getAccountWithKeyType(keyTypeId: Byte, buf: ByteBuffer): PublicKeyAccount =
       keyType(keyTypeId) match {
         case Failure(exception) => throw exception
-        case Success(kt) => PublicKeyAccount(kt, buf.getByteArray(kt.length))
+        case Success(kt)        => PublicKeyAccount(kt, buf.getByteArray(kt.length))
       }
 
     def getAccount: PublicKeyAccount = getAccountWithKeyType(buf.get, buf)

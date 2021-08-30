@@ -17,7 +17,7 @@ trait BroadcastRoute {
 
   protected def doBroadcast(tx: Transaction): Future[Either[ApiError, Transaction]] = Future {
     val r = for {
-      r  <- utx.putIfNew(tx)
+      r <- utx.putIfNew(tx)
     } yield {
       val (added, _) = r
       if (added) allChannels.broadcastTx(tx, None)

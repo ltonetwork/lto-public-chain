@@ -23,16 +23,17 @@ object GenesisSerializer extends TransactionSerializer.For[GenesisTransaction] {
     )
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-    require(bytes.length >= Longs.BYTES + Address.AddressLength + Longs.BYTES, "Data does not match base length")
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+    Try {
+      require(bytes.length >= Longs.BYTES + Address.AddressLength + Longs.BYTES, "Data does not match base length")
 
-    val buf = ByteBuffer.wrap(bytes)
+      val buf = ByteBuffer.wrap(bytes)
 
-    val timestamp = buf.getLong
-    val recipient = buf.getAddress
-    val amount    = buf.getLong
+      val timestamp = buf.getLong
+      val recipient = buf.getAddress
+      val amount    = buf.getLong
 
-    create(recipient, amount, timestamp)
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      create(recipient, amount, timestamp)
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

@@ -104,4 +104,5 @@ object Dependencies {
   )
   lazy val kindProjector = "org.spire-math" %% "kind-projector" % "0.9.6"
   lazy val seasalt = Seq("com.ltonetwork" % "seasalt" % "0.0.4")
+  lazy val jaxb_api = Seq("javax.xml.bind" % "jaxb-api" % "2.3.0")
 }

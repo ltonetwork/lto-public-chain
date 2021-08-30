@@ -9,10 +9,10 @@ package object crypto {
   val KeyLength: Int       = 32 //Curve25519
   val DigestLength: Int    = 32
 
-  def fastHash(m: Array[Byte]): Array[Byte] = new Hasher("Blake2b-256").hash(m).getBytes
-  def fastHash(s: String): Array[Byte] = fastHash(s.getBytes())
+  def fastHash(m: Array[Byte]): Array[Byte]   = new Hasher("Blake2b-256").hash(m).getBytes
+  def fastHash(s: String): Array[Byte]        = fastHash(s.getBytes())
   def secureHash(m: Array[Byte]): Array[Byte] = new Hasher("SHA-256").hash(fastHash(m)).getBytes
-  def secureHash(s: String): Array[Byte] = secureHash(s.getBytes())
+  def secureHash(s: String): Array[Byte]      = secureHash(s.getBytes())
 
   def sign(account: PrivateKeyAccount, message: Array[Byte]): Array[Byte] =
     sign(account.privateKey, account.keyType, message)

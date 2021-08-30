@@ -79,10 +79,6 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
              proofs: Proofs): Either[ValidationError, TransactionT] =
     DataTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, data, sponsor, proofs).validatedEither
 
-  def signed(version: Byte,
-             timestamp: Long,
-             sender: PrivateKeyAccount,
-             fee: Long,
-             data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
+  def signed(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
     create(version, None, timestamp, sender, fee, data, None, Proofs.empty).signWith(sender)
 }

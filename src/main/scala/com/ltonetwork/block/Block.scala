@@ -124,7 +124,7 @@ case class Block private (override val timestamp: Long,
   import Block._
 
   val sender: PublicKeyAccount = signerData.generator
-  val signature: ByteStr = signerData.signature
+  val signature: ByteStr       = signerData.signature
 
   private val transactionField = TransactionsBlockField(version.toInt, transactionData)
 

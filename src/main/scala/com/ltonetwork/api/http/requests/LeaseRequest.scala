@@ -16,8 +16,8 @@ case class LeaseRequest(version: Option[Byte] = None,
                         sponsorKeyType: Option[String] = None,
                         sponsorPublicKey: Option[String] = None,
                         signature: Option[ByteStr] = None,
-                        proofs: Option[Proofs] = None
-    ) extends TxRequest.For[LeaseTransaction] {
+                        proofs: Option[Proofs] = None)
+    extends TxRequest.For[LeaseTransaction] {
 
   protected def sign(tx: LeaseTransaction, signer: PrivateKeyAccount): LeaseTransaction = tx.signWith(signer)
 

@@ -22,13 +22,14 @@ object TransferSerializerV2 extends TransferSerializerLegacy {
     )
   }
 
-  def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val (sender, timestamp, amount, fee, recipient, attachment) = parseBase(buf)
-    val proofs = buf.getProofs
+      val (sender, timestamp, amount, fee, recipient, attachment) = parseBase(buf)
+      val proofs                                                  = buf.getProofs
 
-    create(version, None, timestamp, sender, fee, recipient, amount, attachment, None, proofs)
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      create(version, None, timestamp, sender, fee, recipient, amount, attachment, None, proofs)
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

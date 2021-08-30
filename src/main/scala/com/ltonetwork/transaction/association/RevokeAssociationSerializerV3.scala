@@ -26,16 +26,17 @@ object RevokeAssociationSerializerV3 extends TransactionSerializer.For[RevokeAss
     )
   }
 
-  def parseBytes(version: Byte, bytes: Array[Byte]): Try[RevokeAssociationTransaction] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[RevokeAssociationTransaction] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val (chainId, timestamp, sender, fee) = parseBase(buf)
-    val recipient = buf.getAddress
-    val assocType = buf.getInt
-    val hash      = Some(buf.getByteArrayWithLength).map(ByteStr(_)).noneIfEmpty
-    val (sponsor, proofs) = parseFooter(buf)
+      val (chainId, timestamp, sender, fee) = parseBase(buf)
+      val recipient                         = buf.getAddress
+      val assocType                         = buf.getInt
+      val hash                              = Some(buf.getByteArrayWithLength).map(ByteStr(_)).noneIfEmpty
+      val (sponsor, proofs)                 = parseFooter(buf)
 
-    create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, hash, sponsor, proofs)
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, hash, sponsor, proofs)
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

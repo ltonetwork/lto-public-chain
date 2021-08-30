@@ -18,7 +18,7 @@ import com.ltonetwork.utils._
 object BlockDiffer extends ScorexLogging with Instrumented {
 
   val feeBurnAmt: Long = 0.1.lto
-  val feeBurnPct = 0.2
+  val feeBurnPct       = 0.2
 
   def maybeBurnFee(bc: Blockchain, tx: Transaction): Portfolio = {
     import com.ltonetwork.features.FeatureProvider._

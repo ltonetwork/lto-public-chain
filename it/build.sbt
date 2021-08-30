@@ -37,7 +37,7 @@ inTask(docker)(
 
         if (withAspectJ) run("wget", "--quiet", aspectjAgentUrl, "-O", "/opt/lto/aspectjweaver.jar")
 
-        add((assembly in LocalProject("node")).value, "/opt/lto/lto.jar")
+        add((LocalProject("node") / assembly).value, "/opt/lto/lto.jar")
         add(Seq(configTemplate, startLto), "/opt/lto/")
         run("chmod", "+x", "/opt/lto/start-lto.sh")
         entryPoint("/opt/lto/start-lto.sh")
@@ -99,7 +99,7 @@ inConfig(Test) {
   val commonFlags = "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
   Seq(
     test := (test dependsOn docker).value,
-    envVars in test += "CONTAINER_JAVA_OPTS"     -> s"-Xmx1500m $commonFlags",
-    envVars in testOnly += "CONTAINER_JAVA_OPTS" -> s"-Xmx512m $commonFlags"
+    test / envVars += "CONTAINER_JAVA_OPTS"     -> s"-Xmx1500m $commonFlags",
+    testOnly / envVars += "CONTAINER_JAVA_OPTS" -> s"-Xmx512m $commonFlags"
   ) ++ inTask(test)(itTestsCommonSettings) ++ inTask(testOnly)(itTestsCommonSettings)
 }

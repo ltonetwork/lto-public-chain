@@ -6,10 +6,10 @@ import sbt.internal.inc.ReflectUtilities
 import sbtassembly.MergeStrategy
 
 enablePlugins(JavaServerAppPackaging, JDebPackaging, SystemdPlugin, GitVersioning)
-scalafmtOnCompile in ThisBuild := true
+ThisBuild / scalafmtOnCompile := true
 
 val versionSource = Def.task {
-  val versionFile      = (sourceManaged in Compile).value / "com" / "ltonetwork" / "Version.scala"
+  val versionFile      = (Compile / sourceManaged).value / "com" / "ltonetwork" / "Version.scala"
   val versionExtractor = """(\d+)\.(\d+)\.(\d+).*""".r
 
   version.value match {
@@ -49,8 +49,8 @@ inThisBuild(
 
 resolvers += Resolver.bintrayRepo("ethereum", "maven")
 
-fork in run := true
-javaOptions in run ++= Seq(
+run / fork := true
+run / javaOptions ++= Seq(
   "-XX:+IgnoreUnrecognizedVMOptions",
   "--add-modules=java.xml.bind"
 )
@@ -84,15 +84,15 @@ inTask(assembly)(
     assemblyMergeStrategy := {
       case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.concat
       case PathList("META-INF", "aop.xml")                      => aopMerge
-      case other                                                => (assemblyMergeStrategy in assembly).value(other)
+      case other                                                => (assembly / assemblyMergeStrategy).value(other)
     }
   ))
 
 inConfig(Compile)(
   Seq(
     mainClass := Some("com.ltonetwork.Application"),
-    publishArtifact in packageDoc := false,
-    publishArtifact in packageSrc := false,
+    packageDoc / publishArtifact := false,
+    packageSrc / publishArtifact := false,
     sourceGenerators += versionSource
   ))
 
@@ -156,7 +156,7 @@ val packageSource = Def.setting {
 
 val upstartScript = Def.task {
   val src    = packageSource.value / "upstart.conf"
-  val dest   = (target in Debian).value / "upstart" / s"${packageName.value}.conf"
+  val dest   = (Debian / target).value / "upstart" / s"${packageName.value}.conf"
   val result = TemplateWriter.generateScript(src.toURI.toURL, linuxScriptReplacements.value)
   IO.write(dest, result)
   dest
@@ -211,7 +211,7 @@ lazy val lang =
       version := "0.0.1",
       // the following line forces scala version across all dependencies
       scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true))),
-      test in assembly := {},
+      assembly / test := {},
       addCompilerPlugin(Dependencies.kindProjector),
       libraryDependencies ++=
         Dependencies.cats ++
@@ -259,6 +259,7 @@ lazy val node = project
         Dependencies.ficus ++
         Dependencies.scorex ++
         Dependencies.commons_net ++
+        Dependencies.jaxb_api ++
         Dependencies.monix.value
   )
   .dependsOn(langJVM)

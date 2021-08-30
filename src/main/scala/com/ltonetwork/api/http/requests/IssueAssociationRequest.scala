@@ -20,14 +20,14 @@ case class IssueAssociationRequest(version: Option[Byte] = None,
                                    sponsorPublicKey: Option[String] = None,
                                    signature: Option[ByteStr] = None,
                                    proofs: Option[Proofs] = None,
-    ) extends TxRequest.For[IssueAssociationTransaction] {
+) extends TxRequest.For[IssueAssociationTransaction] {
 
   protected def sign(tx: IssueAssociationTransaction, signer: PrivateKeyAccount): IssueAssociationTransaction = tx.signWith(signer)
 
   def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, IssueAssociationTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
-      validProofs <- toProofs(signature, proofs)
+      validProofs    <- toProofs(signature, proofs)
       tx <- IssueAssociationTransaction.create(
         version.getOrElse(IssueAssociationTransaction.latestVersion),
         None,

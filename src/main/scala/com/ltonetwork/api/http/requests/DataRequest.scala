@@ -15,14 +15,14 @@ case class DataRequest(version: Option[Byte] = None,
                        sponsorKeyType: Option[String] = None,
                        sponsorPublicKey: Option[String] = None,
                        signature: Option[ByteStr] = None,
-                       proofs: Option[Proofs] = None
-    ) extends TxRequest.For[DataTransaction] {
+                       proofs: Option[Proofs] = None)
+    extends TxRequest.For[DataTransaction] {
 
   protected def sign(tx: DataTransaction, signer: PrivateKeyAccount): DataTransaction = tx.signWith(signer)
 
   def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, DataTransaction] =
     for {
-      validProofs    <- toProofs(signature, proofs)
+      validProofs <- toProofs(signature, proofs)
       tx <- DataTransaction.create(
         version.getOrElse(DataTransaction.latestVersion),
         None,

@@ -29,12 +29,13 @@ case class CancelLeaseTransaction private (version: Byte,
   private def serializer: TransactionSerializer.For[CancelLeaseTransaction] = builder.serializer(version)
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj(
-    "version"   -> version,
-    "fee"       -> fee,
-    "timestamp" -> timestamp,
-    "leaseId"   -> leaseId.base58
-  ))
+  val json: Coeval[JsObject] = Coeval.evalOnce(
+    jsonBase ++ Json.obj(
+      "version"   -> version,
+      "fee"       -> fee,
+      "timestamp" -> timestamp,
+      "leaseId"   -> leaseId.base58
+    ))
 }
 
 object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransaction] {

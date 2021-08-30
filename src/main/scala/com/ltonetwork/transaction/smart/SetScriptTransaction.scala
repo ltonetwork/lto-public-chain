@@ -70,10 +70,6 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
              proofs: Proofs): Either[ValidationError, TransactionT] =
     SetScriptTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, script, sponsor, proofs).validatedEither
 
-  def signed(version: Byte,
-             timestamp: Long,
-             sender: PrivateKeyAccount,
-             fee: Long,
-             script: Option[Script]): Either[ValidationError, TransactionT] =
+  def signed(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, script: Option[Script]): Either[ValidationError, TransactionT] =
     create(version, None, timestamp, sender, fee, script, None, Proofs.empty).signWith(sender)
 }

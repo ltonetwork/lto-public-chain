@@ -38,8 +38,8 @@ object SponsorshipTransactionBase {
                           (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
         Validated.condNel(sender.keyType == ED25519 || version >= 3,
-          None,
-          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
       )
     }
   }
