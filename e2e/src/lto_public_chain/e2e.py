@@ -354,39 +354,32 @@ class E2eTests(unittest.TestCase):
             hashlib.sha256(str(anchor).encode('utf-8')).hexdigest())
 
     # Scenario:
-    # 1. Alice's and Charlie's balances initialisation
-    # 2. Create and setup smart contract for Charlie
-    # 3. Alice funds Charlie
-    # 4. Alice can't take money from Charlie
-    # 5.1 Bob takes funds because he knows secret hash and 5.2 after rollback wait height and Alice takes funds back
+    # 1. Create and setup smart contract for Charlie
+    # 2. Alice funds Charlie
+    # 3. Alice can't take money from Charlie
+    # 4.1 Bob takes funds because he knows secret hash and 4.2 after rollback wait height and Alice takes funds back
     #TODO
-    def atomic_swap(self):
+    def test_atomic_swap(self):
         secret_text = 'some secret message from Alice'
         sha_secret = 'BN6RTYGWcwektQfSFzH8raYo9awaLgQ7pLyWLQY4S4F5'
-        # Step 1: Alice's and Charlie's balances initialisation
-        tx_1 = api.transfer(self.validator, self.alice, 10000)
-        tx_2 = api.transfer(self.validator, self.charlie, 10000)
 
-        # Step 2: Create and setup smart contract for Charlie
-
+        # Step 1: Create and setup smart contract for Charlie
         before_height = api.get_height()
 
         script = (
-                f"let Alice = Address(base58'{self.alice.address}') "
-                f"let Bob = Address(base58'{self.bob.address}') "
-                f"let BeforeHeight = {before_height} "
-                "match tx { "
-                "    case ttx: TransferTransaction => "
-                f"        let txToBob = (ttx.recipient == Bob) && (sha256(ttx.proofs[0]) == base58'{sha_secret}') && ((10 + BeforeHeight) >= height) "
-                "        let backToAliceAfterHeight = ((height >= (11 + BeforeHeight)) && (ttx.recipient == Alice)) "
+            f"let Alice = Address(base58'{self.alice.address}')\n"
+            f"let Bob = Address(base58'{self.bob.address}')\n"
+            f"let BeforeHeight = {before_height}\n"
+            "match tx {\n"
+            "case ttx: TransferTransaction =>\n"
+            f"let txToBob = (ttx.recipient == Bob) && (sha256(ttx.proofs[0]) == base58'{sha_secret}') && ((10 + BeforeHeight) >= height)\n"
+            "let backToAliceAfterHeight = ((height >= (11 + BeforeHeight)) && (ttx.recipient == Alice))\n"
+            "txToBob || backToAliceAfterHeight\n"
+            "case other => false\n"
+            "}")
 
-                "        txToBob || backToAliceAfterHeight "
-                "    case other => false "
-                "}")
-        
-        print(script)
-
-        set_script_tx = api.set_script(self.charlie, script)
+        set_script_tx = api.set_script(self.charlie, "true")
+        print(set_script_tx)
 
         # self.assertEqual(
         #     http_requests.get("/debug/minerInfo").status_code,
@@ -399,7 +392,8 @@ def run():
     # suite.addTest(E2eTests("test_lease"))
     # suite.addTest(E2eTests("test_mass_transfer"))
     # suite.addTest(E2eTests("test_sponsorship"))
-    suite.addTest(E2eTests("test_anchor"))
+    # suite.addTest(E2eTests("test_anchor"))
+    suite.addTest(E2eTests("test_atomic_swap"))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     assert result.wasSuccessful()
