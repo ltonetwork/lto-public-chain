@@ -8,8 +8,8 @@ if [ "$1" = upgrade ]; then
         rm -f /home/${{app_name}}/lto/data/peers.dat
 
         # delete legacy configuration files
-        for file_to_remove in application.conf application-dev.conf logback-to-file.xml logback.xml reference.conf logback-overrides.xml
-        do
+        for file_to_remove in application.conf application-dev.conf logback-to-file.xml logback.xml logback-overrides.xml
+            do
             rm -f /usr/share/${{app_name}}/conf/$file_to_remove
         done
 
