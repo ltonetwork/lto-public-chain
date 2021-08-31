@@ -55,11 +55,6 @@ run / javaOptions ++= Seq(
   "--add-modules=java.xml.bind"
 )
 
-assembly / assemblyMergeStrategy := {
-  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case x                             => MergeStrategy.first
-}
-
 val aopMerge: MergeStrategy = new MergeStrategy {
   val name = "aopMerge"
   import scala.xml._
@@ -89,6 +84,7 @@ inTask(assembly)(
     assemblyMergeStrategy := {
       case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.concat
       case PathList("META-INF", "aop.xml")                      => aopMerge
+      case PathList("org", "bouncycastle", xs @ _*)             => MergeStrategy.first
       case other                                                => (assembly / assemblyMergeStrategy).value(other)
     }
   ))
