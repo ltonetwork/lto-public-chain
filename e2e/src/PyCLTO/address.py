@@ -467,15 +467,26 @@ class pyAddress(object):
             logging.error('Private key required')
         else:
             compiledScript = base64.b64decode(script)
-            scriptLength = len(compiledScript)
             if timestamp == 0:
                 timestamp = int(time.time() * 1000)
+
+            # print("--------------------------------\n")
+            # print("Type: {}".format(len(b'\13')))
+            # print("Version: {}".format(len(b'\1')))
+            # print("ChainID: {}".format(len(crypto.str2bytes(str(self.pyclto.CHAIN_ID)))))
+            # print("SenderPK: {}".format(len(base58.b58decode(self.publicKey))))
+            # print("Inlcudes script: {}".format(len(b'\1')))
+            # print("ScriptLength: {}".format(len(struct.pack(">H", len(compiledScript)))))
+            # print("Script: {}".format(len(compiledScript)))
+            # print("Fee: {}".format(len(struct.pack(">Q", txFee))))
+            # print("Timestamp: {}".format(len(struct.pack(">Q", timestamp))))
+            # print("--------------------------------\n")
             sData = b'\13' + \
                 b'\1' + \
                 crypto.str2bytes(str(self.pyclto.CHAIN_ID)) + \
                 base58.b58decode(self.publicKey) + \
                 b'\1' + \
-                struct.pack(">H", scriptLength) + \
+                struct.pack(">H", len(compiledScript)) + \
                 compiledScript + \
                 struct.pack(">Q", txFee) + \
                 struct.pack(">Q", timestamp)
