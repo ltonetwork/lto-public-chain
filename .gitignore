@@ -33,9 +33,6 @@ custom.conf
 *.csv
 *.dat
 
-# standalone docker
-Dockerfile
-
 package
 !src/package
 native
