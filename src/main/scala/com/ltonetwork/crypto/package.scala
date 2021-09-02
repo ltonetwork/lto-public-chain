@@ -31,6 +31,8 @@ package object crypto {
       new ECDSA("secp256k1").signDetached(message, privateKey).getBytes
     case KeyTypes.SECP256R1 =>
       new ECDSA("secp256r1").signDetached(message, privateKey).getBytes
+    case _ =>
+      throw new IllegalArgumentException("Unknown key type")
   }
 
   def verify(signature: Array[Byte], message: Array[Byte], publicKey: Array[Byte]): Boolean =
@@ -46,6 +48,8 @@ package object crypto {
       new ECDSA("secp256k1").verify(message, signature, publicKey)
     case KeyTypes.SECP256R1 =>
       new ECDSA("secp256r1").verify(message, signature, publicKey)
+    case _ =>
+      throw new IllegalArgumentException("Unknown key type")
   }
 
   def createKeyPair(seed: Array[Byte]): (Array[Byte], Array[Byte]) =
@@ -54,7 +58,7 @@ package object crypto {
   def createKeyPair(seed: Array[Byte], keyType: KeyType): (Array[Byte], Array[Byte]) = keyType match {
     case KeyTypes.ED25519 =>
       val hash = new Hasher("SHA-256").hash(seed).getBytes
-      val kp = SigningKeyPair(hash)
+      val kp   = SigningKeyPair(hash)
       (kp.privateKey, kp.publicKey)
     case KeyTypes.SECP256K1 =>
       val kp = new ECDSA("secp256k1").keyPairFromSeed(seed)
@@ -62,5 +66,7 @@ package object crypto {
     case KeyTypes.SECP256R1 =>
       val kp = new ECDSA("secp256r1").keyPairFromSeed(seed)
       (kp.getPrivateKey.getBytes, kp.getPublicKey.getBytes)
+    case _ =>
+      throw new IllegalArgumentException("Unknown key type")
   }
 }
