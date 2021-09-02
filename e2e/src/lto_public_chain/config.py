@@ -1,2 +1,2 @@
 api_key = "e2etestkey"
-node_url = "http://localhost:6869"
+node_url = "https://testnet.lto.network"
