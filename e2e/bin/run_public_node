@@ -3,16 +3,15 @@
 set -Cue -o pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${0}")/../.." ; pwd)"  # Absolute path to project
-PUBLIC_NODE_DIR="${PROJECT_DIR}/public_node"  # Absolute path to public node
+PUBLIC_NODE_DIR="${PROJECT_DIR}/public_node_docker"  # Absolute path to public node
 
 (
   cd "$PUBLIC_NODE_DIR"
 
-  export LTO_WALLET_SEED_BASE58=bEaMXTP5K1bm3uH8AKXJeBfHBP6TBP2dexxHzbEiqXHADmT3mrLaTUjGdK1XRXayMjdimB3kXPUd8pACPKuWAqt7iEohZyhHAuCnxBRqZbXw9VmdaRmvtoNu3SBRCswG4wC
-  export LTO_WALLET_PASSWORD=e2etests
-  export LTO_API_KEY=e2etestkey
-  export LTO_NETWORK=TESTNET
+  LTO_WALLET_SEED_BASE58=bEaMXTP5K1bm3uH8AKXJeBfHBP6TBP2dexxHzbEiqXHADmT3mrLaTUjGdK1XRXayMjdimB3kXPUd8pACPKuWAqt7iEohZyhHAuCnxBRqZbXw9VmdaRmvtoNu3SBRCswG4wC
+  LTO_WALLET_PASSWORD=e2etests
+  LTO_API_KEY=e2etestkey
 
-  docker-compose pull
-  docker-compose up -d "$@"
+  docker build -t custom_node .
+  docker run -p 6869:6869 -e LTO_NETWORK=CUSTOM -e LTO_HEAP_SIZE=2g -e LTO_ENABLE_REST_API=true -e LTO_WALLET_SEED_BASE58="$LTO_WALLET_SEED_BASE58" -e LTO_WALLET_PASSWORD="$LTO_WALLET_PASSWORD" -e LTO_API_KEY="$LTO_API_KEY" -v ${PUBLIC_NODE_DIR}:/lto custom_node
 )
