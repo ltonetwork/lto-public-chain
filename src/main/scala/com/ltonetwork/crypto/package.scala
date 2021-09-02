@@ -1,8 +1,12 @@
 package com.ltonetwork
 
+import com.emstlk.nacl4s.crypto.SigningKeyPair
+import com.emstlk.nacl4s.{SigningKey, VerifyKey}
 import com.ltonetwork.account.{KeyType, KeyTypes, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.seasalt.hash.Hasher
-import com.ltonetwork.seasalt.sign.{ECDSA, Ed25519}
+import com.ltonetwork.seasalt.sign.ECDSA
+
+import scala.util.Try
 
 package object crypto {
   val SignatureLength: Int = 64 //Curve25519
@@ -22,7 +26,7 @@ package object crypto {
 
   def sign(privateKey: Array[Byte], keyType: KeyType, message: Array[Byte]): Array[Byte] = keyType match {
     case KeyTypes.ED25519 =>
-      new Ed25519().signDetached(message, privateKey).getBytes
+      SigningKey(privateKey).sign(message)
     case KeyTypes.SECP256K1 =>
       new ECDSA("secp256k1").signDetached(message, privateKey).getBytes
     case KeyTypes.SECP256R1 =>
@@ -37,7 +41,7 @@ package object crypto {
 
   def verify(signature: Array[Byte], message: Array[Byte], publicKey: Array[Byte], keyType: KeyType): Boolean = keyType match {
     case KeyTypes.ED25519 =>
-      new Ed25519().verify(message, signature, publicKey)
+      Try(VerifyKey(publicKey).verify(message, signature)).fold(_ => false, _ => true)
     case KeyTypes.SECP256K1 =>
       new ECDSA("secp256k1").verify(message, signature, publicKey)
     case KeyTypes.SECP256R1 =>
@@ -49,8 +53,9 @@ package object crypto {
 
   def createKeyPair(seed: Array[Byte], keyType: KeyType): (Array[Byte], Array[Byte]) = keyType match {
     case KeyTypes.ED25519 =>
-      val kp = new Ed25519().keyPairFromSeed(seed)
-      (kp.getPrivateKey.getBytes, kp.getPublicKey.getBytes)
+      val hash = new Hasher("SHA-256").hash(seed).getBytes
+      val kp = SigningKeyPair(hash)
+      (kp.privateKey, kp.publicKey)
     case KeyTypes.SECP256K1 =>
       val kp = new ECDSA("secp256k1").keyPairFromSeed(seed)
       (kp.getPrivateKey.getBytes, kp.getPublicKey.getBytes)

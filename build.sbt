@@ -205,6 +205,8 @@ checkPRRaw in Global := {
   }
 }
 
+lazy val nacl4s = project
+
 lazy val lang =
   crossProject(JSPlatform, JVMPlatform)
     .withoutSuffixFor(JVMPlatform)
@@ -239,7 +241,7 @@ lazy val lang =
     )
 
 lazy val langJS  = lang.js
-lazy val langJVM = lang.jvm
+lazy val langJVM = lang.jvm.dependsOn(nacl4s)
 
 lazy val node = project
   .in(file("."))
