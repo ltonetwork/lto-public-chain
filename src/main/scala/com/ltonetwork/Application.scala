@@ -92,6 +92,8 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
     if (wallet.privateKeyAccounts.isEmpty)
       wallet.generateNewAccounts(1)
 
+    log.info(s"Data directory '${settings.dataDirectory}'")
+
     val feeCalculator          = new FeeCalculator(settings.feesSettings, blockchainUpdater)
     val time: Time             = NTP
     val establishedConnections = new ConcurrentHashMap[Channel, PeerInfo]

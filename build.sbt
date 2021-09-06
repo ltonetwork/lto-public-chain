@@ -137,9 +137,7 @@ inConfig(Universal)(
       "-J-Xms128m",
       "-J-Xmx2g",
       "-J-XX:+ExitOnOutOfMemoryError",
-      // Java 9 support
       "-J-XX:+IgnoreUnrecognizedVMOptions",
-      "-J--add-modules=java.xml.bind",
       // from https://groups.google.com/d/msg/akka-user/9s4Yl7aEz3E/zfxmdc0cGQAJ
       "-J-XX:+UseG1GC",
       "-J-XX:+UseNUMA",
@@ -180,7 +178,7 @@ linuxScriptReplacements += "detect-loader" ->
 inConfig(Debian)(
   Seq(
     linuxStartScriptTemplate := (packageSource.value / "systemd.service").toURI.toURL,
-    debianPackageDependencies += "java8-runtime-headless",
+    debianPackageDependencies += "java11-runtime-headless",
     serviceAutostart := false,
     maintainerScripts := maintainerScriptsFromDirectory(packageSource.value / "debian", Seq("preinst", "postinst", "postrm", "prerm"))
   ))
