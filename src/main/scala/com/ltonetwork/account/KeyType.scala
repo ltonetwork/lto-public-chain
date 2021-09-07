@@ -30,7 +30,7 @@ object KeyTypes {
       .getOrElse(Failure(new IndexOutOfBoundsException(s"Unknown key type id $id")))
 
   def keyType(reference: String): Try[KeyType] =
-    (if (isByte(reference)) dictReference.get(reference) else dictId.get(reference.toByte))
+    (if (isByte(reference)) dictId.get(reference.toByte) else dictReference.get(reference))
       .map(Success(_))
       .getOrElse(Failure(new IndexOutOfBoundsException(s"Unknown key type '$reference'")))
 
