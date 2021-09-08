@@ -28,7 +28,8 @@ object KeyTypes {
       .getOrElse(Failure(new IndexOutOfBoundsException(s"Unknown key type id $id")))
 
   def keyType(reference: String): Try[KeyType] =
-    dictReference.get(reference.toLowerCase())
+    dictReference
+      .get(reference.toLowerCase())
       .map(Success(_))
       .getOrElse(Failure(new IndexOutOfBoundsException(s"Unknown key type '$reference'")))
 
