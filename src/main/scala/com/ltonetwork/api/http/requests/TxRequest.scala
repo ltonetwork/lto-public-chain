@@ -86,7 +86,7 @@ object TxRequest {
           case IssueAssociationTransaction  => Right(jsv.as[IssueAssociationRequest])
           case RevokeAssociationTransaction => Right(jsv.as[RevokeAssociationRequest])
           case SponsorshipTransaction       => Right(jsv.as[SponsorshipRequest])
-          case CancelSponsorshipTransaction => Right(jsv.as[SponsorshipRequest])
+          case CancelSponsorshipTransaction => Right(jsv.as[CancelSponsorshipRequest])
           case TransferTransaction          => Right(jsv.as[TransferRequest])
           case MassTransferTransaction      => Right(jsv.as[MassTransferRequest])
           case LeaseTransaction             => Right(jsv.as[LeaseRequest])
