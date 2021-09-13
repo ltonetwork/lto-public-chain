@@ -1,7 +1,6 @@
 package com.ltonetwork.lang
 
 import java.nio.ByteBuffer
-
 import cats.data.EitherT
 import cats.kernel.Monoid
 import com.ltonetwork.lang.Common._
@@ -9,7 +8,7 @@ import com.ltonetwork.lang.ExprEvaluator.Log
 import com.ltonetwork.lang.v1.compiler.CompilerV1
 import com.ltonetwork.lang.v1.compiler.Terms._
 import com.ltonetwork.lang.v1.compiler.Types._
-import com.ltonetwork.lang.v1.evaluator.EvaluatorV1
+import com.ltonetwork.lang.v1.evaluator.{EvaluatorV1, FunctionIds}
 import com.ltonetwork.lang.v1.evaluator.FunctionIds._
 import com.ltonetwork.lang.v1.evaluator.ctx._
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.PureContext._
@@ -18,8 +17,8 @@ import com.ltonetwork.lang.v1.evaluator.ctx.impl.{CryptoContext, EnvironmentFunc
 import com.ltonetwork.lang.v1.testing.ScriptGen
 import com.ltonetwork.lang.v1.traits.Environment
 import com.ltonetwork.lang.v1.{CTX, FunctionHeader}
+import com.ltonetwork.seasalt.hash.{Blake2b256, Keccak256, SHA256}
 import com.ltonetwork.utils.{Base58, Base64}
-import com.ltonetwork.seasalt.hash.Hasher
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
@@ -698,9 +697,10 @@ class EvaluatorV1Test extends PropSpec with PropertyChecks with Matchers with Sc
   property("checking a hash of some message by crypto function invoking") {
     val bodyText      = "some text for test"
     val bodyBytes     = bodyText.getBytes()
-    val hashFunctions = Map(SHA256 -> new Hasher("SHA-256"), BLAKE256 -> new Hasher("Blake2b-256"), KECCAK256 -> new Hasher("Keccak-256"))
 
-    for ((funcName, funcClass) <- hashFunctions) hashFuncTest(bodyBytes, funcName) shouldBe Right(ByteVector(funcClass.hash(bodyText).getBytes))
+    hashFuncTest(bodyBytes, FunctionIds.SHA256) shouldBe Right(ByteVector(SHA256.hash(bodyText).getBytes))
+    hashFuncTest(bodyBytes, FunctionIds.BLAKE256) shouldBe Right(ByteVector(Blake2b256.hash(bodyText).getBytes))
+    hashFuncTest(bodyBytes, FunctionIds.KECCAK256) shouldBe Right(ByteVector(Keccak256.hash(bodyText).getBytes))
   }
 
   private def hashFuncTest(bodyBytes: Array[Byte], funcName: Short): Either[ExecutionError, ByteVector] = {
