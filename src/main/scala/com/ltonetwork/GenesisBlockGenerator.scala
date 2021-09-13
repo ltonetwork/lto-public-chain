@@ -5,7 +5,7 @@ import com.ltonetwork.block.Block
 import com.ltonetwork.consensus.PoSCalculator.{generatorSignature, hit}
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
 import com.ltonetwork.consensus.{FairPoSCalculator, PoSCalculator}
-import com.ltonetwork.crypto.SignatureLength
+import com.ltonetwork.crypto.signatureLength
 import com.ltonetwork.features.{BlockchainFeature, BlockchainFeatures}
 import com.ltonetwork.settings.{FunctionalitySettings, GenesisSettings, GenesisTransactionSettings}
 import com.ltonetwork.state._
@@ -178,7 +178,7 @@ object GenesisBlockGenerator extends App {
       .getOrElse(mkGenesisSettings(calcInitialBaseTarget()))
 
   def mkGenesisSettings(baseTarget: Long): GenesisSettings = {
-    val reference     = ByteStr(Array.fill(SignatureLength)(-1: Byte))
+    val reference     = ByteStr(Array.fill(signatureLength)(-1: Byte))
     val genesisSigner = PrivateKeyAccount(ByteStr.empty)
 
     val genesis = Block
@@ -186,7 +186,7 @@ object GenesisBlockGenerator extends App {
         version = 1,
         timestamp = timestamp,
         reference = reference,
-        consensusData = NxtLikeConsensusBlockData(baseTarget, ByteStr(Array.fill(crypto.DigestLength)(0: Byte))),
+        consensusData = NxtLikeConsensusBlockData(baseTarget, ByteStr(Array.fill(crypto.digestLength)(0: Byte))),
         transactionData = genesisTxs,
         signer = genesisSigner,
         featureVotes = Set.empty
@@ -209,7 +209,7 @@ object GenesisBlockGenerator extends App {
   def calcInitialBaseTarget(): Long = {
     val posCalculator: PoSCalculator = FairPoSCalculator
 
-    val hitSource = ByteStr(new Array[Byte](crypto.DigestLength))
+    val hitSource = ByteStr(new Array[Byte](crypto.digestLength))
 
     def getHit(account: PrivateKeyAccount): BigInt = {
       val gs = generatorSignature(hitSource, account.publicKey)

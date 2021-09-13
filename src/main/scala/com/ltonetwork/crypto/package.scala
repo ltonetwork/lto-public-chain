@@ -3,15 +3,17 @@ package com.ltonetwork
 import com.emstlk.nacl4s.crypto.SigningKeyPair
 import com.emstlk.nacl4s.{SigningKey, VerifyKey}
 import com.ltonetwork.account.{KeyType, KeyTypes, PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.seasalt.sign.ECDSA
+import com.ltonetwork.seasalt.sign.{ECDSA, Ed25519}
 import scorex.crypto.hash.{Blake2b256, Sha256}
 
 import scala.util.Try
 
 package object crypto {
-  val SignatureLength: Int = 64 //Curve25519
-  val KeyLength: Int       = 32 //Curve25519
-  val DigestLength: Int    = 32
+  val signatureLength: Int = 64 //Curve25519
+  val keyLength: Int       = 32 //Curve25519
+  val digestLength: Int    = 32
+  val secp256k1: ECDSA = new ECDSA("secp256k1");
+  val secp256r1: ECDSA = new ECDSA("secp256r1");
 
   def fastHash(m: Array[Byte]): Array[Byte]   = Blake2b256.hash(m)
   def fastHash(s: String): Array[Byte]        = fastHash(s.getBytes())
@@ -28,9 +30,9 @@ package object crypto {
     case KeyTypes.ED25519 =>
       SigningKey(privateKey).sign(message)
     case KeyTypes.SECP256K1 =>
-      new ECDSA("secp256k1").signDetached(message, privateKey).getBytes
+      secp256k1.signDetached(message, privateKey).getBytes
     case KeyTypes.SECP256R1 =>
-      new ECDSA("secp256r1").signDetached(message, privateKey).getBytes
+      secp256r1.signDetached(message, privateKey).getBytes
     case _ =>
       throw new IllegalArgumentException("Unknown key type")
   }
@@ -45,9 +47,9 @@ package object crypto {
     case KeyTypes.ED25519 =>
       Try(VerifyKey(publicKey).verify(message, signature)).fold(_ => false, _ => true)
     case KeyTypes.SECP256K1 =>
-      new ECDSA("secp256k1").verify(message, signature, publicKey)
+      secp256k1.verify(message, signature, publicKey)
     case KeyTypes.SECP256R1 =>
-      new ECDSA("secp256r1").verify(message, signature, publicKey)
+      secp256r1.verify(message, signature, publicKey)
     case _ =>
       throw new IllegalArgumentException("Unknown key type")
   }
@@ -62,10 +64,10 @@ package object crypto {
       val kp = SigningKeyPair(Sha256.hash(seed))
       (kp.privateKey, kp.publicKey)
     case KeyTypes.SECP256K1 =>
-      val kp = new ECDSA("secp256k1").keyPairFromSeed(seed)
+      val kp = secp256k1.keyPairFromSeed(seed)
       (kp.getPrivateKey.getBytes, kp.getPublicKey.getBytes)
     case KeyTypes.SECP256R1 =>
-      val kp = new ECDSA("secp256r1").keyPairFromSeed(seed)
+      val kp = secp256r1.keyPairFromSeed(seed)
       (kp.getPrivateKey.getBytes, kp.getPublicKey.getBytes)
     case _ =>
       throw new IllegalArgumentException("Unknown key type")

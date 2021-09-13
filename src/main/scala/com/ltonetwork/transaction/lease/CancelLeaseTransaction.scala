@@ -58,7 +58,7 @@ object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransact
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
-        Validated.condNel(leaseId.arr.length == crypto.DigestLength, (), ValidationError.GenericError("Lease transaction id is invalid")),
+        Validated.condNel(leaseId.arr.length == crypto.digestLength, (), ValidationError.GenericError("Lease transaction id is invalid")),
         Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
                           (),

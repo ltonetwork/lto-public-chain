@@ -18,9 +18,9 @@ object PoSCalculator {
   val MinBaseTarget: Long             = 9
 
   def generatorSignature(signature: Array[Byte], publicKey: Array[Byte]): Array[Byte] = {
-    val s = new Array[Byte](crypto.DigestLength * 2)
-    System.arraycopy(signature, 0, s, 0, crypto.DigestLength)
-    System.arraycopy(publicKey, 0, s, crypto.DigestLength, crypto.DigestLength)
+    val s = new Array[Byte](crypto.digestLength * 2)
+    System.arraycopy(signature, 0, s, 0, crypto.digestLength)
+    System.arraycopy(publicKey, 0, s, crypto.digestLength, crypto.digestLength)
     crypto.fastHash(s)
   }
 
