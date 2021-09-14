@@ -3,7 +3,7 @@ package com.ltonetwork.api.http
 import cats.Applicative
 import com.ltonetwork.account.KeyType
 import com.ltonetwork.account.KeyTypes.{ED25519, SECP256K1, SECP256R1}
-import com.ltonetwork.crypto.{DigestLength, SignatureLength}
+import com.ltonetwork.crypto.{digestLength, signatureLength}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction.{Proofs, TransactionBuilder, ValidationError}
@@ -16,8 +16,8 @@ package object requests {
   import cats.syntax.either._
   import cats.syntax.traverse._
 
-  val SignatureStringLength: Int = base58Length(SignatureLength)
-  val DigestStringLength: Int    = base58Length(DigestLength)
+  val SignatureStringLength: Int = base58Length(signatureLength)
+  val DigestStringLength: Int    = base58Length(digestLength)
 
   def parseBase58(v: String, error: String, maxLength: Int): Validation[ByteStr] =
     if (v.length > maxLength) Left(GenericError(error))

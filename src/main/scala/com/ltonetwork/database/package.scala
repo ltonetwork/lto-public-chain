@@ -62,8 +62,8 @@ package object database {
 
     while (b.remaining() > 0) {
       val buffer = b.get() match {
-        case crypto.DigestLength    => new Array[Byte](crypto.DigestLength)
-        case crypto.SignatureLength => new Array[Byte](crypto.SignatureLength)
+        case crypto.`digestLength`    => new Array[Byte](crypto.digestLength)
+        case crypto.`signatureLength` => new Array[Byte](crypto.signatureLength)
       }
       b.get(buffer)
       ids += ByteStr(buffer)
@@ -77,8 +77,8 @@ package object database {
       .foldLeft(ByteBuffer.allocate(ids.map(_.arr.length + 1).sum)) {
         case (b, id) =>
           b.put(id.arr.length match {
-              case crypto.DigestLength    => crypto.DigestLength.toByte
-              case crypto.SignatureLength => crypto.SignatureLength.toByte
+              case crypto.`digestLength`    => crypto.digestLength.toByte
+              case crypto.`signatureLength` => crypto.signatureLength.toByte
             })
             .put(id.arr)
       }

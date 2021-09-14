@@ -1,7 +1,7 @@
 package com.ltonetwork.state
 
 import com.ltonetwork.account.{Address, PrivateKeyAccount}
-import com.ltonetwork.crypto.SignatureLength
+import com.ltonetwork.crypto.signatureLength
 import com.ltonetwork.db.WithState
 import com.ltonetwork.features._
 import com.ltonetwork.lagonaki.mocks.TestBlock
@@ -26,11 +26,11 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
 
   private def genesisBlock(genesisTs: Long, address: Address, initialBalance: Long) = TestBlock.create(
     genesisTs,
-    ByteStr(Array.fill[Byte](SignatureLength)(0)),
+    ByteStr(Array.fill[Byte](signatureLength)(0)),
     Seq(GenesisTransaction.create(address, initialBalance, genesisTs).explicitGet())
   )
   private def genesisBlock(genesisTs: Long, balances: Seq[(Address, Long)]) =
-    TestBlock.create(genesisTs, ByteStr(Array.fill[Byte](SignatureLength)(0)), balances.map {
+    TestBlock.create(genesisTs, ByteStr(Array.fill[Byte](signatureLength)(0)), balances.map {
       case (addr, amt) => GenesisTransaction.create(addr, amt, genesisTs).explicitGet()
     })
 

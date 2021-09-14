@@ -85,7 +85,7 @@ object GenesisBlockGenerator extends App {
   }.toSeq
 
   val genesisBlock: Block = {
-    val reference     = ByteStr(Array.fill(crypto.SignatureLength)(-1: Byte))
+    val reference     = ByteStr(Array.fill(crypto.signatureLength)(-1: Byte))
     val genesisSigner = PrivateKeyAccount(Array.empty)
 
     Block
@@ -93,7 +93,7 @@ object GenesisBlockGenerator extends App {
         version = 1,
         timestamp = timestamp,
         reference = reference,
-        consensusData = NxtLikeConsensusBlockData(settings.baseTarget, ByteStr(Array.fill(crypto.DigestLength)(0: Byte))),
+        consensusData = NxtLikeConsensusBlockData(settings.baseTarget, ByteStr(Array.fill(crypto.digestLength)(0: Byte))),
         transactionData = genesisTxs,
         signer = genesisSigner,
         featureVotes = Set.empty

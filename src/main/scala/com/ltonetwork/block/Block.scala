@@ -274,7 +274,7 @@ object Block extends ScorexLogging {
 
     val transactionGenesisData      = genesisTransactions(genesisSettings)
     val transactionGenesisDataField = TransactionsBlockField.Version1or2(transactionGenesisData)
-    val consensusGenesisData        = NxtLikeConsensusBlockData(genesisSettings.initialBaseTarget, ByteStr(Array.fill(crypto.DigestLength)(0: Byte)))
+    val consensusGenesisData        = NxtLikeConsensusBlockData(genesisSettings.initialBaseTarget, ByteStr(Array.fill(crypto.digestLength)(0: Byte)))
     val consensusGenesisDataField   = NxtConsensusBlockField(consensusGenesisData)
     val txBytesSize                 = transactionGenesisDataField.bytes().length
     val txBytes                     = Bytes.ensureCapacity(Ints.toByteArray(txBytesSize), 4, 0) ++ transactionGenesisDataField.bytes()
