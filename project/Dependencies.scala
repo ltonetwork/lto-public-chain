@@ -1,6 +1,8 @@
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport.toPlatformDepsGroupID
 import sbt._
 
+import scala.language.postfixOps
+
 object Dependencies {
 
   def akkaModule(module: String) = "com.typesafe.akka" %% s"akka-$module" % "2.4.19"
@@ -44,7 +46,8 @@ object Dependencies {
   lazy val akka = Seq("actor", "slf4j").map(akkaModule)
 
   lazy val db = Seq(
-    "org.ethereum" % "leveldbjni-all" % "1.18.3"
+    "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8",
+    "com.ltonetwork" % "leveldbjni.leveldbjni-osx" % "latest.integration"
   )
 
   lazy val logging = Seq(
@@ -64,7 +67,8 @@ object Dependencies {
     akkaModule("persistence"),
     akkaModule("persistence-tck") % "test",
     "com.github.dnvriend" %% "akka-persistence-inmemory" % "2.4.18.1" % "test",
-    "org.ethereum" % "leveldbjni-all" % "1.18.3"
+    "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8",
+    "com.ltonetwork" % "leveldbjni.leveldbjni-osx" % "latest.integration"
   )
 
   lazy val metrics = {

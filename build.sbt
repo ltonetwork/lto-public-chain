@@ -48,6 +48,7 @@ inThisBuild(
   ))
 
 resolvers += Resolver.bintrayRepo("ethereum", "maven")
+resolvers += "SonaType s01 Snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots/"
 
 run / fork := true
 run / javaOptions ++= Seq(
