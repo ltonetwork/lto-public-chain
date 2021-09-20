@@ -5,15 +5,15 @@ import scala.language.postfixOps
 
 object Dependencies {
 
-  def akkaModule(module: String) = "com.typesafe.akka" %% s"akka-$module" % "2.4.19"
+//  def akkaModule(module: String) = "com.typesafe.akka" %% s"akka-$module" % "2.6.16"
 
   def swaggerModule(module: String) = ("io.swagger" % s"swagger-$module" % "1.5.16").exclude("com.google.guava", "guava")
 
-  def akkaHttpModule(module: String) = "com.typesafe.akka" %% module % "10.0.9"
+  def akkaHttpModule(module: String) = "com.typesafe.akka" %% module % "10.2.6"
 
   def nettyModule(module: String) = "io.netty" % s"netty-$module" % "4.1.24.Final"
 
-  def kamonModule(v: String)(module: String) = "io.kamon" %% s"kamon-$module" % v
+//  def kamonModule(v: String)(module: String) = "io.kamon" %% s"kamon-$module" % v
 
   val asyncHttpClient = "org.asynchttpclient" % "async-http-client" % "2.4.7"
 
@@ -24,7 +24,7 @@ object Dependencies {
   )
 
   lazy val testKit = scalatest ++ Seq(
-    akkaModule("testkit"),
+    "com.typesafe.akka" %% s"akka-testkit" % "2.6.16",
     "org.scalacheck"   %% "scalacheck"                  % "1.13.5",
     "org.mockito"      % "mockito-all"                  % "1.10.19",
     "org.scalamock"    %% "scalamock-scalatest-support" % "3.6.0",
@@ -41,9 +41,12 @@ object Dependencies {
 
   lazy val serialization = Seq(
     "com.google.guava"  % "guava"      % "21.0",
-    "com.typesafe.play" %% "play-json" % "2.6.9"
+    "com.typesafe.play" %% "play-json" % "2.9.2"
   )
-  lazy val akka = Seq("actor", "slf4j").map(akkaModule)
+  lazy val akka = Seq(
+    "com.typesafe.akka" %% s"akka-actor" % "2.6.16",
+    "com.typesafe.akka" %% s"akka-slf4j" % "2.6.16",
+  )
 
   lazy val db = Seq(
     "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8",
@@ -51,10 +54,11 @@ object Dependencies {
   )
 
   lazy val logging = Seq(
-    "ch.qos.logback"       % "logback-classic"          % "1.2.3",
-    "org.slf4j"            % "slf4j-api"                % "1.7.25",
-    "org.slf4j"            % "jul-to-slf4j"             % "1.7.25",
-    "net.logstash.logback" % "logstash-logback-encoder" % "4.11"
+    "ch.qos.logback"       % "logback-classic"          % "1.2.5",
+    "org.slf4j"            % "slf4j-api"                % "1.7.32",
+    "org.slf4j"            % "jul-to-slf4j"             % "1.7.32",
+    "net.logstash.logback" % "logstash-logback-encoder" % "6.6",
+    "joda-time" % "joda-time" % "2.10.10"
   )
 
   lazy val http = Seq("core", "annotations", "models", "jaxrs").map(swaggerModule) ++ Seq(
@@ -64,17 +68,19 @@ object Dependencies {
   )
 
   lazy val matcher = Seq(
-    akkaModule("persistence"),
-    akkaModule("persistence-tck") % "test",
-    "com.github.dnvriend" %% "akka-persistence-inmemory" % "2.4.18.1" % "test",
+    "com.typesafe.akka" %% s"akka-persistence" % "2.6.16",
+    "com.typesafe.akka" %% s"akka-persistence-tck" % "2.6.16" % "test",
+    "com.github.dnvriend" %% "akka-persistence-inmemory" % "2.5.15.2" % "test",
     "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8",
     "com.ltonetwork" % "leveldbjni.leveldbjni-osx" % "latest.integration"
   )
 
   lazy val metrics = {
-    Seq("core", "system-metrics").map(kamonModule("0.6.7")) ++
-      Seq("akka-2.4", "influxdb").map(kamonModule("0.6.8")) ++
       Seq(
+        "io.kamon" %% "kamon-core" % "2.2.3",
+        "io.kamon" %% "kamon-akka" % "2.2.3",
+        "io.kamon" %% "kamon-system-metrics" % "2.2.3",
+        "io.kamon" %% "kamon-influxdb" % "2.2.3",
         "org.influxdb" % "influxdb-java"    % "2.7",
         "io.kamon"     %% "kamon-autoweave" % "0.6.5"
       )
