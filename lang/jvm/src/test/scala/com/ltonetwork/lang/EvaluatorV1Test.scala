@@ -17,7 +17,7 @@ import com.ltonetwork.lang.v1.evaluator.ctx.impl.{CryptoContext, EnvironmentFunc
 import com.ltonetwork.lang.v1.testing.ScriptGen
 import com.ltonetwork.lang.v1.traits.Environment
 import com.ltonetwork.lang.v1.{CTX, FunctionHeader}
-import com.ltonetwork.seasalt.hash.{Blake2b256, Keccak256, SHA256}
+import scorex.crypto.hash.{Blake2b256, Keccak256, Sha256}
 import com.ltonetwork.utils.{Base58, Base64}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.prop.PropertyChecks
@@ -698,9 +698,9 @@ class EvaluatorV1Test extends PropSpec with PropertyChecks with Matchers with Sc
     val bodyText      = "some text for test"
     val bodyBytes     = bodyText.getBytes()
 
-    hashFuncTest(bodyBytes, FunctionIds.SHA256) shouldBe Right(ByteVector(SHA256.hash(bodyText).getBytes))
-    hashFuncTest(bodyBytes, FunctionIds.BLAKE256) shouldBe Right(ByteVector(Blake2b256.hash(bodyText).getBytes))
-    hashFuncTest(bodyBytes, FunctionIds.KECCAK256) shouldBe Right(ByteVector(Keccak256.hash(bodyText).getBytes))
+    hashFuncTest(bodyBytes, FunctionIds.SHA256) shouldBe Right(ByteVector(Sha256.hash(bodyText)))
+    hashFuncTest(bodyBytes, FunctionIds.BLAKE256) shouldBe Right(ByteVector(Blake2b256.hash(bodyText)))
+    hashFuncTest(bodyBytes, FunctionIds.KECCAK256) shouldBe Right(ByteVector(Keccak256.hash(bodyText)))
   }
 
   private def hashFuncTest(bodyBytes: Array[Byte], funcName: Short): Either[ExecutionError, ByteVector] = {
