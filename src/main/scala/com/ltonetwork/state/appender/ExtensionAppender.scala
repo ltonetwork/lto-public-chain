@@ -1,7 +1,6 @@
 package com.ltonetwork.state.appender
 
 import com.ltonetwork.consensus.PoSSelector
-import com.ltonetwork.metrics.{BlockStats, Instrumented, Metrics}
 import com.ltonetwork.mining.Miner
 import com.ltonetwork.network.{InvalidBlockStorage, PeerDatabase, formatBlocks, id}
 import com.ltonetwork.settings.LtoSettings
@@ -12,14 +11,13 @@ import io.netty.channel.Channel
 import io.netty.channel.group.ChannelGroup
 import monix.eval.{Coeval, Task}
 import monix.execution.Scheduler
-import org.influxdb.dto.Point
 import com.ltonetwork.block.Block
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction._
 
 import scala.util.{Left, Right}
 
-object ExtensionAppender extends ScorexLogging with Instrumented {
+object ExtensionAppender extends ScorexLogging {
 
   def apply(checkpoint: CheckpointService,
             blockchainUpdater: BlockchainUpdater with Blockchain,
@@ -47,7 +45,8 @@ object ExtensionAppender extends ScorexLogging with Instrumented {
                   .map { b =>
                     b -> appendBlock(checkpoint, blockchainUpdater, utxStorage, pos, time, settings)(b).right
                       .map {
-                        _.foreach(bh => BlockStats.applied(b, BlockStats.Source.Ext, bh))
+                        // removed the metrics, applied only the result of the previously called function: Seq.empty
+                        _.foreach(bh => Seq.empty)
                       }
                   }
                   .zipWithIndex
@@ -61,7 +60,6 @@ object ExtensionAppender extends ScorexLogging with Instrumented {
 
                       extension.view
                         .dropWhile(_ != declinedBlock)
-                        .foreach(BlockStats.declined(_, BlockStats.Source.Ext))
 
                       if (i == 0) log.warn(s"Can't process fork starting with $lastCommonBlockId, error appending block $declinedBlock: $e")
                       else
@@ -91,14 +89,6 @@ object ExtensionAppender extends ScorexLogging with Instrumented {
 
                     case Right(_) =>
                       val depth = initialHeight - commonBlockHeight
-                      if (depth > 0) {
-                        Metrics.write(
-                          Point
-                            .measurement("rollback")
-                            .addField("depth", initialHeight - commonBlockHeight)
-                            .addField("txs", droppedBlocks.size)
-                        )
-                      }
                       droppedBlocks.flatMap(_.transactionData).foreach(utxStorage.putIfNew)
                       Right(Some(blockchainUpdater.score))
                   }
@@ -111,7 +101,6 @@ object ExtensionAppender extends ScorexLogging with Instrumented {
         }
       }).executeOn(scheduler)
 
-    extensionBlocks.foreach(BlockStats.received(_, BlockStats.Source.Ext, ch))
     processAndBlacklistOnFailure(
       ch,
       peerDatabase,

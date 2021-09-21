@@ -19,7 +19,6 @@ import com.ltonetwork.database.Keys
 import com.ltonetwork.features.api.ActivationApiRoute
 import com.ltonetwork.history.{CheckpointServiceImpl, StorageFactory}
 import com.ltonetwork.http.{DebugApiRoute, NodeApiRoute}
-import com.ltonetwork.metrics.Metrics
 import com.ltonetwork.mining.{Miner, MinerImpl}
 import com.ltonetwork.network.RxExtensionLoader.RxExtensionLoaderShutdownHook
 import com.ltonetwork.network._
@@ -32,13 +31,11 @@ import com.ltonetwork.wallet.Wallet
 import io.netty.channel.Channel
 import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
-import kamon.Kamon
 import monix.eval.{Coeval, Task}
 import monix.execution.Scheduler._
 import monix.execution.schedulers.SchedulerService
 import monix.reactive.Observable
 import monix.reactive.subjects.ConcurrentSubject
-import org.influxdb.dto.Point
 import org.slf4j.bridge.SLF4JBridgeHandler
 
 import scala.concurrent.Await
@@ -280,8 +277,6 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
 
     //on unexpected shutdown
     sys.addShutdownHook {
-      Kamon.shutdown()
-      Metrics.shutdown()
       shutdown(utxStorage, network)
     }
   }
@@ -394,27 +389,9 @@ object Application extends ScorexLogging {
     }
 
     val settings = LtoSettings.fromConfig(config)
-    Kamon.start(config)
-    val isMetricsStarted = Metrics.start(settings.metrics)
 
     RootActorSystem.start("ltonetwork", config) { actorSystem =>
       import actorSystem.dispatcher
-      isMetricsStarted.foreach { started =>
-        if (started) {
-          import settings.synchronizationSettings.microBlockSynchronizer
-          import settings.{minerSettings => miner}
-
-          Metrics.write(
-            Point
-              .measurement("config")
-              .addField("miner-micro-block-interval", miner.microBlockInterval.toMillis)
-              .addField("miner-max-transactions-in-key-block", miner.maxTransactionsInKeyBlock)
-              .addField("miner-max-transactions-in-micro-block", miner.maxTransactionsInMicroBlock)
-              .addField("miner-min-micro-block-age", miner.minMicroBlockAge.toMillis)
-              .addField("mbs-wait-response-timeout", microBlockSynchronizer.waitResponseTimeout.toMillis)
-          )
-        }
-      }
 
       // Initialize global var with actual address scheme
       AddressScheme.current = new AddressScheme {

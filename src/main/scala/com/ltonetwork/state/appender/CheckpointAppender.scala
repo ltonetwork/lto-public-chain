@@ -6,7 +6,6 @@ import com.ltonetwork.state.{Blockchain, ByteStr}
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel.Channel
 import io.netty.channel.group.ChannelGroup
-import kamon.Kamon
 import monix.eval.Task
 import monix.execution.Scheduler
 import com.ltonetwork.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
@@ -55,13 +54,8 @@ object CheckpointAppender extends ScorexLogging {
       val hh                 = existingItems.map(_.height) :+ genesisBlockHeight
       blockchain.blockAt(hh(fork.size)).foreach { lastValidBlock =>
         log.warn(s"Fork detected (length = ${fork.size}), rollback to last valid block $lastValidBlock]")
-        blockBlockForkStats.increment()
-        blockForkHeightStats.record(fork.size)
         blockchainUpdater.removeAfter(lastValidBlock.uniqueId)
       }
     }
   }
-
-  private val blockBlockForkStats  = Kamon.metrics.counter("block-fork")
-  private val blockForkHeightStats = Kamon.metrics.histogram("block-fork-height")
 }

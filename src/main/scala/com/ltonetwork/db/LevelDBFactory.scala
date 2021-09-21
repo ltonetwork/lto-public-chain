@@ -4,9 +4,9 @@ import com.ltonetwork.utils.ScorexLogging
 import org.iq80.leveldb.DBFactory
 
 object LevelDBFactory extends ScorexLogging {
-  private val nativeFactory = "org.fusesource.leveldbjni.JniDBFactory"
+  private val nativeFactory     = "org.fusesource.leveldbjni.JniDBFactory"
   private val appleArm64Factory = "com.ltonetwork.leveldbjni.JniDBFactory"
-  private val javaFactory   = "org.iq80.leveldb.impl.Iq80DBFactory"
+  private val javaFactory       = "org.iq80.leveldb.impl.Iq80DBFactory"
 
   lazy val factory: DBFactory = load
 

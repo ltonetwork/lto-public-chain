@@ -3,7 +3,6 @@ package com.ltonetwork.state.diffs.smart.performance
 import com.ltonetwork.lang.v1.compiler.Terms._
 import com.ltonetwork.lang.v1.compiler.CompilerV1
 import com.ltonetwork.lang.v1.parser.Parser
-import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.state._
 import com.ltonetwork.utils._
 import com.ltonetwork.state.diffs._
@@ -62,10 +61,6 @@ class SigVerifyPerformanceTest extends PropSpec with PropertyChecks with Matcher
           assertDiffAndState(Seq(TestBlock.create(Seq(gen, setScript))), TestBlock.create(scriptTransfers), smartEnabledFS) {
             case _ =>
           }
-
-        val simeplCheckTime   = Instrumented.withTime(simpleCheck())._2
-        val scriptedCheckTime = Instrumented.withTime(scriptedCheck())._2
-        println(s"[parallel] simple check time: $simeplCheckTime ms,\t [seqential] scripted check time: $scriptedCheckTime ms")
     }
 
   }

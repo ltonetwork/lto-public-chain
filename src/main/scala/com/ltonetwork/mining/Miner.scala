@@ -4,16 +4,12 @@ import cats.data.EitherT
 import cats.implicits._
 import com.ltonetwork.consensus.{GeneratingBalanceProvider, PoSSelector}
 import com.ltonetwork.features.BlockchainFeatures
-import com.ltonetwork.features.FeatureProvider._
-import com.ltonetwork.metrics.{BlockStats, HistogramExt, Instrumented}
 import com.ltonetwork.network._
 import com.ltonetwork.settings.{FunctionalitySettings, LtoSettings}
 import com.ltonetwork.state._
 import com.ltonetwork.state.appender.{BlockAppender, MicroblockAppender}
 import com.ltonetwork.utx.UtxPool
 import io.netty.channel.group.ChannelGroup
-import kamon.Kamon
-import kamon.metric.instrument
 import monix.eval.Task
 import monix.execution.cancelables.{CompositeCancelable, SerialCancelable}
 import monix.execution.schedulers.SchedulerService
@@ -65,8 +61,7 @@ class MinerImpl(allChannels: ChannelGroup,
                 val appenderScheduler: SchedulerService)
     extends Miner
     with MinerDebugInfo
-    with ScorexLogging
-    with Instrumented {
+    with ScorexLogging{
 
   import Miner._
 
@@ -78,9 +73,6 @@ class MinerImpl(allChannels: ChannelGroup,
 
   private val scheduledAttempts = SerialCancelable()
   private val microBlockAttempt = SerialCancelable()
-
-  private val blockBuildTimeStats      = Kamon.metrics.histogram("pack-and-forge-block-time", instrument.Time.Milliseconds)
-  private val microBlockBuildTimeStats = Kamon.metrics.histogram("forge-microblock-time", instrument.Time.Milliseconds)
 
   private val nextBlockGenerationTimes: MMap[Address, Long] = MMap.empty
 
@@ -141,27 +133,24 @@ class MinerImpl(allChannels: ChannelGroup,
     val refBlockID          = referencedBlockInfo.blockId
     lazy val currentTime    = timeService.correctedTime()
     lazy val blockDelay     = currentTime - lastBlock.timestamp
-    measureSuccessful(
-      blockBuildTimeStats,
-      for {
-        _ <- checkQuorumAvailable()
-        validBlockDelay <- pos
-          .getValidBlockDelay(height, account.publicKey, refBlockBT, balance)
-          .leftMap(_.toString)
-          .ensure(s"$currentTime: Block delay $blockDelay was NOT less than estimated delay")(_ < blockDelay)
-        _ = log.debug(
-          s"Forging with ${account.address}, Time $blockDelay > Estimated Time $validBlockDelay, balance $balance, prev block $refBlockID")
-        _ = log.debug(s"Previous block ID $refBlockID at $height with target $refBlockBT")
-        consensusData <- consensusData(height, account, lastBlock, refBlockBT, refBlockTS, balance, currentTime)
-        estimators                         = MiningConstraints(minerSettings, blockchainUpdater, height)
-        mdConstraint                       = MultiDimensionalMiningConstraint(estimators.total, estimators.keyBlock)
-        (unconfirmed, updatedMdConstraint) = utx.packUnconfirmed(mdConstraint, false)
-        _                                  = log.debug(s"Adding ${unconfirmed.size} unconfirmed transaction(s) to new block")
-        block <- Block
-          .buildAndSign(version.toByte, currentTime, refBlockID, consensusData, unconfirmed, account, blockFeatures(version))
-          .leftMap(_.err)
-      } yield (estimators, block, updatedMdConstraint.constraints.head)
-    )
+    for {
+      _ <- checkQuorumAvailable()
+      validBlockDelay <- pos
+        .getValidBlockDelay(height, account.publicKey, refBlockBT, balance)
+        .leftMap(_.toString)
+        .ensure(s"$currentTime: Block delay $blockDelay was NOT less than estimated delay")(_ < blockDelay)
+      _ = log.debug(
+        s"Forging with ${account.address}, Time $blockDelay > Estimated Time $validBlockDelay, balance $balance, prev block $refBlockID")
+      _ = log.debug(s"Previous block ID $refBlockID at $height with target $refBlockBT")
+      consensusData <- consensusData(height, account, lastBlock, refBlockBT, refBlockTS, balance, currentTime)
+      estimators                         = MiningConstraints(minerSettings, blockchainUpdater, height)
+      mdConstraint                       = MultiDimensionalMiningConstraint(estimators.total, estimators.keyBlock)
+      (unconfirmed, updatedMdConstraint) = utx.packUnconfirmed(mdConstraint, false)
+      _                                  = log.debug(s"Adding ${unconfirmed.size} unconfirmed transaction(s) to new block")
+      block <- Block
+        .buildAndSign(version.toByte, currentTime, refBlockID, consensusData, unconfirmed, account, blockFeatures(version))
+        .leftMap(_.err)
+    } yield (estimators, block, updatedMdConstraint.constraints.head)
   }
 
   private def checkQuorumAvailable(): Either[String, Unit] = {
@@ -191,7 +180,7 @@ class MinerImpl(allChannels: ChannelGroup,
       log.trace(s"Skipping microBlock because utx is empty")
       Task.now(Retry)
     } else {
-      val (unconfirmed, updatedTotalConstraint) = measureLog("packing unconfirmed transactions for microblock") {
+      val (unconfirmed, updatedTotalConstraint) = {
         val mdConstraint                       = MultiDimensionalMiningConstraint(restTotalConstraint, constraints.micro)
         val (unconfirmed, updatedMdConstraint) = utx.packUnconfirmed(mdConstraint, sortInBlock = false)
         (unconfirmed, updatedMdConstraint.constraints.head)
@@ -219,12 +208,10 @@ class MinerImpl(allChannels: ChannelGroup,
             ))
           microBlock <- EitherT.fromEither[Task](
             MicroBlock.buildAndSign(account, unconfirmed, accumulatedBlock.signerData.signature, signedBlock.signerData.signature))
-          _ = microBlockBuildTimeStats.safeRecord(System.currentTimeMillis() - start)
           _ <- EitherT(MicroblockAppender(checkpoint, blockchainUpdater, utx, appenderScheduler)(microBlock))
         } yield (microBlock, signedBlock)).value map {
           case Left(err) => Error(err)
           case Right((microBlock, signedBlock)) =>
-            BlockStats.mined(microBlock)
             allChannels.broadcast(MicroBlockInv(account, microBlock.totalResBlockSig, microBlock.prevResBlockSig))
             if (updatedTotalConstraint.isEmpty) {
               log.trace(s"$microBlock has been mined for $account. Stop forging microBlocks, the block is full: $updatedTotalConstraint")
@@ -312,7 +299,6 @@ class MinerImpl(allChannels: ChannelGroup,
                   scheduleMining()
                 case Right(Some(score)) =>
                   log.debug(s"Forged and applied $block by ${account.address} with cumulative score $score")
-                  BlockStats.mined(block, blockchainUpdater.height)
                   allChannels.broadcast(BlockForged(block))
                   scheduleMining()
                   if (!totalConstraint.isEmpty) startMicroBlockMining(account, block, estimators, totalConstraint)
@@ -331,7 +317,6 @@ class MinerImpl(allChannels: ChannelGroup,
   }
 
   def scheduleMining(): Unit = {
-    Miner.blockMiningStarted.increment()
     val nonScriptedAccounts = wallet.privateKeyAccounts.filterNot(blockchainUpdater.hasScript(_))
     scheduledAttempts := CompositeCancelable.fromSet(nonScriptedAccounts.map(generateBlockTask).map(_.runAsyncLogErr).toSet)
     microBlockAttempt := SerialCancelable()
@@ -343,7 +328,6 @@ class MinerImpl(allChannels: ChannelGroup,
                                     constraints: MiningConstraints,
                                     restTotalConstraint: MiningConstraint): Unit = {
     log.info(s"Start mining microblocks")
-    Miner.microMiningStarted.increment()
     microBlockAttempt := generateMicroBlockSequence(account, lastBlock, Duration.Zero, constraints, restTotalConstraint).runAsyncLogErr
     log.trace(s"MicroBlock mining scheduled for $account")
   }
@@ -352,9 +336,6 @@ class MinerImpl(allChannels: ChannelGroup,
 }
 
 object Miner {
-  val blockMiningStarted = Kamon.metrics.counter("block-mining-started")
-  val microMiningStarted = Kamon.metrics.counter("micro-mining-started")
-
   val MaxTransactionsPerMicroblock: Int = 500
 
   val Disabled = new Miner with MinerDebugInfo {

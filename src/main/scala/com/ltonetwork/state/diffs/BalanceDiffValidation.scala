@@ -1,7 +1,6 @@
 package com.ltonetwork.state.diffs
 
 import cats.implicits._
-import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state.{Blockchain, ByteStr, Diff, LeaseBalance, Portfolio}
 import com.ltonetwork.account.Address
@@ -10,7 +9,7 @@ import com.ltonetwork.transaction.ValidationError.AccountBalanceError
 
 import scala.util.{Left, Right}
 
-object BalanceDiffValidation extends ScorexLogging with Instrumented {
+object BalanceDiffValidation extends ScorexLogging {
 
   def apply(b: Blockchain, currentHeight: Int, fs: FunctionalitySettings)(d: Diff): Either[AccountBalanceError, Diff] = {
 

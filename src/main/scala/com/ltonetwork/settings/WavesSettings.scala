@@ -1,7 +1,6 @@
 package com.ltonetwork.settings
 
 import com.typesafe.config.Config
-import com.ltonetwork.metrics.Metrics
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 
@@ -18,8 +17,7 @@ case class LtoSettings(directory: String,
                        restAPISettings: RestAPISettings,
                        synchronizationSettings: SynchronizationSettings,
                        utxSettings: UtxSettings,
-                       featuresSettings: FeaturesSettings,
-                       metrics: Metrics.Settings)
+                       featuresSettings: FeaturesSettings)
 
 object LtoSettings {
 
@@ -42,7 +40,6 @@ object LtoSettings {
     val synchronizationSettings = SynchronizationSettings.fromConfig(config)
     val utxSettings             = config.as[UtxSettings]("lto.utx")
     val featuresSettings        = config.as[FeaturesSettings]("lto.features")
-    val metrics                 = config.as[Metrics.Settings]("metrics")
 
     LtoSettings(
       directory,
@@ -58,8 +55,7 @@ object LtoSettings {
       restAPISettings,
       synchronizationSettings,
       utxSettings,
-      featuresSettings,
-      metrics
+      featuresSettings
     )
   }
 }

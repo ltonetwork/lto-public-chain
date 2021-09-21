@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentHashMap
 import cats._
 import com.ltonetwork.account.Address
 import com.ltonetwork.consensus.TransactionsOrdering
-import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.mining.MultiDimensionalMiningConstraint
 import com.ltonetwork.settings.{FunctionalitySettings, UtxSettings}
 import com.ltonetwork.state.diffs.TransactionDiffer
@@ -15,8 +14,6 @@ import com.ltonetwork.transaction.ValidationError.{GenericError, SenderIsBlackli
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.{ScorexLogging, Time}
-import kamon.Kamon
-import kamon.metric.instrument.{Time => KamonTime}
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.execution.schedulers.SchedulerService
@@ -27,7 +24,6 @@ import scala.util.{Left, Right}
 
 class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculator, fs: FunctionalitySettings, utxSettings: UtxSettings)
     extends ScorexLogging
-    with Instrumented
     with AutoCloseable
     with UtxPool {
   outer =>
@@ -36,11 +32,11 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
 
   private implicit val scheduler: SchedulerService = Scheduler.singleThread("utx-pool-cleanup")
 
-  private val transactions          = new ConcurrentHashMap[ByteStr, Transaction]()
+  private val transactions = new ConcurrentHashMap[ByteStr, Transaction]()
   private val pessimisticPortfolios = new PessimisticPortfolios
 
   private val removeInvalid = Task {
-    val b                    = blockchain
+    val b = blockchain
     val transactionsToRemove = transactions.values.asScala.filter(t => b.containsTransaction(t.id()))
     removeAll(transactionsToRemove)
   }.delayExecution(utxSettings.cleanupInterval)
@@ -52,10 +48,6 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
     scheduler.shutdown()
   }
 
-  private val utxPoolSizeStats    = Kamon.metrics.minMaxCounter("utx-pool-size", 500.millis)
-  private val processingTimeStats = Kamon.metrics.histogram("utx-transaction-processing-time", KamonTime.Milliseconds)
-  private val putRequestStats     = Kamon.metrics.counter("utx-pool-put-if-new")
-
   private def removeExpired(currentTs: Long): Unit = {
     def isExpired(tx: Transaction) = (currentTs - tx.timestamp).millis > utxSettings.maxTransactionAge
 
@@ -64,7 +56,6 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
       .foreach { tx =>
         transactions.remove(tx.id())
         pessimisticPortfolios.remove(tx.id())
-        utxPoolSizeStats.decrement()
       }
   }
 
@@ -76,15 +67,15 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
     } else {
       val sender: Option[String] = tx match {
         case x: Transaction => Some(x.sender.address)
-        case _              => None
+        case _ => None
       }
 
       sender match {
         case Some(addr) if utxSettings.blacklistSenderAddresses.contains(addr) =>
           val recipients = tx match {
-            case tt: TransferTransaction      => Seq(tt.recipient)
+            case tt: TransferTransaction => Seq(tt.recipient)
             case mtt: MassTransferTransaction => mtt.transfers.map(_.address)
-            case _                            => Seq()
+            case _ => Seq()
           }
           val allowed =
             recipients.nonEmpty &&
@@ -97,7 +88,6 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
 
   override def removeAll(txs: Traversable[Transaction]): Unit = {
     txs.view.map(_.id()).foreach { id =>
-      Option(transactions.remove(id)).foreach(_ => utxPoolSizeStats.decrement())
       pessimisticPortfolios.remove(id)
     }
 
@@ -118,7 +108,7 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
   override def packUnconfirmed(rest: MultiDimensionalMiningConstraint, sortInBlock: Boolean): (Seq[Transaction], MultiDimensionalMiningConstraint) = {
     val currentTs = time.correctedTime()
     removeExpired(currentTs)
-    val b      = blockchain
+    val b = blockchain
     val differ = TransactionDiffer(fs, blockchain.lastBlockTimestamp, currentTs, b.height) _
     val (invalidTxs, reversedValidTxs, _, finalConstraint, _) = transactions.values.asScala.toSeq
       .sorted(TransactionsOrdering.InUTXPool)
@@ -126,7 +116,7 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
       .scanLeft((Seq.empty[ByteStr], Seq.empty[Transaction], Monoid[Diff].empty, rest, false)) {
         case ((invalid, valid, diff, currRest, isEmpty), tx) =>
           val updatedBlockchain = composite(b, diff, 0)
-          val updatedRest       = currRest.put(updatedBlockchain, tx)
+          val updatedRest = currRest.put(updatedBlockchain, tx)
           if (updatedRest.isOverfilled) {
             (invalid, valid, diff, currRest, isEmpty)
           } else {
@@ -156,21 +146,15 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
   }
 
   private def putIfNew(b: Blockchain, tx: Transaction): Either[ValidationError, (Boolean, Diff)] = {
-    putRequestStats.increment()
-    measureSuccessful(
-      processingTimeStats, {
-        for {
-          _    <- Either.cond(transactions.size < utxSettings.maxSize, (), GenericError("Transaction pool size limit is reached"))
-          _    <- checkNotBlacklisted(tx)
-          _    <- feeCalculator.enoughFee(tx, blockchain, fs)
-          diff <- TransactionDiffer(fs, blockchain.lastBlockTimestamp, time.correctedTime(), blockchain.height)(b, tx)
-        } yield {
-          utxPoolSizeStats.increment()
-          pessimisticPortfolios.add(tx.id(), diff)
-          (Option(transactions.put(tx.id(), tx)).isEmpty, diff)
-        }
-      }
-    )
+    for {
+      _ <- Either.cond(transactions.size < utxSettings.maxSize, (), GenericError("Transaction pool size limit is reached"))
+      _ <- checkNotBlacklisted(tx)
+      _ <- feeCalculator.enoughFee(tx, blockchain, fs)
+      diff <- TransactionDiffer(fs, blockchain.lastBlockTimestamp, time.correctedTime(), blockchain.height)(b, tx)
+    } yield {
+      pessimisticPortfolios.add(tx.id(), diff)
+      (Option(transactions.put(tx.id(), tx)).isEmpty, diff)
+    }
   }
 }
 

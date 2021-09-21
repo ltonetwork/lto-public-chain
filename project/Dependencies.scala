@@ -13,14 +13,10 @@ object Dependencies {
 
   def nettyModule(module: String) = "io.netty" % s"netty-$module" % "4.1.24.Final"
 
-//  def kamonModule(v: String)(module: String) = "io.kamon" %% s"kamon-$module" % v
-
   val asyncHttpClient = "org.asynchttpclient" % "async-http-client" % "2.4.7"
 
   lazy val network = Seq("handler", "buffer", "codec").map(nettyModule) ++ Seq(
     "org.bitlet" % "weupnp" % "0.1.4",
-    // Solves an issue with kamon-influxdb
-    asyncHttpClient.exclude("io.netty", "netty-handler")
   )
 
   lazy val testKit = scalatest ++ Seq(
@@ -74,17 +70,6 @@ object Dependencies {
     "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8",
     "com.ltonetwork" % "leveldbjni.leveldbjni-osx" % "latest.integration"
   )
-
-  lazy val metrics = {
-      Seq(
-        "io.kamon" %% "kamon-core" % "2.2.3",
-        "io.kamon" %% "kamon-akka" % "2.2.3",
-        "io.kamon" %% "kamon-system-metrics" % "2.2.3",
-        "io.kamon" %% "kamon-influxdb" % "2.2.3",
-        "org.influxdb" % "influxdb-java"    % "2.7",
-        "io.kamon"     %% "kamon-autoweave" % "0.6.5"
-      )
-  }.map(_.exclude("org.asynchttpclient", "async-http-client"))
 
   lazy val fp = Seq(
     "org.typelevel"       %% "cats-core"       % "1.1.0",

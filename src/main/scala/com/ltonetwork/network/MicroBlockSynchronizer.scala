@@ -3,7 +3,6 @@ package com.ltonetwork.network
 import java.util.concurrent.TimeUnit
 
 import com.google.common.cache.{Cache, CacheBuilder}
-import com.ltonetwork.metrics.BlockStats
 import com.ltonetwork.settings.SynchronizationSettings.MicroblockSynchronizerSettings
 import com.ltonetwork.state.ByteStr
 import io.netty.channel._
@@ -80,7 +79,6 @@ object MicroBlockSynchronizer {
               case Right(_) =>
                 microBlockOwners.get(totalSig, () => MSet.empty) += ch
                 nextInvs.get(prevSig, { () =>
-                  BlockStats.inv(mbInv, ch)
                   mbInv
                 })
                 lastBlockId()
@@ -97,7 +95,6 @@ object MicroBlockSynchronizer {
       case ((ch, MicroBlockResponse(mb))) =>
         import mb.{totalResBlockSig => totalSig}
         successfullyReceived.put(totalSig, dummy)
-        BlockStats.received(mb, ch)
         Option(awaiting.getIfPresent(totalSig)) match {
           case None => Observable.empty
           case Some(mi) =>

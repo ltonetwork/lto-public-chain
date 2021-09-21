@@ -1,6 +1,5 @@
 package com.ltonetwork.lagonaki.unit
 
-import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.produce
 import com.ltonetwork.{NoShrink, TransactionGen, crypto}
@@ -113,18 +112,6 @@ class BlockSpecification extends PropSpec with PropertyChecks with TransactionGe
         assert(parsedBlock.version.toInt == version)
         assert(parsedBlock.signerData.generator.publicKey.sameElements(recipient.publicKey))
         assert(parsedBlock.featureVotes == featureVotes)
-    }
-  }
-
-  ignore("sign time for 60k txs") {
-    forAll(randomTransactionsGen(60000), accountGen, byteArrayGen(Block.BlockIdLength), byteArrayGen(Block.GeneratorSignatureLength)) {
-      case ((txs, acc, ref, gs)) =>
-        val (block, t0) =
-          Instrumented.withTime(Block.buildAndSign(3, 1, ByteStr(ref), NxtLikeConsensusBlockData(1, ByteStr(gs)), txs, acc, Set.empty).explicitGet())
-        val (bytes, t1) = Instrumented.withTime(block.bytesWithoutSignature())
-        val (hash, t2)  = Instrumented.withTime(crypto.fastHash(bytes))
-        val (sig, t3)   = Instrumented.withTime(crypto.sign(acc, hash))
-        println((t0, t1, t2, t3))
     }
   }
 

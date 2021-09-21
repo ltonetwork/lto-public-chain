@@ -7,7 +7,6 @@ import com.ltonetwork.account.Address
 import com.ltonetwork.block.Block.CurrentBlockFeePart
 import com.ltonetwork.block.{Block, MicroBlock}
 import com.ltonetwork.features.BlockchainFeatures
-import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.mining.MiningConstraint
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
@@ -15,7 +14,7 @@ import com.ltonetwork.state.reader.CompositeBlockchain.composite
 import com.ltonetwork.transaction.{Transaction, ValidationError}
 import com.ltonetwork.utils._
 
-object BlockDiffer extends ScorexLogging with Instrumented {
+object BlockDiffer extends ScorexLogging {
 
   val feeBurnAmt: Long = 0.1.lto
   val feeBurnPct       = 0.2

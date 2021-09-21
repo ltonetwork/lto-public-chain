@@ -255,7 +255,6 @@ lazy val node = project
         Dependencies.testKit.map(_ % "test") ++
         Dependencies.logging ++
         Dependencies.matcher ++
-        Dependencies.metrics ++
         Dependencies.fp ++
         Dependencies.meta ++
         Dependencies.ficus ++

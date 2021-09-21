@@ -5,7 +5,6 @@ import java.nio.channels.ClosedChannelException
 import java.util.concurrent.ConcurrentHashMap
 
 import com.ltonetwork.Version
-import com.ltonetwork.metrics.Metrics
 import com.ltonetwork.network.MessageObserver.Messages
 import com.ltonetwork.settings._
 import com.ltonetwork.state.NG
@@ -20,7 +19,6 @@ import io.netty.channel.socket.nio.{NioServerSocketChannel, NioSocketChannel}
 import io.netty.handler.codec.{LengthFieldBasedFrameDecoder, LengthFieldPrepender}
 import io.netty.util.concurrent.DefaultThreadFactory
 import monix.reactive.Observable
-import org.influxdb.dto.Point
 import com.ltonetwork.transaction._
 
 import scala.collection.JavaConverters._
@@ -220,13 +218,6 @@ object NetworkServer extends ScorexLogging {
           .foreach(doConnect)
       }
 
-      Metrics.write(
-        Point
-          .measurement("connections")
-          .addField("outgoing", outgoingStr)
-          .addField("incoming", incomingStr)
-          .addField("n", all.size)
-      )
     }
 
     def doShutdown(): Unit =

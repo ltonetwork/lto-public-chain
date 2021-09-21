@@ -6,7 +6,6 @@ import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.block.{Block, BlockHeader, MicroBlock}
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.features.FeatureProvider._
-import com.ltonetwork.metrics.{Instrumented, TxsInBlockchainStats}
 import com.ltonetwork.mining.{MiningConstraint, MiningConstraints, MultiDimensionalMiningConstraint}
 import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state.diffs.BlockDiffer
@@ -17,15 +16,13 @@ import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAsso
 import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.utils.{ScorexLogging, Time, UnsupportedFeature, forceStopApplication}
-import kamon.Kamon
 import monix.reactive.Observable
 import monix.reactive.subjects.ConcurrentSubject
 
 class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time: Time)
     extends BlockchainUpdater
     with NG
-    with ScorexLogging
-    with Instrumented {
+    with ScorexLogging {
 
   import com.ltonetwork.state.BlockchainUpdaterImpl._
   import settings.blockchainSettings.functionalitySettings
@@ -153,15 +150,10 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
                   s"Competitors liquid block $block(score=${block.blockScore()}) is not better than existing (ng.base ${ng.base}(score=${ng.base.blockScore()}))",
                   block))
             } else
-              measureSuccessful(forgeBlockTimeStats, ng.totalDiffOf(block.reference)) match {
+              ng.totalDiffOf(block.reference) match {
                 case None => Left(BlockAppendError(s"References incorrect or non-existing block", block))
                 case Some((referencedForgedBlock, referencedLiquidDiff, carry, discarded)) =>
                   if (referencedForgedBlock.signaturesValid().isRight) {
-                    if (discarded.nonEmpty) {
-                      microBlockForkStats.increment()
-                      microBlockForkHeightStats.record(discarded.size)
-                    }
-
                     val constraint: MiningConstraint = {
                       val height            = blockchain.heightOf(referencedForgedBlock.reference).getOrElse(0)
                       val miningConstraints = MiningConstraints(settings.minerSettings, blockchain, height)
@@ -186,7 +178,6 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
 
                     diff.map { hardenedDiff =>
                       blockchain.append(referencedLiquidDiff, carry, referencedForgedBlock)
-                      TxsInBlockchainStats.record(ng.transactions.size)
                       Some((hardenedDiff, discarded.flatMap(_.transactionData)))
                     }
                   } else {
@@ -232,10 +223,8 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
       case Some(ng) =>
         ng.lastMicroBlock match {
           case None if ng.base.uniqueId != microBlock.prevResBlockSig =>
-            blockMicroForkStats.increment()
             Left(MicroBlockAppendError("It's first micro and it doesn't reference base block(which exists)", microBlock))
           case Some(prevMicro) if prevMicro.totalResBlockSig != microBlock.prevResBlockSig =>
-            microMicroForkStats.increment()
             Left(MicroBlockAppendError("It doesn't reference last known microBlock(which exists)", microBlock))
           case _ =>
             for {
@@ -553,14 +542,6 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
 }
 
 object BlockchainUpdaterImpl extends ScorexLogging {
-
-  import kamon.metric.instrument.{Time => KTime}
-
-  private val blockMicroForkStats       = Kamon.metrics.counter("block-micro-fork")
-  private val microMicroForkStats       = Kamon.metrics.counter("micro-micro-fork")
-  private val microBlockForkStats       = Kamon.metrics.counter("micro-block-fork")
-  private val microBlockForkHeightStats = Kamon.metrics.histogram("micro-block-fork-height")
-  private val forgeBlockTimeStats       = Kamon.metrics.histogram("forge-block-time", KTime.Milliseconds)
 
   def areVersionsOfSameBlock(b1: Block, b2: Block): Boolean =
     b1.signerData.generator == b2.signerData.generator &&
