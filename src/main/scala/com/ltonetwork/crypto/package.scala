@@ -8,9 +8,9 @@ package object crypto {
   val signatureLength: Int = 64 //Curve25519
   val keyLength: Int       = 32 //Curve25519
   val digestLength: Int    = 32
-  val secp256k1: ECDSA = new ECDSA("secp256k1")
-  val secp256r1: ECDSA = new ECDSA("secp256r1")
-  val ed25519: Ed25519 = new Ed25519()
+  val secp256k1: ECDSA     = new ECDSA("secp256k1")
+  val secp256r1: ECDSA     = new ECDSA("secp256r1")
+  val ed25519: Ed25519     = new Ed25519()
 
   def fastHash(m: Array[Byte]): Array[Byte]   = Blake2b256.hash(m).getBytes
   def fastHash(s: String): Array[Byte]        = fastHash(s.getBytes())
