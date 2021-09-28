@@ -15,6 +15,7 @@ import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.burn.BurnTransaction
+import com.ltonetwork.transaction.claim.ClaimTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
@@ -401,6 +402,7 @@ trait TransactionGenBase extends ScriptGen {
       lease = LeaseTransaction.signed(2, timestamp, master, fee, recipient, ENOUGH_AMT / 2).explicitGet()
     } yield (genesis, setScript, lease, transfer)
 
+<<<<<<< HEAD
   def anchorTransactionGen: Gen[AnchorTransaction]                = versionGen(AnchorTransaction).flatMap(anchorTransactionGen)
   def anchorTransactionGen(version: Byte): Gen[AnchorTransaction] = anchorTransactionGen(version, ED25519)
   def anchorTransactionGen(version: Byte, keyType: KeyType): Gen[AnchorTransaction] =
@@ -446,6 +448,55 @@ trait TransactionGenBase extends ScriptGen {
       hashOpt <- Gen.option(genBoundedBytes(minSubjectLength, RevokeAssociationTransaction.MaxSubjectLength).map(ByteStr(_)))
       sponsor <- sponsorGen(version)
     } yield RevokeAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, hashOpt).sponsorWith(sponsor).explicitGet()
+
+  def anchorTransactionGen: Gen[AnchorTransaction] = versionGen(AnchorTransaction).flatMap(anchorTransactionGen)
+  def anchorTransactionGen(version: Byte): Gen[AnchorTransaction] = for {
+    sender <- accountGen
+    timestamp <- timestampGen
+    size <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
+    len <- Gen.oneOf(AnchorTransaction.EntryLength)
+    data <- Gen.listOfN(size, genBoundedBytes(len, len))
+    sponsor <- sponsorGen(version)
+    fee = 15000000
+    anchors = data.map(ByteStr(_))
+  } yield AnchorTransaction.signed(version, timestamp, sender, fee, anchors).sponsorWith(sponsor).explicitGet()
+
+  def claimTransactionGen: Gen[ClaimTransaction] = versionGen(ClaimTransaction).flatMap(claimTransactionGen)
+  def claimTransactionGen(version: Byte): Gen[ClaimTransaction] = for {
+    sender <- accountGen
+    timestamp <- timestampGen
+    size <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
+    len <- Gen.oneOf(AnchorTransaction.EntryLength)
+    data <- Gen.listOfN(size, genBoundedBytes(len, len))
+    sponsor <- sponsorGen(version)
+    fee = 15000000
+    anchors = data.map(ByteStr(_))
+  } yield ClaimTransaction.signed(version, timestamp, sender, fee, anchors).sponsorWith(sponsor).explicitGet()
+
+  def issueAssocTransactionGen: Gen[IssueAssociationTransaction] = versionGen(IssueAssociationTransaction).flatMap(issueAssocTransactionGen)
+  def issueAssocTransactionGen(version: Byte): Gen[IssueAssociationTransaction] = for {
+    sender <- accountGen
+    timestamp <- timestampGen
+    recipient <- accountGen
+    assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
+    expires   <- if (version < 3) Gen.const(None) else Gen.option(timestampGen)
+    fee <- smallFeeGen
+    minHashLength = if (version < 3) 0 else 1
+    hashOpt <- Gen.option(genBoundedBytes(minHashLength, IssueAssociationTransaction.MaxHashLength).map(ByteStr(_)))
+    sponsor <- sponsorGen(version)
+  } yield IssueAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, expires, hashOpt).sponsorWith(sponsor).explicitGet()
+
+  def revokeAssocTransactionGen: Gen[RevokeAssociationTransaction] = versionGen(RevokeAssociationTransaction).flatMap(revokeAssocTransactionGen)
+  def revokeAssocTransactionGen(version: Byte): Gen[RevokeAssociationTransaction] = for {
+    sender <- accountGen
+    timestamp <- timestampGen
+    recipient <- accountGen
+    assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
+    fee <- smallFeeGen
+    minHashLength = if (version < 3) 0 else 1
+    hashOpt <- Gen.option(genBoundedBytes(minHashLength, RevokeAssociationTransaction.MaxHashLength).map(ByteStr(_)))
+    sponsor <- sponsorGen(version)
+  } yield RevokeAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, hashOpt).sponsorWith(sponsor).explicitGet()
 
   def assocTransactionGen: Gen[AssociationTransaction] = Gen.oneOf(issueAssocTransactionGen, revokeAssocTransactionGen)
 
