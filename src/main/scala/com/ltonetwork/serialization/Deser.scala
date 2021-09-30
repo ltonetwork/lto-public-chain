@@ -49,11 +49,14 @@ object Deser {
     r
   }
 
-  def serializeOption[T](b: Option[T])(ser: T => Array[Byte]): Array[Byte] = b.map(a => (1: Byte) +: serializeArray(ser(a))).getOrElse(Array(0: Byte))
+  def serializeOption[T](b: Option[T])(ser: T => Array[Byte]): Array[Byte] = b.map(a => (1: Byte) +: ser(a)).getOrElse(Array(0: Byte))
 
   def serializeArrays(bs: Seq[Array[Byte]]): Array[Byte] = Shorts.toByteArray(bs.length.toShort) ++ Bytes.concat(bs.map(serializeArray): _*)
 
   def serializeArraysWithoutLength(bs: Seq[Array[Byte]]): Array[Byte] = Bytes.concat(bs: _*)
+
+  def serializeList[T](list: List[T])(ser: T => Array[Byte]): Array[Byte] =
+    Shorts.toByteArray(list.length.toShort) ++ list.map(ser(_)).reduceOption((a, b) => a ++ b).getOrElse(Array.emptyByteArray)
 
   def serializeAccount(account: PublicKeyAccount): Array[Byte] = Bytes.concat(Array(account.keyType.id), account.publicKey)
 }

@@ -1,7 +1,7 @@
 package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
-import com.ltonetwork.account.PublicKeyAccount
+import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.ClaimRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.claim.ClaimTransaction
@@ -22,9 +22,8 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
     parsed.fee shouldEqual tx.fee
     parsed.sponsor shouldEqual tx.sponsor
 
-    parsed.anchors.zip(tx.anchors).foreach {
-      case (r, t) =>
-        r shouldEqual t
+    parsed.related.zip(tx.related).foreach {
+      case (r, t) => r shouldEqual t
     }
 
     parsed.bytes() shouldEqual tx.bytes()
@@ -55,33 +54,30 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
       req.timestamp should be ('defined)
       req.timestamp.get shouldEqual tx.timestamp
 
-      req.anchors zip tx.anchors foreach {
-        case (re, te) =>
-          re shouldEqual te.base58
+      req.related.getOrElse(List.empty[ByteStr]).zip(tx.related).foreach {
+        case (r, t) => r shouldEqual t
       }
     }
   }
 
-  property(testName = "JSON format validation") {
+  property(testName = "JSON format validation (minimal)") {
     val js = Json.parse("""{
                        "type": 20,
                        "version": 3,
-                       "id": "4kdm76fxCDCV3P9uXX5acfNvCg2AhMkVAXDdJimtapxo",
+                       "id": "EY7marMyFL3Xv4JNfcvw6ETcAa6JmbxNRsPuwYJRN8Ky",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
                        "timestamp": 1526911531530,
-                       "anchors": [
-                         "264h1cUrahDxWCPJBAPgtf6A9f3dNhkrLAeBUdHU8A5NDtksaumZ4WmsAU2NiF4eTCubLpYAd9D6xgBosPv34inu"
-                       ],
+                       "claimType": 42,
+                       "amount": 0,
                        "proofs": [
                          "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
                        ]
                        }
   """)
 
-    val anchor = ByteStr.decodeBase58("264h1cUrahDxWCPJBAPgtf6A9f3dNhkrLAeBUdHU8A5NDtksaumZ4WmsAU2NiF4eTCubLpYAd9D6xgBosPv34inu").get
     val proof = ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get
 
     val tx = ClaimTransaction
@@ -91,7 +87,12 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
         1526911531530L,
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         100000,
-        List(anchor),
+        42,
+        None,
+        None,
+        0,
+        None,
+        List.empty[ByteStr],
         None,
         Proofs(Seq(proof))
       ).explicitGet()
@@ -99,11 +100,11 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
     tx.json() shouldEqual js
   }
 
-  property(testName = "JSON format validation for sponsored tx") {
+  property(testName = "JSON format validation (full)") {
     val js = Json.parse("""{
                        "type": 20,
                        "version": 3,
-                       "id": "BaSEvxZzFaujdA3Jt5kLKhnSy4w2vhcuHn9uuzyLKt4o",
+                       "id": "Hny72m41hBDs9kSTVm48sT6wsVy5C9ZhmMdkcpHmN728",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
@@ -112,9 +113,14 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
                        "sponsorPublicKey": "22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz",
                        "fee": 100000,
                        "timestamp": 1526911531530,
-                       "anchors": [
-                         "264h1cUrahDxWCPJBAPgtf6A9f3dNhkrLAeBUdHU8A5NDtksaumZ4WmsAU2NiF4eTCubLpYAd9D6xgBosPv34inu",
-                         "31CS3LiQKFAo5sipHDc4vKCDJD4iQ5BkVwLEqjEaoBjZgQ6t6KbwPNpYxgEnbhtbbLmJcuKCxnJeP2zoDT1L1YYc"
+                       "claimType": 42,
+                       "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt",
+                       "subject": "dRsU",
+                       "amount": 8900000,
+                       "hash": "32MUGxHoR66M4HT8ga7haKS6tLkJ1w5P4du6q3X9tZqvdSuSHNoUzwQCPwPyW8u5xLxso1Qx99GexVGfLGep1Wfv",
+                       "related": [
+                         "7hmabbFS8a2z79a29pzZH1s8LHxrsEAnnLjJxNdZ1gGw",
+                         "EXhjYjy8a1dURbttrGzfcft7cddDnPnoa3vqaBLCTFVY"
                        ],
                        "proofs": [
                          "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94",
@@ -123,9 +129,9 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
                        }
   """)
 
-    val anchors = List(
-      ByteStr.decodeBase58("264h1cUrahDxWCPJBAPgtf6A9f3dNhkrLAeBUdHU8A5NDtksaumZ4WmsAU2NiF4eTCubLpYAd9D6xgBosPv34inu").get,
-      ByteStr.decodeBase58("31CS3LiQKFAo5sipHDc4vKCDJD4iQ5BkVwLEqjEaoBjZgQ6t6KbwPNpYxgEnbhtbbLmJcuKCxnJeP2zoDT1L1YYc").get
+    val related = List(
+      ByteStr.decodeBase58("7hmabbFS8a2z79a29pzZH1s8LHxrsEAnnLjJxNdZ1gGw").get,
+      ByteStr.decodeBase58("EXhjYjy8a1dURbttrGzfcft7cddDnPnoa3vqaBLCTFVY").get
     )
     val proofs = Seq(
       ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get,
@@ -139,11 +145,15 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
         1526911531530L,
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         100000,
-        anchors,
+        42,
+        Some(Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet()),
+        Some(ByteStr.decodeBase58("dRsU").get),
+        8900000,
+        Some(ByteStr.decodeBase58("32MUGxHoR66M4HT8ga7haKS6tLkJ1w5P4du6q3X9tZqvdSuSHNoUzwQCPwPyW8u5xLxso1Qx99GexVGfLGep1Wfv").get),
+        related,
         Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
         Proofs(proofs)
-      )
-      .explicitGet()
+      ).explicitGet()
 
     tx.json() shouldEqual js
   }

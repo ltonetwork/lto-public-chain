@@ -1,21 +1,22 @@
 package com.ltonetwork.api.requests
 
-import cats.implicits._
-import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.state.ByteStr
-import com.ltonetwork.transaction.ValidationError.GenericError
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.claim.ClaimTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
-import com.ltonetwork.utils.Time
-import com.ltonetwork.wallet.Wallet
-import play.api.libs.json.{Format, JsNumber, JsObject, Json, OWrites}
+import play.api.libs.json.{Format, JsObject, Json}
 
 case class ClaimRequest(version: Option[Byte] = None,
                          timestamp: Option[Long] = None,
                          senderKeyType: Option[String] = None,
                          senderPublicKey: Option[String] = None,
                          fee: Long,
-                         anchors: List[String],
+                         claimType: Int,
+                         recipient: Option[String],
+                         subject: Option[ByteStr] = None,
+                         amount: Option[Long],
+                         hash: Option[ByteStr] = None,
+                         related: Option[List[ByteStr]] = None,
                          sponsorKeyType: Option[String] = None,
                          sponsorPublicKey: Option[String] = None,
                          signature: Option[ByteStr] = None,
@@ -26,7 +27,8 @@ case class ClaimRequest(version: Option[Byte] = None,
 
   def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, ClaimTransaction] =
     for {
-      validClaims <- anchors.traverse(s => parseBase58(s, "invalid anchor", ClaimTransaction.MaxClaimStringSize))
+      validRecipient <- recipient.noneIfEmpty.map(r => Address.fromString(r))
+        .fold[Either[ValidationError, Option[Address]]](Right(None))(_.map(Some(_)))
       validProofs  <- toProofs(signature, proofs)
       tx <- ClaimTransaction.create(
         version.getOrElse(ClaimTransaction.latestVersion),
@@ -34,7 +36,12 @@ case class ClaimRequest(version: Option[Byte] = None,
         timestamp.getOrElse(defaultTimestamp),
         sender,
         fee,
-        validClaims,
+        claimType,
+        validRecipient,
+        subject.noneIfEmpty,
+        amount.getOrElse(0),
+        hash.noneIfEmpty,
+        related.getOrElse(List.empty[ByteStr]),
         sponsor,
         validProofs
       )

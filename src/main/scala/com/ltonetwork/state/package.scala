@@ -37,6 +37,9 @@ package object state {
   implicit class OptionByteStrExt[T <: ByteStr](val opt: Option[T]) extends AnyVal {
     def noneIfEmpty: Option[ByteStr] = opt.collect { case h if h.toString.nonEmpty => h }
   }
+  implicit class OptionStringExt[T <: String](val opt: Option[T]) extends AnyVal {
+    def noneIfEmpty: Option[String] = opt.collect { case h if h.nonEmpty => h }
+  }
 
   implicit class Cast[A](a: A) {
     def cast[B: ClassTag]: Option[B] = {

@@ -465,13 +465,16 @@ trait TransactionGenBase extends ScriptGen {
   def claimTransactionGen(version: Byte): Gen[ClaimTransaction] = for {
     sender <- accountGen
     timestamp <- timestampGen
+    claimType <- Gen.choose(Int.MinValue, Int.MaxValue)
+    recipient <- Gen.option(addressGen)
+    subject  <- Gen.option(genBoundedBytes(1, ClaimTransaction.MaxSubjectLength).map(ByteStr(_)))
+    amount <- Gen.choose(Long.MinValue, Long.MaxValue)
+    hash <- Gen.option(genBoundedBytes(1, ClaimTransaction.MaxHashLength).map(ByteStr(_)))
     size <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
-    len <- Gen.oneOf(AnchorTransaction.EntryLength)
-    data <- Gen.listOfN(size, genBoundedBytes(len, len))
+    related <- Gen.listOfN(size, bytes32gen.map(ByteStr(_)))
     sponsor <- sponsorGen(version)
     fee = 15000000
-    anchors = data.map(ByteStr(_))
-  } yield ClaimTransaction.signed(version, timestamp, sender, fee, anchors).sponsorWith(sponsor).explicitGet()
+  } yield ClaimTransaction.signed(version, timestamp, sender, fee, claimType, recipient, subject, amount, hash, related).sponsorWith(sponsor).explicitGet()
 
   def issueAssocTransactionGen: Gen[IssueAssociationTransaction] = versionGen(IssueAssociationTransaction).flatMap(issueAssocTransactionGen)
   def issueAssocTransactionGen(version: Byte): Gen[IssueAssociationTransaction] = for {
@@ -482,9 +485,9 @@ trait TransactionGenBase extends ScriptGen {
     expires   <- if (version < 3) Gen.const(None) else Gen.option(timestampGen)
     fee <- smallFeeGen
     minHashLength = if (version < 3) 0 else 1
-    hashOpt <- Gen.option(genBoundedBytes(minHashLength, IssueAssociationTransaction.MaxHashLength).map(ByteStr(_)))
+    hash <- Gen.option(genBoundedBytes(minHashLength, IssueAssociationTransaction.MaxHashLength).map(ByteStr(_)))
     sponsor <- sponsorGen(version)
-  } yield IssueAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, expires, hashOpt).sponsorWith(sponsor).explicitGet()
+  } yield IssueAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, expires, hash).sponsorWith(sponsor).explicitGet()
 
   def revokeAssocTransactionGen: Gen[RevokeAssociationTransaction] = versionGen(RevokeAssociationTransaction).flatMap(revokeAssocTransactionGen)
   def revokeAssocTransactionGen(version: Byte): Gen[RevokeAssociationTransaction] = for {
@@ -494,9 +497,9 @@ trait TransactionGenBase extends ScriptGen {
     assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
     fee <- smallFeeGen
     minHashLength = if (version < 3) 0 else 1
-    hashOpt <- Gen.option(genBoundedBytes(minHashLength, RevokeAssociationTransaction.MaxHashLength).map(ByteStr(_)))
+    hash <- Gen.option(genBoundedBytes(minHashLength, RevokeAssociationTransaction.MaxHashLength).map(ByteStr(_)))
     sponsor <- sponsorGen(version)
-  } yield RevokeAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, hashOpt).sponsorWith(sponsor).explicitGet()
+  } yield RevokeAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, hash).sponsorWith(sponsor).explicitGet()
 
   def assocTransactionGen: Gen[AssociationTransaction] = Gen.oneOf(issueAssocTransactionGen, revokeAssocTransactionGen)
 
