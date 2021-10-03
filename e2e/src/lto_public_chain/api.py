@@ -22,6 +22,10 @@ def transfer(sender, recipient, amount, attachment=''):
     sender_account = create_account(sender.seed)
     return sender_account.sendLTO(recipient, amount, attachment)
 
+def transferv3(sender, recipient, amount, attachment=''):
+    sender_account = create_account(sender.seed)
+    return sender_account.sendLTOv3(recipient, amount, attachment)
+
 def invoke_association(sender, party, anchor, association_type=1):
     sender_account = create_account(sender.seed)
     return sender_account.invokeAssociation(party, association_type, anchor)
@@ -34,6 +38,10 @@ def list_associations(address):
     return http_requests.get("/associations/status/{}".format(address))
 
 def lease(lessor, lessee, amount):
+    sender_account = create_account(lessor.seed)
+    return sender_account.lease(lessee, amount)
+
+def leasev3(lessor, lessee, amount):
     sender_account = create_account(lessor.seed)
     return sender_account.lease(lessee, amount)
 
@@ -63,6 +71,10 @@ def cancel_sponsor(sponsor, party):
 def anchor(sender, hash):
     sender_account = create_account(sender.seed)
     return sender_account.anchor(hash)
+
+def anchorv3(sender, hash):
+    sender_account = create_account(sender.seed)
+    return sender_account.anchorv3(hash)
 
 def get_tx_polled(id):
     return polling.poll(
