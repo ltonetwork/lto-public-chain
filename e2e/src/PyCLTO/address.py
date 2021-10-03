@@ -473,7 +473,7 @@ class pyAddress(object):
             req = self.pyclto.wrapper('/transactions/broadcast', data)
             return req
 
-    def lease(self, recipient, amount, txFee=0, timestamp=0):
+    def leasev3(self, recipient, amount, txFee=0, timestamp=0):
         if txFee == 0:
             txFee = self.pyclto.DEFAULT_LEASE_FEE
         if not self.privKey:
@@ -546,6 +546,50 @@ class pyAddress(object):
                 "timestamp": timestamp,
                 "signature": signature,
                 "type": 9
+            })
+            req = self.pyclto.wrapper('/transactions/broadcast', data)
+            if self.pyclto.OFFLINE:
+                return req
+            elif 'leaseId' in req:
+                return req['leaseId']
+
+    def leaseCancelv3(self, leaseId, txFee=0, timestamp=0):
+        print()
+        if txFee == 0:
+            txFee = self.pyclto.DEFAULT_LEASE_FEE
+        if not self.privKey:
+            msg = 'Private key required'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+        elif not self.pyclto.OFFLINE and self.balance() < txFee:
+            msg = 'Insufficient LTO balance'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+        else:
+            if timestamp == 0:
+                timestamp = int(time.time() * 1000)
+            sData = b'\x09' + \
+                    b'\3' + \
+                    b'T' + \
+                    struct.pack(">Q", timestamp) + \
+                    b'\x01' + \
+                    base58.b58decode(self.publicKey) + \
+                    struct.pack(">Q", txFee) + \
+                    base58.b58decode(leaseId)
+            signature = crypto.sign(self.privKey, sData)
+            data = json.dumps({
+                "type": 9,
+                "version": 3,
+                "chainId": 'T',
+                "timestamp": timestamp,
+                "keyType": 1,
+                "senderPublicKey": self.publicKey,
+                "fee": txFee,
+                "txId": leaseId,
+                "signature": signature,
+                "proofs": [
+                    signature
+                ]
             })
             req = self.pyclto.wrapper('/transactions/broadcast', data)
             if self.pyclto.OFFLINE:
@@ -810,6 +854,45 @@ class pyAddress(object):
             req = self.pyclto.wrapper('/transactions/broadcast', data)
             return req
 
+    def sponsorv3(self, recipient, txFee=0, timestamp=0):
+        if txFee == 0:
+            txFee = self.pyclto.DEFAULT_SPONSOR_FEE
+        if not self.privKey:
+            msg = 'Private key required'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+        elif not self.pyclto.OFFLINE and self.balance() < txFee:
+            msg = 'Insufficient LTO balance'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+        else:
+            if timestamp == 0:
+                timestamp = int(time.time() * 1000)
+            sData = b'\x12' + \
+                    b'\3' + \
+                    crypto.str2bytes(str(self.pyclto.CHAIN_ID)) + \
+                    struct.pack(">Q", timestamp) + \
+                    b'\x01' + \
+                    base58.b58decode(self.publicKey) + \
+                    struct.pack(">Q", txFee) + \
+                    base58.b58decode(recipient.address)
+
+            signature = crypto.sign(self.privKey, sData)
+            data = json.dumps({
+                "version": 3,
+                "senderPublicKey": self.publicKey,
+                "recipient": recipient.address,
+                "fee": txFee,
+                "timestamp": timestamp,
+                "signature": signature,
+                "type": 18,
+                "proofs": [
+                    signature
+                ]
+            })
+            req = self.pyclto.wrapper('/transactions/broadcast', data)
+            return req
+
     def cancelSponsor(self, recipient, txFee=0, timestamp=0):
         if txFee == 0:
             txFee = self.pyclto.DEFAULT_SPONSOR_FEE
@@ -835,6 +918,45 @@ class pyAddress(object):
             signature = crypto.sign(self.privKey, sData)
             data = json.dumps({
                 "version": 1,
+                "senderPublicKey": self.publicKey,
+                "recipient": recipient.address,
+                "fee": txFee,
+                "timestamp": timestamp,
+                "signature": signature,
+                "type": 19,
+                "proofs": [
+                    signature
+                ]
+            })
+            req = self.pyclto.wrapper('/transactions/broadcast', data)
+            return req
+
+    def cancelSponsorv3(self, recipient, txFee=0, timestamp=0):
+        if txFee == 0:
+            txFee = self.pyclto.DEFAULT_SPONSOR_FEE
+        if not self.privKey:
+            msg = 'Private key required'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+        elif not self.pyclto.OFFLINE and self.balance() < txFee:
+            msg = 'Insufficient LTO balance'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+        else:
+            if timestamp == 0:
+                timestamp = int(time.time() * 1000)
+            sData = b'\x13' + \
+                    b'\3' + \
+                    crypto.str2bytes(str(self.pyclto.CHAIN_ID)) + \
+                    struct.pack(">Q", timestamp) + \
+                    b'\x01' + \
+                    base58.b58decode(self.publicKey) + \
+                    struct.pack(">Q", txFee) + \
+                    base58.b58decode(recipient.address)
+
+            signature = crypto.sign(self.privKey, sData)
+            data = json.dumps({
+                "version": 3,
                 "senderPublicKey": self.publicKey,
                 "recipient": recipient.address,
                 "fee": txFee,

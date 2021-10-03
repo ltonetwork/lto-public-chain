@@ -22,7 +22,7 @@ def transfer(sender, recipient, amount, attachment=''):
     sender_account = create_account(sender.seed)
     return sender_account.sendLTO(recipient, amount, attachment)
 
-def transferv3(sender, recipient, amount, attachment=''):
+def transfer_v3(sender, recipient, amount, attachment=''):
     sender_account = create_account(sender.seed)
     return sender_account.sendLTOv3(recipient, amount, attachment)
 
@@ -41,13 +41,17 @@ def lease(lessor, lessee, amount):
     sender_account = create_account(lessor.seed)
     return sender_account.lease(lessee, amount)
 
-def leasev3(lessor, lessee, amount):
+def lease_v3(lessor, lessee, amount):
     sender_account = create_account(lessor.seed)
-    return sender_account.lease(lessee, amount)
+    return sender_account.leasev3(lessee, amount)
 
 def cancel_lease(lessor, lease_id):
     sender_account = create_account(lessor.seed)
     return sender_account.leaseCancel(lease_id)
+
+def cancel_lease_v3(lessor, lease_id):
+    sender_account = create_account(lessor.seed)
+    return sender_account.leaseCancelv3(lease_id)
 
 def list_active_leases(address):
     return http_requests.get("/leasing/active/{}".format(address))
@@ -64,15 +68,23 @@ def sponsor(sponsor, party):
     sender_account = create_account(sponsor.seed)
     return sender_account.sponsor(party)
 
+def sponsor_v3(sponsor, party):
+    sender_account = create_account(sponsor.seed)
+    return sender_account.sponsorv3(party)
+
 def cancel_sponsor(sponsor, party):
     sender_account = create_account(sponsor.seed)
     return sender_account.cancelSponsor(party)
+
+def cancel_sponsor_v3(sponsor, party):
+    sender_account = create_account(sponsor.seed)
+    return sender_account.cancelSponsorv3(party)
 
 def anchor(sender, hash):
     sender_account = create_account(sender.seed)
     return sender_account.anchor(hash)
 
-def anchorv3(sender, hash):
+def anchor_v3(sender, hash):
     sender_account = create_account(sender.seed)
     return sender_account.anchorv3(hash)
 

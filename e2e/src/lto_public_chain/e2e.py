@@ -1,4 +1,5 @@
 import hashlib
+from time import sleep
 import unittest
 
 import base58
@@ -390,7 +391,7 @@ class E2eTests(unittest.TestCase):
         # Anchor
         anchor = 'e2etests'
         anchor_hashed = hashlib.sha256(str(anchor).encode('utf-8')).hexdigest()
-        anchor_tx = api.anchorv3(self.alice, anchor_hashed)
+        anchor_tx = api.anchor_v3(self.alice, anchor_hashed)
 
         polled_anchor_tx = api.get_tx_polled(anchor_tx['id'])
 
@@ -399,24 +400,49 @@ class E2eTests(unittest.TestCase):
             anchor_tx['id'])
 
         # Transfer
-        transfer_tx = api.transferv3(self.alice, self.bob, 1)
+        transfer_tx = api.transfer_v3(self.alice, self.bob, 1)
 
         polled_transfer_tx = api.get_tx_polled(transfer_tx['id'])
-        print(polled_transfer_tx)
 
         self.assertEqual(
             polled_transfer_tx['id'],
             transfer_tx['id'])
 
         # Lease
-        lease_tx = api.leasev3(self.alice, self.bob, 1)
+        lease_tx = api.lease_v3(self.alice, self.bob, 1)
 
         polled_lease_tx = api.get_tx_polled(lease_tx['id'])
-        print(polled_lease_tx)
 
         self.assertEqual(
             polled_lease_tx['id'],
             lease_tx['id'])
+
+        # Cancel Lease
+        cancel_lease_tx = api.cancel_lease_v3(self.alice, lease_tx['id'])
+
+        polled_cancel_lease_tx = api.get_tx_polled(cancel_lease_tx)
+
+        self.assertEqual(
+            polled_cancel_lease_tx['id'],
+            cancel_lease_tx)
+
+        # Sponsor
+        sponsor_tx = api.sponsor_v3(self.alice, self.bob)
+
+        polled_sponsor_tx = api.get_tx_polled(sponsor_tx['id'])
+
+        self.assertEqual(
+            polled_sponsor_tx['id'],
+            sponsor_tx['id'])
+
+        # Cancel Sponsor
+        cancel_sponsor_tx = api.cancel_sponsor_v3(self.alice, self.bob)
+        
+        polled_cancel_sponsor_tx = api.get_tx_polled(cancel_sponsor_tx['id'])
+
+        self.assertEqual(
+            polled_cancel_sponsor_tx['id'],
+            cancel_sponsor_tx['id'])
 
 
 def run():
