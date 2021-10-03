@@ -325,6 +325,54 @@ class pyAddress(object):
 
             return self.pyclto.wrapper('/transactions/broadcast', data)
 
+    def sendLTOv3(self, recipient, amount, attachment='', txFee=0, timestamp=0):
+        if not self.privKey:
+            msg = 'Private key required'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+
+        elif amount <= 0:
+            msg = 'Amount must be > 0'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+        elif not self.pyclto.OFFLINE and self.balance() < amount + txFee:
+            msg = 'Insufficient LTO balance'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+
+        else:
+            if txFee == 0:
+                txFee = self.pyclto.DEFAULT_TX_FEE
+            if timestamp == 0:
+                timestamp = int(time.time() * 1000)
+            sData = b'\x04' + \
+                    b'\x03' + \
+                    b'T' + \
+                    struct.pack(">Q", timestamp) + \
+                    b'\x01' + \
+                    base58.b58decode(self.publicKey) + \
+                    struct.pack(">Q", txFee) + \
+                    base58.b58decode(recipient.address) + \
+                    struct.pack(">Q", amount) + \
+                    struct.pack(">H", len(attachment)) + \
+                    crypto.str2bytes(attachment)
+            signature = crypto.sign(self.privKey, sData)
+            data = json.dumps({
+                "type": 4,
+                "version": 3,
+                "chainId": 'T',
+                "timestamp": timestamp,
+                "keyType": 1,
+                "senderPublicKey": self.publicKey,
+                "fee": txFee,
+                "recipient": recipient.address,
+                "amount": amount,
+                "attachment": base58.b58encode(crypto.str2bytes(attachment)),
+                "signature": signature,
+                "proofs": [signature]
+            })
+
+            return self.pyclto.wrapper('/transactions/broadcast', data)
 
     def massTransferLTO(self, transfers, attachment='', timestamp=0,baseFee=0):
         if baseFee == 0:
@@ -418,6 +466,52 @@ class pyAddress(object):
                 "timestamp": timestamp,
                 "signature": signature,
                 "type": 8,
+                "proofs": [
+                    signature
+                ]
+            })
+            req = self.pyclto.wrapper('/transactions/broadcast', data)
+            return req
+
+    def lease(self, recipient, amount, txFee=0, timestamp=0):
+        if txFee == 0:
+            txFee = self.pyclto.DEFAULT_LEASE_FEE
+        if not self.privKey:
+            msg = 'Private key required'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+        elif amount <= 0:
+            msg = 'Amount must be > 0'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+        elif not self.pyclto.OFFLINE and self.balance() < amount + txFee:
+            msg = 'Insufficient LTO balance'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+        else:
+            if timestamp == 0:
+                timestamp = int(time.time() * 1000)
+            sData = b'\x08' + \
+                    b'\3' + \
+                    b'T' + \
+                    struct.pack(">Q", timestamp) + \
+                    b'\x01' + \
+                    base58.b58decode(self.publicKey) + \
+                    struct.pack(">Q", txFee) + \
+                    base58.b58decode(recipient.address) + \
+                    struct.pack(">Q", amount)
+            signature = crypto.sign(self.privKey, sData)
+            data = json.dumps({
+                "type": 8,
+                "version": 3,
+                "chainId": 'T',
+                "timestamp": timestamp,
+                "keyType": 1,
+                "senderPublicKey": self.publicKey,
+                "fee": txFee,
+                "recipient": recipient.address,
+                "amount": amount,
+                "signature": signature,
                 "proofs": [
                     signature
                 ]
@@ -533,6 +627,50 @@ class pyAddress(object):
             data = json.dumps({
                 "type": 15,
                 "version": 1,
+                "senderPublicKey": self.publicKey,
+                "anchors": [
+                    base58.b58encode(crypto.str2bytes(anchor))
+                ],
+                "fee": txFee,
+                "timestamp": timestamp,
+                "proofs": [
+                    signature
+                ]
+            })
+            req = self.pyclto.wrapper('/transactions/broadcast', data)
+            return req
+
+    def anchorv3(self, anchor, txFee=0, timestamp=0):
+        if txFee == 0:
+            txFee = self.pyclto.DEFAULT_LEASE_FEE
+        if not self.privKey:
+            msg = 'Private key required'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+
+        elif not self.pyclto.OFFLINE and self.balance() < txFee:
+            msg = 'Insufficient LTO balance'
+            logging.error(msg)
+            self.pyclto.throw_error(msg)
+        else:
+            if timestamp == 0:
+                timestamp = int(time.time() * 1000)
+            sData = b'\x0f' + \
+                    b'\x03' + \
+                    b'T' + \
+                    struct.pack(">Q", timestamp) + \
+                    b'\x01' + \
+                    base58.b58decode(self.publicKey) + \
+                    struct.pack(">Q", txFee) + \
+                    struct.pack(">H", 1) + \
+                    struct.pack(">H", len(crypto.str2bytes(anchor))) + \
+                    crypto.str2bytes(anchor)
+            signature = crypto.sign(self.privKey, sData)
+            data = json.dumps({
+                "type": 15,
+                "version": 3,
+                "chainId": 'T',
+                "keyType": 1,
                 "senderPublicKey": self.publicKey,
                 "anchors": [
                     base58.b58encode(crypto.str2bytes(anchor))
