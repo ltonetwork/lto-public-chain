@@ -47,7 +47,7 @@ inThisBuild(
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-language:implicitConversions", "-Ywarn-unused:-implicits")
   ))
 
-resolvers += Resolver.sonatypeRepo("snapshots");
+resolvers += Resolver.file("local-dependencies", file("dependencies"))(Resolver.ivyStylePatterns)
 
 run / fork := true
 run / javaOptions ++= Seq(
