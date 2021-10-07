@@ -47,7 +47,7 @@ inThisBuild(
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-language:implicitConversions", "-Ywarn-unused:-implicits")
   ))
 
-resolvers += Resolver.bintrayRepo("ethereum", "maven")
+resolvers += Resolver.sonatypeRepo("snapshots");
 
 run / fork := true
 run / javaOptions ++= Seq(
