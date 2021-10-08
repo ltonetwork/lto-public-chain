@@ -1,6 +1,7 @@
 package com.ltonetwork
 
 import cats.syntax.semigroup._
+import com.ltonetwork.account.KeyTypes.SECP256K1
 import com.ltonetwork.account.PublicKeyAccount._
 import com.ltonetwork.account._
 import com.ltonetwork.lang.Global
@@ -67,6 +68,7 @@ trait TransactionGenBase extends ScriptGen {
   val ntpTimestampGen: Gen[Long] = Gen.choose(1, 1000).map(time.correctedTime() - _)
 
   val accountGen: Gen[PrivateKeyAccount] = bytes32gen.map(seed => PrivateKeyAccount(seed))
+  val accountGenSecp256k1: Gen[PrivateKeyAccount] = bytes32gen.map(seed => PrivateKeyAccount(seed, SECP256K1))
   val addressGen: Gen[Address] = accountGen.map(PublicKeyAccount.toAddress(_))
 
   def otherAccountGen(candidate: PrivateKeyAccount): Gen[PrivateKeyAccount] = accountGen.flatMap(Gen.oneOf(candidate, _))
@@ -180,6 +182,14 @@ trait TransactionGenBase extends ScriptGen {
     attachment <- genBoundedBytes(0, TransferTransaction.MaxAttachmentSize)
     recipient <- addressGen
   } yield (sender, recipient, amount, timestamp, fee, attachment)
+  val transferParamGenSecp256k1: Gen[(PrivateKeyAccount, Address, Long, Long, Long, Array[Byte])] = for {
+    amount     <- positiveLongGen
+    fee        <- smallFeeGen
+    timestamp  <- timestampGen
+    sender     <- accountGenSecp256k1
+    attachment <- genBoundedBytes(0, TransferTransaction.MaxAttachmentSize)
+    recipient  <- addressGen
+  } yield (sender, recipient, amount, timestamp, fee, attachment)
 
   def transferGeneratorP(sender: PrivateKeyAccount, recipient: Address): Gen[TransferTransaction] =
     for {
@@ -235,6 +245,11 @@ trait TransactionGenBase extends ScriptGen {
     (sender, recipient, amount, timestamp, fee, attachment) <- transferParamGen
     sponsor <- sponsorGen(version)
   } yield TransferTransaction.signed(version, timestamp, sender, fee, recipient, amount, attachment).sponsorWith(sponsor).explicitGet()
+  def transferGenSecp256k1(version: Byte): Gen[TransferTransaction] =
+    for {
+      (sender, recipient, amount, timestamp, fee, attachment) <- transferParamGenSecp256k1
+      sponsor                                                 <- sponsorGen(version)
+    } yield TransferTransaction.signed(version, timestamp, sender, fee, recipient, amount, attachment).sponsorWith(sponsor).explicitGet()
 
   val transferV1Gen: Gen[TransferTransaction] = transferGen(1)
   val transferV2Gen: Gen[TransferTransaction] = transferGen(2)
