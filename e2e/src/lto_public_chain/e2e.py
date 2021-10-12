@@ -99,16 +99,16 @@ class E2eTests(unittest.TestCase):
         )
         self.assertTrue(alice_assoc_after_revoke['revokeHeight'] >= alice_assoc_after_revoke['issueHeight'])
 
-        bob_assocs = api.list_associations(self.bob.address).json()
-        bob_assoc = next((assoc for assoc in bob_assocs['incoming'] if assoc['issueTransactionId'] == revoke_assoc_tx_id), None)
+        bob_assocs_after_revoke = api.list_associations(self.bob.address).json()
+        bob_assoc_after_revoke = next((assoc for assoc in bob_assocs_after_revoke['incoming'] if 'revokeTransactionId' in assoc and assoc['revokeTransactionId'] == revoke_assoc_tx_id), None)
 
         self.assertIsNotNone(bob_assoc)
         self.assertEqual(
-            bob_assoc['associationType'],
+            bob_assoc_after_revoke['associationType'],
             1
         )
         self.assertEqual(
-            bob_assoc['party'],
+            bob_assoc_after_revoke['party'],
             self.alice.address
         )
         self.assertEqual(
@@ -448,13 +448,13 @@ class E2eTests(unittest.TestCase):
 def run():
     suite = unittest.TestSuite()
     suite.addTest(E2eTests("test_connectivity"))
-    # suite.addTest(E2eTests("test_association"))
-    # suite.addTest(E2eTests("test_lease"))
-    # suite.addTest(E2eTests("test_mass_transfer"))
-    # suite.addTest(E2eTests("test_sponsorship"))
-    # suite.addTest(E2eTests("test_anchor"))
+    suite.addTest(E2eTests("test_association"))
+    suite.addTest(E2eTests("test_lease"))
+    suite.addTest(E2eTests("test_mass_transfer"))
+    suite.addTest(E2eTests("test_sponsorship"))
+    suite.addTest(E2eTests("test_anchor"))
     # suite.addTest(E2eTests("test_atomic_swap"))
-    suite.addTest(E2eTests("test_v3"))
+    # suite.addTest(E2eTests("test_v3"))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     assert result.wasSuccessful()
