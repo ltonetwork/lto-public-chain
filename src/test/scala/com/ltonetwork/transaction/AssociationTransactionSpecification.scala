@@ -33,10 +33,17 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
     parsed.bytes() shouldEqual tx.bytes()
   }
 
-  property("serialization roundtrip") {
+  property("serialization roundtrip versions") {
     forEvery(versionTable(IssueAssociationTransaction)) { version: Byte =>
       forAll(issueAssocTransactionGen(version))(tx => checkSerialization(tx, IssueAssociationTransaction.parseBytes))
       forAll(revokeAssocTransactionGen(version))(tx => checkSerialization(tx, RevokeAssociationTransaction.parseBytes))
+    }
+  }
+
+  property("serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(issueAssocTransactionGen(3.toByte, keyType))(tx => checkSerialization(tx, IssueAssociationTransaction.parseBytes))
+      forAll(revokeAssocTransactionGen(3.toByte, keyType))(tx => checkSerialization(tx, RevokeAssociationTransaction.parseBytes))
     }
   }
 

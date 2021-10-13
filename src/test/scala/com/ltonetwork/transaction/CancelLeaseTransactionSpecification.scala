@@ -18,9 +18,18 @@ class CancelLeaseTransactionSpecification extends PropSpec with PropertyChecks w
     first.bytes() shouldEqual second.bytes()
   }
 
-  property("Cancel lease serialization roundtrip") {
+  property("Cancel lease serialization roundtrip versions") {
     forEvery(versionTable(CancelLeaseTransaction)) { version =>
       forAll(cancelLeaseGen(version)) { tx: CancelLeaseTransaction =>
+        val recovered = tx.builder.parseBytes(tx.bytes()).get
+        assertTxs(recovered, tx)
+      }
+    }
+  }
+
+  property("Cancel lease serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(cancelLeaseGen(3.toByte, keyType)){ tx: CancelLeaseTransaction =>
         val recovered = tx.builder.parseBytes(tx.bytes()).get
         assertTxs(recovered, tx)
       }

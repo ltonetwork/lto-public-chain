@@ -22,9 +22,18 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
     first.bytes() shouldEqual second.bytes()
   }
 
-  property("Lease transaction serialization roundtrip") {
+  property("Lease transaction serialization roundtrip versions") {
     forEvery(versionTable(LeaseTransaction)) { version =>
       forAll(leaseGen(version)) { tx: LeaseTransaction =>
+        val recovered = tx.builder.parseBytes(tx.bytes()).get
+        assertTxs(recovered, tx)
+      }
+    }
+  }
+
+  property("Lease transaction serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(leaseGen(3.toByte, keyType)) { tx: LeaseTransaction =>
         val recovered = tx.builder.parseBytes(tx.bytes()).get
         assertTxs(recovered, tx)
       }
