@@ -6,11 +6,11 @@ import polling
 
 import config
 import http_requests
-import PyCLTO
+from LTO import PyCLTO
 
-pl = PyCLTO.PyCLTO()
-pl.NODE = "https://testnet.lto.network"
-pl.setChain("testnet")
+pl = PyCLTO('T')
+#pl.NODE = "https://testnet.lto.network"
+#pl.setChain("testnet")
 
 def create_account(base58_seed):
     return pl.Address(seed=base58_seed)
