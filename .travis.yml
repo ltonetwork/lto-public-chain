@@ -25,7 +25,7 @@ before_script:
   - unset SBT_OPTS
   - export JAVA_TOOL_OPTIONS="-Xmx1548m"
 script:
-  - sbt -J-Xms128m -J-Xmx1248m -J-XX:+UseConcMarkSweepGC -J-XX:+CMSClassUnloadingEnabled checkPR
+  - sbt -J-Xms128m -J-Xmx1248m -J-XX:+UseConcMarkSweepGC -J-XX:+CMSClassUnloadingEnabled -J"--add-opens=java.base/jdk.internal.ref=ALL-UNNAMED" checkPR
 
 cache:
   directories:
