@@ -25,16 +25,15 @@ CHAIN_ID = 'T'
 
 
 pl = PyCLTO(CHAIN_ID)
-#pl.NODE = config.node_url
-#pl.setChain("testnet")
+node = PublicNode(pl.NODE.url)
 
 def create_wallet():
     return http_requests.post("/addresses", "")
 
 
 def create_account(base58_seed):
-    account = AccountED25519(CHAIN_ID).createFromSeed(base58_seed)
-    return account.address
+    return AccountED25519(CHAIN_ID).createFromSeed(base58_seed)
+    # return account.address
     #return pl.Address(seed=base58_seed)
 
 def transfer(sender, recipient, amount, attachment=''):
@@ -81,7 +80,7 @@ def cancel_lease_v3(lessor, lease_id):
     return CancelLease(lease_id).signWith(sender_account)
 
 def list_active_leases(address):
-     return PublicNode(pl.NODE.url).leaseList(address)
+     return node.leaseList(address)
 
 def set_script(sender, script):
     sender_account = create_account(sender.seed)
@@ -125,17 +124,17 @@ def anchor_v3(sender, hash):
 
 def get_tx_polled(id):
     return polling.poll(
-        lambda: PublicNode(pl.NODE.url).tx(id),
+        lambda: node.tx(id),
         check_success=lambda response: 'id' in response,
         step=1,
         poll_forever=True
     )
 
 def get_height():
-    return PublicNode(pl.NODE.url).height()
+    return node.height()
 
 def get_address_balance(address):
-    return PublicNode(pl.NODE.url).balance(address)
+    return node.balance(address)
 
 def shutdown_node():
     http_requests.post("/node/stop")
