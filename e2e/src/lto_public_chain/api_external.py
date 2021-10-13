@@ -6,22 +6,23 @@ import polling
 
 import config
 import http_requests
-from LTO import PyCLTO
+from LTO import PyCLTO, AccountED25519, CancelLease, PublicNode
 
-pl = PyCLTO('T')
-#pl.NODE = "https://testnet.lto.network"
-#pl.setChain("testnet")
+CHAIN_ID = 'T'
+pl = PyCLTO(CHAIN_ID)
+
 
 def create_account(base58_seed):
-    return pl.Address(seed=base58_seed)
+    account = AccountED25519(CHAIN_ID).createFromSeed(base58_seed)
+    return account.address
 
-def cancel_lease(address, lease_id):
-    sender_account = create_account(address.seed)
-    return sender_account.leaseCancel(lease_id)
+def cancel_lease(lessor, lease_id):
+    sender_account = AccountED25519(CHAIN_ID).createFromSeed(lessor.seed)
+    return CancelLease(lease_id).signWith(sender_account)
 
 def get_tx_polled(id):
     return polling.poll(
-        lambda: pl.tx(id),
+        lambda: PublicNode(pl.NODE.url).tx(id),
         check_success=lambda response: 'id' in response,
         step=1,
         timeout=60
@@ -30,7 +31,7 @@ def get_tx_polled(id):
 def is_lease_missing(address, lease_id):
     try:
         polling.poll(
-            lambda: http_requests.get_from_url("https://testnet.lto.network/leasing/active/{}".format(address)),
+            lambda: PublicNode(pl.NODE.url).leaseList(address),
             check_success=lambda response: (not any(r['id'] == lease_id for r in response.json())),
             ignore_exceptions=(requests.exceptions.ConnectionError),
             step=1,
