@@ -32,6 +32,13 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
     }
   }
 
+  property("serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(sponsorshipGen(3.toByte, keyType))(tx => checkSerialization(tx, SponsorshipTransaction.parseBytes))
+      forAll(cancelSponsorshipGen(3.toByte, keyType))(tx => checkSerialization(tx, CancelSponsorshipTransaction.parseBytes))
+    }
+  }
+
   property("from TransactionBuilder") {
     forAll(sponsorshipGen) { tx: SponsorshipTransaction =>
       val recovered = TransactionBuilders.parseBytes(tx.bytes()).get

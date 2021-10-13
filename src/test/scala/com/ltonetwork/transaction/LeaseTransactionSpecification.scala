@@ -31,6 +31,15 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
     }
   }
 
+  property("Lease transaction serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(leaseGen(3.toByte, keyType)) { tx: LeaseTransaction =>
+        val recovered = tx.builder.parseBytes(tx.bytes()).get
+        assertTxs(recovered, tx)
+      }
+    }
+  }
+
   property("Lease transaction from TransactionBuilder") {
     forAll(leaseGen) { tx: LeaseTransaction =>
       val recovered = TransactionBuilders.parseBytes(tx.bytes()).get

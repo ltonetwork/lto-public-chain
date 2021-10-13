@@ -12,7 +12,7 @@ object KeyTypes {
   val SECP256K1: KeyType = KeyType(2, 33, "secp256k1")
   val SECP256R1: KeyType = KeyType(3, 33, "secp256r1")
 
-  private val all = Seq(
+  val all = Seq(
     ED25519,
     SECP256K1,
     SECP256R1

@@ -14,9 +14,29 @@ import com.ltonetwork.utils.Base58
 
 class MassTransferTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
-  property("serialization roundtrip") {
+  property("serialization roundtrip version") {
     forEvery(versionTable(MassTransferTransaction)) { version =>
       forAll(massTransferGen(version, MassTransferTransaction.MaxTransferCount)) { tx: MassTransferTransaction =>
+        val recovered = MassTransferTransaction.parseBytes(tx.bytes()).get
+
+        recovered.sender.address shouldEqual tx.sender.address
+        recovered.timestamp shouldEqual tx.timestamp
+        recovered.fee shouldEqual tx.fee
+
+        recovered.transfers.zip(tx.transfers).foreach {
+          case (ParsedTransfer(rr, ra), ParsedTransfer(tr, ta)) =>
+            rr shouldEqual tr
+            ra shouldEqual ta
+        }
+
+        recovered.bytes() shouldEqual tx.bytes()
+      }
+    }
+  }
+
+  property("serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(massTransferGen(3.toByte, keyType, MassTransferTransaction.MaxTransferCount)) { tx: MassTransferTransaction =>
         val recovered = MassTransferTransaction.parseBytes(tx.bytes()).get
 
         recovered.sender.address shouldEqual tx.sender.address

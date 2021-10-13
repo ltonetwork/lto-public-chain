@@ -30,9 +30,15 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
     parsed.bytes() shouldEqual tx.bytes()
   }
 
-  property("serialization roundtrip") {
+  property("serialization roundtrip versions") {
     forEvery(versionTable(AnchorTransaction)) { version: Byte =>
       forAll(anchorTransactionGen(version))(checkSerialization)
+    }
+  }
+
+  property("serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(anchorTransactionGen(3.toByte, keyType))(checkSerialization)
     }
   }
 
