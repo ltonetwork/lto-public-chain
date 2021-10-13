@@ -32,7 +32,7 @@ class E2eTests(unittest.TestCase):
 
         # Step 1: Alice gets associated with Bob
         invoke_assoc_tx = api.invoke_association_v3(self.alice, self.bob, anchor)
-        invoke_assoc_tx_id = invoke_assoc_tx['id']
+        invoke_assoc_tx_id = invoke_assoc_tx.id
         polled_invoke_assoc_tx = api.get_tx_polled(invoke_assoc_tx_id)
 
         self.assertEqual(
