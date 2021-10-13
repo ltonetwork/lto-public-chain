@@ -37,7 +37,7 @@ class TransferTransactionSpecification extends PropSpec with PropertyChecks with
 
   property("Transfer serialization roundtrip secp256k1") {
     forEvery(versionTable(TransferTransaction)) { version =>
-      forAll(transferGenSecp256k1(version))(checkSerialization)
+      forAll(transferGenSecp256k1(3))(checkSerialization)
     }
   }
 

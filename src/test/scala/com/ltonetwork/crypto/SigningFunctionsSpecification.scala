@@ -40,20 +40,19 @@ class SigningFunctionsSpecification extends PropSpec with PropertyChecks with Ma
     }
   }
 
-  // TODO: uncomment when secp256r1 is implemented in seasalt
-//  property("signed message should be verifiable with appropriate SECP256R1 public key") {
-//    forAll (sizeRange(10)) { (seed1: Array[Byte], seed2: Array[Byte], message1: Array[Byte], message2: Array[Byte]) =>
-//      whenever(!seed1.sameElements(seed2) && !message1.sameElements(message2)) {
-//        val acc      = PrivateKeyAccount(seed1, SECP256R1)
-//        val sig      = crypto.sign(acc, message1)
-//        val rightKey = acc.publicKey
-//        crypto.verify(sig, message1, rightKey, SECP256R1) should be(true)
-//
-//        val wrongKey = PrivateKeyAccount(seed2).publicKey
-//        crypto.verify(sig, message1, wrongKey, SECP256R1) shouldNot be(true)
-//
-//        crypto.verify(sig, message2, rightKey, SECP256R1) shouldNot be(true)
-//      }
-//    }
-//  }
+  property("signed message should be verifiable with appropriate SECP256R1 public key") {
+    forAll (sizeRange(10)) { (seed1: Array[Byte], seed2: Array[Byte], message1: Array[Byte], message2: Array[Byte]) =>
+      whenever(!seed1.sameElements(seed2) && !message1.sameElements(message2)) {
+        val acc      = PrivateKeyAccount(seed1, SECP256R1)
+        val sig      = crypto.sign(acc, message1)
+        val rightKey = acc.publicKey
+        crypto.verify(sig, message1, rightKey, SECP256R1) should be(true)
+
+        val wrongKey = PrivateKeyAccount(seed2).publicKey
+        crypto.verify(sig, message1, wrongKey, SECP256R1) shouldNot be(true)
+
+        crypto.verify(sig, message2, rightKey, SECP256R1) shouldNot be(true)
+      }
+    }
+  }
 }
