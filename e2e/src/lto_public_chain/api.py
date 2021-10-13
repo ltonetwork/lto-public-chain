@@ -125,7 +125,7 @@ def anchor_v3(sender, hash):
 
 def get_tx_polled(id):
     return polling.poll(
-        lambda: pl.tx(id),
+        lambda: PublicNode(pl.NODE.url).tx(id),
         check_success=lambda response: 'id' in response,
         step=1,
         poll_forever=True
