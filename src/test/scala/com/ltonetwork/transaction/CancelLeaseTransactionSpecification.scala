@@ -29,7 +29,7 @@ class CancelLeaseTransactionSpecification extends PropSpec with PropertyChecks w
 
   property("Cancel lease serialization roundtrip keypairs") {
     forEvery(keyTypeTable) { keyType =>
-      forAll(cancelLeaseGen(3.toByte, keyType)){ tx: CancelLeaseTransaction =>
+      forAll(cancelLeaseGen(3.toByte, keyType)) { tx: CancelLeaseTransaction =>
         val recovered = tx.builder.parseBytes(tx.bytes()).get
         assertTxs(recovered, tx)
       }
@@ -67,8 +67,10 @@ class CancelLeaseTransactionSpecification extends PropSpec with PropertyChecks w
         fee = 1000000,
         leaseId = ByteStr.decodeBase58("EXhjYjy8a1dURbttrGzfcft7cddDnPnoa3vqaBLCTFVY").get,
         sponsor = None,
-        proofs = Proofs.fromSignature(ByteStr.decodeBase58("4T76AXcksn2ixhyMNu4m9UyY54M3HDTw5E2HqUsGV4phogs2vpgBcN5oncu4sbW4U3KU197yfHMxrc3kZ7e6zHG3").get)
-      ).explicitGet()
+        proofs =
+          Proofs.fromSignature(ByteStr.decodeBase58("4T76AXcksn2ixhyMNu4m9UyY54M3HDTw5E2HqUsGV4phogs2vpgBcN5oncu4sbW4U3KU197yfHMxrc3kZ7e6zHG3").get)
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }
@@ -100,7 +102,8 @@ class CancelLeaseTransactionSpecification extends PropSpec with PropertyChecks w
         leaseId = ByteStr.decodeBase58("DJWkQxRyJNqWhq9qSQpK2D4tsrct6eZbjSv3AH4PSha6").get,
         sponsor = None,
         proofs = Proofs(Seq(ByteStr.decodeBase58("3h5SQLbCzaLoTHUeoCjXUHB6qhNUfHZjQQVsWTRAgTGMEdK5aeULMVUfDq63J56kkHJiviYTDT92bLGc8ELrUgvi").get))
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }
@@ -141,7 +144,8 @@ class CancelLeaseTransactionSpecification extends PropSpec with PropertyChecks w
         leaseId = ByteStr.decodeBase58("DJWkQxRyJNqWhq9qSQpK2D4tsrct6eZbjSv3AH4PSha6").get,
         sponsor = Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
         proofs = Proofs(proofs)
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }

@@ -97,7 +97,8 @@ class TransferTransactionSpecification extends PropSpec with PropertyChecks with
         Base58.decode("4t2Xazb2SX").get,
         None,
         Proofs.fromSignature(ByteStr.decodeBase58("eaV1i3hEiXyYQd6DQY7EnPg9XzpAvB9VA3bnpin2qJe4G36GZXaGnYKCgSf9xiQ61DcAwcBFzjSXh6FwCgazzFz").get)
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }
@@ -132,7 +133,8 @@ class TransferTransactionSpecification extends PropSpec with PropertyChecks with
         Base58.decode("4t2Xazb2SX").get,
         None,
         Proofs(Seq(ByteStr.decodeBase58("4bfDaqBcnK3hT8ywFEFndxtS1DTSYfncUqd4s5Vyaa66PZHawtC73rDswUur6QZu5RpqM7L9NFgBHT1vhCoox4vi").get))
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }
@@ -177,7 +179,8 @@ class TransferTransactionSpecification extends PropSpec with PropertyChecks with
         Base58.decode("4t2Xazb2SX").get,
         Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
         Proofs(proofs)
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }

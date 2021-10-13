@@ -695,8 +695,8 @@ class EvaluatorV1Test extends PropSpec with PropertyChecks with Matchers with Sc
   }
 
   property("checking a hash of some message by crypto function invoking") {
-    val bodyText      = "some text for test"
-    val bodyBytes     = bodyText.getBytes()
+    val bodyText  = "some text for test"
+    val bodyBytes = bodyText.getBytes()
 
     hashFuncTest(bodyBytes, FunctionIds.SHA256) shouldBe Right(ByteVector(Sha256.hash(bodyText)))
     hashFuncTest(bodyBytes, FunctionIds.BLAKE256) shouldBe Right(ByteVector(Blake2b256.hash(bodyText)))

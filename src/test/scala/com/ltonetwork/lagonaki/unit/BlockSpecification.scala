@@ -18,9 +18,9 @@ class BlockSpecification extends PropSpec with PropertyChecks with TransactionGe
   val time = System.currentTimeMillis() - 5000
 
   val blockGen = for {
-    baseTarget          <- arbitrary[Long]
-    reference           <- byteArrayGen(Block.BlockIdLength).map(r => ByteStr(r))
-    generationSignature <- byteArrayGen(Block.GeneratorSignatureLength)
+    baseTarget                <- arbitrary[Long]
+    reference                 <- byteArrayGen(Block.BlockIdLength).map(r => ByteStr(r))
+    generationSignature       <- byteArrayGen(Block.GeneratorSignatureLength)
     sender                    <- accountGen
     recipient                 <- accountGen
     paymentTransaction        <- ltoTransferGeneratorP(time, sender, recipient)

@@ -33,14 +33,15 @@ class TransactionsRouteSpec
 
   import TransactionsApiRoute.MaxTransactionsPerRequest
 
-  private val wallet       = Wallet(WalletSettings(None, "qwerty", None, None, None))
-  private val blockchain   = mock[Blockchain]
-  private val utx          = mock[UtxPool]
-  private val allChannels  = mock[ChannelGroup]
-  private val feesSettings = FeesSettings(Map[Byte, Seq[FeeSettings]](
-    TransferTransaction.typeId -> Seq(FeeSettings("BASE", 1.lto)),
-    MassTransferTransaction.typeId -> Seq(FeeSettings("BASE", 1.lto), FeeSettings("VAR", 0.1.lto))
-  ))
+  private val wallet      = Wallet(WalletSettings(None, "qwerty", None, None, None))
+  private val blockchain  = mock[Blockchain]
+  private val utx         = mock[UtxPool]
+  private val allChannels = mock[ChannelGroup]
+  private val feesSettings = FeesSettings(
+    Map[Byte, Seq[FeeSettings]](
+      TransferTransaction.typeId     -> Seq(FeeSettings("BASE", 1.lto)),
+      MassTransferTransaction.typeId -> Seq(FeeSettings("BASE", 1.lto), FeeSettings("VAR", 0.1.lto))
+    ))
   private val route =
     TransactionsApiRoute(restAPISettings, TestFunctionalitySettings.Stub, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
   routePath("/calculateFee") - {
@@ -172,7 +173,7 @@ class TransactionsRouteSpec
           status shouldEqual StatusCodes.OK
           val resp = responseAs[Seq[JsValue]]
           for ((r, t) <- resp.zip(txs)) {
-            if((r \ "signature").isDefined) (r \ "signature").as[String] shouldEqual t.proofs.toSignature.base58
+            if ((r \ "signature").isDefined) (r \ "signature").as[String] shouldEqual t.proofs.toSignature.base58
             else (r \ "proofs").as[List[String]].head shouldEqual t.proofs.toSignature.toString
           }
         }
