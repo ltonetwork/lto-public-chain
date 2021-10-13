@@ -25,7 +25,7 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
     parsed.bytes() shouldEqual tx.bytes()
   }
 
-  property("serialization roundtrip") {
+  property("serialization roundtrip versions") {
     forEvery(versionTable(SponsorshipTransaction)) { version =>
       forAll(sponsorshipGen(version))(tx => checkSerialization(tx, SponsorshipTransaction.parseBytes))
       forAll(cancelSponsorshipGen(version))(tx => checkSerialization(tx, CancelSponsorshipTransaction.parseBytes))

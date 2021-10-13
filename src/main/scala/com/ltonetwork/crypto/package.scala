@@ -46,10 +46,6 @@ package object crypto {
     case KeyTypes.SECP256K1 =>
       secp256k1.verify(message, signature, publicKey)
     case KeyTypes.SECP256R1 =>
-      println("Sig " + signature.length + "b: " + signature.mkString("(", ", ", ")"))
-      println("PK " + publicKey.length + "b: " + publicKey.mkString("(", ", ", ")"))
-      println("Msg " + message.length + "b: " + message.mkString("(", ", ", ")"))
-      println("-------------------------------------------------------")
       secp256r1.verify(message, signature, publicKey)
     case _ =>
       throw new IllegalArgumentException("Unknown key type")
