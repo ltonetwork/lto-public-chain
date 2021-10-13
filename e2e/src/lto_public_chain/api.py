@@ -33,8 +33,6 @@ def create_wallet():
 
 def create_account(base58_seed):
     return AccountED25519(CHAIN_ID).createFromSeed(base58_seed)
-    # return account.address
-    #return pl.Address(seed=base58_seed)
 
 
 def transfer(sender, recipient, amount, attachment=''):
