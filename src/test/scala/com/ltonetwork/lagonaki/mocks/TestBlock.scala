@@ -31,7 +31,7 @@ object TestBlock {
       .explicitGet()
   }
 
-  def create(txs: Transaction*): Block = create(defaultSigner, txs.toSeq)
+  def create(txs: Transaction*): Block        = create(defaultSigner, txs.toSeq)
   def create(txs: => Seq[Transaction]): Block = create(defaultSigner, txs)
 
   def create(signer: PrivateKeyAccount, txs: Seq[Transaction]): Block =

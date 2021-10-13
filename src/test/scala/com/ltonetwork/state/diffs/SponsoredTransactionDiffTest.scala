@@ -120,15 +120,17 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
   property("2 sponsors go in LIFO with fallthrough") {
     forAll(setup2) {
       case (genesis, sponsorship, sponsorship2, _, transfer, sponsor2) =>
-        val transferSponsor2 = TransferTransaction.signed(
-          version = 2,
-          sponsorship2.timestamp,
-          sponsor2,
-          transfer.fee,
-          transfer.recipient,
-          ENOUGH_AMT - sponsorship2.fee - transfer.fee,
-          Array.emptyByteArray
-        ).explicitGet()
+        val transferSponsor2 = TransferTransaction
+          .signed(
+            version = 2,
+            sponsorship2.timestamp,
+            sponsor2,
+            transfer.fee,
+            transfer.recipient,
+            ENOUGH_AMT - sponsorship2.fee - transfer.fee,
+            Array.emptyByteArray
+          )
+          .explicitGet()
 
         assertDiffAndState(Seq(block(genesis), block(sponsorship), block(sponsorship2), block(transferSponsor2)), block(transfer)) {
           case (d, b) =>
@@ -177,7 +179,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
   property("sponsored transaction for smart account that accepts tx") {
     forAll(setup) {
       case (genesis, _, _, transfer, sponsor, sender) =>
-        val script = ScriptV1(TRUE).explicitGet()
+        val script    = ScriptV1(TRUE).explicitGet()
         val setScript = SetScriptTransaction.signed(1, transfer.timestamp, sender, 10.lto, Some(script)).explicitGet()
 
         val sponsoredTransfer = transfer.sponsorWith(sponsor)
@@ -196,7 +198,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
   property("sponsored transaction for smart account that rejects tx") {
     forAll(setup) {
       case (genesis, _, _, transfer, sponsor, sender) =>
-        val script = ScriptV1(FALSE).explicitGet()
+        val script    = ScriptV1(FALSE).explicitGet()
         val setScript = SetScriptTransaction.signed(1, transfer.timestamp, sender, 10.lto, Some(script)).explicitGet()
 
         val sponsoredTransfer = transfer.sponsorWith(sponsor)
@@ -209,7 +211,7 @@ class SponsoredTransactionDiffTest extends PropSpec with PropertyChecks with Mat
   property("smart account that sponsors a transaction") {
     forAll(setup) {
       case (genesis, _, _, transfer, sponsor, _) =>
-        val script = ScriptV1(TRUE).explicitGet()
+        val script    = ScriptV1(TRUE).explicitGet()
         val setScript = SetScriptTransaction.signed(1, transfer.timestamp, sponsor, 10.lto, Some(script)).explicitGet()
 
         val sponsoredTransfer = transfer.sponsorWith(sponsor)

@@ -9,7 +9,7 @@ import com.ltonetwork.account.PrivateKeyAccount
 class SigningFunctionsSpecification extends PropSpec with PropertyChecks with Matchers {
 
   property("signed message should be verifiable with appropriate ED25519 public key") {
-    forAll (sizeRange(10)) { (seed1: Array[Byte], seed2: Array[Byte], message1: Array[Byte], message2: Array[Byte]) =>
+    forAll(sizeRange(10)) { (seed1: Array[Byte], seed2: Array[Byte], message1: Array[Byte], message2: Array[Byte]) =>
       whenever(!seed1.sameElements(seed2) && !message1.sameElements(message2)) {
         val acc      = PrivateKeyAccount(seed1)
         val sig      = crypto.sign(acc, message1)
@@ -25,7 +25,7 @@ class SigningFunctionsSpecification extends PropSpec with PropertyChecks with Ma
   }
 
   property("signed message should be verifiable with appropriate SECP256K1 public key") {
-    forAll (sizeRange(10)) { (seed1: Array[Byte], seed2: Array[Byte], message1: Array[Byte], message2: Array[Byte]) =>
+    forAll(sizeRange(10)) { (seed1: Array[Byte], seed2: Array[Byte], message1: Array[Byte], message2: Array[Byte]) =>
       whenever(!seed1.sameElements(seed2) && !message1.sameElements(message2)) {
         val acc      = PrivateKeyAccount(seed1, SECP256K1)
         val sig      = crypto.sign(acc, message1)
@@ -41,7 +41,7 @@ class SigningFunctionsSpecification extends PropSpec with PropertyChecks with Ma
   }
 
   property("signed message should be verifiable with appropriate SECP256R1 public key") {
-    forAll (sizeRange(10)) { (seed1: Array[Byte], seed2: Array[Byte], message1: Array[Byte], message2: Array[Byte]) =>
+    forAll(sizeRange(10)) { (seed1: Array[Byte], seed2: Array[Byte], message1: Array[Byte], message2: Array[Byte]) =>
       whenever(!seed1.sameElements(seed2) && !message1.sameElements(message2)) {
         val acc      = PrivateKeyAccount(seed1, SECP256R1)
         val sig      = crypto.sign(acc, message1)

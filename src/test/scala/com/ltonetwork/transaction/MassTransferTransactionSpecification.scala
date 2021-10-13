@@ -144,11 +144,11 @@ class MassTransferTransactionSpecification extends PropSpec with PropertyChecks 
         Base58.decode("59QuUcqP6p").get,
         None,
         Proofs(Seq(ByteStr.decodeBase58("FXMNu3ecy5zBjn9b69VtpuYRwxjCbxdkZ3xZpLzB8ZeFDvcgTkmEDrD29wtGYRPtyLS3LPYrL2d5UM6TpFBMUGQ").get))
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }
-
 
   property(testName = "JSON format validation v3") {
     val js = Json.parse("""{
@@ -204,7 +204,8 @@ class MassTransferTransactionSpecification extends PropSpec with PropertyChecks 
         Base58.decode("59QuUcqP6p").get,
         Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
         Proofs(proofs)
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }

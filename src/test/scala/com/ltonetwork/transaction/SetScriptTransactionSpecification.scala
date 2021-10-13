@@ -55,10 +55,10 @@ class SetScriptTransactionSpecification extends PropSpec with PropertyChecks wit
       json.toString shouldEqual tx.toString
 
       val req = json.as[SetScriptRequest]
-      req.senderPublicKey should be ('defined)
+      req.senderPublicKey should be('defined)
       req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp should be ('defined)
+      req.timestamp should be('defined)
       req.timestamp.get shouldEqual tx.timestamp
 
       req.script shouldEqual tx.script.map(_.bytes().base64)
@@ -99,7 +99,6 @@ class SetScriptTransactionSpecification extends PropSpec with PropertyChecks wit
 
     tx.json() shouldEqual js
   }
-
 
   property(testName = "JSON format validation V3") {
     val js = Json.parse("""{

@@ -66,10 +66,10 @@ class DataTransactionSpecification extends PropSpec with PropertyChecks with Mat
       json.toString shouldEqual tx.toString
 
       val req = json.as[DataRequest]
-      req.senderPublicKey should be ('defined)
+      req.senderPublicKey should be('defined)
       req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp should be ('defined)
+      req.timestamp should be('defined)
       req.timestamp.get shouldEqual tx.timestamp
 
       req.data zip tx.data foreach {
