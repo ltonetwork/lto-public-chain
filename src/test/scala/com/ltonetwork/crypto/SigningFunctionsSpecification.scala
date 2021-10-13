@@ -32,7 +32,7 @@ class SigningFunctionsSpecification extends PropSpec with PropertyChecks with Ma
         val rightKey = acc.publicKey
         crypto.verify(sig, message1, rightKey, SECP256K1) should be(true)
 
-        val wrongKey = PrivateKeyAccount(seed2).publicKey
+        val wrongKey = PrivateKeyAccount(seed2, SECP256K1).publicKey
         crypto.verify(sig, message1, wrongKey, SECP256K1) shouldNot be(true)
 
         crypto.verify(sig, message2, rightKey, SECP256K1) shouldNot be(true)
@@ -48,7 +48,7 @@ class SigningFunctionsSpecification extends PropSpec with PropertyChecks with Ma
         val rightKey = acc.publicKey
         crypto.verify(sig, message1, rightKey, SECP256R1) should be(true)
 
-        val wrongKey = PrivateKeyAccount(seed2).publicKey
+        val wrongKey = PrivateKeyAccount(seed2, SECP256R1).publicKey
         crypto.verify(sig, message1, wrongKey, SECP256R1) shouldNot be(true)
 
         crypto.verify(sig, message2, rightKey, SECP256R1) shouldNot be(true)
