@@ -59,7 +59,7 @@ def list_associations(address):
 
 
 def lease(lessor, lessee, amount):
-    transaction = Lease(lessee.address, amount)
+    transaction = Lease(lessee, amount)
     transaction.signWith(lessor)
     return transaction.broadcastTo(node)
 

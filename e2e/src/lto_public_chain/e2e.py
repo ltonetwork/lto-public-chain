@@ -154,7 +154,7 @@ class E2eTests(unittest.TestCase):
         amount = 50000
         balance_before = api.get_address_balance(self.alice.address).json()
 
-        lease_tx = api.lease(self.alice, self.validator, amount)
+        lease_tx = api.lease(self.alice, self.validator.address, amount)
         lease_tx_id = lease_tx.id
         polled_lease_tx = api.get_tx_polled(lease_tx_id)
 
@@ -342,11 +342,11 @@ class E2eTests(unittest.TestCase):
         tx = api.anchor(self.alice, anchor_hashed)
         
         # Step 2: Bob (or anyone) validates the data isn't tampered
-        polled_tx = api.get_tx_polled(tx['id'])
+        polled_tx = api.get_tx_polled(tx.id)
 
         self.assertEqual(
             polled_tx['id'],
-            tx['id'])
+            tx.id)
 
         self.assertEqual(
             len(polled_tx['anchors']),
@@ -390,61 +390,62 @@ class E2eTests(unittest.TestCase):
 
     # TEMP
     def test_v3(self):
+        '''
         # Anchor
         anchor = 'e2etests'
         anchor_hashed = hashlib.sha256(str(anchor).encode('utf-8')).hexdigest()
-        anchor_tx = api.anchor_v3(self.alice, anchor_hashed)
+        anchor_tx = api.anchor(self.alice, anchor_hashed)
 
-        polled_anchor_tx = api.get_tx_polled(anchor_tx['id'])
+        polled_anchor_tx = api.get_tx_polled(anchor_tx.id)
 
         self.assertEqual(
             polled_anchor_tx['id'],
-            anchor_tx['id'])
+            anchor_tx.id)
 
         # Transfer
-        transfer_tx = api.transfer_v3(self.alice, self.bob, 1)
+        transfer_tx = api.transfer(self.alice, self.bob.address, 1)
 
-        polled_transfer_tx = api.get_tx_polled(transfer_tx['id'])
+        polled_transfer_tx = api.get_tx_polled(transfer_tx.id)
 
         self.assertEqual(
             polled_transfer_tx['id'],
-            transfer_tx['id'])
-
+            transfer_tx.id)
+        '''
         # Lease
-        lease_tx = api.lease_v3(self.alice, self.bob, 1)
+        lease_tx = api.lease(self.alice, self.bob.address, 1)
 
-        polled_lease_tx = api.get_tx_polled(lease_tx['id'])
+        polled_lease_tx = api.get_tx_polled(lease_tx.id)
 
         self.assertEqual(
             polled_lease_tx['id'],
-            lease_tx['id'])
+            lease_tx.id)
 
         # Cancel Lease
-        cancel_lease_tx = api.cancel_lease_v3(self.alice, lease_tx['id'])
+        cancel_lease_tx = api.cancel_lease(self.alice, lease_tx.id)
 
         polled_cancel_lease_tx = api.get_tx_polled(cancel_lease_tx)
 
         self.assertEqual(
             polled_cancel_lease_tx['id'],
             cancel_lease_tx)
-
+        '''
         # Sponsor
-        sponsor_tx = api.sponsor_v3(self.alice, self.bob)
+        sponsor_tx = api.sponsor(self.alice, self.bob.address)
 
-        polled_sponsor_tx = api.get_tx_polled(sponsor_tx['id'])
+        polled_sponsor_tx = api.get_tx_polled(sponsor_tx.id)
 
         self.assertEqual(
             polled_sponsor_tx['id'],
-            sponsor_tx['id'])
+            sponsor_tx.id)
 
         # Cancel Sponsor
-        cancel_sponsor_tx = api.cancel_sponsor_v3(self.alice, self.bob)
+        cancel_sponsor_tx = api.cancel_sponsor(self.alice, self.bob.address)
         
-        polled_cancel_sponsor_tx = api.get_tx_polled(cancel_sponsor_tx['id'])
+        polled_cancel_sponsor_tx = api.get_tx_polled(cancel_sponsor_tx.id)
 
         self.assertEqual(
             polled_cancel_sponsor_tx['id'],
-            cancel_sponsor_tx['id'])
+            cancel_sponsor_tx.id)'''
 
 
 def run():
