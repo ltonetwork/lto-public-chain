@@ -37,8 +37,8 @@ def create_account(base58_seed):
 
 
 def transfer(sender, recipient, amount, attachment=''):
-    sender_account = AccountED25519(CHAIN_ID).createFromSeed(sender.seed)
-    transaction = Transfer(recipient=recipient, amount=amount, attachment=attachment).signWith(sender_account)
+    transaction = Transfer(recipient=recipient, amount=amount, attachment=attachment)
+    transaction.signWith(sender)
     return transaction.broadcastTo(node)
 
 
@@ -59,14 +59,14 @@ def list_associations(address):
 
 
 def lease(lessor, lessee, amount):
-    sender_account = AccountED25519(CHAIN_ID).createFromSeed(lessor.seed)
-    transaction = Lease(lessee, amount).signWith(sender_account)
+    transaction = Lease(lessee.address, amount)
+    transaction.signWith(lessor)
     return transaction.broadcastTo(node)
 
 
 def cancel_lease(lessor, lease_id):
-    sender_account = AccountED25519(CHAIN_ID).createFromSeed(lessor.seed)
-    transaction = CancelLease(lease_id).signWith(sender_account)
+    transaction = CancelLease(lease_id)
+    transaction.signWith(lessor)
     return transaction.broadcastTo(node)
 
 def list_active_leases(address):
@@ -75,33 +75,33 @@ def list_active_leases(address):
 
 
 def set_script(sender, script):
-    sender_account = AccountED25519(CHAIN_ID).createFromSeed(sender.seed)
-    transaction = SetScript(script).signWith(sender_account)
+    transaction = SetScript(script)
+    transaction.signWith(sender)
     return transaction.broadcastTo(node)
 
 
 
 def mass_transfer(sender, transfers, attachment='e2etests'):
-    sender_account = AccountED25519(CHAIN_ID).createFromSeed(sender.seed)
-    transaction = MassTransfer(transfers, attachment).signWith(sender_account)
+    transaction = MassTransfer(transfers, attachment)
+    transaction.signWith(sender)
     return transaction.broadcastTo(node)
 
 
 def sponsor(sponsor, recipient):
-    sender_account = AccountED25519(CHAIN_ID).createFromSeed(sponsor.seed)
-    transaction = Sponsorship(recipient).signWith(sender_account)
+    transaction = Sponsorship(recipient)
+    transaction.signWith(sponsor)
     return transaction.broadcastTo(node)
 
 
 def cancel_sponsor(sponsor, recipient):
-    sender_account = AccountED25519(CHAIN_ID).createFromSeed(sponsor.seed)
-    transaction = CancelSponsorship(recipient).signWith(sender_account)
+    transaction = CancelSponsorship(recipient)
+    transaction.signWith(sponsor)
     return transaction.broadcastTo(node)
 
 
 def anchor(sender, hash):
-    sender_account = AccountED25519(CHAIN_ID).createFromSeed(sender.seed)
-    transaction = Anchor(hash).signWith(sender_account)
+    transaction = Anchor(hash)
+    transaction.signWith(sender)
     return transaction.broadcastTo(node)
 
 def get_tx_polled(id):
@@ -116,7 +116,7 @@ def get_height():
     return node.height()
 
 def get_address_balance(address):
-    return node.balance(address)
+    return http_requests.get("/addresses/balance/details/{}".format(address))
 
 def shutdown_node():
     http_requests.post("/node/stop")
