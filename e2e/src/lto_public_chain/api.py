@@ -3,6 +3,7 @@ import time
 
 import requests
 import polling
+import time
 
 import config
 import http_requests
@@ -42,14 +43,14 @@ def transfer(sender, recipient, amount, attachment=''):
 
 
 def invoke_association(sender, party, anchor, association_type=1):
-    sender_account = AccountED25519(CHAIN_ID).createFromSeed(sender.seed)
-    transaction = Association(party, association_type, anchor).signWith(sender_account)
+    transaction = Association(party.address, association_type, anchor)
+    transaction.signWith(sender)
     return transaction.broadcastTo(node)
 
 
 def revoke_association(sender, party, anchor, association_type=1):
-    sender_account = AccountED25519(CHAIN_ID).createFromSeed(sender.seed)
-    transaction = RevokeAssociation(party, association_type, anchor).signWith(sender_account)
+    transaction = RevokeAssociation(party.address, association_type, anchor)
+    transaction.signWith(sender)
     return transaction.broadcastTo(node)
 
 def list_associations(address):
@@ -105,7 +106,7 @@ def anchor(sender, hash):
 
 def get_tx_polled(id):
     return polling.poll(
-        lambda: node.tx(id),
+        lambda: (requests.get('%s%s' % ('https://testnet.lto.network', ('/transactions/info/%s' % id)), headers='')).json(),
         check_success=lambda response: 'id' in response,
         step=1,
         poll_forever=True
