@@ -131,7 +131,7 @@ class E2eTests(unittest.TestCase):
         # self.assertTrue(api.is_node_down())
 
         # Step 3: Alice withdraws her lease from the validator
-        cancel_lease_tx_id = api_external.cancel_lease(self.alice, lease_tx_id)
+        cancel_lease_tx_id = api_external.cancel_lease(self.alice, lease_tx_id).id
         polled_cancel_lease_tx = api_external.get_tx_polled(cancel_lease_tx_id)
 
         self.assertEqual(
@@ -155,14 +155,14 @@ class E2eTests(unittest.TestCase):
         balance_before = api.get_address_balance(self.alice.address).json()
 
         lease_tx = api.lease(self.alice, self.validator, amount)
-        lease_tx_id = lease_tx['id']
+        lease_tx_id = lease_tx.id
         polled_lease_tx = api.get_tx_polled(lease_tx_id)
 
         self.assertEqual(
             polled_lease_tx['id'],
             lease_tx_id)
 
-        alice_leases = api.list_active_leases(self.alice.address).json()
+        alice_leases = api.list_active_leases(self.alice.address)
         alice_lease = next((lease for lease in alice_leases if lease['id'] == lease_tx_id), None)
 
         self.assertIsNotNone(alice_lease)
@@ -187,7 +187,7 @@ class E2eTests(unittest.TestCase):
             balance_before['available'] - self.TRANSFER_FEE - amount
         )
 
-        validator_leases = api.list_active_leases(self.validator.address).json()
+        validator_leases = api.list_active_leases(self.validator.address)
         validator_lease = next((lease for lease in validator_leases if lease['id'] == lease_tx_id), None)
 
         self.assertIsNotNone(validator_lease)
@@ -228,11 +228,11 @@ class E2eTests(unittest.TestCase):
         ]
 
         tx = api.mass_transfer(self.validator, transfers)
-        polled_tx = api.get_tx_polled(tx['id'])
+        polled_tx = api.get_tx_polled(tx.id)
 
         self.assertEqual(
             polled_tx['id'],
-            tx['id'])
+            tx.id)
 
         self.assertEqual(
             validator_balance_before - (self.TRANSFER_FEE + 3*(self.MASS_TRANSFER_FEE_PER_TX + amount)),
@@ -258,12 +258,12 @@ class E2eTests(unittest.TestCase):
     def test_sponsorship(self):
         # Step 1: Charlie sponsors Alice
         charlie_balance_before_1 = api.get_address_balance(self.charlie.address).json()['regular']
-        sponsor_tx = api.sponsor(self.charlie, self.alice)
-        polled_sponsor_tx = api.get_tx_polled(sponsor_tx['id'])
+        sponsor_tx = api.sponsor(self.charlie, self.alice.address)
+        polled_sponsor_tx = api.get_tx_polled(sponsor_tx.id)
 
         self.assertEqual(
             polled_sponsor_tx['id'],
-            sponsor_tx['id'])
+            sponsor_tx.id)
 
         self.assertEqual(
             charlie_balance_before_1 - self.SPONSOR_FEE,
@@ -275,11 +275,11 @@ class E2eTests(unittest.TestCase):
         alice_balance_before_2 = api.get_address_balance(self.alice.address).json()['regular']
         bob_balance_before_2 = api.get_address_balance(self.bob.address).json()['regular']
 
-        transfer_tx = api.transfer(self.alice, self.bob, 10000)
-        polled_transfer_tx = api.get_tx_polled(transfer_tx['id'])
+        transfer_tx = api.transfer(self.alice, self.bob.address, 10000)
+        polled_transfer_tx = api.get_tx_polled(transfer_tx.id)
 
         self.assertEqual(
-            transfer_tx['id'],
+            transfer_tx.id,
             polled_transfer_tx['id'])
 
         self.assertEqual(
@@ -296,12 +296,12 @@ class E2eTests(unittest.TestCase):
 
         # 3. Charlie revokes as sponsor of Alice
         charlie_balance_before_3 = api.get_address_balance(self.charlie.address).json()['regular']
-        sponsor_tx = api.cancel_sponsor(self.charlie, self.alice)
-        polled_sponsor_tx = api.get_tx_polled(sponsor_tx['id'])
+        sponsor_tx = api.cancel_sponsor(self.charlie, self.alice.address)
+        polled_sponsor_tx = api.get_tx_polled(sponsor_tx.id)
 
         self.assertEqual(
             polled_sponsor_tx['id'],
-            sponsor_tx['id'])
+            sponsor_tx.id)
 
         self.assertEqual(
             charlie_balance_before_3 - self.SPONSOR_FEE,
@@ -313,11 +313,11 @@ class E2eTests(unittest.TestCase):
         alice_balance_before_4 = api.get_address_balance(self.alice.address).json()['regular']
         bob_balance_before_4 = api.get_address_balance(self.bob.address).json()['regular']
 
-        transfer_tx = api.transfer(self.alice, self.bob, 10000)
-        polled_transfer_tx = api.get_tx_polled(transfer_tx['id'])
+        transfer_tx = api.transfer(self.alice, self.bob.address, 10000)
+        polled_transfer_tx = api.get_tx_polled(transfer_tx.id)
 
         self.assertEqual(
-            transfer_tx['id'],
+            transfer_tx.id,
             polled_transfer_tx['id'])
 
         self.assertEqual(
@@ -450,8 +450,8 @@ class E2eTests(unittest.TestCase):
 def run():
     suite = unittest.TestSuite()
     suite.addTest(E2eTests("test_connectivity"))
-    # suite.addTest(E2eTests("test_association"))
-    # suite.addTest(E2eTests("test_lease"))
+    #suite.addTest(E2eTests("test_association"))
+    #suite.addTest(E2eTests("test_lease"))
     #suite.addTest(E2eTests("test_mass_transfer"))
     #suite.addTest(E2eTests("test_sponsorship"))
     #suite.addTest(E2eTests("test_anchor"))
