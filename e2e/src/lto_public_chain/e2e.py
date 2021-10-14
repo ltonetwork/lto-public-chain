@@ -68,13 +68,13 @@ class E2eTests(unittest.TestCase):
         )
         self.assertEqual(
             polled_invoke_assoc_tx['id'],
-            invoke_assoc_tx['id'])
+            invoke_assoc_tx.id)
         self.assertFalse('revokeTransactionId' in bob_assoc)
         self.assertFalse('revokeHeight' in bob_assoc)
 
         # Step 2: Alice revokes her association with Bob
         revoke_assoc_tx = api.revoke_association(self.alice, self.bob, anchor)
-        revoke_assoc_tx_id = revoke_assoc_tx['id']
+        revoke_assoc_tx_id = revoke_assoc_tx.id
         polled_revoke_assoc_tx = api.get_tx_polled(revoke_assoc_tx_id)
 
         self.assertEqual(
@@ -113,7 +113,7 @@ class E2eTests(unittest.TestCase):
         )
         self.assertEqual(
             polled_invoke_assoc_tx['id'],
-            invoke_assoc_tx['id'])
+            invoke_assoc_tx.id)
 
     # Scenario:
     # 1. Alice leases LTO to the validator node
