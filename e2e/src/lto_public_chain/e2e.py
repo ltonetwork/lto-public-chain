@@ -356,14 +356,17 @@ class E2eTests(unittest.TestCase):
             base58.b58decode(polled_tx['anchors'][0]).decode('utf-8'),
             hashlib.sha256(str(anchor).encode('utf-8')).hexdigest())
 
-    # Scenario:
+    # Scenario1:
     # 1. Create and setup smart contract for Charlie
     # 2. Alice funds Charlie
     # 3. Alice can't take money from Charlie
     # 4.1 Bob takes funds because he knows secret hash and 4.2 after rollback wait height and Alice takes funds back
+    # Scenario2:
+    # 1. Alice restrict the Account
+    # 2. Alice remove the account restriction
     #TODO
     def test_atomic_swap(self):
-        secret_text = 'some secret message from Alice'
+        '''secret_text = 'some secret message from Alice'
         sha_secret = 'BN6RTYGWcwektQfSFzH8raYo9awaLgQ7pLyWLQY4S4F5'
 
         # Step 1: Create and setup smart contract for Charlie
@@ -379,10 +382,18 @@ class E2eTests(unittest.TestCase):
             "let backToAliceAfterHeight = ((height >= (11 + BeforeHeight)) && (ttx.recipient == Alice))\n"
             "txToBob || backToAliceAfterHeight\n"
             "case other => false\n"
-            "}")
+            "}")'''
 
-        set_script_tx = api.set_script(self.charlie, "true")
-        print(set_script_tx)
+        script = (
+            "{-# SCRIPT_TYPE ACCOUNT #-}\n"
+            "match tx {\n"
+                  "case t:  TransferTransaction => false\n"
+                  "case mt: MassTransferTransaction => false\n"
+                  "case ss: SetScriptTransaction => false\n"
+                  "case _ => sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)\n"
+                  "}")
+        set_script_tx = api.set_script(self.alice, script)
+
 
         # self.assertEqual(
         #     http_requests.get("/debug/minerInfo").status_code,
