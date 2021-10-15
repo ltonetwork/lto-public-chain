@@ -390,7 +390,7 @@ class E2eTests(unittest.TestCase):
 
     # TEMP
     def test_v3(self):
-        '''
+
         # Anchor
         anchor = 'e2etests'
         anchor_hashed = hashlib.sha256(str(anchor).encode('utf-8')).hexdigest()
@@ -410,7 +410,7 @@ class E2eTests(unittest.TestCase):
         self.assertEqual(
             polled_transfer_tx['id'],
             transfer_tx.id)
-        '''
+
         # Lease
         lease_tx = api.lease(self.alice, self.bob.address, 1)
 
@@ -423,12 +423,12 @@ class E2eTests(unittest.TestCase):
         # Cancel Lease
         cancel_lease_tx = api.cancel_lease(self.alice, lease_tx.id)
 
-        polled_cancel_lease_tx = api.get_tx_polled(cancel_lease_tx)
+        polled_cancel_lease_tx = api.get_tx_polled(cancel_lease_tx.id)
 
         self.assertEqual(
             polled_cancel_lease_tx['id'],
-            cancel_lease_tx)
-        '''
+            cancel_lease_tx.id)
+
         # Sponsor
         sponsor_tx = api.sponsor(self.alice, self.bob.address)
 
@@ -445,19 +445,19 @@ class E2eTests(unittest.TestCase):
 
         self.assertEqual(
             polled_cancel_sponsor_tx['id'],
-            cancel_sponsor_tx.id)'''
+            cancel_sponsor_tx.id)
 
 
 def run():
     suite = unittest.TestSuite()
     suite.addTest(E2eTests("test_connectivity"))
-    #suite.addTest(E2eTests("test_association"))
-    #suite.addTest(E2eTests("test_lease"))
-    #suite.addTest(E2eTests("test_mass_transfer"))
-    #suite.addTest(E2eTests("test_sponsorship"))
-    #suite.addTest(E2eTests("test_anchor"))
-    # suite.addTest(E2eTests("test_atomic_swap"))
-    # suite.addTest(E2eTests("test_v3"))
+    suite.addTest(E2eTests("test_association"))
+    suite.addTest(E2eTests("test_lease"))
+    suite.addTest(E2eTests("test_mass_transfer"))
+    suite.addTest(E2eTests("test_sponsorship"))
+    suite.addTest(E2eTests("test_anchor"))
+    suite.addTest(E2eTests("test_atomic_swap"))
+    suite.addTest(E2eTests("test_v3"))
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     assert result.wasSuccessful()
