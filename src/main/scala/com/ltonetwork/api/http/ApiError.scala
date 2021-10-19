@@ -24,7 +24,7 @@ trait ApiError {
 object ApiError {
   def fromValidationError(e: ValidationError): ApiError = {
     e match {
-      case ValidationError.InvalidAddress(_)       => InvalidAddress
+      case ValidationError.InvalidAddress(r)       => new InvalidAddress(r)
       case ValidationError.NegativeAmount(x, of)   => NegativeAmount(s"$x of $of")
       case ValidationError.NegativeMinFee(x, of)   => NegativeMinFee(s"$x per $of")
       case ValidationError.InsufficientFee(x)      => InsufficientFee(x)
@@ -121,10 +121,12 @@ case object InvalidSignature extends ApiError {
   override val message = "invalid signature"
 }
 
-case object InvalidAddress extends ApiError {
+case object InvalidAddress extends InvalidAddress("")
+
+class InvalidAddress(reason: String = "") extends ApiError {
   override val id      = 102
   override val code    = StatusCodes.BadRequest
-  override val message = "invalid address"
+  override val message = if (reason.isEmpty) "invalid address" else s"invalid address: $reason"
 }
 
 case object InvalidSeed extends ApiError {
