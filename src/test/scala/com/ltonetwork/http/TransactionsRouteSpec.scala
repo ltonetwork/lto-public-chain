@@ -1,17 +1,18 @@
 package com.ltonetwork.http
 
 import akka.http.scaladsl.model.StatusCodes
-import com.ltonetwork.account.PublicKeyAccount
+import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.api.http.{InvalidAddress, InvalidSignature, TooBigArrayAllocation, TransactionsApiRoute}
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.http.ApiMarshallers._
 import com.ltonetwork.settings.{FeeSettings, FeesSettings, TestFunctionalitySettings, WalletSettings}
 import com.ltonetwork.state.Blockchain
+import com.ltonetwork.transaction.Proofs
 import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransaction}
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
-import com.ltonetwork.{BlockGen, NoShrink, TestTime, TransactionGen}
+import com.ltonetwork.{BlockGen, NoShrink, TestTime, TestWallet, TransactionGen}
 import com.ltonetwork.utils._
 import io.netty.channel.group.ChannelGroup
 import org.scalacheck.Gen._
@@ -37,6 +38,7 @@ class TransactionsRouteSpec
   private val blockchain  = mock[Blockchain]
   private val utx         = mock[UtxPool]
   private val allChannels = mock[ChannelGroup]
+  private val allAccounts  = wallet.privateKeyAccounts
   private val feesSettings = FeesSettings(
     Map[Byte, Seq[FeeSettings]](
       TransferTransaction.typeId     -> Seq(FeeSettings("BASE", 1.lto)),
@@ -44,6 +46,7 @@ class TransactionsRouteSpec
     ))
   private val route =
     TransactionsApiRoute(restAPISettings, TestFunctionalitySettings.Stub, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+
   routePath("/calculateFee") - {
     "transfer with LTO fee" - {
       "TransferTransaction" in {
@@ -156,6 +159,33 @@ class TransactionsRouteSpec
             status shouldEqual StatusCodes.OK
             responseAs[JsValue] shouldEqual tx.json() + ("height" -> JsNumber(height))
           }
+      }
+    }
+  }
+
+  routePath("/sign") - {
+    "sign transaction" - {
+      "TransferTransaction" in {
+        val sender: PrivateKeyAccount = allAccounts.head
+        val transferTx = Json.obj(
+          "type" -> 4,
+          "version" -> 2,
+          "amount" -> 1000000,
+          "fee" -> 100 * 1000 * 1000L,
+          "sender" -> sender.address,
+          "recipient" -> accountGen.sample.get.toAddress
+        )
+
+        val featuresSettings = TestFunctionalitySettings.Enabled.copy(
+          preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0))
+
+        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+
+        Post(routePath("/sign"), transferTx) ~> api_key(apiKey) ~> route ~> check {
+          status shouldEqual StatusCodes.OK
+          (responseAs[JsObject] \ "timestamp").as[Long] should not be 0
+          (responseAs[JsObject] \ "proofs").as[Proofs].proofs should not be empty
+        }
       }
     }
   }
