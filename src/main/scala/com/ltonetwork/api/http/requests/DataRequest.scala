@@ -4,6 +4,7 @@ import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state.{ByteStr, DataEntry}
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
+import com.ltonetwork.utils.Time
 import play.api.libs.json.{Format, JsObject, Json}
 
 case class DataRequest(version: Option[Byte] = None,
@@ -20,13 +21,13 @@ case class DataRequest(version: Option[Byte] = None,
 
   protected def sign(tx: DataTransaction, signer: PrivateKeyAccount): DataTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, DataTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, DataTransaction] =
     for {
       validProofs <- toProofs(signature, proofs)
       tx <- DataTransaction.create(
         version.getOrElse(DataTransaction.latestVersion),
         None,
-        timestamp.getOrElse(defaultTimestamp),
+        timestamp(time),
         sender,
         fee,
         data,

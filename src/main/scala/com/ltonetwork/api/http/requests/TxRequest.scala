@@ -18,10 +18,13 @@ import play.api.libs.json.JsObject
 trait TxRequest {
   type TransactionT <: Transaction
 
+  val timestamp: Option[Long]
   val senderKeyType: Option[String]
   val senderPublicKey: Option[String]
   val sponsorKeyType: Option[String]
   val sponsorPublicKey: Option[String]
+
+  protected def timestamp(time: Option[Time]): Long = timestamp.getOrElse(time.fold(defaultTimestamp)(_.getTimestamp()))
 
   protected def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT
 
@@ -45,13 +48,13 @@ trait TxRequest {
       .map(publicKeyAccount(sponsorKeyType, _))
       .fold[Either[ValidationError, Option[PublicKeyAccount]]](Right(None))(_.map(k => Some(k)))
 
-  protected def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, TransactionT]
+  protected def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, TransactionT]
 
   def toTx: Either[ValidationError, TransactionT] =
     for {
       sender  <- resolveSender
       sponsor <- resolveSponsor
-      tx      <- toTxFrom(sender, sponsor)
+      tx      <- toTxFrom(sender, sponsor, None)
     } yield tx
 
   def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransactionT] =
@@ -59,14 +62,14 @@ trait TxRequest {
       signer  <- wallet.findPrivateKey(signerAddress)
       sender  <- resolveSender(signer)
       sponsor <- resolveSponsor
-      tx      <- toTxFrom(sender, sponsor)
+      tx      <- toTxFrom(sender, sponsor, Some(time))
     } yield sign(tx, signer)
 
   def sponsorTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransactionT] =
     for {
       signer <- wallet.findPrivateKey(signerAddress)
       sender <- resolveSender
-      tx     <- toTxFrom(sender, Some(signer))
+      tx     <- toTxFrom(sender, Some(signer), Some(time))
     } yield sign(tx, signer)
 }
 
