@@ -29,7 +29,7 @@ case class RevokeAssociationTransaction private (version: Byte,
     jsonBase ++ (
       Json.obj(
         "associationType" -> assocType,
-        "party"           -> recipient.stringRepr,
+        "recipient"       -> recipient.stringRepr,
       ) ++
         hash.map(h => Json.obj("hash" -> h.base58)).getOrElse(Json.obj())
     ))
