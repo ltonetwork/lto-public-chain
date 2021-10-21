@@ -5,6 +5,7 @@ import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.{Proofs, ValidationError}
+import com.ltonetwork.utils.Time
 import play.api.libs.json.{Format, JsObject, Json, OWrites}
 
 case class SetScriptRequest(version: Option[Byte] = None,
@@ -26,14 +27,14 @@ case class SetScriptRequest(version: Option[Byte] = None,
 
   protected def sign(tx: SetScriptTransaction, signer: PrivateKeyAccount): SetScriptTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, SetScriptTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, SetScriptTransaction] =
     for {
       validScript <- decodedScript
       validProofs <- toProofs(signature, proofs)
       tx <- SetScriptTransaction.create(
         version.getOrElse(SetScriptTransaction.latestVersion),
         None,
-        timestamp.getOrElse(defaultTimestamp),
+        timestamp(time),
         sender,
         fee,
         validScript,

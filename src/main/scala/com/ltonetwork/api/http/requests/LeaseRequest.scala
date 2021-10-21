@@ -4,6 +4,7 @@ import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
+import com.ltonetwork.utils.Time
 import play.api.libs.json.{Format, JsObject, Json}
 
 case class LeaseRequest(version: Option[Byte] = None,
@@ -21,14 +22,14 @@ case class LeaseRequest(version: Option[Byte] = None,
 
   protected def sign(tx: LeaseTransaction, signer: PrivateKeyAccount): LeaseTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, LeaseTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, LeaseTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
       validProofs    <- toProofs(signature, proofs)
       tx <- LeaseTransaction.create(
         version.getOrElse(LeaseTransaction.latestVersion),
         None,
-        timestamp.getOrElse(defaultTimestamp),
+        timestamp(time),
         sender,
         fee,
         validRecipient,

@@ -4,6 +4,7 @@ import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.sponsorship.CancelSponsorshipTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
+import com.ltonetwork.utils.Time
 import play.api.libs.json.{Format, JsObject, Json}
 
 case class CancelSponsorshipRequest(version: Option[Byte] = None,
@@ -20,14 +21,14 @@ case class CancelSponsorshipRequest(version: Option[Byte] = None,
 
   protected def sign(tx: CancelSponsorshipTransaction, signer: PrivateKeyAccount): CancelSponsorshipTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, CancelSponsorshipTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, CancelSponsorshipTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
       validProofs    <- toProofs(signature, proofs)
       tx <- CancelSponsorshipTransaction.create(
         version.getOrElse(CancelSponsorshipTransaction.latestVersion),
         None,
-        timestamp.getOrElse(defaultTimestamp),
+        timestamp(time),
         sender,
         fee,
         validRecipient,
