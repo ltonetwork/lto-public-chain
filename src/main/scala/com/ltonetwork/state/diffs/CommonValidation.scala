@@ -1,7 +1,7 @@
 package com.ltonetwork.state.diffs
 
 import cats._
-import com.ltonetwork.account.Address
+import com.ltonetwork.account.{Address, KeyTypes}
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.features.{BlockchainFeature, BlockchainFeatures}
 import com.ltonetwork.settings.FunctionalitySettings
@@ -54,6 +54,13 @@ object CommonValidation {
       case _                            => Right(tx)
     }
   }
+
+  def disallowUnsupportedKeyTypes[T <: Transaction](tx: T): Either[ValidationError, T] = tx match {
+    case _ => if (tx.sender.keyType != KeyTypes.ED25519)
+      Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype " + tx.sender.keyType.toString() + " not supported."))
+    else Right(tx)
+  }
+
   def disallowDuplicateIds[T <: Transaction](blockchain: Blockchain,
                                              settings: FunctionalitySettings,
                                              height: Int,

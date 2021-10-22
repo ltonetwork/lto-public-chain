@@ -30,6 +30,7 @@ object TransactionDiffer {
       _ <- CommonValidation.disallowDuplicateIds(blockchain, settings, currentBlockHeight, tx)
       _ <- CommonValidation.disallowSendingGreaterThanBalance(blockchain, settings, currentBlockTimestamp, tx)
       _ <- CommonValidation.checkFee(blockchain, settings, currentBlockHeight, tx)
+      _ <- CommonValidation.disallowUnsupportedKeyTypes(tx)
       diff <- tx match {
         case gtx: GenesisTransaction => GenesisTransactionDiff(currentBlockHeight)(gtx)
         case _ =>
