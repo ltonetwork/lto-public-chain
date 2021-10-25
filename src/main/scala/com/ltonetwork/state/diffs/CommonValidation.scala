@@ -1,7 +1,7 @@
 package com.ltonetwork.state.diffs
 
 import cats._
-import com.ltonetwork.account.{Address, KeyTypes}
+import com.ltonetwork.account.{Address, KeyType, KeyTypes}
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.features.{BlockchainFeature, BlockchainFeatures}
 import com.ltonetwork.settings.FunctionalitySettings
@@ -55,12 +55,6 @@ object CommonValidation {
     }
   }
 
-  def disallowUnsupportedKeyTypes[T <: Transaction](tx: T): Either[ValidationError, T] = tx match {
-    case _ => if (tx.sender.keyType != KeyTypes.ED25519)
-      Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype " + tx.sender.keyType.toString() + " not supported."))
-    else Right(tx)
-  }
-
   def disallowDuplicateIds[T <: Transaction](blockchain: Blockchain,
                                              settings: FunctionalitySettings,
                                              height: Int,
@@ -108,6 +102,22 @@ object CommonValidation {
 
       case _ => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
     }
+  }
+
+  def disallowUnsupportedKeyTypes[T <: Transaction](tx: T): Either[ValidationError, T] = {
+
+    def disallowKeyTypes(keyType: KeyType) = keyType match {
+      case (KeyTypes.ED25519)                 => Right(tx)
+      case (KeyTypes.SECP256K1)               => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype SECP256K1 not supported."))
+      case (KeyTypes.SECP256R1)               => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype SECP256R1 not supported."))
+
+      case _ => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype not supported."))
+    }
+
+    for {
+      _ <- disallowKeyTypes(tx.sender.keyType)
+      _ <- if(tx.sponsor.isDefined) disallowKeyTypes(tx.sponsor.get.keyType) else Right(tx)
+    } yield tx
   }
 
   def disallowTxFromFuture[T <: Transaction](settings: FunctionalitySettings, time: Long, tx: T): Either[ValidationError, T] = {
