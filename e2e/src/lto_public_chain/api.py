@@ -106,7 +106,7 @@ def anchor(sender, hash):
 
 def get_tx_polled(id):
     return polling.poll(
-        lambda: (requests.get('%s%s' % ('https://testnet.lto.network', ('/transactions/info/%s' % id)), headers='')).json(),
+        lambda: http_requests.get_id(id),
         check_success=lambda response: 'id' in response,
         step=1,
         poll_forever=True

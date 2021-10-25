@@ -21,3 +21,7 @@ def get_from_url(url):
 
 def post_from_url(url, payload=None):
     return requests.post(url, headers=api_key_header(), json=payload)
+
+def get_id(id):
+    return (requests.get('%s%s' % ('https://testnet.lto.network', ('/transactions/info/%s' % id)), headers='')).json()
+

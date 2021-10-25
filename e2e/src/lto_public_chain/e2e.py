@@ -366,40 +366,8 @@ class E2eTests(unittest.TestCase):
     # 2. Alice remove the account restriction
     #TODO
     def test_atomic_swap(self):
-        '''secret_text = 'some secret message from Alice'
-        sha_secret = 'BN6RTYGWcwektQfSFzH8raYo9awaLgQ7pLyWLQY4S4F5'
-
-        # Step 1: Create and setup smart contract for Charlie
-        before_height = api.get_height()
-
-        script = (
-            f"let Alice = Address(base58'{self.alice.address}')\n"
-            f"let Bob = Address(base58'{self.bob.address}')\n"
-            f"let BeforeHeight = {before_height}\n"
-            "match tx {\n"
-            "case ttx: TransferTransaction =>\n"
-            f"let txToBob = (ttx.recipient == Bob) && (sha256(ttx.proofs[0]) == base58'{sha_secret}') && ((10 + BeforeHeight) >= height)\n"
-            "let backToAliceAfterHeight = ((height >= (11 + BeforeHeight)) && (ttx.recipient == Alice))\n"
-            "txToBob || backToAliceAfterHeight\n"
-            "case other => false\n"
-            "}")'''
-
-        script = (
-            "{-# SCRIPT_TYPE ACCOUNT #-}\n"
-            "match tx {\n"
-                  "case t:  TransferTransaction => false\n"
-                  "case mt: MassTransferTransaction => false\n"
-                  "case ss: SetScriptTransaction => false\n"
-                  "case _ => sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)\n"
-                  "}")
-        set_script_tx = api.set_script(self.alice, script)
-
-
-        # self.assertEqual(
-        #     http_requests.get("/debug/minerInfo").status_code,
-        #     200)
-
-    # TEMP
+        pass
+    
     def test_v3(self):
 
         # Anchor
