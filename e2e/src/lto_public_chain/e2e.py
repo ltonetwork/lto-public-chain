@@ -361,9 +361,6 @@ class E2eTests(unittest.TestCase):
     # 2. Alice funds Charlie
     # 3. Alice can't take money from Charlie
     # 4.1 Bob takes funds because he knows secret hash and 4.2 after rollback wait height and Alice takes funds back
-    # Scenario2:
-    # 1. Alice restrict the Account
-    # 2. Alice remove the account restriction
     #TODO
     def test_atomic_swap(self):
         pass
