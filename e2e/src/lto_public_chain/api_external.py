@@ -30,7 +30,6 @@ def get_tx_polled(id):
     )
 
 
-
 def is_lease_missing(address, lease_id):
     try:
         polling.poll(
