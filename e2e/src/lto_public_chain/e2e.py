@@ -11,9 +11,9 @@ import utils
 
 class E2eTests(unittest.TestCase):
     validator = api.create_account('cable sniff exchange judge gym rifle prevent traffic picture firm shaft exist cute unusual check')
-    alice = api.create_account('prepare awake mule vital rescue when radio view sibling bread spatial abstract visual insane crisp')
+    alice = api.create_account('amazing use view color endless fever dinner corn sight history lobster sniff merit fly evolve')
     bob = api.create_account('home visit certain universe adjust thing estate pyramid age puzzle update ensure fatal crucial hat')
-    charlie = api.create_account('loud forum youth tourist discover prosper lawn wisdom cattle twelve rule grow cry music stomach')
+    charlie = api.create_account('amazing use view color endless fever dinner corn sight history lobster sniff merit fly sight')
 
     TRANSFER_FEE = 100000000
     MASS_TRANSFER_FEE_PER_TX = 10000000
