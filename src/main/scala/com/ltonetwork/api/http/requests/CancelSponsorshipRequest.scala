@@ -21,7 +21,9 @@ case class CancelSponsorshipRequest(version: Option[Byte] = None,
 
   protected def sign(tx: CancelSponsorshipTransaction, signer: PrivateKeyAccount): CancelSponsorshipTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, CancelSponsorshipTransaction] =
+  def toTxFrom(sender: PublicKeyAccount,
+               sponsor: Option[PublicKeyAccount],
+               time: Option[Time]): Either[ValidationError, CancelSponsorshipTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
       validProofs    <- toProofs(signature, proofs)

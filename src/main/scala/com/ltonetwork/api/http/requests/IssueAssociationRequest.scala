@@ -25,7 +25,9 @@ case class IssueAssociationRequest(version: Option[Byte] = None,
 
   protected def sign(tx: IssueAssociationTransaction, signer: PrivateKeyAccount): IssueAssociationTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, IssueAssociationTransaction] =
+  def toTxFrom(sender: PublicKeyAccount,
+               sponsor: Option[PublicKeyAccount],
+               time: Option[Time]): Either[ValidationError, IssueAssociationTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
       validProofs    <- toProofs(signature, proofs)

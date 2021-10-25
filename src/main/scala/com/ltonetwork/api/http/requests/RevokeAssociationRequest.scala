@@ -24,7 +24,9 @@ case class RevokeAssociationRequest(version: Option[Byte] = None,
 
   protected def sign(tx: RevokeAssociationTransaction, signer: PrivateKeyAccount): RevokeAssociationTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, RevokeAssociationTransaction] =
+  def toTxFrom(sender: PublicKeyAccount,
+               sponsor: Option[PublicKeyAccount],
+               time: Option[Time]): Either[ValidationError, RevokeAssociationTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
       validProofs    <- toProofs(signature, proofs)

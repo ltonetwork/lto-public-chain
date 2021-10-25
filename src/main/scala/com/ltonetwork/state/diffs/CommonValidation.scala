@@ -107,16 +107,16 @@ object CommonValidation {
   def disallowUnsupportedKeyTypes[T <: Transaction](tx: T): Either[ValidationError, T] = {
 
     def disallowKeyTypes(keyType: KeyType) = keyType match {
-      case (KeyTypes.ED25519)                 => Right(tx)
-      case (KeyTypes.SECP256K1)               => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype SECP256K1 not supported."))
-      case (KeyTypes.SECP256R1)               => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype SECP256R1 not supported."))
+      case (KeyTypes.ED25519)   => Right(tx)
+      case (KeyTypes.SECP256K1) => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype SECP256K1 not supported."))
+      case (KeyTypes.SECP256R1) => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype SECP256R1 not supported."))
 
       case _ => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype not supported."))
     }
 
     for {
       _ <- disallowKeyTypes(tx.sender.keyType)
-      _ <- if(tx.sponsor.isDefined) disallowKeyTypes(tx.sponsor.get.keyType) else Right(tx)
+      _ <- if (tx.sponsor.isDefined) disallowKeyTypes(tx.sponsor.get.keyType) else Right(tx)
     } yield tx
   }
 
