@@ -9,8 +9,7 @@ import http_requests
 from LTO import PyCLTO, AccountED25519, CancelLease, PublicNode
 
 CHAIN_ID = 'T'
-pl = PyCLTO(CHAIN_ID)
-node = PublicNode(pl.NODE.url)
+node = PublicNode(config.node_url)
 
 def create_account(base58_seed):
     account = AccountED25519(CHAIN_ID).createFromSeed(base58_seed)

@@ -9,11 +9,16 @@ import api_external
 import http_requests
 import utils
 
+
 class E2eTests(unittest.TestCase):
-    validator = api.create_account('cable sniff exchange judge gym rifle prevent traffic picture firm shaft exist cute unusual check')
-    alice = api.create_account('amazing use view color endless fever dinner corn sight history lobster sniff merit fly evolve')
-    bob = api.create_account('home visit certain universe adjust thing estate pyramid age puzzle update ensure fatal crucial hat')
-    charlie = api.create_account('amazing use view color endless fever dinner corn sight history lobster sniff merit fly sight')
+    validator = api.create_account(
+        'cable sniff exchange judge gym rifle prevent traffic picture firm shaft exist cute unusual check')
+    alice = api.create_account(
+        'amazing use view color endless fever dinner corn sight history lobster sniff merit fly evolve')
+    bob = api.create_account(
+        'home visit certain universe adjust thing estate pyramid age puzzle update ensure fatal crucial hat')
+    charlie = api.create_account(
+        'amazing use view color endless fever dinner corn sight history lobster sniff merit fly sight')
 
     TRANSFER_FEE = 100000000
     MASS_TRANSFER_FEE_PER_TX = 10000000
@@ -40,7 +45,8 @@ class E2eTests(unittest.TestCase):
             invoke_assoc_tx_id)
 
         alice_assocs = api.list_associations(self.alice.address).json()
-        alice_assoc = next((assoc for assoc in alice_assocs['outgoing'] if assoc['issueTransactionId'] == invoke_assoc_tx_id), None)
+        alice_assoc = next(
+            (assoc for assoc in alice_assocs['outgoing'] if assoc['issueTransactionId'] == invoke_assoc_tx_id), None)
 
         self.assertIsNotNone(alice_assoc)
         self.assertEqual(
@@ -55,7 +61,8 @@ class E2eTests(unittest.TestCase):
         self.assertFalse('revokeHeight' in alice_assoc)
 
         bob_assocs = api.list_associations(self.bob.address).json()
-        bob_assoc = next((assoc for assoc in bob_assocs['incoming'] if assoc['issueTransactionId'] == invoke_assoc_tx_id), None)
+        bob_assoc = next(
+            (assoc for assoc in bob_assocs['incoming'] if assoc['issueTransactionId'] == invoke_assoc_tx_id), None)
 
         self.assertIsNotNone(bob_assoc)
         self.assertEqual(
@@ -82,7 +89,9 @@ class E2eTests(unittest.TestCase):
             revoke_assoc_tx_id)
 
         alice_assocs_after_revoke = api.list_associations(self.alice.address).json()
-        alice_assoc_after_revoke = next((assoc for assoc in alice_assocs_after_revoke['outgoing'] if 'revokeTransactionId' in assoc and assoc['revokeTransactionId'] == revoke_assoc_tx_id), None)
+        alice_assoc_after_revoke = next((assoc for assoc in alice_assocs_after_revoke['outgoing'] if
+                                         'revokeTransactionId' in assoc and assoc[
+                                             'revokeTransactionId'] == revoke_assoc_tx_id), None)
 
         self.assertIsNotNone(alice_assoc_after_revoke)
         self.assertEqual(
@@ -100,7 +109,9 @@ class E2eTests(unittest.TestCase):
         self.assertTrue(alice_assoc_after_revoke['revokeHeight'] >= alice_assoc_after_revoke['issueHeight'])
 
         bob_assocs_after_revoke = api.list_associations(self.bob.address).json()
-        bob_assoc_after_revoke = next((assoc for assoc in bob_assocs_after_revoke['incoming'] if 'revokeTransactionId' in assoc and assoc['revokeTransactionId'] == revoke_assoc_tx_id), None)
+        bob_assoc_after_revoke = next((assoc for assoc in bob_assocs_after_revoke['incoming'] if
+                                       'revokeTransactionId' in assoc and assoc[
+                                           'revokeTransactionId'] == revoke_assoc_tx_id), None)
 
         self.assertIsNotNone(bob_assoc)
         self.assertEqual(
@@ -215,15 +226,15 @@ class E2eTests(unittest.TestCase):
         transfers = [
             {
                 'recipient': self.alice.address,
-                'amount' : amount
+                'amount': amount
             },
             {
                 'recipient': self.bob.address,
-                'amount' : amount
+                'amount': amount
             },
             {
                 'recipient': self.charlie.address,
-                'amount' : amount
+                'amount': amount
             }
         ]
 
@@ -235,7 +246,7 @@ class E2eTests(unittest.TestCase):
             tx.id)
 
         self.assertEqual(
-            validator_balance_before - (self.TRANSFER_FEE + 3*(self.MASS_TRANSFER_FEE_PER_TX + amount)),
+            validator_balance_before - (self.TRANSFER_FEE + 3 * (self.MASS_TRANSFER_FEE_PER_TX + amount)),
             api.get_address_balance(self.validator.address).json()['regular'])
 
         self.assertEqual(
@@ -340,7 +351,7 @@ class E2eTests(unittest.TestCase):
         anchor = 'e2etests'
         anchor_hashed = hashlib.sha256(str(anchor).encode('utf-8')).hexdigest()
         tx = api.anchor(self.alice, anchor_hashed)
-        
+
         # Step 2: Bob (or anyone) validates the data isn't tampered
         polled_tx = api.get_tx_polled(tx.id)
 
@@ -351,7 +362,7 @@ class E2eTests(unittest.TestCase):
         self.assertEqual(
             len(polled_tx['anchors']),
             1)
-        
+
         self.assertEqual(
             base58.b58decode(polled_tx['anchors'][0]).decode('utf-8'),
             hashlib.sha256(str(anchor).encode('utf-8')).hexdigest())
@@ -361,12 +372,37 @@ class E2eTests(unittest.TestCase):
     # 2. Alice funds Charlie
     # 3. Alice can't take money from Charlie
     # 4.1 Bob takes funds because he knows secret hash and 4.2 after rollback wait height and Alice takes funds back
-    #TODO
+    # TODO
     def test_atomic_swap(self):
-        pass
-    
-    def test_v3(self):
+        # Step 1: Alice transfer 0.1 LTO to Bob
+        amount = 10000000
+        '''
+        transfer_tx = api.transfer(self.alice, self.bob.address, amount)
+        polled_transfer_tx = api.get_tx_polled(transfer_tx.id)
+        self.assertEqual(polled_transfer_tx['id'], transfer_tx.id)
 
+        # Step 2: Alice set up a smart contract preventing her from making transactions
+        script = "match tx { \n" \
+                 "case t:  TransferTransaction => false \n" \
+                 "case _ => sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)}"
+        script_tx = api.set_script(self.alice, script)
+        polled_script_tx = api.get_tx_polled(script_tx.id)
+        self.assertEqual(polled_script_tx['id'], script_tx.id)'''
+
+        # Step3: Alice cannot make transfer transaction anymore but can still do other transactions
+        '''with self.assertRaises(Exception):
+            api.transfer(self.alice, self.bob.address, amount)'''
+
+
+
+        anchor_hashed = hashlib.sha256(str('anchor').encode('utf-8')).hexdigest()
+        anchor_tx = api.anchor(self.alice, anchor_hashed)
+        polled_anchor_tx = api.get_tx_polled(anchor_tx.id)
+        self.assertEqual(polled_anchor_tx['id'], anchor_tx.id)
+
+
+
+    def test_v3(self):
         # Anchor
         anchor = 'e2etests'
         anchor_hashed = hashlib.sha256(str(anchor).encode('utf-8')).hexdigest()
@@ -416,7 +452,7 @@ class E2eTests(unittest.TestCase):
 
         # Cancel Sponsor
         cancel_sponsor_tx = api.cancel_sponsor(self.alice, self.bob.address)
-        
+
         polled_cancel_sponsor_tx = api.get_tx_polled(cancel_sponsor_tx.id)
 
         self.assertEqual(
@@ -437,6 +473,7 @@ def run():
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     assert result.wasSuccessful()
+
 
 if __name__ == "__main__":
     run()
