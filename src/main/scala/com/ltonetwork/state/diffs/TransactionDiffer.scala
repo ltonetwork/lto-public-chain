@@ -23,6 +23,7 @@ object TransactionDiffer {
       blockchain: Blockchain,
       tx: Transaction): Either[ValidationError, Diff] = {
     for {
+      _ <- CommonValidation.disallowUnsupportedKeyTypes(tx)
       _ <- Verifier(blockchain, currentBlockHeight)(tx)
       _ <- CommonValidation.disallowTxFromFuture(settings, currentBlockTimestamp, tx)
       _ <- CommonValidation.disallowTxFromPast(prevBlockTimestamp, tx)
@@ -30,7 +31,6 @@ object TransactionDiffer {
       _ <- CommonValidation.disallowDuplicateIds(blockchain, settings, currentBlockHeight, tx)
       _ <- CommonValidation.disallowSendingGreaterThanBalance(blockchain, settings, currentBlockTimestamp, tx)
       _ <- CommonValidation.checkFee(blockchain, settings, currentBlockHeight, tx)
-      _ <- CommonValidation.disallowUnsupportedKeyTypes(tx)
       diff <- tx match {
         case gtx: GenesisTransaction => GenesisTransactionDiff(currentBlockHeight)(gtx)
         case _ =>
