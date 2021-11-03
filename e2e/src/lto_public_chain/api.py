@@ -21,12 +21,8 @@ from LTO.Transactions.Sponsorship import Sponsorship
 from LTO.Transactions.CancelSponsorship import CancelSponsorship
 from LTO.Transactions.Anchor import Anchor
 
-
-CHAIN_ID = 'T'
-
-
-pl = PyCLTO(CHAIN_ID)
-node = PublicNode(pl.NODE.url)
+CHAIN_ID = 'C'
+node = PublicNode(config.node_url)
 
 def create_wallet():
     return http_requests.post("/addresses", "")
