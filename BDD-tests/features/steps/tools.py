@@ -49,3 +49,6 @@ def getSeed(name):
         while len(name) < 15:
             name = name + "a"
         return name
+
+def convertBalance(balance):
+    return int(float(balance) * 100000000)

@@ -11,8 +11,8 @@ Feature: Anchor Transaction
 
   Scenario Outline: Unsuccessful anchor transaction
     Given "<Alice>" has "<no>" lto
-    Then "<Alice>" Anchor transaction fails
+    Then "<Alice>" "<transaction>" transaction fails
 
     Examples:
-    | Alice  | no |
-    | Alice  | 0  |
+    | Alice  | no | transaction |
+    | Alice  | 0  |  anchor   |
