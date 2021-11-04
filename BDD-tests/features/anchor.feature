@@ -1,18 +1,18 @@
 Feature: Anchor Transaction
 
   Scenario Outline: Successfull anchor transaction
-    Given "<user>" has 100 lto
-    When "<user>" make an anchor transaction
-    Then "<user>" has 99.65 lto
+    Given "<Alice>" has "<some>" lto
+    When "<Alice>" make an anchor transaction
+    Then "<Alice>" has "<less>" lto
 
     Examples:
-    | user  |
-    | Alice |
+    | Alice | some | less  |
+    | Alice | 100  | 99.65 |
 
   Scenario Outline: Unsuccessful anchor transaction
-    Given "<user>" has 0 lto
-    Then "<user>" Anchor transaction fails
+    Given "<Alice>" has "<no>" lto
+    Then "<Alice>" Anchor transaction fails
 
     Examples:
-    | user  |
-    | Alice |
+    | Alice  | no |
+    | Alice  | 0  |
