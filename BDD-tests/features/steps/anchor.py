@@ -15,7 +15,7 @@ def step_impl(context, user):
             assert transfer.id == tools.pollTx(transfer.id)["id"]
 
         else:
-            transfer = tools.transferTo(amount=aliceBalance - 10000000000, sender=user)
+            transfer = tools.transferTo(amount=aliceBalance - (10000000000 + TRANSFER_FEE), sender=user)
             assert transfer.id == tools.pollTx(transfer.id)["id"]
     assert tools.getBalance(user) == 10000000000
 
@@ -37,7 +37,6 @@ def step_impl(context, user):
         assert aliceBalance == 0
     except:
         transfer = tools.transferTo(amount=aliceBalance-TRANSFER_FEE, sender=user)
-        print("Transfer ", transfer)
         assert transfer.id == tools.pollTx(transfer.id)["id"]
     assert tools.getBalance(user) == 0
 
