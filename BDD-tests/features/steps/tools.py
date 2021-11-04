@@ -2,6 +2,8 @@ from LTO.Accounts.AccountFactoryED25519 import AccountED25519 as AccountFactory
 from LTO.PublicNode import PublicNode
 from LTO.Transactions.Transfer import Transfer
 from LTO.Transactions.Anchor import Anchor
+from LTO.Transactions.Sponsorship import Sponsorship
+from LTO.Transactions.CancelSponsorship import CancelSponsorship
 import random
 import polling
 import requests
@@ -52,3 +54,23 @@ def getSeed(name):
 
 def convertBalance(balance):
     return int(float(balance) * 100000000)
+
+def isSponsoring(account1, account2):
+    account1 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(account1))
+    account2 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(account2))
+    return account1.address in NODE.sponsorshipList(account2.address)['sponsor']
+
+def sponsor(sponsored, sponsoring):
+    sponsored = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sponsored))
+    sponsoring = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sponsoring))
+    transaction = Sponsorship(sponsored.address)
+    transaction.signWith(sponsoring)
+    return transaction.broadcastTo(NODE)
+
+
+def cancelSponsorship(sponsored, sponsoring):
+    sponsored = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sponsored))
+    sponsoring = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sponsoring))
+    transaction = CancelSponsorship(sponsored.address)
+    transaction.signWith(sponsoring)
+    return transaction.broadcastTo(NODE)
