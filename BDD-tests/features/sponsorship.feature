@@ -38,5 +38,7 @@ Scenario Outline: Unsuccessful Cancel Sponsorship transaction
   Then "<Alice>" "<transaction>" transaction fails
 
   Examples:
-  | Alice  | no |  transaction         |
+  | Alice  | no |  transaction          |
   | Alice  | 10  |  cancelSponsorship   |
+
+

@@ -15,6 +15,7 @@ NODE = PublicNode(URL)
 ROOT_SEED = 'fragile because fox snap picnic mean art observe vicious program chicken purse text hidden chest'
 TRANSFER_FEE = 100000000
 
+lastTransactionSuccess = None
 
 def getBalance(seed):
     account = AccountFactory(CHAIN_ID).createFromSeed(getSeed(seed))
@@ -30,19 +31,41 @@ def pollTx(id):
     )
 
 def transferTo(recipient=ROOT_SEED, amount=0, sender=ROOT_SEED):
+    global lastTransactionSuccess
+
     recipientAccount = AccountFactory(CHAIN_ID).createFromSeed(getSeed(recipient))
     senderAccount    = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sender))
     transaction = Transfer(recipientAccount.address, amount)
     transaction.signWith(senderAccount)
-    return(transaction.broadcastTo(NODE))
+    try:
+        tx = transaction.broadcastTo(NODE)
+        pollTx(tx.id)
+        lastTransactionSuccess = True
+        return tx
+    except:
+        lastTransactionSuccess = False
+        raise
 
-def anchor(seed=ROOT_SEED):
+def anchor(seed=ROOT_SEED, hash=""):
+    global lastTransactionSuccess
+
     account = AccountFactory(CHAIN_ID).createFromSeed(getSeed(seed))
-    randomString = ''.join(random.choice('qwertyuioplkjhgfds') for _ in range(6))
-    hash = hashlib.sha256(randomString.encode('utf-8')).hexdigest()
-    transaction = Anchor(hash)
+    if not hash:
+        hash = ''.join(random.choice('qwertyuioplkjhgfds') for _ in range(6))
+    transaction = Anchor(encodeHash(hash))
     transaction.signWith(account)
-    return(transaction.broadcastTo(NODE))
+
+    try:
+        tx = transaction.broadcastTo(NODE)
+        pollTx(tx.id)
+        lastTransactionSuccess = True
+        return tx
+    except:
+        lastTransactionSuccess = False
+        raise
+
+def isLastTransactionSuccessful():
+    return lastTransactionSuccess
 
 def getSeed(name):
     if len(name) >= 15:
@@ -54,6 +77,10 @@ def getSeed(name):
 
 def convertBalance(balance):
     return int(float(balance) * 100000000)
+
+def encodeHash(hash):
+    return hashlib.sha256(hash.encode('utf-8')).hexdigest()
+
 
 def isSponsoring(account1, account2):
     account1 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(account1))
