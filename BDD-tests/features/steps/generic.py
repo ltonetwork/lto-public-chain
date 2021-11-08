@@ -1,8 +1,8 @@
+import LTO
 from behave import *
 import tools
-import pytest
 
-TRANSFER_FEE = 100000000
+TRANSFER_FEE = LTO.Transfer.DEFAULT_TX_FEE
 
 
 @given('{user} has {balance} lto')
@@ -32,12 +32,7 @@ def step_impl(context, user, balance):
 def step_impl(context):
     assert tools.lastTransactionSuccess == False
 
+
 @then('The transaction is successful')
 def step_impl(context):
     assert tools.lastTransactionSuccess == True
-
-
-"""@then('"{user}" "{transaction}" transaction fails')
-def step_impl(context, user, transaction):
-    with pytest.raises(Exception):
-        getattr(tools, islas)(seed=user)"""

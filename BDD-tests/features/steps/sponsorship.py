@@ -8,19 +8,14 @@ def step_impl(context, user1, user2):
     try:
         assert tools.isSponsoring(user1, user2) == False
     except:
-        cancelSponsorship = tools.cancelSponsorship(user2, user1)
-        assert cancelSponsorship.id == tools.pollTx(cancelSponsorship.id)["id"]
-        assert tools.isSponsoring(user1, user2) == False
-
+        tools.cancelSponsorship(user2, user1)
 
 @given('{user1} is sponsoring {user2}')
 def step_impl(context, user1, user2):
     try:
         assert tools.isSponsoring(user1, user2) == True
     except:
-        sponsorship = tools.sponsor(user2, user1)
-        assert sponsorship.id == tools.pollTx(sponsorship.id)["id"]
-        assert tools.isSponsoring(user1, user2) == True
+        tools.sponsor(user2, user1)
 
 
 @when('{user1} tries to sponsor {user2}')
