@@ -7,12 +7,12 @@ import pytest
 @when('{sender} transfers {amount} lto to {recipient}')
 def step_impl(context, sender, amount, recipient):
     amount = tools.convertBalance(amount)
-    transaction = tools.transferTo(recipient=recipient, amount=amount, sender=sender)
-    assert transaction.id == tools.pollTx(transaction.id)["id"]
+    tools.transferTo(recipient=recipient, amount=amount, sender=sender)
 
 
 @when('{sender} tries to transfer {amount} lto to {recipient}')
 def step_impl(context, sender, amount, recipient):
+    amount = tools.convertBalance(amount)
     try:
         tools.transferTo(recipient=recipient, amount=amount, sender=sender)
     except:

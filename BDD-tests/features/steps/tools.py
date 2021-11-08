@@ -88,16 +88,34 @@ def isSponsoring(account1, account2):
     return account1.address in NODE.sponsorshipList(account2.address)['sponsor']
 
 def sponsor(sponsored, sponsoring):
+    global lastTransactionSuccess
+
     sponsored = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sponsored))
     sponsoring = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sponsoring))
     transaction = Sponsorship(sponsored.address)
     transaction.signWith(sponsoring)
-    return transaction.broadcastTo(NODE)
+
+    try:
+        tx = transaction.broadcastTo(NODE)
+        pollTx(tx.id)
+        lastTransactionSuccess = True
+        return tx
+    except:
+        lastTransactionSuccess = False
+        raise
 
 
 def cancelSponsorship(sponsored, sponsoring):
+    global lastTransactionSuccess
     sponsored = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sponsored))
     sponsoring = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sponsoring))
     transaction = CancelSponsorship(sponsored.address)
     transaction.signWith(sponsoring)
-    return transaction.broadcastTo(NODE)
+    try:
+        tx = transaction.broadcastTo(NODE)
+        pollTx(tx.id)
+        lastTransactionSuccess = True
+        return tx
+    except:
+        lastTransactionSuccess = False
+        raise
