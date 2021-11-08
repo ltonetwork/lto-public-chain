@@ -1,18 +1,25 @@
 package com.ltonetwork.api.http.swagger
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import com.github.swagger.akka.model.{Info, License}
-import com.github.swagger.akka.{HasActorSystem, SwaggerHttpService}
+import com.github.swagger.akka.SwaggerHttpService
 import com.ltonetwork.Version
 import com.ltonetwork.settings.RestAPISettings
-import io.swagger.models.{Scheme, Swagger}
+import io.swagger.v3.oas.models.info.Info
+import io.swagger.v3.oas.models.servers.{Server, ServerVariable, ServerVariables}
+import io.swagger.v3.oas.models.OpenAPI
 
-import scala.reflect.runtime.universe.Type
+class SwaggerDocService(val actorSystem: ActorSystem, val apiClasses: Set[Class[_]], settings: RestAPISettings)
+    extends SwaggerHttpService {
 
-class SwaggerDocService(val actorSystem: ActorSystem, val materializer: ActorMaterializer, val apiTypes: Seq[Type], settings: RestAPISettings)
-    extends SwaggerHttpService
-    with HasActorSystem {
+  def createServer(scheme: String): Server = {
+    val swaggerServer: Server = new Server()
+    swaggerServer.setUrl(basePath)
+    val httpServerSchemes: ServerVariables = new ServerVariables()
+    httpServerSchemes.addServerVariable("scheme", new ServerVariable()._default(scheme))
+    swaggerServer.setVariables(httpServerSchemes)
+    swaggerServer
+  }
 
   override val host: String = settings.bindAddress + ":" + settings.port
   override val info: Info = Info(
@@ -25,9 +32,8 @@ class SwaggerDocService(val actorSystem: ActorSystem, val materializer: ActorMat
   )
 
   //Let swagger-ui determine the host and port
-  override val swaggerConfig: Swagger = new Swagger()
-    .basePath(prependSlashIfNecessary(basePath))
+  override val swaggerConfig: OpenAPI = new OpenAPI()
+    .addServersItem(createServer("http"))
+    .addServersItem(createServer("https"))
     .info(info)
-    .scheme(Scheme.HTTP)
-    .scheme(Scheme.HTTPS)
 }

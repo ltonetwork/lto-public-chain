@@ -6,8 +6,9 @@ import com.ltonetwork.network._
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.state.{Blockchain, ByteStr}
 import io.netty.channel.group.ChannelGroup
-import io.swagger.annotations._
-import javax.ws.rs.Path
+import jakarta.validation.Path
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
 import play.api.libs.json._
