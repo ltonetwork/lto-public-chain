@@ -30,6 +30,11 @@ def generateAccount():
 def getBalance(user):
     return NODE.balance(USERS[user].address)
 
+def fundsForTransaction(user, txFee):
+    balance = getBalance(user)
+    if txFee > balance:
+        transferTo(user, txFee - balance)
+
 
 def pollTx(id):
     return polling.poll(

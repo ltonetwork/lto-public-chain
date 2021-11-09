@@ -17,11 +17,12 @@ def step_impl(context, user, balance):
     except:
         if userBalance < balance:
             transfer = tools.transferTo(recipient=user, amount=balance - userBalance)
-            assert transfer.id == tools.pollTx(transfer.id)["id"]
 
         else:
+            if userBalance - balance <= TRANSFER_FEE:
+                transfer = tools.transferTo(recipient=user, amount=TRANSFER_FEE)
+            userBalance = tools.getBalance(user)
             transfer = tools.transferTo(amount=userBalance - (balance + TRANSFER_FEE), sender=user)
-            assert transfer.id == tools.pollTx(transfer.id)["id"]
     assert tools.getBalance(user) == balance
 
 

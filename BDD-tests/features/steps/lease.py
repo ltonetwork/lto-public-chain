@@ -1,3 +1,4 @@
+import LTO
 from behave import *
 import tools
 
@@ -5,8 +6,9 @@ import tools
 @given('{user1} is not leasing to {user2}')
 def step_impl(context, user1, user2):
     try:
-        assert tools.isLeasing(user1, user2) == False
+        assert tools.isLeasing(user1, user2) is False
     except:
+        tools.fundsForTransaction(user1, LTO.CancelLease.DEFAULT_CANCEL_LEASE_FEE)
         tools.cancelLease(user1, user2)
 
 
@@ -23,6 +25,7 @@ def step_impl(context, user1, user2):
     try:
         assert tools.isLeasing(user1, user2) == True
     except:
+        tools.fundsForTransaction(user1, LTO.Lease.DEFAULT_LEASE_FEE)
         tools.lease(user1, user2)
 
 
