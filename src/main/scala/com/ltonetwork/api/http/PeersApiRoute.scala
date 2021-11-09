@@ -3,19 +3,24 @@ package com.ltonetwork.api.http
 import java.net.{InetAddress, InetSocketAddress}
 import java.util.concurrent.ConcurrentMap
 import java.util.stream.Collectors
-import javax.ws.rs.Path
 
 import akka.http.scaladsl.server.Route
 import com.ltonetwork.network.{PeerDatabase, PeerInfo}
 import com.ltonetwork.settings.RestAPISettings
 import io.netty.channel.Channel
-import io.swagger.annotations._
+import jakarta.validation.Path
+import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import io.swagger.v3.oas.annotations.parameters.RequestBody
+import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
+import io.swagger.v3.oas.annotations.tags.Tag
 import play.api.libs.json._
 
 import scala.collection.JavaConverters._
 
 @Path("/peers")
-@Api(value = "/peers", description = "Get info about peers", position = 2)
+@Tag("peers")
 case class PeersApiRoute(settings: RestAPISettings,
                          connectToPeer: InetSocketAddress => Unit,
                          peerDatabase: PeerDatabase,
@@ -30,10 +35,13 @@ case class PeersApiRoute(settings: RestAPISettings,
     }
 
   @Path("/all")
-  @ApiOperation(value = "Peer list", notes = "Peer list", httpMethod = "GET")
+  @Operation(
+    summary = "Peer list",
+    method = "GET"
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with peer list or error")
+      new ApiResponse(responseCode = "200", description = "Json with peer list or error")
     ))
   def allPeers: Route = (path("all") & get) {
     complete(
@@ -52,10 +60,13 @@ case class PeersApiRoute(settings: RestAPISettings,
   }
 
   @Path("/connected")
-  @ApiOperation(value = "Connected peers list", notes = "Connected peers list", httpMethod = "GET")
+  @Operation(
+    summary = "Connected peers list",
+    method = "GET"
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with connected peers or error")
+      new ApiResponse(responseCode = "200", description = "Json with connected peers or error")
     ))
   def connectedPeers: Route = (path("connected") & get) {
     val peers = establishedConnections
@@ -77,18 +88,20 @@ case class PeersApiRoute(settings: RestAPISettings,
   }
 
   @Path("/connect")
-  @ApiOperation(value = "Connect to peer", notes = "Connect to peer", httpMethod = "POST")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "Json with data",
-        required = true,
-        paramType = "body",
-        dataType = "string",
-        defaultValue = "{\n\t\"host\":\"127.0.0.1\",\n\t\"port\":\"9084\"\n}"
-      )
-    ))
+  @Operation(
+    summary = "Connect to peer",
+    method = "POST"
+  )
+  @RequestBody(
+    description = "Json with data",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String]),
+      examples = Array(new ExampleObject(
+        value = "{\n\t\"host\":\"127.0.0.1\",\n\t\"port\":\"9084\"\n}"
+      ))
+    )),
+    required = true
+  )
   def connect: Route = (path("connect") & post & withAuth) {
     json[ConnectReq] { req =>
       val add: InetSocketAddress = new InetSocketAddress(InetAddress.getByName(req.host), req.port)
@@ -99,10 +112,13 @@ case class PeersApiRoute(settings: RestAPISettings,
   }
 
   @Path("/blacklisted")
-  @ApiOperation(value = "Blacklisted peers list", notes = "Blacklisted peers list", httpMethod = "GET")
+  @Operation(
+    summary = "Blacklisted peers list",
+    method = "GET"
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with blacklisted peers or error")
+      new ApiResponse(responseCode = "200", description = "Json with blacklisted peers or error")
     ))
   def blacklistedPeers: Route = (path("blacklisted") & get) {
     complete(
@@ -114,10 +130,13 @@ case class PeersApiRoute(settings: RestAPISettings,
   }
 
   @Path("/suspended")
-  @ApiOperation(value = "Suspended peers list", notes = "Suspended peers list", httpMethod = "GET")
+  @Operation(
+    summary = "Suspended peers list",
+    method = "GET"
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "JSON with suspended peers or error")
+      new ApiResponse(responseCode = "200", description = "JSON with suspended peers or error")
     ))
   def suspendedPeers: Route = (path("suspended") & get) {
     complete(
@@ -126,10 +145,13 @@ case class PeersApiRoute(settings: RestAPISettings,
   }
 
   @Path("/clearblacklist")
-  @ApiOperation(value = "Remove all blacklisted peers", notes = "Clear blacklist", httpMethod = "POST")
+  @Operation(
+    summary = "Remove all blacklisted peers",
+    method = "POST"
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "200")
+      new ApiResponse(responseCode = "200", description = "200")
     ))
   def clearBlacklist: Route = (path("clearblacklist") & post & withAuth) {
     peerDatabase.clearBlacklist()
