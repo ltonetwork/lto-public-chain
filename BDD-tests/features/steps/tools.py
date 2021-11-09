@@ -6,6 +6,7 @@ from LTO.Transactions.Sponsorship import Sponsorship
 from LTO.Transactions.CancelSponsorship import CancelSponsorship
 from LTO.Transactions.Lease import Lease
 from LTO.Transactions.CancelLease import CancelLease
+from LTO.Transactions.MassTransfer import MassTransfer
 import random
 import polling
 import requests
@@ -15,7 +16,6 @@ CHAIN_ID = 'T'
 URL = 'https://testnet.lto.network'
 NODE = PublicNode(URL)
 ROOT_SEED = 'fragile because fox snap picnic mean art observe vicious program chicken purse text hidden chest'
-TRANSFER_FEE = 100000000
 
 lastTransactionSuccess = None
 
@@ -184,5 +184,28 @@ def lease(account1, account2, amount=100000000):
     except:
         lastTransactionSuccess = False
         raise
+
+def processInput(transfers):
+    transferLsit = []
+    for transfer in transfers:
+        transferLsit.append({'recipient': AccountFactory(CHAIN_ID).createFromSeed(getSeed(transfer[0])).address,
+                             'amount': convertBalance(transfer[1])})
+    return transferLsit
+
+def massTransfer(transfers, sender):
+    global lastTransactionSuccess
+    sender = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sender))
+    transaction = MassTransfer(processInput(transfers))
+    transaction.signWith(sender)
+    try:
+        tx = transaction.broadcastTo(NODE)
+        pollTx(tx.id)
+        lastTransactionSuccess = True
+        return tx
+    except:
+        lastTransactionSuccess = False
+        raise
+
+
 
 
