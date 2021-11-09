@@ -11,13 +11,15 @@ import com.ltonetwork.utils.Time
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
-import io.swagger.annotations._
-
-import javax.ws.rs.Path
+import jakarta.validation.Path
+import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.tags.Tag
 import play.api.libs.json._
 
 @Path("/associations")
-@Api(value = "/associations/")
+@Tag("associations")
 case class AssociationsApiRoute(settings: RestAPISettings,
                                 wallet: Wallet,
                                 blockchain: Blockchain,
@@ -35,11 +37,21 @@ case class AssociationsApiRoute(settings: RestAPISettings,
     }
 
   @Path("/status/{address}")
-  @ApiOperation(value = "Details for account", notes = "Account's associations", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Account's associations",
+    method = "GET"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def associations: Route = (path("status" / Segment) & get) { address =>
     complete(
       Address
