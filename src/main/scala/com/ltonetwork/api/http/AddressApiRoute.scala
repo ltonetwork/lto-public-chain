@@ -20,7 +20,8 @@ import io.netty.channel.group.ChannelGroup
 import jakarta.validation.Path
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.tags.Tag
 import play.api.libs.json._
 
@@ -86,16 +87,18 @@ case class AddressApiRoute(settings: RestAPISettings,
         required = true,
         schema = new Schema(implementation = classOf[String]),
         in = ParameterIn.PATH
-      ),
-      new Parameter(
-        name = "json",
-        description = "Json with data",
-        required = true,
-        schema = new Schema(implementation = classOf[com.ltonetwork.api.http.SignedMessage]),
-        example = "{\n\t\"message\":\"Base58-encoded message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}",
-        in = ParameterIn.QUERY
       )
     )
+  )
+  @RequestBody(
+    description = "Json with data",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[com.ltonetwork.api.http.SignedMessage]),
+      examples = Array(new ExampleObject(
+        value = "{\n\t\"message\":\"Base58-encoded message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}"
+      ))
+    )),
+    required = true
   )
   def verify: Route = {
     path("verify" / Segment) { address =>
@@ -116,16 +119,18 @@ case class AddressApiRoute(settings: RestAPISettings,
         required = true,
         schema = new Schema(implementation = classOf[String]),
         in = ParameterIn.PATH
-      ),
-      new Parameter(
-        name = "json",
-        description = "Json with data",
-        required = true,
-        schema = new Schema(implementation = classOf[com.ltonetwork.api.http.SignedMessage]),
-        example = "{\n\t\"message\":\"Plain message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}",
-        in = ParameterIn.QUERY
       )
     )
+  )
+  @RequestBody(
+    description = "Json with data",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[com.ltonetwork.api.http.SignedMessage]),
+      examples = Array(new ExampleObject(
+        value = "{\n\t\"message\":\"Plain message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}",
+      ))
+    )),
+    required = true
   )
   def verifyText: Route = path("verifyText" / Segment) { address =>
     verifyPath(address, decode = false)

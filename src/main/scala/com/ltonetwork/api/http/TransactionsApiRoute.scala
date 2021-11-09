@@ -21,7 +21,8 @@ import play.api.libs.json._
 import jakarta.validation.Path
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.tags.Tag
 
 import java.util.NoSuchElementException
@@ -193,16 +194,12 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     summary = "Calculates a fee for a transaction",
     method = "POST"
   )
-  @Parameters(
-    Array(
-      new Parameter(
-        name = "json",
-        description = "Transaction data including type and optional timestamp in milliseconds",
-        required = true,
-        schema = new Schema(implementation = classOf[String]),
-        in = ParameterIn.QUERY
-      )
-    )
+  @RequestBody(
+    description = "Transaction data including type and optional timestamp in milliseconds",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String]),
+    )),
+    required = true
   )
   def calculateFee: Route = (pathPrefix("calculateFee") & post) {
     pathEndOrSingleSlash {
@@ -230,16 +227,12 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     summary = "Sign a transaction",
     method = "POST"
   )
-  @Parameters(
-    Array(
-      new Parameter(
-        name = "json",
-        description = "Transaction data including type and optional timestamp in milliseconds",
-        required = true,
-        schema = new Schema(implementation = classOf[String]),
-        in = ParameterIn.QUERY
-      )
-    )
+  @RequestBody(
+    description = "Transaction data including type and optional timestamp in milliseconds",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String])
+    )),
+    required = true
   )
   def sign: Route = (pathPrefix("sign") & post & withAuth) {
     pathEndOrSingleSlash {
@@ -264,15 +257,15 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         required = true,
         schema = new Schema(implementation = classOf[String]),
         in = ParameterIn.PATH
-      ),
-      new Parameter(
-        name = "json",
-        description = "Transaction data including type and optional timestamp in milliseconds",
-        required = true,
-        schema = new Schema(implementation = classOf[String]),
-        in = ParameterIn.QUERY
       )
     )
+  )
+  @RequestBody(
+    description = "Transaction data including type and optional timestamp in milliseconds",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String])
+    )),
+    required = true
   )
   def signWithSigner: Route = pathPrefix(Segment) { signerAddress =>
     handleExceptions(jsonExceptionHandler) {
@@ -294,16 +287,12 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     summary = "Sponsor a transaction",
     method = "POST"
   )
-  @Parameters(
-    Array(
-      new Parameter(
-        name = "json",
-        description = "Transaction data including type and optional timestamp in milliseconds",
-        required = true,
-        schema = new Schema(implementation = classOf[String]),
-        in = ParameterIn.QUERY
-      )
-    )
+  @RequestBody(
+    description = "Transaction data including type and optional timestamp in milliseconds",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String])
+    )),
+    required = true
   )
   def sponsor: Route = (pathPrefix("sign") & post & withAuth) {
     pathEndOrSingleSlash {
@@ -328,15 +317,15 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         required = true,
         schema = new Schema(implementation = classOf[String]),
         in = ParameterIn.PATH
-      ),
-      new Parameter(
-        name = "json",
-        description = "Transaction data including type and optional timestamp in milliseconds",
-        required = true,
-        schema = new Schema(implementation = classOf[String]),
-        in = ParameterIn.QUERY
       )
     )
+  )
+  @RequestBody(
+    description = "Transaction data including type and optional timestamp in milliseconds",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String])
+    )),
+    required = true
   )
   def sponsorWithSigner: Route = pathPrefix(Segment) { signerAddress =>
     handleExceptions(jsonExceptionHandler) {
@@ -358,16 +347,12 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     summary = "Broadcasts a signed transaction",
     method = "POST"
   )
-  @Parameters(
-    Array(
-      new Parameter(
-        name = "json",
-        description = "Transaction data including type and signature",
-        required = true,
-        schema = new Schema(implementation = classOf[String]),
-        in = ParameterIn.QUERY
-      )
-    )
+  @RequestBody(
+    description = "Transaction data including type and signature",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String])
+    )),
+    required = true
   )
   def broadcast: Route = (pathPrefix("broadcast") & post) {
     handleExceptions(jsonExceptionHandler) {
