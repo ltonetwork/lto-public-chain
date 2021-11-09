@@ -37,7 +37,7 @@ def step_impl(context, user1, user2):
     tools.sponsor(user2, user1)
 
 
-@when('{user1} cancel the sponsorship for {user2}')
+@when('{user1} cancels the sponsorship for {user2}')
 def step_impl(context, user1, user2):
     tools.cancelSponsorship(user2, user1)
 

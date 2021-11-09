@@ -1,9 +1,11 @@
 Feature: Lease transaction
 
+  Background:
+    Given Alice has a new account with 10 LTO
+    And Bob has a new account with 10 LTO
+
   Scenario: Successful lease transaction
     Given Alice has 100 lto
-    And Alice is not leasing to Bob
-    And Alice has 100 lto
     When Alice leases 10 lto to Bob
     Then Alice has 99 lto
     And Alice is leasing Bob

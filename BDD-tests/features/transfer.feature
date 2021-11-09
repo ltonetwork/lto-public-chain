@@ -1,11 +1,15 @@
-Feature: Transfer Transaction
+Feature: Transfer
+
+  Background: Transfer set up
+    Given Alice has a new account
+    And Bob has a new account
 
   Scenario: Successful Transfer transaction
-    Given Alice has 100 lto
+    Given Alice has 15 lto
     And Bob has 0 lto
-    When Alice transfers 10 lto to Bob
-    Then Alice has 89 lto
-    And Bob has 10 lto
+    When Alice transfers 5 lto to Bob
+    Then Alice has 9 lto
+    And Bob has 5 lto
 
 
   Scenario: Unsuccessful transfer transaction

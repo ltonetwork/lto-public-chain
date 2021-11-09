@@ -1,12 +1,14 @@
-Feature: Association transaction
+Feature: Association
+
+  Background: Association setup
+    Given Alice has a new account
+    And Bob has a new account
 
   Scenario: Successful association transaction
-    Given Alice has 100 lto
-    And Alice is not associated with Bob
-    And Alice has 100 lto
+    Given Alice has 10 lto
     When Alice make an association with Bob
     Then Alice is associated with Bob
-    And Alice has 99 lto
+    And Alice has 9 lto
 
   Scenario: Successful revoke association transaction
     Given Alice has 100 lto

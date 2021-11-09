@@ -20,13 +20,15 @@ CHAIN_ID = 'T'
 URL = 'https://testnet.lto.network'
 NODE = PublicNode(URL)
 ROOT_SEED = 'fragile because fox snap picnic mean art observe vicious program chicken purse text hidden chest'
-
+ROOT_ACCOUNT = AccountFactory(CHAIN_ID).createFromSeed(ROOT_SEED)
 lastTransactionSuccess = None
+USERS = {}
 
+def generateAccount():
+    return AccountFactory(CHAIN_ID).create()
 
-def getBalance(seed):
-    account = AccountFactory(CHAIN_ID).createFromSeed(getSeed(seed))
-    return NODE.balance(account.address)
+def getBalance(user):
+    return NODE.balance(USERS[user].address)
 
 
 def pollTx(id):
@@ -38,11 +40,19 @@ def pollTx(id):
     )
 
 
-def transferTo(recipient=ROOT_SEED, amount=0, sender=ROOT_SEED):
+def transferTo(recipient="", amount=0, sender=""):
     global lastTransactionSuccess
 
-    recipientAccount = AccountFactory(CHAIN_ID).createFromSeed(getSeed(recipient))
-    senderAccount = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sender))
+    if not recipient:
+        recipientAccount = ROOT_ACCOUNT
+    else:
+        recipientAccount = USERS[recipient]
+
+    if not sender:
+        senderAccount = ROOT_ACCOUNT
+    else:
+        senderAccount = USERS[sender]
+
     transaction = Transfer(recipientAccount.address, amount)
     transaction.signWith(senderAccount)
     try:
@@ -55,10 +65,15 @@ def transferTo(recipient=ROOT_SEED, amount=0, sender=ROOT_SEED):
         raise
 
 
-def anchor(seed=ROOT_SEED, hash=""):
+
+def anchor(user="", hash=""):
     global lastTransactionSuccess
 
-    account = AccountFactory(CHAIN_ID).createFromSeed(getSeed(seed))
+    if not user:
+        account = ROOT_ACCOUNT
+    else:
+        account = USERS[user]
+
     if not hash:
         hash = ''.join(random.choice('qwertyuioplkjhgfds') for _ in range(6))
     transaction = Anchor(encodeHash(hash))
@@ -72,6 +87,7 @@ def anchor(seed=ROOT_SEED, hash=""):
     except:
         lastTransactionSuccess = False
         raise
+
 
 
 def isLastTransactionSuccessful():
@@ -96,14 +112,14 @@ def encodeHash(hash):
 
 
 def isSponsoring(account1, account2):
-    account1 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(account1))
-    account2 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(account2))
+    account1 = USERS[account1]
+    account2 = USERS[account2]
     return account1.address in NODE.sponsorshipList(account2.address)['sponsor']
 
 
 def isLeasing(account1, account2):
-    account1 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(account1))
-    account2 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(account2))
+    account1 = USERS[account1]
+    account2 = USERS[account2]
     leasList = NODE.leaseList(account1.address)
     for lease in leasList:
         if lease['recipient'] == account2.address:
@@ -122,8 +138,8 @@ def getLeaseId(account1, account2):
 def sponsor(sponsored, sponsoring):
     global lastTransactionSuccess
 
-    sponsored = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sponsored))
-    sponsoring = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sponsoring))
+    sponsored = USERS[sponsored]
+    sponsoring = USERS[sponsoring]
     transaction = Sponsorship(sponsored.address)
     transaction.signWith(sponsoring)
 
@@ -139,8 +155,8 @@ def sponsor(sponsored, sponsoring):
 
 def cancelSponsorship(sponsored, sponsoring):
     global lastTransactionSuccess
-    sponsored = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sponsored))
-    sponsoring = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sponsoring))
+    sponsored = USERS[sponsored]
+    sponsoring = USERS[sponsoring]
     transaction = CancelSponsorship(sponsored.address)
     transaction.signWith(sponsoring)
     try:
@@ -155,8 +171,8 @@ def cancelSponsorship(sponsored, sponsoring):
 def cancelLease(account1, account2):
     global lastTransactionSuccess
 
-    account1 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(account1))
-    account2 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(account2))
+    account1 = USERS[account1]
+    account2 = USERS[account2]
 
     leaseId = getLeaseId(account1, account2)
     transaction = CancelLease(leaseId)
@@ -175,8 +191,8 @@ def lease(account1, account2, amount=100000000):
     global lastTransactionSuccess
 
     amount = int(amount)
-    account1 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(account1))
-    account2 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(account2))
+    account1 = USERS[account1]
+    account2 = USERS[account2]
 
     transaction = Lease(recipient=account2.address, amount=amount)
     transaction.signWith(account1)
@@ -192,13 +208,13 @@ def lease(account1, account2, amount=100000000):
 def processInput(transfers):
     transferLsit = []
     for transfer in transfers:
-        transferLsit.append({'recipient': AccountFactory(CHAIN_ID).createFromSeed(getSeed(transfer[0])).address,
+        transferLsit.append({'recipient': USERS[transfer[0]].address,
                              'amount': convertBalance(transfer[1])})
     return transferLsit
 
 def massTransfer(transfers, sender):
     global lastTransactionSuccess
-    sender = AccountFactory(CHAIN_ID).createFromSeed(getSeed(sender))
+    sender = USERS[sender]
     transaction = MassTransfer(processInput(transfers))
     transaction.signWith(sender)
     try:
@@ -211,8 +227,8 @@ def massTransfer(transfers, sender):
         raise
 
 def isAssociated(user1, user2):
-    user1 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(user1))
-    user2 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(user2))
+    user1 = USERS[user1]
+    user2 = USERS[user2]
 
     listOutgoing = NODE.wrapper(api='/associations/status/{}'.format(user1.address))['outgoing']
     assType = []
@@ -227,8 +243,8 @@ def isAssociated(user1, user2):
 def revokeAssociation(user1, user2, typeHash):
     global lastTransactionSuccess
 
-    user1 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(user1))
-    user2 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(user2))
+    user1 = USERS[user1]
+    user2 = USERS[user2]
 
     type = typeHash[0]
     hash = crypto.bytes2str(base58.b58decode(typeHash[1]))
@@ -253,8 +269,8 @@ def randomTypeAndHash():
 def association(user1, user2):
     global lastTransactionSuccess
 
-    user1 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(user1))
-    user2 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(user2))
+    user1 = USERS[user1]
+    user2 = USERS[user2]
 
     type, hash = randomTypeAndHash()
 

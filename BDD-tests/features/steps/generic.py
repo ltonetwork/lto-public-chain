@@ -4,6 +4,9 @@ import tools
 
 TRANSFER_FEE = LTO.Transfer.DEFAULT_TX_FEE
 
+@given('{user} has a new account')
+def step_impl(context, user):
+    tools.USERS.update({user: tools.generateAccount()})
 
 @given('{user} has {balance} lto')
 def step_impl(context, user, balance):
