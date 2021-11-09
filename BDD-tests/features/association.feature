@@ -11,12 +11,11 @@ Feature: Association
     And Alice has 9 lto
 
   Scenario: Successful revoke association transaction
-    Given Alice has 100 lto
+    Given Alice has 10 lto
     And Alice is associated with Bob
-    And Alice has 100 lto
     When Alice revoke the association with Bob
     Then Alice is not associated with Bob
-    And Alice has 99 lto
+    And Alice has 8 lto
 
   Scenario: Unsuccessful association transaction due to insufficient balance
     Given Alice has 0 lto

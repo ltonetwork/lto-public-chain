@@ -19,3 +19,7 @@ Feature: Sponsored transaction
 
     # add lto in the given
 
+    # after you do a lease can you still send the leased money in a transfer ?
+
+    #finish fixing the sponsorhip feature
+

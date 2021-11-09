@@ -25,7 +25,7 @@ def step_impl(context, user1, user2):
     try:
         assert tools.isLeasing(user1, user2) == True
     except:
-        tools.fundsForTransaction(user1, LTO.Lease.DEFAULT_LEASE_FEE)
+        tools.fundsForTransaction(user1, LTO.Lease.DEFAULT_LEASE_FEE + 100000000)
         tools.lease(user1, user2)
 
 
@@ -49,11 +49,11 @@ def step_impl(context, user1, amount, user2):
 
 
 
-@then('{user1} is leasing {user2}')
+@then('{user1} is leasing to {user2}')
 def step_impl(context, user1, user2):
     assert tools.isLeasing(user1, user2) is True
 
 
-@then('{user1} is not leasing {user2}')
+@then('{user1} is not leasing to {user2}')
 def step_impl(context, user1, user2):
     assert tools.isLeasing(user1, user2) is False

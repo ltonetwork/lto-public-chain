@@ -7,18 +7,18 @@ Feature: Sponsorship
     And Dick has a new account
 
   Scenario: Successful sponsorship transaction
-    Given Alice has 100 lto
+    Given Alice has 10 lto
     When Alice sponsors Bob
-    Then Alice has 95 lto
+    Then Alice has 5 lto
     And Alice is sponsoring Bob
 
   Scenario: The sponsoring account pays for the transaction costs
     Given Alice is sponsoring Bob
     And Bob has 10 lto
     And Charlie has 0 lto
-    And Alice has 100 lto
+    And Alice has 5 lto
     When Bob transfers 5 lto to Charlie
-    Then Alice has 99 lto
+    Then Alice has 4 lto
     And Bob has 5 lto
     And Charlie has 5 lto
 
