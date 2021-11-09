@@ -2,7 +2,6 @@ package com.ltonetwork.http
 
 import java.net.{InetAddress, InetSocketAddress, URI}
 import java.util.concurrent.ConcurrentMap
-
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
@@ -22,8 +21,13 @@ import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.Channel
 import io.netty.channel.group.ChannelGroup
-import io.swagger.annotations._
-import javax.ws.rs.Path
+import jakarta.validation.Path
+import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import io.swagger.v3.oas.annotations.parameters.RequestBody
+import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
+import io.swagger.v3.oas.annotations.tags.Tag
 import monix.eval.{Coeval, Task}
 import play.api.libs.json._
 
@@ -32,7 +36,7 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 @Path("/debug")
-@Api(value = "/debug")
+@Tag("debug")
 case class DebugApiRoute(ws: LtoSettings,
                          wallet: Wallet,
                          ng: NG,
@@ -62,11 +66,21 @@ case class DebugApiRoute(ws: LtoSettings,
   }
 
   @Path("/blocks/{howMany}")
-  @ApiOperation(value = "Blocks", notes = "Get sizes and full hashes for last blocks", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Get sizes and full hashes for last blocks",
+    method = "GET"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "howMany", value = "How many last blocks to take", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "howMany",
+        description = "How many last blocks to take",
+        required = true,
+        schema = new Schema(implementation = classOf[Int]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def blocks: Route = {
     (path("blocks" / IntNumber) & get & withAuth) { howMany =>
       complete(JsArray(ng.lastBlocks(howMany).map { block =>
@@ -77,54 +91,52 @@ case class DebugApiRoute(ws: LtoSettings,
   }
 
   @Path("/print")
-  @ApiOperation(
-    value = "Print",
-    notes = "Prints a string at DEBUG level, strips to 100 chars",
-    httpMethod = "POST"
+  @Operation(
+    summary = "Prints a string at DEBUG level, strips to 100 chars",
+    method = "POST"
   )
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "Json with data",
-        required = true,
-        paramType = "body",
-        dataType = "com.ltonetwork.http.DebugMessage",
-        defaultValue = "{\n\t\"message\": \"foo\"\n}"
-      )
-    ))
-  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json portfolio")))
+  @RequestBody(
+    description = "Json with data",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[com.ltonetwork.http.DebugMessage]),
+      examples = Array(new ExampleObject(
+        value = "{\n\t\"message\": \"foo\"\n}",
+      ))
+    )),
+    required = true
+  )
+  @ApiResponses(Array(new ApiResponse(responseCode = "200", description = "Json portfolio")))
   def print: Route = (path("print") & post & withAuth) {
     json[DebugMessage] { params =>
       log.debug(params.message.take(250))
       ""
     }
   }
+
   @Path("/portfolios/{address}")
-  @ApiOperation(
-    value = "Portfolio",
-    notes = "Get current portfolio considering pessimistic transactions in the UTX pool",
-    httpMethod = "GET"
+  @Operation(
+    summary = "Get current portfolio considering pessimistic transactions in the UTX pool",
+    method = "GET"
   )
-  @ApiImplicitParams(
+  @Parameters(
     Array(
-      new ApiImplicitParam(
+      new Parameter(
         name = "address",
-        value = "An address of portfolio",
+        description = "An address of portfolio",
         required = true,
-        dataType = "string",
-        paramType = "path"
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
       ),
-      new ApiImplicitParam(
+      new Parameter(
         name = "considerUnspent",
-        value = "Taking into account pessimistic transactions from UTX pool",
+        description = "Taking into account pessimistic transactions from UTX pool",
         required = false,
-        dataType = "boolean",
-        paramType = "query",
-        defaultValue = "true"
+        schema = new Schema(implementation = classOf[Boolean]),
+        in = ParameterIn.QUERY
       )
-    ))
-  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json portfolio")))
+    )
+  )
+  @ApiResponses(Array(new ApiResponse(responseCode = "200", description = "Json portfolio")))
   def portfolios: Route = path("portfolios" / Segment) { rawAddress =>
     (get & withAuth & parameter('considerUnspent.as[Boolean])) { considerUnspent =>
       Address.fromString(rawAddress) match {
@@ -137,18 +149,31 @@ case class DebugApiRoute(ws: LtoSettings,
   }
 
   @Path("/state")
-  @ApiOperation(value = "State", notes = "Get current state", httpMethod = "GET")
-  @ApiResponses(Array(new ApiResponse(code = 200, message = "Json state")))
+  @Operation(
+    summary = "Get current state",
+    method = "GET"
+  )
+  @ApiResponses(Array(new ApiResponse(responseCode = "200", description = "Json state")))
   def state: Route = (path("state") & get & withAuth) {
     complete(ng.ltoDistribution(ng.height).map { case (a, b) => a.stringRepr -> b })
   }
 
   @Path("/stateAtHeight/{height}")
-  @ApiOperation(value = "State at block", notes = "Get state at specified height", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Get state at specified height",
+    method = "GET"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "height", value = "height", required = true, dataType = "integer", paramType = "path")
-    ))
+      new Parameter(
+        name = "height",
+        description = "Height at which the state should be retrieved",
+        required = true,
+        schema = new Schema(implementation = classOf[Int]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def stateAtHeight: Route = (path("stateAtHeight" / IntNumber) & get & withAuth) { height =>
     complete(ng.ltoDistribution(height).map { case (a, b) => a.stringRepr -> b })
   }
@@ -171,21 +196,23 @@ case class DebugApiRoute(ws: LtoSettings,
   }
 
   @Path("/rollback")
-  @ApiOperation(value = "Rollback to height", notes = "Removes all blocks after given height", httpMethod = "POST")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(
-        name = "body",
-        value = "Json with data",
-        required = true,
-        paramType = "body",
-        dataType = "com.ltonetwork.http.RollbackParams",
-        defaultValue = "{\n\t\"rollbackTo\": 3,\n\t\"returnTransactionsToUTX\": false\n}"
-      )
-    ))
+  @Operation(
+    summary = "Removes all blocks after given height",
+    method = "POST"
+  )
+  @RequestBody(
+    description = "Json with data",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[com.ltonetwork.http.RollbackParams]),
+      examples = Array(new ExampleObject(
+        value = "{\n\t\"rollbackTo\": 3,\n\t\"returnTransactionsToUTX\": false\n}",
+      ))
+    )),
+    required = true
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "200 if success, 404 if there are no block at this height")
+      new ApiResponse(responseCode = "200", description = "200 if success, 404 if there are no block at this height")
     ))
   def rollback: Route = (path("rollback") & post & withAuth) {
     json[RollbackParams] { params =>
@@ -199,10 +226,13 @@ case class DebugApiRoute(ws: LtoSettings,
   }
 
   @Path("/info")
-  @ApiOperation(value = "State", notes = "All info you need to debug", httpMethod = "GET")
+  @Operation(
+    summary = "All info you need to debug",
+    method = "GET"
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json state")
+      new ApiResponse(responseCode = "200", description = "Json state")
     ))
   def info: Route = (path("info") & get & withAuth) {
     complete(
@@ -217,10 +247,13 @@ case class DebugApiRoute(ws: LtoSettings,
   }
 
   @Path("/minerInfo")
-  @ApiOperation(value = "State", notes = "All miner info you need to debug", httpMethod = "GET")
+  @Operation(
+    summary = "All miner info you need to debug",
+    method = "GET"
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json state")
+      new ApiResponse(responseCode = "200", description = "Json state")
     ))
   def minerInfo: Route = (path("minerInfo") & get & withAuth) {
     complete(miner.collectNextBlockGenerationTimes.map {
@@ -236,10 +269,13 @@ case class DebugApiRoute(ws: LtoSettings,
   }
 
   @Path("/historyInfo")
-  @ApiOperation(value = "State", notes = "All history info you need to debug", httpMethod = "GET")
+  @Operation(
+    summary = "All history info you need to debug",
+    method = "GET"
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json state")
+      new ApiResponse(responseCode = "200", description = "Json state")
     ))
   def historyInfo: Route = (path("historyInfo") & get & withAuth) {
     val a = ng.lastPersistedBlockIds(10)
@@ -249,31 +285,45 @@ case class DebugApiRoute(ws: LtoSettings,
   }
 
   @Path("/configInfo")
-  @ApiOperation(value = "Config", notes = "Currently running node config", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Currently running node config",
+    method = "GET"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(
+      new Parameter(
         name = "full",
-        value = "Exposes full typesafe config",
+        description = "Exposes full typesafe config",
         required = false,
-        dataType = "boolean",
-        paramType = "query",
-        defaultValue = "false"
-      )))
+        schema = new Schema(implementation = classOf[Boolean]),
+        in = ParameterIn.QUERY
+      )
+    )
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json state")
+      new ApiResponse(responseCode = "200", description = "Json state")
     ))
   def configInfo: Route = (path("configInfo") & get & parameter('full.as[Boolean]) & withAuth) { full =>
     complete(if (full) fullConfig else ltoConfig)
   }
 
   @Path("/rollback-to/{signature}")
-  @ApiOperation(value = "Block signature", notes = "Rollback the state to the block with a given signature", httpMethod = "DELETE")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Rollback the state to the block with a given signature",
+    method = "DELETE"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "signature", value = "Base58-encoded block signature", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "signature",
+        description = "Base58-encoded block signature",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def rollbackTo: Route = path("rollback-to" / Segment) { signature =>
     (delete & withAuth) {
       ByteStr.decodeBase58(signature) match {
@@ -286,14 +336,20 @@ case class DebugApiRoute(ws: LtoSettings,
   }
 
   @Path("/blacklist")
-  @ApiOperation(value = "Blacklist given peer", notes = "Moving peer to blacklist", httpMethod = "POST")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "address", value = "IP address of node", required = true, dataType = "string", paramType = "body")
-    ))
+  @Operation(
+    summary = "Moving peer to blacklist",
+    method = "POST"
+  )
+  @RequestBody(
+    description = "IP address of node",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String]),
+    )),
+    required = true
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "200 if success, 404 if there are no peer with such address")
+      new ApiResponse(responseCode = "200", description = "200 if success, 404 if there are no peer with such address")
     ))
   def blacklist: Route = (path("blacklist") & post & withAuth) {
     entity(as[String]) { socketAddressString =>
