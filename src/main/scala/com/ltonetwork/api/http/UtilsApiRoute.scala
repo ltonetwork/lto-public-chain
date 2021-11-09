@@ -2,18 +2,23 @@ package com.ltonetwork.api.http
 
 import java.security.SecureRandom
 
-import javax.ws.rs.Path
 import akka.http.scaladsl.server.Route
 import com.ltonetwork.crypto
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.state.diffs.CommonValidation
 import com.ltonetwork.utils.{Base58, Time}
-import io.swagger.annotations._
+import jakarta.validation.Path
+import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import io.swagger.v3.oas.annotations.parameters.RequestBody
+import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
+import io.swagger.v3.oas.annotations.tags.Tag
 import play.api.libs.json.Json
 import com.ltonetwork.transaction.smart.script.{Script, ScriptCompiler}
 
 @Path("/utils")
-@Api(value = "/utils", description = "Useful functions", position = 3, produces = "application/json")
+@Tag("utils")
 case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends ApiRoute {
 
   import UtilsApiRoute._
@@ -29,14 +34,23 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   }
 
   @Path("/script/compile")
-  @ApiOperation(value = "Compile", notes = "Compiles string code to base64 script representation", httpMethod = "POST")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "code", required = true, dataType = "string", paramType = "body", value = "Script code")
-    ))
+  @Operation(
+    summary = "Compiles string code to base64 script representation",
+    method = "POST"
+  )
+  @RequestBody(
+    description = "Script code",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String]),
+    )),
+    required = true
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "base64 or error")
+      new ApiResponse(
+        responseCode = "200",
+        description = "base64 or error"
+      )
     ))
   def compile: Route = path("script" / "compile") {
     (post & entity(as[String])) { code =>
@@ -56,15 +70,24 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   }
 
   @Path("/script/estimate")
-  @ApiOperation(value = "Estimate", notes = "Estimates compiled code in Base64 representation", httpMethod = "POST")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "code", required = true, dataType = "string", paramType = "body", value = "A compiled Base64 code")
-    ))
+  @Operation(
+    summary = "Estimates compiled code in Base64 representation",
+    method = "POST"
+  )
+  @RequestBody(
+    description = "Compiled Base64 code",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String]),
+    )),
+    required = true
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "base64 or error")
-    ))
+      new ApiResponse(
+        responseCode = "200",
+        description = "base64 or error"
+      )
+  ))
   def estimate: Route = path("script" / "estimate") {
     (post & entity(as[String])) { code =>
       complete(
@@ -91,24 +114,39 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   }
 
   @Path("/time")
-  @ApiOperation(value = "Time", notes = "Current Node time (UTC)", httpMethod = "GET")
+  @Operation(
+    summary = "Current Node time (UTC)",
+    method = "GET"
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with time or error")
+      new ApiResponse(
+        responseCode = "200",
+        description = "Json with time or error"
+      )
     ))
   def time: Route = (path("time") & get) {
     complete(Json.obj("system" -> System.currentTimeMillis(), "NTP" -> timeService.correctedTime()))
   }
 
   @Path("/hash/secure")
-  @ApiOperation(value = "Hash", notes = "Return SecureHash of specified message: `blake2b(sha256(message))`", httpMethod = "POST")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "message", value = "Message to hash", required = true, paramType = "body", dataType = "string")
-    ))
+  @Operation(
+    summary = "Return SecureHash of specified message: `blake2b(sha256(message))`",
+    method = "POST"
+  )
+  @RequestBody(
+    description = "Message to hash",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String]),
+    )),
+    required = true
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with error or json like {\"message\": \"your message\",\"hash\": \"your message hash\"}")
+      new ApiResponse(
+        responseCode = "200",
+        description = "Json with error or json like {\"message\": \"your message\",\"hash\": \"your message hash\"}"
+      )
     ))
   def hashSecure: Route = (path("hash" / "secure") & post) {
     entity(as[String]) { message =>
@@ -117,14 +155,23 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   }
 
   @Path("/hash/fast")
-  @ApiOperation(value = "Hash", notes = "Return `blake2b(message)` of specified message", httpMethod = "POST")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "message", value = "Message to hash", required = true, paramType = "body", dataType = "string")
-    ))
+  @Operation(
+    summary = "Return `blake2b(message)` of specified message",
+    method = "POST"
+  )
+  @RequestBody(
+    description = "Message to hash",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String]),
+    )),
+    required = true
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with error or json like {\"message\": \"your message\",\"hash\": \"your message hash\"}")
+      new ApiResponse(
+        responseCode = "200",
+        description = "Json with error or json like {\"message\": \"your message\",\"hash\": \"your message hash\"}"
+      )
     ))
   def hashFast: Route = (path("hash" / "fast") & post) {
     entity(as[String]) { message =>
