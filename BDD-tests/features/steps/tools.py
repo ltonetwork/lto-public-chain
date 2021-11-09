@@ -7,6 +7,10 @@ from LTO.Transactions.CancelSponsorship import CancelSponsorship
 from LTO.Transactions.Lease import Lease
 from LTO.Transactions.CancelLease import CancelLease
 from LTO.Transactions.MassTransfer import MassTransfer
+from LTO.Transactions.RevokeAssociation import RevokeAssociation
+from LTO.Transactions.Association import Association
+from LTO import crypto
+import base58
 import random
 import polling
 import requests
@@ -206,6 +210,65 @@ def massTransfer(transfers, sender):
         lastTransactionSuccess = False
         raise
 
+def isAssociated(user1, user2):
+    user1 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(user1))
+    user2 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(user2))
+
+    listOutgoing = NODE.wrapper(api='/associations/status/{}'.format(user1.address))['outgoing']
+    assType = []
+    for association in listOutgoing:
+        if 'revokeTransactionId' not in association and association['party'] == user2.address:
+            assType.append([association['associationType'], association['hash']])
+    if not assType:
+        return False
+    else:
+        return assType
+
+def revokeAssociation(user1, user2, typeHash):
+    global lastTransactionSuccess
+
+    user1 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(user1))
+    user2 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(user2))
+
+    type = typeHash[0]
+    hash = crypto.bytes2str(base58.b58decode(typeHash[1]))
+
+    transaction = RevokeAssociation(recipient=user2.address, associationType=type, anchor=hash)
+    transaction.signWith(user1)
+
+    try:
+        tx = transaction.broadcastTo(NODE)
+        pollTx(tx.id)
+        lastTransactionSuccess = True
+        return tx
+    except:
+        lastTransactionSuccess = False
+        raise
+
+def randomTypeAndHash():
+    type = ''.join(random.choice('123456789') for _ in range(2))
+    hash = ''.join(random.choice('qwertyuiopasdfghjklzxcvbnm') for _ in range(9))
+    return [int(type), hash]
+
+def association(user1, user2):
+    global lastTransactionSuccess
+
+    user1 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(user1))
+    user2 = AccountFactory(CHAIN_ID).createFromSeed(getSeed(user2))
+
+    type, hash = randomTypeAndHash()
+
+    transaction = Association(user2.address, associationType=type, anchor=hash)
+    transaction.signWith(user1)
+
+    try:
+        tx = transaction.broadcastTo(NODE)
+        pollTx(tx.id)
+        lastTransactionSuccess = True
+        return tx
+    except:
+        lastTransactionSuccess = False
+        raise
 
 
 
