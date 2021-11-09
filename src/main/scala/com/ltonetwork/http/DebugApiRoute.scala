@@ -21,7 +21,6 @@ import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.Channel
 import io.netty.channel.group.ChannelGroup
-import jakarta.validation.Path
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
@@ -31,6 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import monix.eval.{Coeval, Task}
 import play.api.libs.json._
 
+import javax.ws.rs.Path
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}

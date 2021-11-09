@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.Route
 import com.ltonetwork.Shutdownable
 import com.ltonetwork.settings.{Constants, RestAPISettings}
 import com.ltonetwork.state.Blockchain
-import jakarta.validation.Path
+import javax.ws.rs.Path
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag

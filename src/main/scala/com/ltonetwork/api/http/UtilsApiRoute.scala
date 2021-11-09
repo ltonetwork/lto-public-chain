@@ -7,7 +7,7 @@ import com.ltonetwork.crypto
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.state.diffs.CommonValidation
 import com.ltonetwork.utils.{Base58, Time}
-import jakarta.validation.Path
+import javax.ws.rs.Path
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}

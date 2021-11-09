@@ -6,7 +6,7 @@ import com.ltonetwork.api.http.{ApiRoute, CommonApiFunctions, InvalidAddress}
 import com.ltonetwork.consensus.GeneratingBalanceProvider
 import com.ltonetwork.settings.{FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.Blockchain
-import jakarta.validation.Path
+import javax.ws.rs.Path
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Schema
