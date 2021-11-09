@@ -5,14 +5,19 @@ import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.features.{BlockchainFeatureStatus, BlockchainFeatures}
 import com.ltonetwork.settings.{FeaturesSettings, FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.Blockchain
-import io.swagger.annotations._
-import javax.ws.rs.Path
+import jakarta.validation.Path
+import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import io.swagger.v3.oas.annotations.parameters.RequestBody
+import io.swagger.v3.oas.annotations.tags.Tag
 import play.api.libs.json.Json
 import com.ltonetwork.api.http.{ApiRoute, CommonApiFunctions}
 import com.ltonetwork.utils.ScorexLogging
+import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
 
 @Path("/activation")
-@Api(value = "activation")
+@Tag("activation")
 case class ActivationApiRoute(settings: RestAPISettings,
                               functionalitySettings: FunctionalitySettings,
                               featuresSettings: FeaturesSettings,
@@ -26,10 +31,16 @@ case class ActivationApiRoute(settings: RestAPISettings,
   }
 
   @Path("/status")
-  @ApiOperation(value = "Status", notes = "Get activation status", httpMethod = "GET")
+  @Operation(
+    summary = "Get activation status",
+    method = "GET"
+  )
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json activation status")
+      new ApiResponse(
+        responseCode = "200",
+        description = "Json activation status"
+      )
     ))
   def status: Route = (get & path("status")) {
 
