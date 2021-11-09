@@ -23,7 +23,7 @@ import scala.concurrent._
 import scala.util.Try
 
 @Path("/blocks")
-@Tag("blocks")
+@Tag(name="blocks")
 case class BlocksApiRoute(settings: RestAPISettings,
                           blockchain: Blockchain,
                           allChannels: ChannelGroup,

@@ -5,7 +5,6 @@ import com.github.swagger.akka.model.{Info, License}
 import com.github.swagger.akka.SwaggerHttpService
 import com.ltonetwork.Version
 import com.ltonetwork.settings.RestAPISettings
-import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.servers.{Server, ServerVariable, ServerVariables}
 import io.swagger.v3.oas.models.OpenAPI
 

@@ -20,7 +20,7 @@ import play.api.libs.json._
 import scala.collection.JavaConverters._
 
 @Path("/peers")
-@Tag("peers")
+@Tag(name="peers")
 case class PeersApiRoute(settings: RestAPISettings,
                          connectToPeer: InetSocketAddress => Unit,
                          peerDatabase: PeerDatabase,

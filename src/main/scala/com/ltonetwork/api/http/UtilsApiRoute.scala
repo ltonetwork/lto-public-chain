@@ -18,7 +18,7 @@ import play.api.libs.json.Json
 import com.ltonetwork.transaction.smart.script.{Script, ScriptCompiler}
 
 @Path("/utils")
-@Tag("utils")
+@Tag(name="utils")
 case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends ApiRoute {
 
   import UtilsApiRoute._

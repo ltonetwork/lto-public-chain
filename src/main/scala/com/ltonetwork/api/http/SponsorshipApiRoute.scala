@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import play.api.libs.json.{Format, Json}
 
 @Path("/sponsorship")
-@Tag("sponsorship")
+@Tag(name="sponsorship")
 case class SponsorshipApiRoute(settings: RestAPISettings, wallet: Wallet, blockchain: Blockchain, utx: UtxPool, allChannels: ChannelGroup, time: Time)
     extends ApiRoute
     with BroadcastRoute {

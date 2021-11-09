@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import play.api.libs.json._
 
 @Path("/associations")
-@Tag("associations")
+@Tag(name="associations")
 case class AssociationsApiRoute(settings: RestAPISettings,
                                 wallet: Wallet,
                                 blockchain: Blockchain,

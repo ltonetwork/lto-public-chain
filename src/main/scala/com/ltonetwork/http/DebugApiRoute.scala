@@ -36,7 +36,7 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 @Path("/debug")
-@Tag("debug")
+@Tag(name="debug")
 case class DebugApiRoute(ws: LtoSettings,
                          wallet: Wallet,
                          ng: NG,

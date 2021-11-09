@@ -14,7 +14,7 @@ import com.ltonetwork.api.http.{ApiRoute, CommonApiFunctions}
 import com.ltonetwork.utils.ScorexLogging
 
 @Path("/node")
-@Tag("node")
+@Tag(name="node")
 case class NodeApiRoute(settings: RestAPISettings, blockchain: Blockchain, application: Shutdownable)
     extends ApiRoute
     with CommonApiFunctions

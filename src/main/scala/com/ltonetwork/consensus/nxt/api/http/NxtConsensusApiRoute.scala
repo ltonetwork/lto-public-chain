@@ -14,7 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import play.api.libs.json.Json
 
 @Path("/consensus")
-@Tag("consensus")
+@Tag(name="consensus")
 case class NxtConsensusApiRoute(settings: RestAPISettings, blockchain: Blockchain, fs: FunctionalitySettings)
     extends ApiRoute
     with CommonApiFunctions {

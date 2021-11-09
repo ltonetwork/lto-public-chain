@@ -13,9 +13,7 @@ import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.api.http.swagger.SwaggerDocService
 import com.ltonetwork.utils.ScorexLogging
 
-import scala.reflect.runtime.universe.Type
-
-case class CompositeHttpService(system: ActorSystem, apiTypes: Seq[Type], routes: Seq[ApiRoute], settings: RestAPISettings) extends ScorexLogging {
+case class CompositeHttpService(system: ActorSystem, apiTypes: Set[Class[_]], routes: Seq[ApiRoute], settings: RestAPISettings) extends ScorexLogging {
 
   val swaggerService = new SwaggerDocService(system, apiTypes, settings)
 

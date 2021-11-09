@@ -30,7 +30,7 @@ import scala.util.Success
 import scala.util.control.Exception
 
 @Path("/transactions")
-@Tag("transactions")
+@Tag(name="transactions")
 case class TransactionsApiRoute(settings: RestAPISettings,
                                 functionalitySettings: FunctionalitySettings,
                                 feesSettings: FeesSettings,

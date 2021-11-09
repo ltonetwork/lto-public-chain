@@ -1,16 +1,17 @@
 package com.ltonetwork.network
 
 import com.google.common.primitives.{Bytes, Ints}
-import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json._
 import com.ltonetwork.utils.Base58
+import io.swagger.v3.oas.annotations.media.Schema
 import scorex.crypto.signatures.Curve25519._
+
 import scala.collection.immutable.Stream
 import scala.util.{Failure, Success}
 
-case class BlockCheckpoint(height: Int, @ApiModelProperty(dataType = "java.lang.String") signature: Array[Byte])
+case class BlockCheckpoint(height: Int, @Schema(`type` = "java.lang.String") signature: Array[Byte])
 
-case class Checkpoint(items: Seq[BlockCheckpoint], @ApiModelProperty(dataType = "java.lang.String") signature: Array[Byte]) {
+case class Checkpoint(items: Seq[BlockCheckpoint], @Schema(`type` = "java.lang.String") signature: Array[Byte]) {
   def toSign: Array[Byte] = {
     val length      = items.size
     val lengthBytes = Ints.toByteArray(length)

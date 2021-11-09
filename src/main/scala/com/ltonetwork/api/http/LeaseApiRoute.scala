@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import play.api.libs.json.JsNumber
 
 @Path("/leasing")
-@Tag("leasing")
+@Tag(name="leasing")
 case class LeaseApiRoute(settings: RestAPISettings, wallet: Wallet, blockchain: Blockchain, utx: UtxPool, allChannels: ChannelGroup, time: Time)
     extends ApiRoute
     with BroadcastRoute {

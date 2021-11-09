@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import java.nio.charset.StandardCharsets
 
 @Path("/wallet")
-@Tag("wallet")
+@Tag(name="wallet")
 case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends ApiRoute {
 
   override lazy val route =

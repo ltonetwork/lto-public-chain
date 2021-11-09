@@ -28,7 +28,7 @@ import play.api.libs.json._
 import scala.util.{Failure, Success, Try}
 
 @Path("/addresses")
-@Tag("addresses")
+@Tag(name="addresses")
 case class AddressApiRoute(settings: RestAPISettings,
                            wallet: Wallet,
                            blockchain: Blockchain,
