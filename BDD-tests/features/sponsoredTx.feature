@@ -7,16 +7,22 @@ Feature: Sponsored transaction
     And Dick has a new account
 
   Scenario: Basic sponsored transaction
-    Given Alice has 100 lto
-    And Bob has 10 lto
+    Given Alice has 5 lto
+    And Bob has 3 lto
     When Bob anchors "1234" sponsored by Alice
-    Then Alice has 99.65 lto
-    And Bob has 10 lto
+    Then Alice has 4.65 lto
+    And Bob has 3 lto
 
 
-    # also sponsor transaction with sponsored account
+  Scenario: Sponsored anchor transaction from sponsored account
+    Given Charlie is sponsoring Alice
+    And Alice has 5 lto
+    And Charlie has 5 lto
+    And Bob has 5 lto
+    When Bob anchors "1234" sponsored by Alice
+    Then Bob has 5 lto
+    And Alice has 5 lto
+    And Charlie has 4.65 lto
 
-
-    # after you do a lease can you still send the leased money in a transfer ?
 
 

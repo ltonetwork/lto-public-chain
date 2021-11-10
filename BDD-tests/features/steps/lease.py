@@ -20,13 +20,14 @@ def step_impl(context, user1, user2):
         tools.lastTransactionSuccess = False
 
 
-@given('{user1} is leasing to {user2}')
-def step_impl(context, user1, user2):
+@given('{user1} is leasing {amount} lto to {user2}')
+def step_impl(context, user1, amount, user2):
+    amount = tools.convertBalance(amount)
     try:
-        assert tools.isLeasing(user1, user2) == True
+        assert tools.isLeasing(user1, user2, amount) is True
     except:
-        tools.fundsForTransaction(user1, LTO.Lease.DEFAULT_LEASE_FEE + 100000000)
-        tools.lease(user1, user2)
+        tools.fundsForTransaction(user1, LTO.Lease.DEFAULT_LEASE_FEE + amount)
+        tools.lease(user1, user2, amount)
 
 
 @when('{user1} leases {amount} lto to {user2}')
@@ -49,9 +50,10 @@ def step_impl(context, user1, amount, user2):
 
 
 
-@then('{user1} is leasing to {user2}')
-def step_impl(context, user1, user2):
-    assert tools.isLeasing(user1, user2) is True
+@then('{user1} is leasing {amount} lto to {user2}')
+def step_impl(context, user1, amount, user2):
+    amount = tools.convertBalance(amount)
+    assert tools.isLeasing(user1, user2, amount) is True
 
 
 @then('{user1} is not leasing to {user2}')

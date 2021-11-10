@@ -3,10 +3,9 @@ import tools
 import pytest
 
 
-@when('{user} anchors {hash}')
+@when(u'"{user}" anchors "{hash}"')
 def step_impl(context, user, hash):
     tools.anchor(user, hash)
-
 
 @when('{user} tries to anchor')
 def step_impl(context, user):
@@ -19,3 +18,6 @@ def step_impl(context, user):
 @then('There is an anchor transaction with hash {hash} signed by {Alice}')
 def step_impl(context, hash, user):
     pass
+
+
+

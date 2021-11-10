@@ -17,7 +17,8 @@ import requests
 import hashlib
 
 CHAIN_ID = 'T'
-URL = 'https://testnet.lto.network'
+URL2 = 'https://testnet.lto.network'
+URL = 'http://116.203.167.231:6869'
 NODE = PublicNode(URL)
 ROOT_SEED = 'fragile because fox snap picnic mean art observe vicious program chicken purse text hidden chest'
 ROOT_ACCOUNT = AccountFactory(CHAIN_ID).createFromSeed(ROOT_SEED)
@@ -71,7 +72,7 @@ def transferTo(recipient="", amount=0, sender=""):
 
 
 
-def anchor(user="", hash=""):
+def anchor(user="", hash="", sponsor=""):
     global lastTransactionSuccess
 
     if not user:
@@ -83,6 +84,10 @@ def anchor(user="", hash=""):
         hash = ''.join(random.choice('qwertyuioplkjhgfds') for _ in range(6))
     transaction = Anchor(encodeHash(hash))
     transaction.signWith(account)
+
+    if sponsor:
+        sponsorAccount = USERS[sponsor]
+        transaction.sponsorWith(sponsorAccount)
 
     try:
         tx = transaction.broadcastTo(NODE)
@@ -122,13 +127,17 @@ def isSponsoring(account1, account2):
     return account1.address in NODE.sponsorshipList(account2.address)['sponsor']
 
 
-def isLeasing(account1, account2):
+def isLeasing(account1, account2, amount=""):
     account1 = USERS[account1]
     account2 = USERS[account2]
     leasList = NODE.leaseList(account1.address)
     for lease in leasList:
         if lease['recipient'] == account2.address:
-            return True
+            if amount:
+                if lease['amount'] == amount:
+                    return True
+            else:
+                return True
     return False
 
 
@@ -192,9 +201,11 @@ def cancelLease(account1, account2):
         raise
 
 
-def lease(account1, account2, amount=100000000):
+def lease(account1, account2, amount=""):
     global lastTransactionSuccess
 
+    if not amount:
+        amount = 100000000
     amount = int(amount)
     account1 = USERS[account1]
     account2 = USERS[account2]
