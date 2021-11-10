@@ -24,9 +24,9 @@ Feature: Sponsorship
 
   Scenario: Sponsorship fall through to sender
     Given Alice is sponsoring Bob
-    And Bob has 10 LTO
-    And Charlie has 0 LTO
-    And Alice has 0 LTO
+    And Bob has 10 lto
+    And Charlie has 0 lto
+    And Alice has 9 lto
     When Bob transfers 5 lto to Charlie
     Then Alice has 0 lto
     And Bob has 4 lto
@@ -37,10 +37,10 @@ Feature: Sponsorship
     And Dick is sponsoring Bob
     And Bob has 10 LTO
     And Charlie has 0 LTO
-    And Alice has 100 LTO
+    And Alice has 10 LTO
     And Dick has 10 LTO
     When Bob transfers 5 lto to Charlie
-    Then Alice has 100 lto
+    Then Alice has 10 lto
     And Dick has 9 LTO
     And Bob has 5 lto
     And Charlie has 5 lto
@@ -50,10 +50,10 @@ Feature: Sponsorship
     And Dick is sponsoring Bob
     And Bob has 10 LTO
     And Charlie has 0 LTO
-    And Alice has 100 LTO
+    And Alice has 10 LTO
     And Dick has 0 LTO
     When Bob transfers 5 lto to Charlie
-    Then Alice has 99 lto
+    Then Alice has 9 lto
     And Dick has 0 lto
     And Bob has 5 lto
     And Charlie has 5 lto
@@ -65,10 +65,10 @@ Feature: Sponsorship
 
 Scenario: Successfull CancelSponsorship transaction
     Given Alice is sponsoring Bob
-    And Alice has 100 lto
+    And Alice has 6 lto
     When Alice cancels the sponsorship for Bob
-    Then Alice has 95 lto
-    And Alice is not sponsoring bob
+    Then Alice has 1 lto
+    And Alice is not sponsoring Bob
 
   Scenario: Unsuccessful cancel sponsorship transaction due to insufficient balance
     Given Alice has 0 lto

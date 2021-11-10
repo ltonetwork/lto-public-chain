@@ -13,13 +13,10 @@ Feature: Sponsored transaction
     Then Alice has 99.65 lto
     And Bob has 10 lto
 
-    # give background to all of them
 
     # also sponsor transaction with sponsored account
 
-    # add lto in the given
 
     # after you do a lease can you still send the leased money in a transfer ?
 
-    #finish fixing the sponsorhip feature
 
