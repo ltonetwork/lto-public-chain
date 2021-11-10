@@ -3,53 +3,53 @@ from behave import *
 import tools
 
 
-@when(u'{user1} tries to make an association with {user2}')
-def step_impl(context, user1, user2):
+@when(u'{sender} tries to make an association with {recipient}')
+def step_impl(context, sender, recipient):
     try:
-        tools.association(user1, user2)
+        tools.association(sender, recipient)
     except:
         pass
 
 
-@given('{user1} is not associated with {user2}')
-def step_impl(context, user1, user2):
+@given('{sender} is not associated with {recipient}')
+def step_impl(context, sender, recipient):
     try:
-        assert tools.isAssociated(user1, user2) is False
+        assert tools.isAssociated(sender, recipient) is False
     except:
-        tools.fundsForTransaction(user1, LTO.RevokeAssociation.DEFAULT_LEASE_FEE)
-        assTypeList = tools.isAssociated(user1, user2)
+        tools.fundsForTransaction(sender, LTO.RevokeAssociation.DEFAULT_LEASE_FEE)
+        assTypeList = tools.isAssociated(sender, recipient)
         for typeHash in assTypeList:
-            tools.revokeAssociation(user1, user2, typeHash)
-        assert tools.isAssociated(user1, user2) is False
+            tools.revokeAssociation(sender, recipient, typeHash)
+        assert tools.isAssociated(sender, recipient) is False
 
 
-@given('{user1} is associated with {user2}')
-def step_impl(context, user1, user2):
+@given('{sender} is associated with {recipient}')
+def step_impl(context, sender, recipient):
     try:
-        assert tools.isAssociated(user1, user2) is not False
+        assert tools.isAssociated(sender, recipient) is not False
     except:
-        tools.fundsForTransaction(user1, LTO.Association.DEFAULT_LEASE_FEE)
-        tools.association(user1, user2)
-        assert tools.isAssociated(user1, user2) is not False
+        tools.fundsForTransaction(sender, LTO.Association.DEFAULT_LEASE_FEE)
+        tools.association(sender, recipient)
+        assert tools.isAssociated(sender, recipient) is not False
 
 
-@when('{user1} make an association with {user2}')
-def step_impl(context, user1, user2):
-    tools.association(user1, user2)
+@when('{sender} make an association with {recipient}')
+def step_impl(context, sender, recipient):
+    tools.association(sender, recipient)
 
 
-@when('{user1} revoke the association with {user2}')
-def step_impl(context, user1, user2):
-    assTypeList = tools.isAssociated(user1, user2)
+@when('{sender} revoke the association with {recipient}')
+def step_impl(context, sender, recipient):
+    assTypeList = tools.isAssociated(sender, recipient)
     for typeHash in assTypeList:
-        tools.revokeAssociation(user1, user2, typeHash)
+        tools.revokeAssociation(sender, recipient, typeHash)
 
 
-@then('{user1} is associated with {user2}')
-def step_impl(context, user1, user2):
-    assert tools.isAssociated(user1, user2) is not False
+@then('{sender} is associated with {recipient}')
+def step_impl(context, sender, recipient):
+    assert tools.isAssociated(sender, recipient) is not False
 
 
-@then('{user1} is not associated with {user2}')
-def step_impl(context, user1, user2):
-    assert tools.isAssociated(user1, user2) is False
+@then('{sender} is not associated with {recipient}')
+def step_impl(context, sender, recipient):
+    assert tools.isAssociated(sender, recipient) is False

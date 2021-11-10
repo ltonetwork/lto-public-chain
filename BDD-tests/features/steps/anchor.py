@@ -15,7 +15,7 @@ def step_impl(context, user):
         pass
 
 
-@then('There is an anchor transaction with hash {hash} signed by {Alice}')
+@then('There is an anchor transaction with hash {hash} signed by {user}')
 def step_impl(context, hash, user):
     pass
 

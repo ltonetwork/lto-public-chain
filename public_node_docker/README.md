@@ -35,3 +35,25 @@ docker run -p 6869:6869 -e LTO_NETWORK=TESTNET -e LTO_HEAP_SIZE=2g -v YOUR_LOCAL
 |`LTO_FEATURES`             |Features you wish to vote. E.g. set to 4 to start voting for the Smart Accounts feature. You can also vote for multiple features at by comma seperating them (e.g. 4,5)|
 
 **Note: All variables are optional.**  
+
+## Running the tests
+
+First have behave installed:
+```
+pip install behave
+```
+
+Running all the tests:
+```
+cd BDD-tests 
+behave
+```
+Running a single feature:
+```
+behave -i featureName.feature
+```
+
+Running a single scenario:
+```
+behave -n 'scenarioName'
+```
