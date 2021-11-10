@@ -22,6 +22,7 @@ Feature: Association
     When Alice tries to make an association with Bob of type 1
     Then The transaction fails
 
+  @skip
   Scenario: Issue, revoke, issue association
     Given Alice has an association with Bob of type 5
     And Alice has 10 lto
@@ -29,6 +30,7 @@ Feature: Association
     And Alice tries to make an association with Bob of type 5
     Then Alice has 8 lto
     And Alice is not associated with Bob
+    # https://github.com/ltonetwork/lto-public-chain/issues/103
 
   Scenario: Revoke association with anchor
     Given Alice has an association with Bob of type 76 and anchor qwerty

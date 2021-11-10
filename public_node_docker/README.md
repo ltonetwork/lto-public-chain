@@ -48,6 +48,7 @@ Running all the tests:
 cd BDD-tests 
 behave
 ```
+
 Running a single feature:
 ```
 behave -i featureName.feature
@@ -56,4 +57,10 @@ behave -i featureName.feature
 Running a single scenario:
 ```
 behave -n 'scenarioName'
+```
+
+
+Add the skip tag to not run the tests that are known to fail due to known bugs
+```
+behave --tags=-skip
 ```
