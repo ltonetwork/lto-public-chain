@@ -104,15 +104,6 @@ def isLastTransactionSuccessful():
     return lastTransactionSuccess
 
 
-def getSeed(name):
-    if len(name) >= 15:
-        return name
-    else:
-        while len(name) < 15:
-            name = name + "a"
-        return name
-
-
 def convertBalance(balance):
     return int(float(balance) * 100000000)
 
@@ -256,14 +247,11 @@ def isAssociated(user1, user2):
     else:
         return assType
 
-def revokeAssociation(user1, user2, typeHash):
+def revokeAssociation(user1, user2, type, hash = ""):
     global lastTransactionSuccess
 
     user1 = USERS[user1]
     user2 = USERS[user2]
-
-    type = typeHash[0]
-    hash = crypto.bytes2str(base58.b58decode(typeHash[1]))
 
     transaction = RevokeAssociation(recipient=user2.address, associationType=type, anchor=hash)
     transaction.signWith(user1)
@@ -277,18 +265,11 @@ def revokeAssociation(user1, user2, typeHash):
         lastTransactionSuccess = False
         raise
 
-def randomTypeAndHash():
-    type = ''.join(random.choice('123456789') for _ in range(2))
-    hash = ''.join(random.choice('qwertyuiopasdfghjklzxcvbnm') for _ in range(9))
-    return [int(type), hash]
-
-def association(user1, user2):
+def association(user1, user2, type, hash=""):
     global lastTransactionSuccess
 
     user1 = USERS[user1]
     user2 = USERS[user2]
-
-    type, hash = randomTypeAndHash()
 
     transaction = Association(user2.address, associationType=type, anchor=hash)
     transaction.signWith(user1)

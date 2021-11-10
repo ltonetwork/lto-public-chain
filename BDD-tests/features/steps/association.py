@@ -3,47 +3,45 @@ from behave import *
 import tools
 
 
-@when(u'{sender} tries to make an association with {recipient}')
-def step_impl(context, sender, recipient):
+@when(u'{sender} tries to make an association with {recipient} of type {type:d}')
+def step_impl(context, sender, recipient, type):
     try:
-        tools.association(sender, recipient)
+        tools.association(sender, recipient, type)
     except:
         pass
 
 
-@given('{sender} is not associated with {recipient}')
-def step_impl(context, sender, recipient):
-    try:
-        assert tools.isAssociated(sender, recipient) is False
-    except:
-        tools.fundsForTransaction(sender, LTO.RevokeAssociation.DEFAULT_LEASE_FEE)
-        assTypeList = tools.isAssociated(sender, recipient)
-        for typeHash in assTypeList:
-            tools.revokeAssociation(sender, recipient, typeHash)
-        assert tools.isAssociated(sender, recipient) is False
-
-
-@given('{sender} is associated with {recipient}')
-def step_impl(context, sender, recipient):
+@given('{sender} has an association with {recipient} of type {type:d}')
+def step_impl(context, sender, recipient, type):
     try:
         assert tools.isAssociated(sender, recipient) is not False
     except:
         tools.fundsForTransaction(sender, LTO.Association.DEFAULT_LEASE_FEE)
-        tools.association(sender, recipient)
+        tools.association(sender, recipient, type)
         assert tools.isAssociated(sender, recipient) is not False
 
 
-@when('{sender} make an association with {recipient}')
-def step_impl(context, sender, recipient):
-    tools.association(sender, recipient)
+@given('{sender} has an association with {recipient} of type {type:d} and anchor {hash}')
+def step_impl(context, sender, recipient, type, hash):
+    try:
+        assert tools.isAssociated(sender, recipient) is not False
+    except:
+        tools.fundsForTransaction(sender, LTO.Association.DEFAULT_LEASE_FEE)
+        tools.association(sender, recipient, type, hash)
+        assert tools.isAssociated(sender, recipient) is not False
+
+@when('{sender} make an association with {recipient} of type {type:d}')
+def step_impl(context, sender, recipient, type):
+    tools.association(sender, recipient, type)
 
 
-@when('{sender} revoke the association with {recipient}')
-def step_impl(context, sender, recipient):
-    assTypeList = tools.isAssociated(sender, recipient)
-    for typeHash in assTypeList:
-        tools.revokeAssociation(sender, recipient, typeHash)
+@when('{sender} revoke the association with {recipient} of type {type:d}')
+def step_impl(context, sender, recipient, type):
+    tools.revokeAssociation(sender, recipient, type)
 
+@when('{sender} revoke the association with {recipient} of type {type:d} and anchor {hash}')
+def step_impl(context, sender, recipient, type, hash):
+    tools.revokeAssociation(sender, recipient, type, hash)
 
 @then('{sender} is associated with {recipient}')
 def step_impl(context, sender, recipient):
