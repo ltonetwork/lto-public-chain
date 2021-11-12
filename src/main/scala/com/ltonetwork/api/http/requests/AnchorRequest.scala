@@ -17,8 +17,8 @@ case class AnchorRequest(version: Option[Byte] = None,
                          sponsorKeyType: Option[String] = None,
                          sponsorPublicKey: Option[String] = None,
                          signature: Option[ByteStr] = None,
-                         proofs: Option[Proofs] = None,
-) extends TxRequest.For[AnchorTransaction] {
+                         proofs: Option[Proofs] = None)
+    extends TxRequest.For[AnchorTransaction] {
 
   protected def sign(tx: AnchorTransaction, signer: PrivateKeyAccount): AnchorTransaction = tx.signWith(signer)
 

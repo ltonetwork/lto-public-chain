@@ -7,6 +7,7 @@ import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
+import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransaction}
@@ -96,6 +97,7 @@ object TxRequest {
           case CancelLeaseTransaction       => Right(jsv.as[CancelLeaseRequest])
           case DataTransaction              => Right(jsv.as[DataRequest])
           case SetScriptTransaction         => Right(jsv.as[SetScriptRequest])
+          case RegisterTransaction          => Right(jsv.as[RegisterRequest])
           case _                            => Left(GenericError(s"Unsupported transaction type ($typeId)"))
         }
     }
