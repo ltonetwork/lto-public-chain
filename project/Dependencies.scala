@@ -3,7 +3,7 @@ import sbt._
 
 object Dependencies {
 
-  def akkaModule(module: String) = "com.typesafe.akka" %% s"akka-$module" % "2.4.19"
+  def akkaModule(module: String) = "com.typesafe.akka" %% s"akka-$module" % "2.6.16"
 
   def swaggerModule(module: String) = ("io.swagger.core.v3" % s"swagger-$module" % "2.1.11").exclude("com.google.guava", "guava")
 
