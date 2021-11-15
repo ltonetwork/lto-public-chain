@@ -6,7 +6,7 @@ import com.ltonetwork.network._
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.state.{Blockchain, ByteStr}
 import io.netty.channel.group.ChannelGroup
-import javax.ws.rs.Path
+import jakarta.ws.rs.Path
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.{Content, Schema}

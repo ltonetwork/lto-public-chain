@@ -30,7 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import monix.eval.{Coeval, Task}
 import play.api.libs.json._
 
-import javax.ws.rs.Path
+import jakarta.ws.rs.Path
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
