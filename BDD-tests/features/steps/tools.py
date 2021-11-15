@@ -1,14 +1,14 @@
-from LTO.Accounts.AccountFactoryED25519 import AccountED25519 as AccountFactory
-from LTO.PublicNode import PublicNode
-from LTO.Transactions.Transfer import Transfer
-from LTO.Transactions.Anchor import Anchor
-from LTO.Transactions.Sponsorship import Sponsorship
-from LTO.Transactions.CancelSponsorship import CancelSponsorship
-from LTO.Transactions.Lease import Lease
-from LTO.Transactions.CancelLease import CancelLease
-from LTO.Transactions.MassTransfer import MassTransfer
-from LTO.Transactions.RevokeAssociation import RevokeAssociation
-from LTO.Transactions.Association import Association
+from LTO.Accounts.account_factory_ed25519 import AccountFactoryED25519 as AccountFactory
+from LTO.public_node import PublicNode
+from LTO.Transactions.transfer import Transfer
+from LTO.Transactions.anchor import Anchor
+from LTO.Transactions.sponsorship import Sponsorship
+from LTO.Transactions.cancel_sponsorship import CancelSponsorship
+from LTO.Transactions.lease import Lease
+from LTO.Transactions.cancel_lease import CancelLease
+from LTO.Transactions.mass_transfer import MassTransfer
+from LTO.Transactions.revoke_association import RevokeAssociation
+from LTO.Transactions.association import Association
 from LTO import crypto
 import base58
 import random
@@ -21,7 +21,7 @@ URL2 = 'https://testnet.lto.network'
 URL = 'http://116.203.167.231:6869'
 NODE = PublicNode(URL)
 ROOT_SEED = 'fragile because fox snap picnic mean art observe vicious program chicken purse text hidden chest'
-ROOT_ACCOUNT = AccountFactory(CHAIN_ID).createFromSeed(ROOT_SEED)
+ROOT_ACCOUNT = AccountFactory(CHAIN_ID).create_from_seed(ROOT_SEED)
 lastTransactionSuccess = None
 USERS = {}
 
@@ -60,9 +60,9 @@ def transferTo(recipient="", amount=0, sender=""):
         senderAccount = USERS[sender]
 
     transaction = Transfer(recipientAccount.address, amount)
-    transaction.signWith(senderAccount)
+    transaction.sign_with(senderAccount)
     try:
-        tx = transaction.broadcastTo(NODE)
+        tx = transaction.broadcast_to(NODE)
         pollTx(tx.id)
         lastTransactionSuccess = True
         return tx
@@ -83,14 +83,14 @@ def anchor(user="", hash="", sponsor=""):
     if not hash:
         hash = ''.join(random.choice('qwertyuioplkjhgfds') for _ in range(6))
     transaction = Anchor(encodeHash(hash))
-    transaction.signWith(account)
+    transaction.sign_with(account)
 
     if sponsor:
         sponsorAccount = USERS[sponsor]
-        transaction.sponsorWith(sponsorAccount)
+        transaction.sponsor_with(sponsorAccount)
 
     try:
-        tx = transaction.broadcastTo(NODE)
+        tx = transaction.broadcast_to(NODE)
         pollTx(tx.id)
         lastTransactionSuccess = True
         return tx
@@ -115,13 +115,13 @@ def encodeHash(hash):
 def isSponsoring(account1, account2):
     account1 = USERS[account1]
     account2 = USERS[account2]
-    return account1.address in NODE.sponsorshipList(account2.address)['sponsor']
+    return account1.address in NODE.sponsorship_list(account2.address)['sponsor']
 
 
 def isLeasing(account1, account2, amount=""):
     account1 = USERS[account1]
     account2 = USERS[account2]
-    leasList = NODE.leaseList(account1.address)
+    leasList = NODE.lease_list(account1.address)
     for lease in leasList:
         if lease['recipient'] == account2.address:
             if amount:
@@ -133,7 +133,7 @@ def isLeasing(account1, account2, amount=""):
 
 
 def getLeaseId(account1, account2):
-    leasList = NODE.leaseList(account1.address)
+    leasList = NODE.lease_list(account1.address)
     for lease in leasList:
         if lease['recipient'] == account2.address:
             return lease['id']
@@ -146,10 +146,10 @@ def sponsor(sponsored, sponsoring):
     sponsored = USERS[sponsored]
     sponsoring = USERS[sponsoring]
     transaction = Sponsorship(sponsored.address)
-    transaction.signWith(sponsoring)
+    transaction.sign_with(sponsoring)
 
     try:
-        tx = transaction.broadcastTo(NODE)
+        tx = transaction.broadcast_to(NODE)
         pollTx(tx.id)
         lastTransactionSuccess = True
         return tx
@@ -163,9 +163,9 @@ def cancelSponsorship(sponsored, sponsoring):
     sponsored = USERS[sponsored]
     sponsoring = USERS[sponsoring]
     transaction = CancelSponsorship(sponsored.address)
-    transaction.signWith(sponsoring)
+    transaction.sign_with(sponsoring)
     try:
-        tx = transaction.broadcastTo(NODE)
+        tx = transaction.broadcast_to(NODE)
         pollTx(tx.id)
         lastTransactionSuccess = True
         return tx
@@ -181,9 +181,9 @@ def cancelLease(account1, account2):
 
     leaseId = getLeaseId(account1, account2)
     transaction = CancelLease(leaseId)
-    transaction.signWith(account1)
+    transaction.sign_with(account1)
     try:
-        tx = transaction.broadcastTo(NODE)
+        tx = transaction.broadcast_to(NODE)
         pollTx(tx.id)
         lastTransactionSuccess = True
         return tx
@@ -202,9 +202,9 @@ def lease(account1, account2, amount=""):
     account2 = USERS[account2]
 
     transaction = Lease(recipient=account2.address, amount=amount)
-    transaction.signWith(account1)
+    transaction.sign_with(account1)
     try:
-        tx = transaction.broadcastTo(NODE)
+        tx = transaction.broadcast_to(NODE)
         pollTx(tx.id)
         lastTransactionSuccess = True
         return tx
@@ -223,9 +223,9 @@ def massTransfer(transfers, sender):
     global lastTransactionSuccess
     sender = USERS[sender]
     transaction = MassTransfer(processInput(transfers))
-    transaction.signWith(sender)
+    transaction.sign_with(sender)
     try:
-        tx = transaction.broadcastTo(NODE)
+        tx = transaction.broadcast_to(NODE)
         pollTx(tx.id)
         lastTransactionSuccess = True
         return tx
@@ -253,11 +253,11 @@ def revokeAssociation(user1, user2, type, hash = ""):
     user1 = USERS[user1]
     user2 = USERS[user2]
 
-    transaction = RevokeAssociation(recipient=user2.address, associationType=type, anchor=hash)
-    transaction.signWith(user1)
+    transaction = RevokeAssociation(recipient=user2.address, association_type=type, anchor=hash)
+    transaction.sign_with(user1)
 
     try:
-        tx = transaction.broadcastTo(NODE)
+        tx = transaction.broadcast_to(NODE)
         pollTx(tx.id)
         lastTransactionSuccess = True
         return tx
@@ -270,12 +270,11 @@ def association(user1, user2, type, hash=""):
 
     user1 = USERS[user1]
     user2 = USERS[user2]
-
-    transaction = Association(user2.address, associationType=type, anchor=hash)
-    transaction.signWith(user1)
+    transaction = Association(user2.address, association_type=type, anchor=hash)
+    transaction.sign_with(user1)
 
     try:
-        tx = transaction.broadcastTo(NODE)
+        tx = transaction.broadcast_to(NODE)
         pollTx(tx.id)
         lastTransactionSuccess = True
         return tx
