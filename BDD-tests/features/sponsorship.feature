@@ -63,7 +63,7 @@ Feature: Sponsorship
     When Alice tries to sponsor Dick
     Then The transaction fails
 
-Scenario: Successfull CancelSponsorship transaction
+Scenario: Successful CancelSponsorship transaction
     Given Alice is sponsoring Bob
     And Alice has 6 lto
     When Alice cancels the sponsorship for Bob

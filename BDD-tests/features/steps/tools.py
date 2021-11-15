@@ -22,22 +22,22 @@ URL = 'http://116.203.167.231:6869'
 NODE = PublicNode(URL)
 ROOT_SEED = 'fragile because fox snap picnic mean art observe vicious program chicken purse text hidden chest'
 ROOT_ACCOUNT = AccountFactory(CHAIN_ID).create_from_seed(ROOT_SEED)
-lastTransactionSuccess = None
+last_transaction_success = None
 USERS = {}
 
-def generateAccount():
+def generate_account():
     return AccountFactory(CHAIN_ID).create()
 
-def getBalance(user):
+def get_balance(user):
     return NODE.balance(USERS[user].address)
 
-def fundsForTransaction(user, txFee):
-    balance = getBalance(user)
+def funds_for_transaction(user, txFee):
+    balance = get_balance(user)
     if txFee > balance:
-        transferTo(user, txFee - balance)
+        transfer_to(user, txFee - balance)
 
 
-def pollTx(id):
+def poll_tx(id):
     return polling.poll(
         lambda: requests.get('%s%s' % (URL, ('/transactions/info/%s' % id)), headers='').json(),
         check_success=lambda response: 'id' in response,
@@ -46,34 +46,34 @@ def pollTx(id):
     )
 
 
-def transferTo(recipient="", amount=0, sender=""):
-    global lastTransactionSuccess
+def transfer_to(recipient="", amount=0, sender=""):
+    global last_transaction_success
 
     if not recipient:
-        recipientAccount = ROOT_ACCOUNT
+        recipient_account = ROOT_ACCOUNT
     else:
-        recipientAccount = USERS[recipient]
+        recipient_account = USERS[recipient]
 
     if not sender:
-        senderAccount = ROOT_ACCOUNT
+        sender_account = ROOT_ACCOUNT
     else:
-        senderAccount = USERS[sender]
+        sender_account = USERS[sender]
 
-    transaction = Transfer(recipientAccount.address, amount)
-    transaction.sign_with(senderAccount)
+    transaction = Transfer(recipient_account.address, amount)
+    transaction.sign_with(sender_account)
     try:
         tx = transaction.broadcast_to(NODE)
-        pollTx(tx.id)
-        lastTransactionSuccess = True
+        poll_tx(tx.id)
+        last_transaction_success = True
         return tx
     except:
-        lastTransactionSuccess = False
+        last_transaction_success = False
         raise
 
 
 
-def anchor(user="", hash="", sponsor=""):
-    global lastTransactionSuccess
+def anchor(user="", hash="", sponsor="", version=None):
+    global last_transaction_success
 
     if not user:
         account = ROOT_ACCOUNT
@@ -81,48 +81,45 @@ def anchor(user="", hash="", sponsor=""):
         account = USERS[user]
 
     if not hash:
-        hash = ''.join(random.choice('qwertyuioplkjhgfds') for _ in range(6))
-    transaction = Anchor(encodeHash(hash))
+        hash = ''.join(random.choice('qwertyuiopasdfghjklzxcvbnm') for _ in range(6))
+    transaction = Anchor(encode_hahs(hash))
+    transaction.version = version or Anchor.DEFAULT_VERSION
     transaction.sign_with(account)
 
     if sponsor:
-        sponsorAccount = USERS[sponsor]
-        transaction.sponsor_with(sponsorAccount)
+        sponsor_account = USERS[sponsor]
+        transaction.sponsor_with(sponsor_account)
 
     try:
         tx = transaction.broadcast_to(NODE)
-        pollTx(tx.id)
-        lastTransactionSuccess = True
+        poll_tx(tx.id)
+        last_transaction_success = True
         return tx
     except:
-        lastTransactionSuccess = False
+        last_transaction_success = False
         raise
 
 
 
-def isLastTransactionSuccessful():
-    return lastTransactionSuccess
-
-
-def convertBalance(balance):
+def convert_balance(balance):
     return int(float(balance) * 100000000)
 
 
-def encodeHash(hash):
+def encode_hahs(hash):
     return hashlib.sha256(hash.encode('utf-8')).hexdigest()
 
 
-def isSponsoring(account1, account2):
+def is_sponsoring(account1, account2):
     account1 = USERS[account1]
     account2 = USERS[account2]
     return account1.address in NODE.sponsorship_list(account2.address)['sponsor']
 
 
-def isLeasing(account1, account2, amount=""):
+def is_leasing(account1, account2, amount=""):
     account1 = USERS[account1]
     account2 = USERS[account2]
-    leasList = NODE.lease_list(account1.address)
-    for lease in leasList:
+    lease_list = NODE.lease_list(account1.address)
+    for lease in lease_list:
         if lease['recipient'] == account2.address:
             if amount:
                 if lease['amount'] == amount:
@@ -132,16 +129,16 @@ def isLeasing(account1, account2, amount=""):
     return False
 
 
-def getLeaseId(account1, account2):
-    leasList = NODE.lease_list(account1.address)
-    for lease in leasList:
+def get_lease_id(account1, account2):
+    lease_list = NODE.lease_list(account1.address)
+    for lease in lease_list:
         if lease['recipient'] == account2.address:
             return lease['id']
     raise Exception("No Lease Id Found")
 
 
 def sponsor(sponsored, sponsoring):
-    global lastTransactionSuccess
+    global last_transaction_success
 
     sponsored = USERS[sponsored]
     sponsoring = USERS[sponsoring]
@@ -150,50 +147,50 @@ def sponsor(sponsored, sponsoring):
 
     try:
         tx = transaction.broadcast_to(NODE)
-        pollTx(tx.id)
-        lastTransactionSuccess = True
+        poll_tx(tx.id)
+        last_transaction_success = True
         return tx
     except:
-        lastTransactionSuccess = False
+        last_transaction_success = False
         raise
 
 
-def cancelSponsorship(sponsored, sponsoring):
-    global lastTransactionSuccess
+def cancel_sponsorship(sponsored, sponsoring):
+    global last_transaction_success
     sponsored = USERS[sponsored]
     sponsoring = USERS[sponsoring]
     transaction = CancelSponsorship(sponsored.address)
     transaction.sign_with(sponsoring)
     try:
         tx = transaction.broadcast_to(NODE)
-        pollTx(tx.id)
-        lastTransactionSuccess = True
+        poll_tx(tx.id)
+        last_transaction_success = True
         return tx
     except:
-        lastTransactionSuccess = False
+        last_transaction_success = False
         raise
 
-def cancelLease(account1, account2):
-    global lastTransactionSuccess
+def cancel_lease(account1, account2):
+    global last_transaction_success
 
     account1 = USERS[account1]
     account2 = USERS[account2]
 
-    leaseId = getLeaseId(account1, account2)
-    transaction = CancelLease(leaseId)
+    lease_id = get_lease_id(account1, account2)
+    transaction = CancelLease(lease_id)
     transaction.sign_with(account1)
     try:
         tx = transaction.broadcast_to(NODE)
-        pollTx(tx.id)
-        lastTransactionSuccess = True
+        poll_tx(tx.id)
+        last_transaction_success = True
         return tx
     except:
-        lastTransactionSuccess = False
+        last_transaction_success = False
         raise
 
 
 def lease(account1, account2, amount=""):
-    global lastTransactionSuccess
+    global last_transaction_success
 
     if not amount:
         amount = 100000000
@@ -205,35 +202,35 @@ def lease(account1, account2, amount=""):
     transaction.sign_with(account1)
     try:
         tx = transaction.broadcast_to(NODE)
-        pollTx(tx.id)
-        lastTransactionSuccess = True
+        poll_tx(tx.id)
+        last_transaction_success = True
         return tx
     except:
-        lastTransactionSuccess = False
+        last_transaction_success = False
         raise
 
 def processInput(transfers):
-    transferLsit = []
+    transfer_list = []
     for transfer in transfers:
-        transferLsit.append({'recipient': USERS[transfer[0]].address,
-                             'amount': convertBalance(transfer[1])})
-    return transferLsit
+        transfer_list.append({'recipient': USERS[transfer[0]].address,
+                             'amount': convert_balance(transfer[1])})
+    return transfer_list
 
-def massTransfer(transfers, sender):
-    global lastTransactionSuccess
+def mass_transfer(transfers, sender):
+    global last_transaction_success
     sender = USERS[sender]
     transaction = MassTransfer(processInput(transfers))
     transaction.sign_with(sender)
     try:
         tx = transaction.broadcast_to(NODE)
-        pollTx(tx.id)
-        lastTransactionSuccess = True
+        poll_tx(tx.id)
+        last_transaction_success = True
         return tx
     except:
-        lastTransactionSuccess = False
+        last_transaction_success = False
         raise
 
-def isAssociated(user1, user2):
+def is_associated(user1, user2):
     user1 = USERS[user1]
     user2 = USERS[user2]
 
@@ -247,8 +244,8 @@ def isAssociated(user1, user2):
     else:
         return assType
 
-def revokeAssociation(user1, user2, type, hash = ""):
-    global lastTransactionSuccess
+def revoke_association(user1, user2, type, hash = ""):
+    global last_transaction_success
 
     user1 = USERS[user1]
     user2 = USERS[user2]
@@ -258,15 +255,15 @@ def revokeAssociation(user1, user2, type, hash = ""):
 
     try:
         tx = transaction.broadcast_to(NODE)
-        pollTx(tx.id)
-        lastTransactionSuccess = True
+        poll_tx(tx.id)
+        last_transaction_success = True
         return tx
     except:
-        lastTransactionSuccess = False
+        last_transaction_success = False
         raise
 
 def association(user1, user2, type, hash=""):
-    global lastTransactionSuccess
+    global last_transaction_success
 
     user1 = USERS[user1]
     user2 = USERS[user2]
@@ -275,11 +272,11 @@ def association(user1, user2, type, hash=""):
 
     try:
         tx = transaction.broadcast_to(NODE)
-        pollTx(tx.id)
-        lastTransactionSuccess = True
+        poll_tx(tx.id)
+        last_transaction_success = True
         return tx
     except:
-        lastTransactionSuccess = False
+        last_transaction_success = False
         raise
 
 

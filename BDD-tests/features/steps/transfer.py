@@ -4,14 +4,14 @@ import tools
 
 @when('{sender} transfers {amount} lto to {recipient}')
 def step_impl(context, sender, amount, recipient):
-    amount = tools.convertBalance(amount)
-    tools.transferTo(recipient=recipient, amount=amount, sender=sender)
+    amount = tools.convert_balance(amount)
+    tools.transfer_to(recipient=recipient, amount=amount, sender=sender)
 
 
 @when('{sender} tries to transfer {amount} lto to {recipient}')
 def step_impl(context, sender, amount, recipient):
-    amount = tools.convertBalance(amount)
+    amount = tools.convert_balance(amount)
     try:
-        tools.transferTo(recipient=recipient, amount=amount, sender=sender)
+        tools.transfer_to(recipient=recipient, amount=amount, sender=sender)
     except:
         pass

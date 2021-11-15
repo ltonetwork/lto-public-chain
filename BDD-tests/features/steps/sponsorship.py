@@ -7,17 +7,17 @@ import pytest
 @given('{user1} is not sponsoring {user2}')
 def step_impl(context, user1, user2):
     try:
-        assert tools.isSponsoring(user1, user2) == False
+        assert tools.is_sponsoring(user1, user2) == False
     except:
-        tools.fundsForTransaction(user1, LTO.CancelSponsorship.DEFAULT_SPONSORSHIP_FEE)
-        tools.cancelSponsorship(user2, user1)
+        tools.funds_for_transaction(user1, LTO.CancelSponsorship.DEFAULT_SPONSORSHIP_FEE)
+        tools.cancel_sponsorship(user2, user1)
 
 @given('{user1} is sponsoring {user2}')
 def step_impl(context, user1, user2):
     try:
-        assert tools.isSponsoring(user1, user2) == True
+        assert tools.is_sponsoring(user1, user2) == True
     except:
-        tools.fundsForTransaction(user1, LTO.Sponsorship.DEFAULT_SPONSORSHIP_FEE)
+        tools.funds_for_transaction(user1, LTO.Sponsorship.DEFAULT_SPONSORSHIP_FEE)
         tools.sponsor(user2, user1)
 
 
@@ -31,7 +31,7 @@ def step_impl(context, user1, user2):
 @when('{user1} tries to cancel the sponsorship for {user2}')
 def step_impl(context, user1, user2):
     try:
-        tools.cancelSponsorship(user2, user1)
+        tools.cancel_sponsorship(user2, user1)
     except:
         pass
 
@@ -42,14 +42,14 @@ def step_impl(context, user1, user2):
 
 @when('{user1} cancels the sponsorship for {user2}')
 def step_impl(context, user1, user2):
-    tools.cancelSponsorship(user2, user1)
+    tools.cancel_sponsorship(user2, user1)
 
 
 @then('{user1} is sponsoring {user2}')
 def step_impl(context, user1, user2):
-    assert tools.isSponsoring(user1, user2) is True
+    assert tools.is_sponsoring(user1, user2) is True
 
 
 @then('{user1} is not sponsoring {user2}')
 def step_impl(context, user1, user2):
-    assert tools.isSponsoring(user1, user2) is False
+    assert tools.is_sponsoring(user1, user2) is False

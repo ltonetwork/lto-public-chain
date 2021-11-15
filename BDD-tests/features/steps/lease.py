@@ -6,39 +6,39 @@ import tools
 @given('{user1} is not leasing to {user2}')
 def step_impl(context, user1, user2):
     try:
-        assert tools.isLeasing(user1, user2) is False
+        assert tools.is_leasing(user1, user2) is False
     except:
-        tools.fundsForTransaction(user1, LTO.CancelLease.DEFAULT_CANCEL_LEASE_FEE)
-        tools.cancelLease(user1, user2)
+        tools.funds_for_transaction(user1, LTO.CancelLease.DEFAULT_CANCEL_LEASE_FEE)
+        tools.cancel_lease(user1, user2)
 
 
 @when('{user1} tries to cancel the lease to {user2}')
 def step_impl(context, user1, user2):
     try:
-        tools.cancelLease(user1, user2)
+        tools.cancel_lease(user1, user2)
     except:
-        tools.lastTransactionSuccess = False
+        tools.last_transaction_success = False
 
 
 @given('{user1} is leasing {amount} lto to {user2}')
 def step_impl(context, user1, amount, user2):
-    amount = tools.convertBalance(amount)
+    amount = tools.convert_balance(amount)
     try:
-        assert tools.isLeasing(user1, user2, amount) is True
+        assert tools.is_leasing(user1, user2, amount) is True
     except:
-        tools.fundsForTransaction(user1, LTO.Lease.DEFAULT_LEASE_FEE + amount)
+        tools.funds_for_transaction(user1, LTO.Lease.DEFAULT_LEASE_FEE + amount)
         tools.lease(user1, user2, amount)
 
 
 @when('{user1} leases {amount} lto to {user2}')
 def step_impl(context, user1, amount, user2):
-    amount = tools.convertBalance(amount)
+    amount = tools.convert_balance(amount)
     tools.lease(user1, user2, amount)
 
 
 @when('{user1} cancel the lease to {user2}')
 def step_impl(context, user1, user2):
-    tools.cancelLease(user1, user2)
+    tools.cancel_lease(user1, user2)
 
 
 @when('{user1} tries to lease {amount} lto to {user2}')
@@ -52,10 +52,10 @@ def step_impl(context, user1, amount, user2):
 
 @then('{user1} is leasing {amount} lto to {user2}')
 def step_impl(context, user1, amount, user2):
-    amount = tools.convertBalance(amount)
-    assert tools.isLeasing(user1, user2, amount) is True
+    amount = tools.convert_balance(amount)
+    assert tools.is_leasing(user1, user2, amount) is True
 
 
 @then('{user1} is not leasing to {user2}')
 def step_impl(context, user1, user2):
-    assert tools.isLeasing(user1, user2) is False
+    assert tools.is_leasing(user1, user2) is False

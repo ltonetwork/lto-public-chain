@@ -11,7 +11,6 @@ Feature: Transfer
     Then Alice has 9 lto
     And Bob has 5 lto
 
-
   Scenario: Unsuccessful transfer transaction
     Given Alice has 0 lto
     When Alice tries to transfer 10 lto to Bob

@@ -3,9 +3,10 @@ import tools
 import pytest
 
 
-@when(u'"{user}" anchors "{hash}"')
-def step_impl(context, user, hash):
-    tools.anchor(user, hash)
+@when(u'{user} anchors "{hash}"')
+@when(u'{user} anchors (v{version:d}) "{hash}"')
+def step_impl(context, user, version=None, hash=''):
+    tools.anchor(user, hash, version=version)
 
 @when('{user} tries to anchor')
 def step_impl(context, user):
