@@ -26,7 +26,7 @@ Feature: Sponsorship
     Given Alice is sponsoring Bob
     And Bob has 10 lto
     And Charlie has 0 lto
-    And Alice has 9 lto
+    And Alice has 0 lto
     When Bob transfers 5 lto to Charlie
     Then Alice has 0 lto
     And Bob has 4 lto
