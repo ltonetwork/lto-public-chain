@@ -31,14 +31,16 @@ def step_impl(context, user1, amount, user2):
 
 
 @when('{user1} leases {amount} lto to {user2}')
-def step_impl(context, user1, amount, user2):
+@when('{user1} leases (v{version:d}) {amount} lto to {user2}')
+def step_impl(context, user1, amount, user2, version=None):
     amount = tools.convert_balance(amount)
-    tools.lease(user1, user2, amount)
+    tools.lease(user1, user2, amount, version)
 
 
 @when('{user1} cancel the lease to {user2}')
-def step_impl(context, user1, user2):
-    tools.cancel_lease(user1, user2)
+@when('{user1} cancel the lease (v{version:d}) to {user2}')
+def step_impl(context, user1, user2, version=None):
+    tools.cancel_lease(user1, user2, version)
 
 
 @when('{user1} tries to lease {amount} lto to {user2}')

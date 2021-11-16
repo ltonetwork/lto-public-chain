@@ -25,11 +25,14 @@ ROOT_ACCOUNT = AccountFactory(CHAIN_ID).create_from_seed(ROOT_SEED)
 last_transaction_success = None
 USERS = {}
 
+
 def generate_account():
     return AccountFactory(CHAIN_ID).create()
 
+
 def get_balance(user):
     return NODE.balance(USERS[user].address)
+
 
 def funds_for_transaction(user, txFee):
     balance = get_balance(user)
@@ -46,7 +49,7 @@ def poll_tx(id):
     )
 
 
-def transfer_to(recipient="", amount=0, sender=""):
+def transfer_to(recipient="", amount=0, sender="", version=None):
     global last_transaction_success
 
     if not recipient:
@@ -60,6 +63,7 @@ def transfer_to(recipient="", amount=0, sender=""):
         sender_account = USERS[sender]
 
     transaction = Transfer(recipient_account.address, amount)
+    transaction.version = version or Transfer.DEFAULT_VERSION
     transaction.sign_with(sender_account)
     try:
         tx = transaction.broadcast_to(NODE)
@@ -69,7 +73,6 @@ def transfer_to(recipient="", amount=0, sender=""):
     except:
         last_transaction_success = False
         raise
-
 
 
 def anchor(user="", hash="", sponsor="", version=None):
@@ -98,7 +101,6 @@ def anchor(user="", hash="", sponsor="", version=None):
     except:
         last_transaction_success = False
         raise
-
 
 
 def convert_balance(balance):
@@ -137,12 +139,13 @@ def get_lease_id(account1, account2):
     raise Exception("No Lease Id Found")
 
 
-def sponsor(sponsored, sponsoring):
+def sponsor(sponsored, sponsoring, version=None):
     global last_transaction_success
 
     sponsored = USERS[sponsored]
     sponsoring = USERS[sponsoring]
     transaction = Sponsorship(sponsored.address)
+    transaction.version = version or Sponsorship.DEFAULT_VERSION
     transaction.sign_with(sponsoring)
 
     try:
@@ -155,11 +158,12 @@ def sponsor(sponsored, sponsoring):
         raise
 
 
-def cancel_sponsorship(sponsored, sponsoring):
+def cancel_sponsorship(sponsored, sponsoring, version=None):
     global last_transaction_success
     sponsored = USERS[sponsored]
     sponsoring = USERS[sponsoring]
     transaction = CancelSponsorship(sponsored.address)
+    transaction.version = version or CancelSponsorship.DEFAULT_VERSION
     transaction.sign_with(sponsoring)
     try:
         tx = transaction.broadcast_to(NODE)
@@ -170,7 +174,8 @@ def cancel_sponsorship(sponsored, sponsoring):
         last_transaction_success = False
         raise
 
-def cancel_lease(account1, account2):
+
+def cancel_lease(account1, account2, version=None):
     global last_transaction_success
 
     account1 = USERS[account1]
@@ -178,6 +183,7 @@ def cancel_lease(account1, account2):
 
     lease_id = get_lease_id(account1, account2)
     transaction = CancelLease(lease_id)
+    transaction.version = version or CancelLease.DEFAULT_VERSION
     transaction.sign_with(account1)
     try:
         tx = transaction.broadcast_to(NODE)
@@ -189,7 +195,7 @@ def cancel_lease(account1, account2):
         raise
 
 
-def lease(account1, account2, amount=""):
+def lease(account1, account2, amount="", version=None):
     global last_transaction_success
 
     if not amount:
@@ -199,6 +205,7 @@ def lease(account1, account2, amount=""):
     account2 = USERS[account2]
 
     transaction = Lease(recipient=account2.address, amount=amount)
+    transaction.version = version or Lease.DEFAULT_VERSION
     transaction.sign_with(account1)
     try:
         tx = transaction.broadcast_to(NODE)
@@ -209,17 +216,20 @@ def lease(account1, account2, amount=""):
         last_transaction_success = False
         raise
 
+
 def processInput(transfers):
     transfer_list = []
     for transfer in transfers:
         transfer_list.append({'recipient': USERS[transfer[0]].address,
-                             'amount': convert_balance(transfer[1])})
+                              'amount': convert_balance(transfer[1])})
     return transfer_list
 
-def mass_transfer(transfers, sender):
+
+def mass_transfer(transfers, sender, version=None):
     global last_transaction_success
     sender = USERS[sender]
     transaction = MassTransfer(processInput(transfers))
+    transaction.version = version or MassTransfer.DEFAULT_VERSION
     transaction.sign_with(sender)
     try:
         tx = transaction.broadcast_to(NODE)
@@ -229,6 +239,7 @@ def mass_transfer(transfers, sender):
     except:
         last_transaction_success = False
         raise
+
 
 def is_associated(user1, user2):
     user1 = USERS[user1]
@@ -244,13 +255,15 @@ def is_associated(user1, user2):
     else:
         return assType
 
-def revoke_association(user1, user2, type, hash = ""):
+
+def revoke_association(user1, user2, type, hash="", version=None):
     global last_transaction_success
 
     user1 = USERS[user1]
     user2 = USERS[user2]
 
     transaction = RevokeAssociation(recipient=user2.address, association_type=type, anchor=hash)
+    transaction.version = version or RevokeAssociation.DEFAULT_VERSION
     transaction.sign_with(user1)
 
     try:
@@ -262,12 +275,14 @@ def revoke_association(user1, user2, type, hash = ""):
         last_transaction_success = False
         raise
 
-def association(user1, user2, type, hash=""):
+
+def association(user1, user2, type, hash="", version=None):
     global last_transaction_success
 
     user1 = USERS[user1]
     user2 = USERS[user2]
     transaction = Association(user2.address, association_type=type, anchor=hash)
+    transaction.version = version or Association.DEFAULT_VERSION
     transaction.sign_with(user1)
 
     try:
@@ -278,6 +293,3 @@ def association(user1, user2, type, hash=""):
     except:
         last_transaction_success = False
         raise
-
-
-

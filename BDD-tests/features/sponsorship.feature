@@ -6,11 +6,16 @@ Feature: Sponsorship
     And Charlie has a new account
     And Dick has a new account
 
-  Scenario: Successful sponsorship transaction
+  Scenario Outline: Successful sponsorship transaction
     Given Alice has 10 lto
-    When Alice sponsors Bob
+    When Alice sponsors (<version>) Bob
     Then Alice has 5 lto
     And Alice is sponsoring Bob
+
+    Examples:
+      | version |
+      | v1      |
+      | v3      |
 
   Scenario: The sponsoring account pays for the transaction costs
     Given Alice is sponsoring Bob
@@ -63,12 +68,17 @@ Feature: Sponsorship
     When Alice tries to sponsor Dick
     Then The transaction fails
 
-Scenario: Successful CancelSponsorship transaction
+Scenario Outline: Successful CancelSponsorship transaction
     Given Alice is sponsoring Bob
     And Alice has 6 lto
-    When Alice cancels the sponsorship for Bob
+    When Alice cancels the sponsorship (<version>) for Bob
     Then Alice has 1 lto
     And Alice is not sponsoring Bob
+
+    Examples:
+      | version |
+      | v1      |
+      | v3      |
 
   Scenario: Unsuccessful cancel sponsorship transaction due to insufficient balance
     Given Alice has 0 lto

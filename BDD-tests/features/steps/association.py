@@ -30,18 +30,23 @@ def step_impl(context, sender, recipient, type, hash):
         tools.association(sender, recipient, type, hash)
         assert tools.is_associated(sender, recipient) is not False
 
+
 @when('{sender} make an association with {recipient} of type {type:d}')
-def step_impl(context, sender, recipient, type):
-    tools.association(sender, recipient, type)
+@when('{sender} make an association (v{version:d}) with {recipient} of type {type:d}')
+def step_impl(context, sender, recipient, type, version=None):
+    tools.association(sender, recipient, type, version=version)
 
 
 @when('{sender} revoke the association with {recipient} of type {type:d}')
-def step_impl(context, sender, recipient, type):
-    tools.revoke_association(sender, recipient, type)
+@when('{sender} revoke the association (v{version:d}) with {recipient} of type {type:d}')
+def step_impl(context, sender, recipient, type, version=None):
+    tools.revoke_association(sender, recipient, type, version=version)
+
 
 @when('{sender} revoke the association with {recipient} of type {type:d} and anchor {hash}')
 def step_impl(context, sender, recipient, type, hash):
     tools.revoke_association(sender, recipient, type, hash)
+
 
 @then('{sender} is associated with {recipient}')
 def step_impl(context, sender, recipient):
