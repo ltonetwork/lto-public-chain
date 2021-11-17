@@ -1,7 +1,6 @@
-import LTO
+import lto
 from behave import *
 import tools
-import pytest
 
 
 @given('{user1} is not sponsoring {user2}')
@@ -9,7 +8,7 @@ def step_impl(context, user1, user2):
     try:
         assert tools.is_sponsoring(user1, user2) == False
     except:
-        tools.funds_for_transaction(user1, LTO.CancelSponsorship.DEFAULT_SPONSORSHIP_FEE)
+        tools.funds_for_transaction(user1, lto.CancelSponsorship.DEFAULT_SPONSORSHIP_FEE)
         tools.cancel_sponsorship(user2, user1)
 
 @given('{user1} is sponsoring {user2}')
@@ -17,7 +16,7 @@ def step_impl(context, user1, user2):
     try:
         assert tools.is_sponsoring(user1, user2) == True
     except:
-        tools.funds_for_transaction(user1, LTO.Sponsorship.DEFAULT_SPONSORSHIP_FEE)
+        tools.funds_for_transaction(user1, lto.Sponsorship.DEFAULT_SPONSORSHIP_FEE)
         tools.sponsor(user2, user1)
 
 

@@ -1,28 +1,30 @@
-import LTO
+import lto
 from behave import *
 import tools
 
-TRANSFER_FEE = LTO.Transfer.DEFAULT_TX_FEE
+TRANSFER_FEE = lto.Transfer.DEFAULT_TX_FEE
+
 
 @given('{user} has a new account')
 def step_impl(context, user):
     tools.USERS.update({user: tools.generate_account()})
 
+
 @given('{user} has {balance} lto')
 def step_impl(context, user, balance):
     balance = tools.convert_balance(balance)
-    userBalance = tools.get_balance(user)
+    user_balance = tools.get_balance(user)
     try:
-        assert userBalance == balance
+        assert user_balance == balance
     except:
-        if userBalance < balance:
-            transfer = tools.transfer_to(recipient=user, amount=balance - userBalance)
+        if user_balance < balance:
+            transfer = tools.transfer_to(recipient=user, amount=balance - user_balance)
 
         else:
-            if userBalance - balance <= TRANSFER_FEE:
+            if user_balance - balance <= TRANSFER_FEE:
                 transfer = tools.transfer_to(recipient=user, amount=TRANSFER_FEE)
-            userBalance = tools.get_balance(user)
-            transfer = tools.transfer_to(amount=userBalance - (balance + TRANSFER_FEE), sender=user)
+            user_balance = tools.get_balance(user)
+            transfer = tools.transfer_to(amount=user_balance - (balance + TRANSFER_FEE), sender=user)
     assert tools.get_balance(user) == balance
 
 

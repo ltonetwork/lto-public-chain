@@ -1,4 +1,4 @@
-import LTO
+import lto
 from behave import *
 import tools
 
@@ -16,7 +16,7 @@ def step_impl(context, sender, recipient, type):
     try:
         assert tools.is_associated(sender, recipient) is not False
     except:
-        tools.funds_for_transaction(sender, LTO.Association.DEFAULT_LEASE_FEE)
+        tools.funds_for_transaction(sender, lto.Association.DEFAULT_LEASE_FEE)
         tools.association(sender, recipient, type)
         assert tools.is_associated(sender, recipient) is not False
 
@@ -26,7 +26,7 @@ def step_impl(context, sender, recipient, type, hash):
     try:
         assert tools.is_associated(sender, recipient) is not False
     except:
-        tools.funds_for_transaction(sender, LTO.Association.DEFAULT_LEASE_FEE)
+        tools.funds_for_transaction(sender, lto.Association.DEFAULT_LEASE_FEE)
         tools.association(sender, recipient, type, hash)
         assert tools.is_associated(sender, recipient) is not False
 

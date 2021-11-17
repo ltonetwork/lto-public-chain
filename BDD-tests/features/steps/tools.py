@@ -9,8 +9,6 @@ from lto.transactions.cancel_lease import CancelLease
 from lto.transactions.mass_transfer import MassTransfer
 from lto.transactions.revoke_association import RevokeAssociation
 from lto.transactions.association import Association
-from lto import crypto
-import base58
 import random
 import polling
 import requests
@@ -34,10 +32,10 @@ def get_balance(user):
     return NODE.balance(USERS[user].address)
 
 
-def funds_for_transaction(user, txFee):
+def funds_for_transaction(user, tx_fee):
     balance = get_balance(user)
-    if txFee > balance:
-        transfer_to(user, txFee - balance)
+    if tx_fee > balance:
+        transfer_to(user, tx_fee - balance)
 
 
 def poll_tx(id):
