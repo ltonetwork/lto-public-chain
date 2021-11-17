@@ -1,15 +1,15 @@
-from LTO.Accounts.account_factory_ed25519 import AccountFactoryED25519 as AccountFactory
-from LTO.public_node import PublicNode
-from LTO.Transactions.transfer import Transfer
-from LTO.Transactions.anchor import Anchor
-from LTO.Transactions.sponsorship import Sponsorship
-from LTO.Transactions.cancel_sponsorship import CancelSponsorship
-from LTO.Transactions.lease import Lease
-from LTO.Transactions.cancel_lease import CancelLease
-from LTO.Transactions.mass_transfer import MassTransfer
-from LTO.Transactions.revoke_association import RevokeAssociation
-from LTO.Transactions.association import Association
-from LTO import crypto
+from lto.accounts.account_factory_ed25519 import AccountFactoryED25519 as AccountFactory
+from lto.public_node import PublicNode
+from lto.transactions.transfer import Transfer
+from lto.transactions.anchor import Anchor
+from lto.transactions.sponsorship import Sponsorship
+from lto.transactions.cancel_sponsorship import CancelSponsorship
+from lto.transactions.lease import Lease
+from lto.transactions.cancel_lease import CancelLease
+from lto.transactions.mass_transfer import MassTransfer
+from lto.transactions.revoke_association import RevokeAssociation
+from lto.transactions.association import Association
+from lto import crypto
 import base58
 import random
 import polling

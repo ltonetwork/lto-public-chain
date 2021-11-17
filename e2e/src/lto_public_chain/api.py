@@ -9,17 +9,17 @@ import config
 import http_requests
 from LTO import PyCLTO
 from LTO.Accounts.AccountFactoryED25519 import AccountED25519
-from LTO.Transactions.Transfer import Transfer
-from LTO.Transactions.Association import Association
-from LTO.Transactions.RevokeAssociation import RevokeAssociation
-from LTO.Transactions.Lease import Lease
-from LTO.Transactions.CancelLease import CancelLease
+from lto.transactions.Transfer import Transfer
+from lto.transactions.Association import Association
+from lto.transactions.RevokeAssociation import RevokeAssociation
+from lto.transactions.Lease import Lease
+from lto.transactions.CancelLease import CancelLease
 from LTO.PublicNode import PublicNode
-from LTO.Transactions.SetScript import SetScript
-from LTO.Transactions.MassTransfer import MassTransfer
-from LTO.Transactions.Sponsorship import Sponsorship
-from LTO.Transactions.CancelSponsorship import CancelSponsorship
-from LTO.Transactions.Anchor import Anchor
+from lto.transactions.SetScript import SetScript
+from lto.transactions.MassTransfer import MassTransfer
+from lto.transactions.Sponsorship import Sponsorship
+from lto.transactions.CancelSponsorship import CancelSponsorship
+from lto.transactions.Anchor import Anchor
 
 
 CHAIN_ID = 'T'
