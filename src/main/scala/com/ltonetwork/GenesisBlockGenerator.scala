@@ -145,22 +145,28 @@ object GenesisBlockGenerator extends App {
 
     val confBody =
       s"""lto {
-         |  blockchain.custom {
-         |    address-scheme-character = $chainId
-         |    functionality {
-         |      pre-activated-features = null # undefines all previously defined pre-activated features
-         |      pre-activated-features = ${preActivatedFeatures.toSeq.sorted.map { case (f, h) => s"$f = $h" }.mkString("{", ", ", "}")}
-         |    }
-         |    genesis {
-         |      average-block-delay = ${settings.averageBlockDelay.toSeconds}s
-         |      initial-base-target = ${settings.initialBaseTarget}
-         |      timestamp = ${settings.timestamp} # ${Instant.ofEpochMilli(settings.timestamp)}
-         |      block-timestamp = ${settings.blockTimestamp} # ${Instant.ofEpochMilli(settings.blockTimestamp)}
-         |      signature = "${settings.signature.get}"
-         |      initial-balance = ${settings.initialBalance}
-         |      transactions = [
-         |        ${settings.transactions.map(x => s"""{recipient = "${x.recipient}", amount = ${x.amount}}""").mkString(",\n    ")}
-         |      ]
+         |  blockchain {
+         |    type = CUSTOM
+         |    custom {
+         |      address-scheme-character = $chainId
+         |      functionality {
+         |        pre-activated-features = null # undefines all previously defined pre-activated features
+         |        pre-activated-features = ${preActivatedFeatures.toSeq.sorted.map { case (f, h) => s"$f = $h" }.mkString("{", ", ", "}")}
+         |        feature-check-blocks-period = 1000
+         |        blocks-for-feature-activation = 100
+         |        double-features-periods-after-height = 100000000
+         |      }
+         |      genesis {
+         |        average-block-delay = ${settings.averageBlockDelay.toSeconds}s
+         |        initial-base-target = ${settings.initialBaseTarget}
+         |        timestamp = ${settings.timestamp} # ${Instant.ofEpochMilli(settings.timestamp)}
+         |        block-timestamp = ${settings.blockTimestamp} # ${Instant.ofEpochMilli(settings.blockTimestamp)}
+         |        signature = "${settings.signature.get}"
+         |        initial-balance = ${settings.initialBalance}
+         |        transactions = [
+         |          ${settings.transactions.map(x => s"""{recipient = "${x.recipient}", amount = ${x.amount}}""").mkString(",\n    ")}
+         |        ]
+         |      }
          |    }
          |  }$walletSettings
          |}
