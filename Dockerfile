@@ -8,6 +8,10 @@ COPY . .
 
 RUN test -f target/lto-public-all-*.jar || sbt packageAll -Dnetwork=mainnet
 
+RUN test -f genesis.conf || cp genesis.example.conf genesis.conf
+RUN java -cp target/lto-public-all-*.jar com.ltonetwork.GenesisBlockGenerator genesis.conf lto-custom.conf \
+  && echo 'include "local.conf"' >> lto-custom.conf
+
 
 FROM openjdk:11-jre-slim
 ENV LTO_LOG_LEVEL="INFO"
@@ -26,6 +30,7 @@ COPY starter.py /lto-node/
 COPY entrypoint.sh /lto-node/
 COPY --from=build /usr/src/target/lto-public-all-*.jar /lto-node/lto-public-all.jar
 COPY lto-*.conf /lto-node/
+COPY --from=build /usr/src/lto-custom.conf /lto-node/
 
 VOLUME /lto
 EXPOSE 6869 6868 6863

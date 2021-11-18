@@ -1,0 +1,8 @@
+target/classes
+target/global-logging
+target/src_managed
+target/streams
+target/task-temp-directory
+target/universal
+target/update
+target/zinc

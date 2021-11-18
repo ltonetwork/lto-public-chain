@@ -183,8 +183,12 @@ inConfig(Debian)(
     maintainerScripts := maintainerScriptsFromDirectory(packageSource.value / "debian", Seq("preinst", "postinst", "postrm", "prerm"))
   ))
 
+commands += Command.command("build") { state =>
+  "clean" :: "assembly" :: state
+}
+
 commands += Command.command("packageAll") { state =>
-  "clean" :: "assembly" :: "debian:packageBin" :: state
+  "assembly" :: "debian:packageBin" :: state
 }
 
 // https://stackoverflow.com/a/48592704/4050580

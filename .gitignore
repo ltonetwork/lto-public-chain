@@ -16,7 +16,6 @@ target
 *.*~
 
 # dotfiles
-.dockerignore
 .editorconfig
 .DS_Store
 
@@ -25,8 +24,9 @@ target
 
 # local settings
 localsettings.json
+genesis.conf
 local.conf
-custom.conf
+lto-custom.conf
 
 # Text files
 *.ods

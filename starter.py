@@ -56,7 +56,11 @@ def get_wallet_data():
             seed_base58 = base58.b58encode(seed.encode())
     else:
         if seed is None:
-            seed = pw.Address().seed
+            if NETWORK == 'CUSTOM':
+                seed = 'root'
+            else:
+                seed = pw.Address().seed
+                
             print('Seed phrase:', seed)
         seed_base58 = base58.b58encode(seed.encode())
     password = os.environ.get('LTO_WALLET_PASSWORD', generate_password())
@@ -82,7 +86,9 @@ if __name__ == "__main__":
     elif NETWORK == 'CUSTOM':
         copyfile('/lto-node/lto-custom.conf', '/lto/configs/lto-config.conf')
 
-    api_key = os.environ.get('LTO_API_KEY', 'lt1secretapikey!')
+    api_key = os.environ.get('LTO_API_KEY', generate_password())
+    if os.environ.get('LTO_API_KEY') is None:
+        print('Node API key:', api_key)    
     api_key_hash = secureHash(api_key)
 
     env_dict = parse_env_variables()

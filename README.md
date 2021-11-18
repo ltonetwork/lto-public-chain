@@ -3,12 +3,20 @@
 # Public Chain 
 In the `master` branch there is a code with functions that is under development. The latest release for each network can be found in the [Releases section], you can switch to the corresponding tag and build the application.
 
-To build testnet, use
+To build the node localy, run
 ```
-sbt -Dnetwork=testnet packageAll
+sbt build
 ```
 
-For further information please refer the [LTO Network documentation](https://docs.ltonetwork.com).
+It will produce `lto-public-all-*.jar` in the `target` folder.
+
+To package the build as debian package, run
+```
+sbt packageAll -Dnetwork=mainnet                            # Mainnet
+sbt packageAll -Dnetwork=testnet -DpackageName=lto-testnet  # Testnet
+```
+
+For further information please read the [LTO Network documentation](https://docs.ltonetwork.com).
 
 # Docker
 
@@ -27,15 +35,15 @@ docker run -it ltonetwork/public-node
 
 **For MAINNET:**
 ```
-docker run -p 6869:6869 -e LTO_HEAP_SIZE=2g -e LTO_ENABLE_REST_API -v YOUR_LOCAL_PATH_HERE:/lto legalthings/public-node    
-``` 
+docker run -p 6869:6869 -p 6868:6868 -e LTO_HEAP_SIZE=2g -e LTO_ENABLE_REST_API -v YOUR_LOCAL_PATH_HERE:/lto ltonetwork/public-node    
+```
 
 **For TESTNET:**
 ```
-docker run -p 6869:6869 -e LTO_NETWORK=TESTNET -e LTO_HEAP_SIZE=2g -v YOUR_LOCAL_PATH_HERE:/lto legalthings/public-node    
+docker run -p 6869:6869 -p 6863:6863 -e LTO_NETWORK=TESTNET -e LTO_HEAP_SIZE=2g -v YOUR_LOCAL_PATH_HERE:/lto ltonetwork/public-node
 ``` 
 
-**You can run container with predefined environment variables:**
+**You can run the container with these environment variables:**
 
 |Env variable                 |Description   |
 |-----------------------------|--------------|
