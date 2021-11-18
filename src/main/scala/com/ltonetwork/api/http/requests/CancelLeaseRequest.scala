@@ -4,6 +4,7 @@ import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.lease.CancelLeaseTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
+import com.ltonetwork.utils.Time
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -16,18 +17,18 @@ case class CancelLeaseRequest(version: Option[Byte] = None,
                               sponsorKeyType: Option[String] = None,
                               sponsorPublicKey: Option[String] = None,
                               signature: Option[ByteStr] = None,
-                              proofs: Option[Proofs] = None
-    ) extends TxRequest.For[CancelLeaseTransaction] {
+                              proofs: Option[Proofs] = None)
+    extends TxRequest.For[CancelLeaseTransaction] {
 
   protected def sign(tx: CancelLeaseTransaction, signer: PrivateKeyAccount): CancelLeaseTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, CancelLeaseTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, CancelLeaseTransaction] =
     for {
-      validProofs  <- toProofs(signature, proofs)
+      validProofs <- toProofs(signature, proofs)
       tx <- CancelLeaseTransaction.create(
         version.getOrElse(CancelLeaseTransaction.latestVersion),
         None,
-        timestamp.getOrElse(defaultTimestamp),
+        timestamp(time),
         sender,
         fee,
         leaseId,

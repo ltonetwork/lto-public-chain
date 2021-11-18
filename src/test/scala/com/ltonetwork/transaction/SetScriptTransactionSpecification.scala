@@ -12,9 +12,24 @@ import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.Json
 
 class SetScriptTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
-  property("serialization roundtrip") {
+  property("serialization roundtrip versions") {
     forEvery(versionTable(SetScriptTransaction)) { version =>
       forAll(setScriptTransactionGen(version)) { tx: SetScriptTransaction =>
+        val parsed = SetScriptTransaction.parseBytes(tx.bytes()).get
+
+        parsed.sender.address shouldEqual tx.sender.address
+        parsed.timestamp shouldEqual tx.timestamp
+        parsed.fee shouldEqual tx.fee
+        parsed.script shouldEqual tx.script
+
+        parsed.bytes() shouldEqual tx.bytes()
+      }
+    }
+  }
+
+  property("serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(setScriptTransactionGen(3.toByte, keyType)) { tx: SetScriptTransaction =>
         val parsed = SetScriptTransaction.parseBytes(tx.bytes()).get
 
         parsed.sender.address shouldEqual tx.sender.address
@@ -40,10 +55,10 @@ class SetScriptTransactionSpecification extends PropSpec with PropertyChecks wit
       json.toString shouldEqual tx.toString
 
       val req = json.as[SetScriptRequest]
-      req.senderPublicKey should be ('defined)
+      req.senderPublicKey should be('defined)
       req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp should be ('defined)
+      req.timestamp should be('defined)
       req.timestamp.get shouldEqual tx.timestamp
 
       req.script shouldEqual tx.script.map(_.bytes().base64)
@@ -84,7 +99,6 @@ class SetScriptTransactionSpecification extends PropSpec with PropertyChecks wit
 
     tx.json() shouldEqual js
   }
-
 
   property(testName = "JSON format validation V3") {
     val js = Json.parse("""{

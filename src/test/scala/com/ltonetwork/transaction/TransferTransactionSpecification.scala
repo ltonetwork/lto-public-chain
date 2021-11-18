@@ -1,11 +1,13 @@
 package com.ltonetwork.transaction
 
+import cats.instances.byte
 import com.ltonetwork.TransactionGen
+import com.ltonetwork.account.PublicKeyAccount.Dummy.keyType
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.Json
-import com.ltonetwork.account.{Address, PublicKeyAccount}
+import com.ltonetwork.account.{Address, KeyTypes, PublicKeyAccount}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.state.diffs._
 import com.ltonetwork.utils.Base58
@@ -29,9 +31,15 @@ class TransferTransactionSpecification extends PropSpec with PropertyChecks with
     recovered.bytes() shouldEqual tx.bytes()
   }
 
-  property("Transfer serialization roundtrip") {
+  property("Transfer serialization roundtrip versions") {
     forEvery(versionTable(TransferTransaction)) { version =>
       forAll(transferGen(version))(checkSerialization)
+    }
+  }
+
+  property("Transfer serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(transferGen(3.toByte, keyType))(checkSerialization)
     }
   }
 
@@ -89,7 +97,8 @@ class TransferTransactionSpecification extends PropSpec with PropertyChecks with
         Base58.decode("4t2Xazb2SX").get,
         None,
         Proofs.fromSignature(ByteStr.decodeBase58("eaV1i3hEiXyYQd6DQY7EnPg9XzpAvB9VA3bnpin2qJe4G36GZXaGnYKCgSf9xiQ61DcAwcBFzjSXh6FwCgazzFz").get)
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }
@@ -124,7 +133,8 @@ class TransferTransactionSpecification extends PropSpec with PropertyChecks with
         Base58.decode("4t2Xazb2SX").get,
         None,
         Proofs(Seq(ByteStr.decodeBase58("4bfDaqBcnK3hT8ywFEFndxtS1DTSYfncUqd4s5Vyaa66PZHawtC73rDswUur6QZu5RpqM7L9NFgBHT1vhCoox4vi").get))
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }
@@ -169,7 +179,8 @@ class TransferTransactionSpecification extends PropSpec with PropertyChecks with
         Base58.decode("4t2Xazb2SX").get,
         Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
         Proofs(proofs)
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }

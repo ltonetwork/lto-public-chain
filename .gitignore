@@ -10,7 +10,7 @@ lto.directory_IS_UNDEFINED/
 target
 *.tgz
 *.jar
-!third-party/yourkit/yjp-controller-api-redist.jar
+!dependencies/**/*.jar
 
 # vim
 *.*~
@@ -26,6 +26,7 @@ target
 # local settings
 localsettings.json
 local.conf
+custom.conf
 
 # Text files
 *.ods
@@ -35,6 +36,7 @@ local.conf
 package
 !src/package
 native
+.bsp
 
 # python
 *__pycache__*

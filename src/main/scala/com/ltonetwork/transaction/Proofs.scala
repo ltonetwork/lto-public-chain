@@ -15,8 +15,8 @@ case class Proofs private (proofs: Seq[ByteStr]) {
   def toSignature: ByteStr        = proofs.headOption.getOrElse(ByteStr.empty)
   override def toString: String   = s"Proofs(${proofs.mkString(", ")})"
 
-  def ++(other: Proofs): Proofs = Proofs(this.proofs ++ other.proofs)
-  def +(proof: ByteStr): Proofs = Proofs(this.proofs ++ Seq(proof))
+  def ++(other: Proofs): Proofs     = Proofs(this.proofs ++ other.proofs)
+  def +(proof: ByteStr): Proofs     = Proofs(this.proofs ++ Seq(proof))
   def +(proof: Array[Byte]): Proofs = Proofs(this.proofs ++ Seq(ByteStr(proof)))
 }
 
@@ -47,5 +47,5 @@ object Proofs {
   def apply(proof1: Array[Byte]): Proofs               = new Proofs(Seq(ByteStr(proof1)))
   def apply(proofs: Seq[ByteStr]): Proofs              = new Proofs(proofs)
 
-  implicit def toSeq(proofs: Proofs): Seq[ByteStr]     = proofs.proofs
+  implicit def toSeq(proofs: Proofs): Seq[ByteStr] = proofs.proofs
 }

@@ -164,12 +164,12 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           val enoughFee = 1000.lto
           // Just for converting the request to the transaction
           val enrichedJsv = jsv ++ Json.obj(
-            "fee"    -> enoughFee,
+            "fee" -> enoughFee,
           )
           createTransaction(enrichedJsv) { tx =>
             for {
               commonMinFee <- CommonValidation.getMinFee(blockchain, functionalitySettings, blockchain.height, tx)
-              utxMinFee <- new FeeCalculator(feesSettings, blockchain).minFee(tx)
+              utxMinFee    <- new FeeCalculator(feesSettings, blockchain).minFee(tx)
               minFee = Math.max(commonMinFee, utxMinFee)
             } yield Json.obj("feeAmount" -> minFee)
           }
@@ -218,7 +218,8 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   }
 
   private def signTransaction(signerAddress: String, jsv: JsObject): ToResponseMarshallable = {
-    TxRequest.fromJson(jsv)
+    TxRequest
+      .fromJson(jsv)
       .flatMap(_.signTx(wallet, signerAddress, time))
       .fold(ApiError.fromValidationError, _.json())
   }
@@ -228,10 +229,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   @ApiImplicitParams(
     Array(
       new ApiImplicitParam(name = "json",
-        required = true,
-        dataType = "string",
-        paramType = "body",
-        value = "Transaction data including type and optional timestamp in milliseconds")
+                           required = true,
+                           dataType = "string",
+                           paramType = "body",
+                           value = "Transaction data including type and optional timestamp in milliseconds")
     ))
   def sponsor: Route = (pathPrefix("sign") & post & withAuth) {
     pathEndOrSingleSlash {
@@ -249,10 +250,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     Array(
       new ApiImplicitParam(name = "signerAddress", value = "Wallet address", required = true, dataType = "string", paramType = "path"),
       new ApiImplicitParam(name = "json",
-        required = true,
-        dataType = "string",
-        paramType = "body",
-        value = "Transaction data including type and optional timestamp in milliseconds")
+                           required = true,
+                           dataType = "string",
+                           paramType = "body",
+                           value = "Transaction data including type and optional timestamp in milliseconds")
     ))
   def sponsorWithSigner: Route = pathPrefix(Segment) { signerAddress =>
     handleExceptions(jsonExceptionHandler) {
@@ -263,7 +264,8 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   }
 
   private def sponsorTransaction(signerAddress: String, jsv: JsObject): ToResponseMarshallable = {
-    TxRequest.fromJson(jsv)
+    TxRequest
+      .fromJson(jsv)
       .flatMap(_.sponsorTx(wallet, signerAddress, time))
       .fold(ApiError.fromValidationError, _.json())
   }
@@ -280,12 +282,17 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     ))
   def broadcast: Route = (pathPrefix("broadcast") & post) {
     handleExceptions(jsonExceptionHandler) {
-      json[JsObject] { createTransaction(_) { tx => doBroadcast(tx) } }
+      json[JsObject] {
+        createTransaction(_) { tx =>
+          doBroadcast(tx)
+        }
+      }
     }
   }
 
   private def createTransaction(jsv: JsObject)(f: Transaction => ToResponseMarshallable): ToResponseMarshallable = {
-    TxRequest.fromJson(jsv)
+    TxRequest
+      .fromJson(jsv)
       .flatMap(_.toTx)
       .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
       .fold(ApiError.fromValidationError, tx => f(tx))

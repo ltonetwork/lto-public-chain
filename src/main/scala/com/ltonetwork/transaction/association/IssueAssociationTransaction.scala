@@ -1,6 +1,7 @@
 package com.ltonetwork.transaction.association
 
 import cats.data.{Validated, ValidatedNel}
+import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
@@ -25,14 +26,15 @@ case class IssueAssociationTransaction private (version: Byte,
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
 
-  val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase ++ (
-    Json.obj(
-      "associationType" -> assocType,
-      "recipient"       -> recipient.stringRepr,
-    ) ++
-    expires.fold(Json.obj())(e => Json.obj("expires" -> e)) ++
-    hash.fold(Json.obj())(h => Json.obj("hash" -> h.base58))
-  ))
+  val json: Coeval[JsObject] = Coeval.evalOnce(
+    jsonBase ++ (
+      Json.obj(
+        "associationType" -> assocType,
+        "recipient"       -> recipient.stringRepr,
+      ) ++
+        expires.fold(Json.obj())(e => Json.obj("expires" -> e)) ++
+        hash.fold(Json.obj())(h => Json.obj("hash"       -> h.base58))
+    ))
 }
 
 object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociationTransaction] {
@@ -50,21 +52,22 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
       import tx._
       seq(tx)(
-        Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
-        Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(version < 3 || !hash.exists(_.arr.length == 0),
-                          None,
-                          ValidationError.GenericError("Hash length must not be 0 bytes")),
+        Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
+        Validated.condNel(version < 3 || !hash.exists(_.arr.length == 0), (), ValidationError.GenericError("Hash length must not be 0 bytes")),
         Validated.condNel(!hash.exists(_.arr.length > MaxHashLength),
-                          None,
+                          (),
                           ValidationError.GenericError(s"Hash length must be <= $MaxHashLength bytes")),
-        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(expires.isEmpty || version >= 3,
-                          None,
+                          (),
                           ValidationError.UnsupportedFeature(s"Association expiry is not supported for tx v$version")),
         Validated.condNel(sponsor.isEmpty || version >= 3,
-                          None,
+                          (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sender.keyType == ED25519 || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
       )
     }
   }

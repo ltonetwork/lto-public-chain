@@ -9,10 +9,10 @@ import com.ltonetwork.transaction.{Proofs, TransactionSerializer, ValidationErro
 import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
-trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction]
-  extends TransactionSerializer.For[AssociationTransactionT] {
+trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction] extends TransactionSerializer.For[AssociationTransactionT] {
 
-  type CreateCtor = (Byte, Byte, Long, PublicKeyAccount, Long, Address, Int, Option[ByteStr], Proofs) => Either[ValidationError, AssociationTransactionT]
+  type CreateCtor =
+    (Byte, Byte, Long, PublicKeyAccount, Long, Address, Int, Option[ByteStr], Proofs) => Either[ValidationError, AssociationTransactionT]
   protected val createTx: CreateCtor
 
   override def bodyBytes(tx: AssociationTransactionT): Array[Byte] = {
@@ -29,19 +29,20 @@ trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction]
     )
   }
 
-  def parseBytes(version: Byte, bytes: Array[Byte]): Try[AssociationTransactionT] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[AssociationTransactionT] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val chainId   = buf.getByte
-    val sender    = buf.getPublicKey
-    val recipient = buf.getAddress
-    val assocType = buf.getInt
-    val hashOpt   = buf.getOptionalByteArray.map(ByteStr(_))
-    val timestamp = buf.getLong
-    val fee       = buf.getLong
-    val proofs    = buf.getProofs
+      val chainId   = buf.getByte
+      val sender    = buf.getPublicKey
+      val recipient = buf.getAddress
+      val assocType = buf.getInt
+      val hashOpt   = buf.getOptionalByteArray.map(ByteStr(_))
+      val timestamp = buf.getLong
+      val fee       = buf.getLong
+      val proofs    = buf.getProofs
 
-    createTx(version, chainId, timestamp, sender, fee, recipient, assocType, hashOpt, proofs)
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      createTx(version, chainId, timestamp, sender, fee, recipient, assocType, hashOpt, proofs)
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

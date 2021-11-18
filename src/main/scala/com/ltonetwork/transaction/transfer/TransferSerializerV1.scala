@@ -23,17 +23,18 @@ object TransferSerializerV1 extends TransferSerializerLegacy {
     )
   }
 
-  def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val signature = buf.getSignature
+      val signature = buf.getSignature
 
-    val txTypeId  = buf.getByte
-    require(txTypeId == TransferTransaction.typeId, s"Signed tx type ($txTypeId) doesn't match")
+      val txTypeId = buf.getByte
+      require(txTypeId == TransferTransaction.typeId, s"Signed tx type ($txTypeId) doesn't match")
 
-    val (sender, timestamp, amount, fee, recipient, attachment) = parseBase(buf)
+      val (sender, timestamp, amount, fee, recipient, attachment) = parseBase(buf)
 
-    create(version, None, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.fromSignature(signature))
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      create(version, None, timestamp, sender, fee, recipient, amount, attachment, None, Proofs.fromSignature(signature))
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

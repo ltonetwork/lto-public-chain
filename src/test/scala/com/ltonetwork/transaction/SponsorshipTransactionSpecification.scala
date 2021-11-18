@@ -25,10 +25,17 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
     parsed.bytes() shouldEqual tx.bytes()
   }
 
-  property("serialization roundtrip") {
+  property("serialization roundtrip versions") {
     forEvery(versionTable(SponsorshipTransaction)) { version =>
       forAll(sponsorshipGen(version))(tx => checkSerialization(tx, SponsorshipTransaction.parseBytes))
       forAll(cancelSponsorshipGen(version))(tx => checkSerialization(tx, CancelSponsorshipTransaction.parseBytes))
+    }
+  }
+
+  property("serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(sponsorshipGen(3.toByte, keyType))(tx => checkSerialization(tx, SponsorshipTransaction.parseBytes))
+      forAll(cancelSponsorshipGen(3.toByte, keyType))(tx => checkSerialization(tx, CancelSponsorshipTransaction.parseBytes))
     }
   }
 
@@ -50,10 +57,10 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
       json.toString shouldEqual tx.toString
 
       val req = json.as[SponsorshipRequest]
-      req.senderPublicKey should be ('defined)
+      req.senderPublicKey should be('defined)
       req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp should be ('defined)
+      req.timestamp should be('defined)
       req.timestamp.get shouldEqual tx.timestamp
       req.recipient shouldEqual tx.recipient.stringRepr
     }
@@ -65,10 +72,10 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
       json.toString shouldEqual tx.toString
 
       val req = json.as[CancelSponsorshipRequest]
-      req.senderPublicKey should be ('defined)
+      req.senderPublicKey should be('defined)
       req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp should be ('defined)
+      req.timestamp should be('defined)
       req.timestamp.get shouldEqual tx.timestamp
       req.recipient shouldEqual tx.recipient.stringRepr
     }
@@ -82,8 +89,7 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
     )
 
     forEvery(types) { (typeId, id, create) =>
-      val js = Json.parse(
-        s"""{
+      val js = Json.parse(s"""{
                        "type": $typeId,
                        "version": 1,
                        "id": "$id",
@@ -99,8 +105,8 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
                        }
   """)
 
-    val arr = ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get
-    val tx = create(
+      val arr = ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get
+      val tx = create(
         1,
         None,
         1526911531530L,
@@ -109,8 +115,7 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
         Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet(),
         None,
         Proofs(Seq(arr))
-      )
-      .explicitGet()
+      ).explicitGet()
 
       tx.json() shouldEqual js
     }
@@ -124,8 +129,7 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
     )
 
     forEvery(types) { (typeId, id, create) =>
-      val js = Json.parse(
-        s"""{
+      val js = Json.parse(s"""{
                        "type": $typeId,
                        "version": 3,
                        "id": "$id",
@@ -158,8 +162,7 @@ class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks w
         Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet(),
         Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
         Proofs(proofs)
-      )
-        .explicitGet()
+      ).explicitGet()
 
       tx.json() shouldEqual js
     }

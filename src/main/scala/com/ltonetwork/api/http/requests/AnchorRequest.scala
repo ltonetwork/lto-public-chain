@@ -3,12 +3,10 @@ package com.ltonetwork.api.http.requests
 import cats.implicits._
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state.ByteStr
-import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import com.ltonetwork.utils.Time
-import com.ltonetwork.wallet.Wallet
-import play.api.libs.json.{Format, JsNumber, JsObject, Json, OWrites}
+import play.api.libs.json.{Format, JsObject, Json}
 
 case class AnchorRequest(version: Option[Byte] = None,
                          timestamp: Option[Long] = None,
@@ -20,18 +18,18 @@ case class AnchorRequest(version: Option[Byte] = None,
                          sponsorPublicKey: Option[String] = None,
                          signature: Option[ByteStr] = None,
                          proofs: Option[Proofs] = None,
-    ) extends TxRequest.For[AnchorTransaction] {
+) extends TxRequest.For[AnchorTransaction] {
 
   protected def sign(tx: AnchorTransaction, signer: PrivateKeyAccount): AnchorTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, AnchorTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, AnchorTransaction] =
     for {
       validAnchors <- anchors.traverse(s => parseBase58(s, "invalid anchor", AnchorTransaction.MaxAnchorStringSize))
       validProofs  <- toProofs(signature, proofs)
       tx <- AnchorTransaction.create(
         version.getOrElse(AnchorTransaction.latestVersion),
         None,
-        timestamp.getOrElse(defaultTimestamp),
+        timestamp(time),
         sender,
         fee,
         validAnchors,

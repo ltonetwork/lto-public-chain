@@ -6,10 +6,10 @@ import sbt.internal.inc.ReflectUtilities
 import sbtassembly.MergeStrategy
 
 enablePlugins(JavaServerAppPackaging, JDebPackaging, SystemdPlugin, GitVersioning)
-scalafmtOnCompile in ThisBuild := true
+ThisBuild / scalafmtOnCompile := true
 
 val versionSource = Def.task {
-  val versionFile      = (sourceManaged in Compile).value / "com" / "ltonetwork" / "Version.scala"
+  val versionFile      = (Compile / sourceManaged).value / "com" / "ltonetwork" / "Version.scala"
   val versionExtractor = """(\d+)\.(\d+)\.(\d+).*""".r
 
   version.value match {
@@ -47,10 +47,10 @@ inThisBuild(
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-language:implicitConversions", "-Ywarn-unused:-implicits")
   ))
 
-resolvers += Resolver.bintrayRepo("ethereum", "maven")
+resolvers += Resolver.file("local-dependencies", file("dependencies"))(Resolver.ivyStylePatterns)
 
-fork in run := true
-javaOptions in run ++= Seq(
+run / fork := true
+run / javaOptions ++= Seq(
   "-XX:+IgnoreUnrecognizedVMOptions",
   "--add-modules=java.xml.bind"
 )
@@ -84,15 +84,16 @@ inTask(assembly)(
     assemblyMergeStrategy := {
       case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.concat
       case PathList("META-INF", "aop.xml")                      => aopMerge
-      case other                                                => (assemblyMergeStrategy in assembly).value(other)
+      case PathList("org", "bouncycastle", xs @ _*)             => MergeStrategy.first
+      case other                                                => (assembly / assemblyMergeStrategy).value(other)
     }
   ))
 
 inConfig(Compile)(
   Seq(
     mainClass := Some("com.ltonetwork.Application"),
-    publishArtifact in packageDoc := false,
-    publishArtifact in packageSrc := false,
+    packageDoc / publishArtifact := false,
+    packageSrc / publishArtifact := false,
     sourceGenerators += versionSource
   ))
 
@@ -136,9 +137,7 @@ inConfig(Universal)(
       "-J-Xms128m",
       "-J-Xmx2g",
       "-J-XX:+ExitOnOutOfMemoryError",
-      // Java 9 support
       "-J-XX:+IgnoreUnrecognizedVMOptions",
-      "-J--add-modules=java.xml.bind",
       // from https://groups.google.com/d/msg/akka-user/9s4Yl7aEz3E/zfxmdc0cGQAJ
       "-J-XX:+UseG1GC",
       "-J-XX:+UseNUMA",
@@ -156,7 +155,7 @@ val packageSource = Def.setting {
 
 val upstartScript = Def.task {
   val src    = packageSource.value / "upstart.conf"
-  val dest   = (target in Debian).value / "upstart" / s"${packageName.value}.conf"
+  val dest   = (Debian / target).value / "upstart" / s"${packageName.value}.conf"
   val result = TemplateWriter.generateScript(src.toURI.toURL, linuxScriptReplacements.value)
   IO.write(dest, result)
   dest
@@ -179,7 +178,7 @@ linuxScriptReplacements += "detect-loader" ->
 inConfig(Debian)(
   Seq(
     linuxStartScriptTemplate := (packageSource.value / "systemd.service").toURI.toURL,
-    debianPackageDependencies += "java8-runtime-headless",
+    debianPackageDependencies += "java11-runtime-headless",
     serviceAutostart := false,
     maintainerScripts := maintainerScriptsFromDirectory(packageSource.value / "debian", Seq("preinst", "postinst", "postrm", "prerm"))
   ))
@@ -204,8 +203,6 @@ checkPRRaw in Global := {
   }
 }
 
-lazy val nacl4s = project
-
 lazy val lang =
   crossProject(JSPlatform, JVMPlatform)
     .withoutSuffixFor(JVMPlatform)
@@ -213,7 +210,7 @@ lazy val lang =
       version := "0.0.1",
       // the following line forces scala version across all dependencies
       scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true))),
-      test in assembly := {},
+      assembly / test := {},
       addCompilerPlugin(Dependencies.kindProjector),
       libraryDependencies ++=
         Dependencies.cats ++
@@ -224,7 +221,8 @@ lazy val lang =
           Dependencies.scalactic ++
           Dependencies.monix.value ++
           Dependencies.scodec.value ++
-          Dependencies.fastparse.value,
+          Dependencies.fastparse.value ++
+          Dependencies.seasalt,
       resolvers += Resolver.bintrayIvyRepo("portable-scala", "sbt-plugins")
     )
     .jsSettings(
@@ -239,7 +237,7 @@ lazy val lang =
     )
 
 lazy val langJS  = lang.js
-lazy val langJVM = lang.jvm.dependsOn(nacl4s)
+lazy val langJVM = lang.jvm
 
 lazy val node = project
   .in(file("."))
@@ -260,10 +258,10 @@ lazy val node = project
         Dependencies.ficus ++
         Dependencies.scorex ++
         Dependencies.commons_net ++
+        Dependencies.jaxb_api ++
         Dependencies.monix.value
   )
   .dependsOn(langJVM)
-  .dependsOn(nacl4s)
 
 lazy val it = project
   .dependsOn(node)

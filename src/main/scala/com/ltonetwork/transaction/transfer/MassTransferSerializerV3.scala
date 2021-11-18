@@ -39,20 +39,21 @@ object MassTransferSerializerV3 extends TransactionSerializer.For[MassTransferTr
     ParsedTransfer(address, amount)
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val (chainId, timestamp, sender, fee) = parseBase(buf)
+      val (chainId, timestamp, sender, fee) = parseBase(buf)
 
-    val transferCount = buf.getShort
-    val transfers = (0 until transferCount).foldLeft(List.empty[ParsedTransfer]) {
-      case (acc, _) => acc :+ parseTransfer(buf)
-    }
+      val transferCount = buf.getShort
+      val transfers = (0 until transferCount).foldLeft(List.empty[ParsedTransfer]) {
+        case (acc, _) => acc :+ parseTransfer(buf)
+      }
 
-    val attachment = buf.getByteArrayWithLength
-    val (sponsor, proofs) = parseFooter(buf)
+      val attachment        = buf.getByteArrayWithLength
+      val (sponsor, proofs) = parseFooter(buf)
 
-    create(version, Some(chainId), timestamp, sender, fee, transfers, attachment, sponsor, proofs)
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      create(version, Some(chainId), timestamp, sender, fee, transfers, attachment, sponsor, proofs)
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

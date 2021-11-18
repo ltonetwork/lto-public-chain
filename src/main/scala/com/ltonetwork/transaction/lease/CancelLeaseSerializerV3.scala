@@ -25,14 +25,15 @@ object CancelLeaseSerializerV3 extends TransactionSerializer.For[CancelLeaseTran
     )
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val (chainId, timestamp, sender, fee) = parseBase(buf)
-    val leaseId = ByteStr(buf.getByteArray(32))
-    val (sponsor, proofs) = parseFooter(buf)
+      val (chainId, timestamp, sender, fee) = parseBase(buf)
+      val leaseId                           = ByteStr(buf.getByteArray(32))
+      val (sponsor, proofs)                 = parseFooter(buf)
 
-    create(version, Some(chainId), timestamp, sender, fee, leaseId, sponsor, proofs)
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      create(version, Some(chainId), timestamp, sender, fee, leaseId, sponsor, proofs)
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

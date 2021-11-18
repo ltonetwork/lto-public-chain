@@ -44,7 +44,7 @@ object Dependencies {
   lazy val akka = Seq("actor", "slf4j").map(akkaModule)
 
   lazy val db = Seq(
-    "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
+    "org.ethereum" % "leveldbjni-all" % "1.18.3"
   )
 
   lazy val logging = Seq(
@@ -64,7 +64,7 @@ object Dependencies {
     akkaModule("persistence"),
     akkaModule("persistence-tck") % "test",
     "com.github.dnvriend" %% "akka-persistence-inmemory" % "2.4.18.1" % "test",
-    "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
+    "org.ethereum" % "leveldbjni-all" % "1.18.3"
   )
 
   lazy val metrics = {
@@ -103,4 +103,10 @@ object Dependencies {
     "io.github.amrhassan" %% "scalacheck-cats" % "0.4.0" % Test
   )
   lazy val kindProjector = "org.spire-math" %% "kind-projector" % "0.9.6"
+  lazy val seasalt = Seq("com.ltonetwork" % "seasalt" % "0.0.10")
+  lazy val jaxb_api = Seq(
+    "javax.xml.bind" % "jaxb-api" % "2.3.0",
+    "com.sun.xml.bind" % "jaxb-core" % "2.3.0",
+    "com.sun.xml.bind" % "jaxb-impl" % "2.3.0"
+  )
 }

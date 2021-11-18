@@ -117,6 +117,7 @@ class NgState(val base: Block, val baseBlockDiff: Diff, val baseBlockCarry: Long
 }
 
 object NgState {
+
   /**
     * Allow atomically appends to state
     * Return internal stack and mapping state without dirty reads
@@ -139,7 +140,7 @@ object NgState {
     private def readLock[B](f: => B): B = inLock(lock.readLock(), f)
 
     @volatile private var internalStack = List.empty[T]
-    @volatile private var internalMap = Map.empty[K, V]
+    @volatile private var internalMap   = Map.empty[K, V]
 
     /**
       * Stack state

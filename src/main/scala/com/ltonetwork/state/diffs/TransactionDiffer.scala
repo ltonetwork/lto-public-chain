@@ -23,6 +23,7 @@ object TransactionDiffer {
       blockchain: Blockchain,
       tx: Transaction): Either[ValidationError, Diff] = {
     for {
+      _ <- CommonValidation.disallowUnsupportedKeyTypes(tx)
       _ <- Verifier(blockchain, currentBlockHeight)(tx)
       _ <- CommonValidation.disallowTxFromFuture(settings, currentBlockTimestamp, tx)
       _ <- CommonValidation.disallowTxFromPast(prevBlockTimestamp, tx)
@@ -37,7 +38,7 @@ object TransactionDiffer {
             case ttx: TransferTransaction     => TransferTransactionDiff(blockchain, settings, currentBlockTimestamp, currentBlockHeight)(ttx)
             case mtx: MassTransferTransaction => MassTransferTransactionDiff(blockchain, currentBlockTimestamp, currentBlockHeight)(mtx)
             case ltx: LeaseTransaction        => LeaseTransactionsDiff.lease(blockchain, currentBlockHeight)(ltx)
-            case ltx: CancelLeaseTransaction  =>
+            case ltx: CancelLeaseTransaction =>
               LeaseTransactionsDiff.leaseCancel(blockchain, settings, currentBlockTimestamp, currentBlockHeight)(ltx)
             case dtx: DataTransaction               => DataTransactionDiff(blockchain, currentBlockHeight)(dtx)
             case sstx: SetScriptTransaction         => SetScriptTransactionDiff(currentBlockHeight)(sstx)

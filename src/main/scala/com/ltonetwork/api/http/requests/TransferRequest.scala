@@ -4,6 +4,7 @@ import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.transfer.TransferTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
+import com.ltonetwork.utils.Time
 import play.api.libs.json._
 
 case class TransferRequest(version: Option[Byte] = None,
@@ -17,19 +18,19 @@ case class TransferRequest(version: Option[Byte] = None,
                            sponsorKeyType: Option[String] = None,
                            sponsorPublicKey: Option[String] = None,
                            signature: Option[ByteStr] = None,
-                           proofs: Option[Proofs] = None
-    ) extends TxRequest.For[TransferTransaction] {
+                           proofs: Option[Proofs] = None)
+    extends TxRequest.For[TransferTransaction] {
 
   protected def sign(tx: TransferTransaction, signer: PrivateKeyAccount): TransferTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, TransferTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, TransferTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
       validProofs    <- toProofs(signature, proofs)
       tx <- TransferTransaction.create(
         version.getOrElse(TransferTransaction.latestVersion),
         None,
-        timestamp.getOrElse(defaultTimestamp),
+        timestamp(time),
         sender,
         fee,
         validRecipient,

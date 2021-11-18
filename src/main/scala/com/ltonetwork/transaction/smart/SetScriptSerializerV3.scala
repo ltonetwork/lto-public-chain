@@ -31,16 +31,17 @@ object SetScriptSerializerV3 extends TransactionSerializer.For[SetScriptTransact
     else ScriptReader.fromBytes(scriptBytes).map(Some(_))
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[SetScriptTransaction] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[SetScriptTransaction] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val (chainId, timestamp, sender, fee) = parseBase(buf)
-    val scriptOptEi = parseScript(buf)
-    val (sponsor, proofs) = parseFooter(buf)
+      val (chainId, timestamp, sender, fee) = parseBase(buf)
+      val scriptOptEi                       = parseScript(buf)
+      val (sponsor, proofs)                 = parseFooter(buf)
 
-    (for {
-      scriptOpt <- scriptOptEi
-      tx        <- create(version, Some(chainId), timestamp, sender, fee, scriptOpt, sponsor, proofs)
-    } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      (for {
+        scriptOpt <- scriptOptEi
+        tx        <- create(version, Some(chainId), timestamp, sender, fee, scriptOpt, sponsor, proofs)
+      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

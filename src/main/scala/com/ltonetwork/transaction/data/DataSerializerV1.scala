@@ -26,7 +26,7 @@ object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
   }
 
   private def parseData(bytes: Array[Byte], pos: Int): (List[DataEntry[_]], Int) = {
-    val entryCount = Shorts.fromByteArray(bytes.drop(pos))
+    val entryCount = Shorts.fromByteArray(bytes.slice(pos, pos + Shorts.BYTES))
 
     if (entryCount > 0) {
       val parsed = List.iterate(DataEntry.parse(bytes, pos + Shorts.BYTES), entryCount) { case (_, p) => DataEntry.parse(bytes, p) }
@@ -34,19 +34,20 @@ object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
     } else (List.empty, pos + Shorts.BYTES)
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val sender = buf.getPublicKey
+      val sender = buf.getPublicKey
 
-    val (entries, entriesEnd) = parseData(bytes, buf.position)
-    buf.position(entriesEnd)
+      val (entries, entriesEnd) = parseData(bytes, buf.position)
+      buf.position(entriesEnd)
 
-    val timestamp = buf.getLong
-    val fee       = buf.getLong
-    val proofs    = buf.getProofs
+      val timestamp = buf.getLong
+      val fee       = buf.getLong
+      val proofs    = buf.getProofs
 
-    create(version, None, timestamp, sender, fee, entries, None, proofs)
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      create(version, None, timestamp, sender, fee, entries, None, proofs)
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

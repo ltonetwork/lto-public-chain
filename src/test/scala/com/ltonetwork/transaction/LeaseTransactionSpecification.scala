@@ -22,9 +22,18 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
     first.bytes() shouldEqual second.bytes()
   }
 
-  property("Lease transaction serialization roundtrip") {
+  property("Lease transaction serialization roundtrip versions") {
     forEvery(versionTable(LeaseTransaction)) { version =>
       forAll(leaseGen(version)) { tx: LeaseTransaction =>
+        val recovered = tx.builder.parseBytes(tx.bytes()).get
+        assertTxs(recovered, tx)
+      }
+    }
+  }
+
+  property("Lease transaction serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(leaseGen(3.toByte, keyType)) { tx: LeaseTransaction =>
         val recovered = tx.builder.parseBytes(tx.bytes()).get
         assertTxs(recovered, tx)
       }
@@ -44,10 +53,10 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
       json.toString shouldEqual tx.toString
 
       val req = json.as[LeaseRequest]
-      req.senderPublicKey should be ('defined)
+      req.senderPublicKey should be('defined)
       req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp should be ('defined)
+      req.timestamp should be('defined)
       req.timestamp.get shouldEqual tx.timestamp
 
       req.recipient shouldEqual tx.recipient.toString
@@ -81,8 +90,10 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
         recipient = Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet(),
         amount = 10000000,
         sponsor = None,
-        proofs = Proofs.fromSignature(ByteStr.decodeBase58("iy3TmfbFds7pc9cDDqfjEJhfhVyNtm3GcxoVz8L3kJFvgRPUmiqqKLMeJGYyN12AhaQ6HvE7aF1tFgaAoCCgNJJ").get)
-      ).explicitGet()
+        proofs =
+          Proofs.fromSignature(ByteStr.decodeBase58("iy3TmfbFds7pc9cDDqfjEJhfhVyNtm3GcxoVz8L3kJFvgRPUmiqqKLMeJGYyN12AhaQ6HvE7aF1tFgaAoCCgNJJ").get)
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }
@@ -116,7 +127,8 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
         amount = 10000000,
         sponsor = None,
         proofs = Proofs(Seq(ByteStr.decodeBase58("5Fr3yLwvfKGDsFLi8A8JbHqToHDojrPbdEGx9mrwbeVWWoiDY5pRqS3rcX1rXC9ud52vuxVdBmGyGk5krcgwFu9q").get))
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }
@@ -159,7 +171,8 @@ class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Ma
         amount = 10000000,
         sponsor = Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
         proofs = Proofs(proofs)
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }

@@ -14,17 +14,17 @@ trait PoSCalculator {
 }
 
 object PoSCalculator {
-  private[consensus] val HitSize: Int        = 8
-  private[consensus] val MinBaseTarget: Long = 9
+  private[consensus] val HitSize: Int = 8
+  val MinBaseTarget: Long             = 9
 
-  private[consensus] def generatorSignature(signature: Array[Byte], publicKey: Array[Byte]): Array[Byte] = {
-    val s = new Array[Byte](crypto.DigestLength * 2)
-    System.arraycopy(signature, 0, s, 0, crypto.DigestLength)
-    System.arraycopy(publicKey, 0, s, crypto.DigestLength, crypto.DigestLength)
+  def generatorSignature(signature: Array[Byte], publicKey: Array[Byte]): Array[Byte] = {
+    val s = new Array[Byte](crypto.digestLength * 2)
+    System.arraycopy(signature, 0, s, 0, crypto.digestLength)
+    System.arraycopy(publicKey, 0, s, crypto.digestLength, crypto.digestLength)
     crypto.fastHash(s)
   }
 
-  private[consensus] def hit(generatorSignature: Array[Byte]): BigInt = BigInt(1, generatorSignature.take(HitSize).reverse)
+  def hit(generatorSignature: Array[Byte]): BigInt = BigInt(1, generatorSignature.take(HitSize).reverse)
 
   private[consensus] def normalize(value: Long, targetBlockDelaySeconds: Long): Double =
     value * targetBlockDelaySeconds / (60: Double)

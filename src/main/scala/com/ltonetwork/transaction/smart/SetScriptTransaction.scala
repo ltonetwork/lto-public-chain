@@ -1,6 +1,7 @@
 package com.ltonetwork.transaction.smart
 
 import cats.data.{Validated, ValidatedNel}
+import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account._
 import com.ltonetwork.serialization._
 import com.ltonetwork.state._
@@ -40,12 +41,15 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
       import tx._
       seq(tx)(
-        Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
-        Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
+        Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
-                          None,
+                          (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sender.keyType == ED25519 || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
       )
     }
   }
@@ -66,10 +70,6 @@ object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction]
              proofs: Proofs): Either[ValidationError, TransactionT] =
     SetScriptTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, script, sponsor, proofs).validatedEither
 
-  def signed(version: Byte,
-             timestamp: Long,
-             sender: PrivateKeyAccount,
-             fee: Long,
-             script: Option[Script]): Either[ValidationError, TransactionT] =
+  def signed(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, script: Option[Script]): Either[ValidationError, TransactionT] =
     create(version, None, timestamp, sender, fee, script, None, Proofs.empty).signWith(sender)
 }

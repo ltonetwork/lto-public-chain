@@ -15,7 +15,9 @@ trait TransactionBuilder {
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT = sign(tx, signer, None)
-  implicit def sign(tx: Either[ValidationError, TransactionT], signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, TransactionT] =
+  implicit def sign(tx: Either[ValidationError, TransactionT],
+                    signer: PrivateKeyAccount,
+                    sponsor: Option[PublicKeyAccount]): Either[ValidationError, TransactionT] =
     tx.map(unsigned => sign(unsigned, signer, sponsor))
   implicit def sign(tx: Either[ValidationError, TransactionT], signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
     tx.map(unsigned => sign(unsigned, signer, None))

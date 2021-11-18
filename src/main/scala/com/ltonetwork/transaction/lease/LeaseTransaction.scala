@@ -1,6 +1,7 @@
 package com.ltonetwork.transaction.lease
 
 import cats.data.{Validated, ValidatedNel}
+import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
@@ -29,10 +30,11 @@ case class LeaseTransaction private (version: Byte,
   private def serializer: TransactionSerializer.For[LeaseTransaction] = builder.serializer(version)
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj(
-    "recipient" -> recipient.stringRepr,
-    "amount"    -> amount
-  ))
+  val json: Coeval[JsObject] = Coeval.evalOnce(
+    jsonBase ++ Json.obj(
+      "recipient" -> recipient.stringRepr,
+      "amount"    -> amount
+    ))
 }
 
 object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
@@ -59,16 +61,19 @@ object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
       import tx._
       seq(tx)(
-        Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
-        Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(amount > 0, None, ValidationError.NegativeAmount(amount, "lto")),
-        Validated.condNel(Try(Math.addExact(amount, fee)).isSuccess, None, ValidationError.OverflowError),
-        Validated.condNel(sender.stringRepr != recipient.stringRepr, None, ValidationError.ToSelf),
-        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
+        Validated.condNel(amount > 0, (), ValidationError.NegativeAmount(amount, "lto")),
+        Validated.condNel(Try(Math.addExact(amount, fee)).isSuccess, (), ValidationError.OverflowError),
+        Validated.condNel(sender.stringRepr != recipient.stringRepr, (), ValidationError.ToSelf),
+        Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
-                          None,
+                          (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
-        Validated.condNel(proofs.length <= 1 || version > 1, None, ValidationError.UnsupportedFeature(s"Multiple proofs not supported for tx v1")),
+        Validated.condNel(proofs.length <= 1 || version > 1, (), ValidationError.UnsupportedFeature(s"Multiple proofs not supported for tx v1")),
+        Validated.condNel(sender.keyType == ED25519 || version >= 3,
+                          (),
+                          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
       )
     }
   }

@@ -68,27 +68,31 @@ object Transaction {
 
     private def headerJson: JsObject = {
       Json.obj(
-        "type" -> typeId,
+        "type"    -> typeId,
         "version" -> version,
-        "id" -> id().toString
+        "id"      -> id().toString
       )
     }
 
     private def senderJson: JsObject = {
       Json.obj(
-        "sender" -> sender.address,
-        "senderKeyType" -> sender.keyType.reference,
+        "sender"          -> sender.address,
+        "senderKeyType"   -> sender.keyType.reference,
         "senderPublicKey" -> Base58.encode(sender.publicKey),
       )
     }
 
-    private def sponsorJson: JsObject = sponsor.map(
-      acc => Json.obj(
-        "sponsor" -> acc.address,
-        "sponsorKeyType" -> acc.keyType.reference,
-        "sponsorPublicKey" -> Base58.encode(acc.publicKey)
-      )
-    ).getOrElse(Json.obj())
+    private def sponsorJson: JsObject =
+      sponsor
+        .map(
+          acc =>
+            Json.obj(
+              "sponsor"          -> acc.address,
+              "sponsorKeyType"   -> acc.keyType.reference,
+              "sponsorPublicKey" -> Base58.encode(acc.publicKey)
+          )
+        )
+        .getOrElse(Json.obj())
 
     private def proofsJson: JsObject = tx match {
       case s: SigProofsSwitch if s.usesLegacySignature => Json.obj("signature" -> s.signature.toString)
@@ -97,7 +101,8 @@ object Transaction {
     }
 
     //noinspection ScalaStyle
-    def ++(txSpecificJson: JsObject): JsObject = headerJson ++ senderJson ++ sponsorJson ++
-      Json.obj("fee" -> fee, "timestamp" -> timestamp) ++ txSpecificJson ++ proofsJson
+    def ++(txSpecificJson: JsObject): JsObject =
+      headerJson ++ senderJson ++ sponsorJson ++
+        Json.obj("fee" -> fee, "timestamp" -> timestamp) ++ txSpecificJson ++ proofsJson
   }
 }

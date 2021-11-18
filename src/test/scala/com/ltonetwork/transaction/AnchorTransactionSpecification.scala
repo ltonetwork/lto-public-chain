@@ -30,9 +30,15 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
     parsed.bytes() shouldEqual tx.bytes()
   }
 
-  property("serialization roundtrip") {
+  property("serialization roundtrip versions") {
     forEvery(versionTable(AnchorTransaction)) { version: Byte =>
       forAll(anchorTransactionGen(version))(checkSerialization)
+    }
+  }
+
+  property("serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(anchorTransactionGen(3.toByte, keyType))(checkSerialization)
     }
   }
 
@@ -49,10 +55,10 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
       json.toString shouldEqual tx.toString
 
       val req = json.as[AnchorRequest]
-      req.senderPublicKey should be ('defined)
+      req.senderPublicKey should be('defined)
       req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp should be ('defined)
+      req.timestamp should be('defined)
       req.timestamp.get shouldEqual tx.timestamp
 
       req.anchors zip tx.anchors foreach {
@@ -82,7 +88,7 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
   """)
 
     val anchor = ByteStr.decodeBase58("264h1cUrahDxWCPJBAPgtf6A9f3dNhkrLAeBUdHU8A5NDtksaumZ4WmsAU2NiF4eTCubLpYAd9D6xgBosPv34inu").get
-    val proof = ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get
+    val proof  = ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get
 
     val tx = AnchorTransaction
       .create(
@@ -94,7 +100,8 @@ class AnchorTransactionSpecification extends PropSpec with PropertyChecks with M
         List(anchor),
         None,
         Proofs(Seq(proof))
-      ).explicitGet()
+      )
+      .explicitGet()
 
     tx.json() shouldEqual js
   }

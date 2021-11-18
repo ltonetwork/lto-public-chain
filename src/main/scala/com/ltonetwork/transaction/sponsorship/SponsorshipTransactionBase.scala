@@ -2,6 +2,7 @@ package com.ltonetwork.transaction.sponsorship
 
 import cats.data.{Validated, ValidatedNel}
 import com.google.common.primitives.{Bytes, Longs}
+import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account.{Address, AddressScheme, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.sponsorship.SponsorshipTransaction.supportedVersions
@@ -29,13 +30,16 @@ object SponsorshipTransactionBase {
     def validate(tx: T): ValidatedNel[ValidationError, T] = {
       import tx._
       seq(tx)(
-        Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
-        Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(sender.address != recipient.address, None, ValidationError.GenericError("Can't sponsor oneself")),
-        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
+        Validated.condNel(sender.address != recipient.address, (), ValidationError.GenericError("Can't sponsor oneself")),
+        Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
-                          None,
+                          (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sender.keyType == ED25519 || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
       )
     }
   }

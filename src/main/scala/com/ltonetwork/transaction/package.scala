@@ -22,7 +22,7 @@ package object transaction {
     def sponsorWith(privateKey: PrivateKeyAccount)(implicit sign: (T, PrivateKeyAccount, Option[PublicKeyAccount]) => T): T =
       sign(tx, privateKey, Some(privateKey))
     def sponsorWith(maybePk: Option[PrivateKeyAccount])(implicit sign: (T, PrivateKeyAccount, Option[PublicKeyAccount]) => T): T = maybePk match {
-      case None => tx  // sponsorWith(None) does *not* clear an existing sponsor
+      case None             => tx // sponsorWith(None) does *not* clear an existing sponsor
       case Some(privateKey) => sign(tx, privateKey, Some(privateKey))
     }
   }

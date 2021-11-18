@@ -27,17 +27,18 @@ object IssueAssociationSerializerV3 extends TransactionSerializer.For[IssueAssoc
     )
   }
 
-  def parseBytes(version: Byte, bytes: Array[Byte]): Try[IssueAssociationTransaction] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  def parseBytes(version: Byte, bytes: Array[Byte]): Try[IssueAssociationTransaction] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val (chainId, timestamp, sender, fee) = parseBase(buf)
-    val recipient = buf.getAddress
-    val assocType = buf.getInt
-    val expires   = Some(buf.getLong).noneIf(0)
-    val hash      = Some(buf.getByteArrayWithLength).map(ByteStr(_)).noneIfEmpty
-    val (sponsor, proofs) = parseFooter(buf)
+      val (chainId, timestamp, sender, fee) = parseBase(buf)
+      val recipient                         = buf.getAddress
+      val assocType                         = buf.getInt
+      val expires                           = Some(buf.getLong).noneIf(0)
+      val hash                              = Some(buf.getByteArrayWithLength).map(ByteStr(_)).noneIfEmpty
+      val (sponsor, proofs)                 = parseFooter(buf)
 
-    create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, expires, hash, sponsor, proofs)
-      .fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, expires, hash, sponsor, proofs)
+        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

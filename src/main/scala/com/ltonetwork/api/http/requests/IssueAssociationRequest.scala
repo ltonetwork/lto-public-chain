@@ -4,6 +4,7 @@ import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.association.IssueAssociationTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
+import com.ltonetwork.utils.Time
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -20,18 +21,20 @@ case class IssueAssociationRequest(version: Option[Byte] = None,
                                    sponsorPublicKey: Option[String] = None,
                                    signature: Option[ByteStr] = None,
                                    proofs: Option[Proofs] = None,
-    ) extends TxRequest.For[IssueAssociationTransaction] {
+) extends TxRequest.For[IssueAssociationTransaction] {
 
   protected def sign(tx: IssueAssociationTransaction, signer: PrivateKeyAccount): IssueAssociationTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, IssueAssociationTransaction] =
+  def toTxFrom(sender: PublicKeyAccount,
+               sponsor: Option[PublicKeyAccount],
+               time: Option[Time]): Either[ValidationError, IssueAssociationTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
-      validProofs <- toProofs(signature, proofs)
+      validProofs    <- toProofs(signature, proofs)
       tx <- IssueAssociationTransaction.create(
         version.getOrElse(IssueAssociationTransaction.latestVersion),
         None,
-        timestamp.getOrElse(defaultTimestamp),
+        timestamp(time),
         sender,
         fee,
         validRecipient,

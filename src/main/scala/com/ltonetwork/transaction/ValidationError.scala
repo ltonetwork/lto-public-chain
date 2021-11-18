@@ -39,6 +39,7 @@ object ValidationError {
   case class InvalidPublicKey(err: String)                     extends ValidationError
   case class UnsupportedFeature(err: String)                   extends ValidationError
   case class WrongChainId(chainId: Byte)                       extends ValidationError
+  case class UnsupportedKeyType(err: String)                   extends ValidationError
 
   object GenericError {
     def apply(ex: Throwable): GenericError = new GenericError(Throwables.getStackTraceAsString(ex))

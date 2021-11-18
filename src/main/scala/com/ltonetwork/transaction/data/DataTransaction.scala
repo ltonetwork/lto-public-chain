@@ -2,12 +2,14 @@ package com.ltonetwork.transaction.data
 
 import cats.implicits._
 import cats.data.{Validated, ValidatedNel}
+import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import monix.eval.Coeval
 import play.api.libs.json._
+
 import scala.util.Try
 
 case class DataTransaction private (version: Byte,
@@ -45,16 +47,19 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
       import tx._
 
       seq(tx)(
-        Validated.condNel(supportedVersions.contains(version), None, ValidationError.UnsupportedVersion(version)),
-        Validated.condNel(chainId == networkByte, None, ValidationError.WrongChainId(chainId)),
-        Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), None, ValidationError.TooBigArray),
-        Validated.condNel(!data.exists(_.key.isEmpty), None, ValidationError.GenericError("Empty key found")),
-        Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, None, ValidationError.GenericError("Duplicate keys found")),
-        Try { Validated.condNel(bytes().length <= MaxBytes, None, ValidationError.TooBigArray) }.getOrElse(None.validNel),
-        Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
+        Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
+        Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
+        Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), (), ValidationError.TooBigArray),
+        Validated.condNel(!data.exists(_.key.isEmpty), (), ValidationError.GenericError("Empty key found")),
+        Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, (), ValidationError.GenericError("Duplicate keys found")),
+        Try { Validated.condNel(bytes().length <= MaxBytes, (), ValidationError.TooBigArray) }.getOrElse(().validNel),
+        Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
-                          None,
+                          (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
+        Validated.condNel(sender.keyType == ED25519 || version >= 3,
+                          None,
+                          ValidationError.UnsupportedFeature(s"Sender key type ${sender.keyType} not supported for tx v$version"))
       )
     }
   }
@@ -74,10 +79,6 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
              proofs: Proofs): Either[ValidationError, TransactionT] =
     DataTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, data, sponsor, proofs).validatedEither
 
-  def signed(version: Byte,
-             timestamp: Long,
-             sender: PrivateKeyAccount,
-             fee: Long,
-             data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
+  def signed(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
     create(version, None, timestamp, sender, fee, data, None, Proofs.empty).signWith(sender)
 }

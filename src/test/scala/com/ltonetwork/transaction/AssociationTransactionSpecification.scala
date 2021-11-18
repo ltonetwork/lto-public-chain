@@ -15,7 +15,7 @@ import scala.util.Try
 class AssociationTransactionSpecification extends PropSpec with PropertyChecks with OptionValues with Matchers with TransactionGen {
 
   private def checkSerialization(tx: AssociationTransaction, parser: Array[Byte] => Try[AssociationTransaction]): Assertion = {
-    val bytes = tx.bytes()
+    val bytes  = tx.bytes()
     val parsed = parser(bytes).get
 
     parsed.sender.address shouldEqual tx.sender.address
@@ -27,16 +27,23 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
 
     (parsed, tx) match {
       case (ip: IssueAssociationTransaction, itx: IssueAssociationTransaction) => ip.expires shouldEqual itx.expires
-      case _ =>
+      case _                                                                   =>
     }
 
     parsed.bytes() shouldEqual tx.bytes()
   }
 
-  property("serialization roundtrip") {
+  property("serialization roundtrip versions") {
     forEvery(versionTable(IssueAssociationTransaction)) { version: Byte =>
       forAll(issueAssocTransactionGen(version))(tx => checkSerialization(tx, IssueAssociationTransaction.parseBytes))
       forAll(revokeAssocTransactionGen(version))(tx => checkSerialization(tx, RevokeAssociationTransaction.parseBytes))
+    }
+  }
+
+  property("serialization roundtrip keypairs") {
+    forEvery(keyTypeTable) { keyType =>
+      forAll(issueAssocTransactionGen(3.toByte, keyType))(tx => checkSerialization(tx, IssueAssociationTransaction.parseBytes))
+      forAll(revokeAssocTransactionGen(3.toByte, keyType))(tx => checkSerialization(tx, RevokeAssociationTransaction.parseBytes))
     }
   }
 
@@ -60,10 +67,10 @@ class AssociationTransactionSpecification extends PropSpec with PropertyChecks w
       json.toString shouldEqual tx.toString
 
       val req = json.as[IssueAssociationRequest]
-      req.senderPublicKey should be ('defined)
+      req.senderPublicKey should be('defined)
       req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.timestamp should be ('defined)
+      req.timestamp should be('defined)
       req.timestamp.get shouldEqual tx.timestamp
       req.associationType shouldEqual tx.assocType
       req.recipient shouldEqual tx.recipient.toString

@@ -74,6 +74,7 @@ class MultiSig2of3Test extends PropSpec with PropertyChecks with Matchers with T
         )
 
         val invalidProofs = Seq(
+          transfer.copy(proofs = Proofs.create(Seq()).explicitGet()),
           transfer.copy(proofs = Proofs.create(Seq(sigs(0))).explicitGet()),
           transfer.copy(proofs = Proofs.create(Seq(sigs(1))).explicitGet()),
           transfer.copy(proofs = Proofs.create(Seq(sigs(1), sigs(0))).explicitGet())

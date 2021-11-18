@@ -65,10 +65,10 @@ object TransactionParser {
   def parseBase(buf: ByteBuffer): (Byte, Long, PublicKeyAccount, Long) = {
     val chainId   = buf.getByte
     val timestamp = buf.getLong
-    val sender    = try { buf.getAccount } catch {
+    val sender = try { buf.getAccount } catch {
       case e: Exception => throw new Exception("Invalid sender public key", e)
     }
-    val fee       = buf.getLong
+    val fee = buf.getLong
 
     (chainId, timestamp, sender, fee)
   }

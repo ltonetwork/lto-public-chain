@@ -1,7 +1,7 @@
 package com.ltonetwork.state.diffs
 
 import cats._
-import com.ltonetwork.account.Address
+import com.ltonetwork.account.{Address, KeyType, KeyTypes}
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.features.{BlockchainFeature, BlockchainFeatures}
 import com.ltonetwork.settings.FunctionalitySettings
@@ -54,6 +54,7 @@ object CommonValidation {
       case _                            => Right(tx)
     }
   }
+
   def disallowDuplicateIds[T <: Transaction](blockchain: Blockchain,
                                              settings: FunctionalitySettings,
                                              height: Int,
@@ -77,30 +78,46 @@ object CommonValidation {
       )
 
     (tx, tx.version) match {
-      case (_: GenesisTransaction, 1)          => Right(tx)
-      case (_: TransferTransaction, 1)         => Right(tx)
-      case (_: TransferTransaction, 2)         => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case (_: TransferTransaction, 3)         => activationBarrier(BlockchainFeatures.TransactionsV3)
-      case (_: LeaseTransaction, 1)            => Right(tx)
-      case (_: LeaseTransaction, 2)            => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case (_: LeaseTransaction, 3)            => activationBarrier(BlockchainFeatures.TransactionsV3)
-      case (_: CancelLeaseTransaction, 1)      => Right(tx)
-      case (_: CancelLeaseTransaction, 2)      => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case (_: CancelLeaseTransaction, 3)      => activationBarrier(BlockchainFeatures.TransactionsV3)
-      case (_: MassTransferTransaction, 1)     => Right(tx)
-      case (_: MassTransferTransaction, 3)     => activationBarrier(BlockchainFeatures.TransactionsV3)
-      case (_: DataTransaction, 1)             => deactivationBarrier(BlockchainFeatures.SmartAccounts)
-      case (_: SetScriptTransaction, 1)        => Right(tx)
-      case (_: SetScriptTransaction, 3)        => activationBarrier(BlockchainFeatures.TransactionsV3)
-      case (_: AnchorTransaction, 1)           => Right(tx)
-      case (_: AnchorTransaction, 3)           => activationBarrier(BlockchainFeatures.TransactionsV3)
-      case (_: AssociationTransaction, 1)      => activationBarrier(BlockchainFeatures.AssociationTransaction)
-      case (_: AssociationTransaction, 3)      => activationBarrier(BlockchainFeatures.TransactionsV3)
-      case (_: SponsorshipTransactionBase, 1)  => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
-      case (_: SponsorshipTransactionBase, 3)  => activationBarrier(BlockchainFeatures.TransactionsV3)
+      case (_: GenesisTransaction, 1)         => Right(tx)
+      case (_: TransferTransaction, 1)        => Right(tx)
+      case (_: TransferTransaction, 2)        => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: TransferTransaction, 3)        => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: LeaseTransaction, 1)           => Right(tx)
+      case (_: LeaseTransaction, 2)           => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: LeaseTransaction, 3)           => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: CancelLeaseTransaction, 1)     => Right(tx)
+      case (_: CancelLeaseTransaction, 2)     => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: CancelLeaseTransaction, 3)     => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: MassTransferTransaction, 1)    => Right(tx)
+      case (_: MassTransferTransaction, 3)    => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: DataTransaction, 1)            => deactivationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: SetScriptTransaction, 1)       => Right(tx)
+      case (_: SetScriptTransaction, 3)       => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: AnchorTransaction, 1)          => Right(tx)
+      case (_: AnchorTransaction, 3)          => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: AssociationTransaction, 1)     => activationBarrier(BlockchainFeatures.AssociationTransaction)
+      case (_: AssociationTransaction, 3)     => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: SponsorshipTransactionBase, 1) => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
+      case (_: SponsorshipTransactionBase, 3) => activationBarrier(BlockchainFeatures.Cobalt)
 
-      case _                                   => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
+      case _ => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
     }
+  }
+
+  def disallowUnsupportedKeyTypes[T <: Transaction](tx: T): Either[ValidationError, T] = {
+
+    def disallowKeyTypes(keyType: KeyType) = keyType match {
+      case (KeyTypes.ED25519)   => Right(tx)
+      case (KeyTypes.SECP256K1) => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype SECP256K1 not supported."))
+      case (KeyTypes.SECP256R1) => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype SECP256R1 not supported."))
+
+      case _ => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype not supported."))
+    }
+
+    for {
+      _ <- disallowKeyTypes(tx.sender.keyType)
+      _ <- if (tx.sponsor.isDefined) disallowKeyTypes(tx.sponsor.get.keyType) else Right(tx)
+    } yield tx
   }
 
   def disallowTxFromFuture[T <: Transaction](settings: FunctionalitySettings, time: Long, tx: T): Either[ValidationError, T] = {
@@ -169,7 +186,7 @@ object CommonValidation {
   }
 
   def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Long] = {
-    if (blockchain.isFeatureActivated(BlockchainFeatures.TransactionsV3, height))
+    if (blockchain.isFeatureActivated(BlockchainFeatures.Cobalt, height))
       feeInUnitsVersion4(tx)
     else if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
       feeInUnitsVersion3(tx)

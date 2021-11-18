@@ -1,11 +1,9 @@
 package com.ltonetwork.lang
 
-import com.emstlk.nacl4s.VerifyKey
 import com.ltonetwork.lang.v1.BaseGlobal
 import com.ltonetwork.utils.{Base58, Base64}
 import scorex.crypto.hash.{Blake2b256, Keccak256, Sha256}
-
-import scala.util.Try
+import com.ltonetwork.seasalt.sign.Ed25519
 
 object Global extends BaseGlobal {
   def base58Encode(input: Array[Byte]): Either[String, String] =
@@ -26,7 +24,7 @@ object Global extends BaseGlobal {
     } yield result
 
   def signatureVerify(message: Array[Byte], sig: Array[Byte], pub: Array[Byte]): Boolean =
-    Try(VerifyKey(pub).verify(message, sig)).fold(_ => false, _ => true)
+    (new Ed25519).verify(message, sig, pub)
 
   def keccak256(message: Array[Byte]): Array[Byte]  = Keccak256.hash(message)
   def blake2b256(message: Array[Byte]): Array[Byte] = Blake2b256.hash(message)

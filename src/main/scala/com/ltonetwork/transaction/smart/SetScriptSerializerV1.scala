@@ -33,19 +33,20 @@ object SetScriptSerializerV1 extends TransactionSerializer.For[SetScriptTransact
     }
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[SetScriptTransaction] = Try {
-    val buf = ByteBuffer.wrap(bytes)
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[SetScriptTransaction] =
+    Try {
+      val buf = ByteBuffer.wrap(bytes)
 
-    val chainId     = buf.getByte
-    val sender      = buf.getPublicKey
-    val scriptOptEi = parseScript(buf)
-    val fee         = buf.getLong
-    val timestamp   = buf.getLong
-    val proofs      = buf.getProofs
+      val chainId     = buf.getByte
+      val sender      = buf.getPublicKey
+      val scriptOptEi = parseScript(buf)
+      val fee         = buf.getLong
+      val timestamp   = buf.getLong
+      val proofs      = buf.getProofs
 
-    (for {
-      scriptOpt <- scriptOptEi
-      tx        <- create(version, Some(chainId), timestamp, sender, fee, scriptOpt, None, proofs)
-    } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
-  }.flatten
+      (for {
+        scriptOpt <- scriptOptEi
+        tx        <- create(version, Some(chainId), timestamp, sender, fee, scriptOpt, None, proofs)
+      } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
 }

@@ -4,6 +4,7 @@ import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.association.RevokeAssociationTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
+import com.ltonetwork.utils.Time
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -19,18 +20,20 @@ case class RevokeAssociationRequest(version: Option[Byte] = None,
                                     sponsorPublicKey: Option[String] = None,
                                     signature: Option[ByteStr] = None,
                                     proofs: Option[Proofs] = None,
-    ) extends TxRequest.For[RevokeAssociationTransaction] {
+) extends TxRequest.For[RevokeAssociationTransaction] {
 
   protected def sign(tx: RevokeAssociationTransaction, signer: PrivateKeyAccount): RevokeAssociationTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount]): Either[ValidationError, RevokeAssociationTransaction] =
+  def toTxFrom(sender: PublicKeyAccount,
+               sponsor: Option[PublicKeyAccount],
+               time: Option[Time]): Either[ValidationError, RevokeAssociationTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
-      validProofs <- toProofs(signature, proofs)
+      validProofs    <- toProofs(signature, proofs)
       tx <- RevokeAssociationTransaction.create(
         version.getOrElse(RevokeAssociationTransaction.latestVersion),
         None,
-        timestamp.getOrElse(defaultTimestamp),
+        timestamp(time),
         sender,
         fee,
         validRecipient,

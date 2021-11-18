@@ -32,12 +32,13 @@ import scala.concurrent.duration._
 
 class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with PropertyChecks with TransactionGen with NoShrink with WithDB {
 
-  private val calculatorSettings = FeesSettings(Map[Byte, Seq[FeeSettings]](
-    GenesisTransaction.typeId      -> Seq(FeeSettings("BASE", 0)),
-    TransferTransaction.typeId     -> Seq(FeeSettings("BASE", 0)),
-    MassTransferTransaction.typeId -> Seq(FeeSettings("BASE", 0), FeeSettings("VAR", 0)),
-    SetScriptTransaction.typeId    -> Seq(FeeSettings("BASE", 0))
-  ))
+  private val calculatorSettings = FeesSettings(
+    Map[Byte, Seq[FeeSettings]](
+      GenesisTransaction.typeId      -> Seq(FeeSettings("BASE", 0)),
+      TransferTransaction.typeId     -> Seq(FeeSettings("BASE", 0)),
+      MassTransferTransaction.typeId -> Seq(FeeSettings("BASE", 0), FeeSettings("VAR", 0)),
+      SetScriptTransaction.typeId    -> Seq(FeeSettings("BASE", 0))
+    ))
   import CommonValidation.{ScriptExtraFee => extraFee}
 
   private def mkBlockchain(senderAccount: Address, senderBalance: Long) = {
