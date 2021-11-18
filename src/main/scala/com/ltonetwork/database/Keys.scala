@@ -118,4 +118,5 @@ object Keys {
   def incomingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[Array[Byte]] =
     Key(hBytes(47, seqNr, addressBytes.arr), identity, identity)
 
+  def transactionFeeSponsor(txId: ByteStr): Key[Option[Address]] = Key.opt(hash(48, txId), Address.fromBytes(_).explicitGet(), _.bytes.arr)
 }

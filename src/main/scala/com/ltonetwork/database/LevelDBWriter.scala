@@ -191,7 +191,8 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   scripts: Map[BigInt, Option[Script]],
                                   data: Map[BigInt, AccountDataInfo],
                                   assocs: List[(Int, AssociationTransaction)],
-                                  sponsorship: Map[BigInt, List[Address]]): Unit = readWrite { rw =>
+                                  sponsorship: Map[BigInt, List[Address]],
+                                  feeSponsors: Map[ByteStr, Address]): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
     rw.put(Keys.height, height)
@@ -299,6 +300,10 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
     for ((id, (tx, _)) <- transactions) {
       rw.put(Keys.transactionInfo(id), Some((height, tx)))
+    }
+
+    for ((id, address) <- feeSponsors) {
+      rw.put(Keys.transactionFeeSponsor(id), Some(address))
     }
 
     val activationWindowSize = fs.activationWindowSize(height)
@@ -447,7 +452,9 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.filterHistory(Keys.sponsorshipHistory(sponsoree), currentHeight)
     }
   }
-  override def transactionInfo(id: ByteStr): Option[(Int, Transaction)] = readOnly(db => db.get(Keys.transactionInfo(id)))
+  override def transactionInfo(id: ByteStr): Option[(Int, Transaction)] = readOnly(db =>
+    db.get(Keys.transactionInfo(id)).map(x => x case (id, tx) => (id, tx.withKnownFeeSponsor(db.get(Keys.transactionFeeSponsor(id)))))
+  )
 
   override def transactionHeight(id: ByteStr): Option[Int] = readOnly(db => db.get(Keys.transactionHeight(id)))
 
