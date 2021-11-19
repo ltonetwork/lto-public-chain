@@ -14,7 +14,7 @@ def stop_node():
 
 
 def start_node():
-    subprocess.call("bin/run_public_node", shell=True)
+    subprocess.call("../bin/run_public_node", shell=True)
 
 
 def is_node_up():
