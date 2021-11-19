@@ -6,7 +6,7 @@ WORKDIR /usr/src
 
 COPY . .
 
-RUN test -f target/lto-public-all-*.jar || sbt packageAll -Dnetwork=mainnet
+RUN test -f target/lto-public-all-*.jar || sbt build
 
 RUN test -f genesis.conf || cp genesis.example.conf genesis.conf
 RUN java -cp target/lto-public-all-*.jar com.ltonetwork.GenesisBlockGenerator genesis.conf lto-custom.conf \
