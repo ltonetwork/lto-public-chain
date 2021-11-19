@@ -62,3 +62,26 @@ docker run -p 6869:6869 -p 6863:6863 -e LTO_NETWORK=TESTNET -e LTO_HEAP_SIZE=2g 
 
 **Note: All variables are optional.**  
 
+# Running the tests 
+
+Requirements:
+```
+pip install behave
+pip install lto
+```
+Running the whole suite:
+```
+behave
+```
+Running a specific feature:
+```
+behave -i feature_name.feature
+```
+Running a specific scenario:
+```
+behave -n 'scenario title'
+```
+Running all the tests except the not working ones:
+```
+behave --tags=-skip
+```
