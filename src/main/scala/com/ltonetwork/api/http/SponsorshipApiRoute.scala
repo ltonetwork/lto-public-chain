@@ -11,7 +11,7 @@ import com.ltonetwork.utils.Time
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
-import jakarta.ws.rs.Path
+import jakarta.ws.rs.{GET, Path}
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Schema
@@ -28,10 +28,10 @@ case class SponsorshipApiRoute(settings: RestAPISettings, wallet: Wallet, blockc
     status
   }
 
+  @GET
   @Path("/status/{address}")
   @Operation(
-    summary = "Get all active sponsorship for an address",
-    method = "GET"
+    summary = "Get all active sponsorship for an address"
   )
   @Parameters(
     Array(

@@ -8,7 +8,7 @@ import com.ltonetwork.settings.RestAPISettings
 import play.api.libs.json.{JsArray, JsBoolean, JsString, Json}
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.wallet.Wallet
-import jakarta.ws.rs.Path
+import jakarta.ws.rs.{DELETE, GET, POST, Path}
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
@@ -29,10 +29,10 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
 
   val MaxAddressesPerRequest = 1000
 
+  @GET
   @Path("/addresses")
   @Operation(
-    summary = "Get wallet accounts addresses",
-    method = "GET"
+    summary = "Get wallet accounts addresses"
   )
   def addresses: Route = (path("addresses") & get) {
     val accounts = wallet.privateKeyAccounts
@@ -40,10 +40,10 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
     complete(json)
   }
 
+  @POST
   @Path("/addresses")
   @Operation(
-    summary = "Create a new account in the wallet (if it exists)",
-    method = "POST"
+    summary = "Create a new account in the wallet (if it exists)"
   )
   def createAddress: Route = (path("addresses") & post & withAuth) {
     wallet.generateNewAccount() match {
@@ -53,10 +53,10 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
     }
   }
 
+  @DELETE
   @Path("/addresses/{address}")
   @Operation(
-    summary = "Remove the account with address from the wallet",
-    method = "DELETE"
+    summary = "Remove the account with address from the wallet"
   )
   @Parameters(
     Array(
@@ -83,10 +83,10 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
     }
   }
 
+  @GET
   @Path("/addresses/seq/{from}/{to}")
   @Operation(
-    summary = "Get wallet accounts addresses",
-    method = "GET"
+    summary = "Get wallet accounts addresses"
   )
   @Parameters(
     Array(
@@ -119,10 +119,10 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
     }
   }
 
+  @POST
   @Path("/sign/{address}")
   @Operation(
-    summary = "Sign a message with a private key associated with address",
-    method = "POST"
+    summary = "Sign a message with a private key associated with address"
   )
   @Parameters(
     Array(
@@ -156,10 +156,10 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
     }
   }
 
+  @POST
   @Path("/signText/{address}")
   @Operation(
-    summary = "Sign a message with a private key associated with address",
-    method = "POST"
+    summary = "Sign a message with a private key associated with address"
   )
   @Parameters(
     Array(

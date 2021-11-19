@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.Route
 import com.ltonetwork.Shutdownable
 import com.ltonetwork.settings.{Constants, RestAPISettings}
 import com.ltonetwork.state.Blockchain
-import jakarta.ws.rs.Path
+import jakarta.ws.rs.{GET, POST, Path}
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -24,10 +24,10 @@ case class NodeApiRoute(settings: RestAPISettings, blockchain: Blockchain, appli
     stop ~ status ~ version
   }
 
+  @GET
   @Path("/version")
   @Operation(
     summary = "Get LTO node version",
-    method = "GET",
     responses = Array(
       new ApiResponse(responseCode = "200", description = "Json LTO node version")
     )
@@ -36,10 +36,10 @@ case class NodeApiRoute(settings: RestAPISettings, blockchain: Blockchain, appli
     complete(Json.obj("version" -> Constants.AgentName))
   }
 
+  @POST
   @Path("/stop")
   @Operation(
-    summary = "Stop the node",
-    method = "POST"
+    summary = "Stop the node"
   )
   def stop: Route = (post & path("stop") & withAuth) {
     log.info("Request to stop application")
@@ -47,10 +47,10 @@ case class NodeApiRoute(settings: RestAPISettings, blockchain: Blockchain, appli
     complete(Json.obj("stopped" -> true))
   }
 
+  @GET
   @Path("/status")
   @Operation(
-    summary = "Get status of the running core",
-    method = "GET"
+    summary = "Get status of the running core"
   )
   def status: Route = (get & path("status")) {
     val lastUpdated = blockchain.lastBlock.get.timestamp

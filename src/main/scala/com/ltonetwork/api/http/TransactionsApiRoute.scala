@@ -18,7 +18,7 @@ import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
 import play.api.libs.json._
-import jakarta.ws.rs.Path
+import jakarta.ws.rs.{GET, POST, Path}
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
@@ -53,10 +53,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   private val invalidLimit = StatusCodes.BadRequest -> Json.obj("message" -> "invalid.limit")
 
   //TODO implement general pagination
+  @GET
   @Path("/address/{address}/limit/{limit}")
   @Operation(
-    summary = "Get list of transactions where specified address has been involved",
-    method = "GET"
+    summary = "Get list of transactions where specified address has been involved"
   )
   @Parameters(
     Array(
@@ -103,10 +103,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     }
   }
 
+  @GET
   @Path("/info/{id}")
   @Operation(
-    summary = "Get transaction info",
-    method = "GET"
+    summary = "Get transaction info"
   )
   @Parameters(
     Array(
@@ -135,10 +135,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
       }
   }
 
+  @GET
   @Path("/unconfirmed")
   @Operation(
-    summary = "Get list of unconfirmed transactions",
-    method = "GET"
+    summary = "Get list of unconfirmed transactions"
   )
   def unconfirmed: Route = (pathPrefix("unconfirmed") & get) {
     pathEndOrSingleSlash {
@@ -146,19 +146,19 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     } ~ utxSize ~ utxTransactionInfo
   }
 
+  @GET
   @Path("/unconfirmed/size")
   @Operation(
-    summary = "Get number of unconfirmed transactions in the UTX pool",
-    method = "GET"
+    summary = "Get number of unconfirmed transactions in the UTX pool"
   )
   def utxSize: Route = (pathPrefix("size") & get) {
     complete(Json.obj("size" -> JsNumber(utx.size)))
   }
 
+  @GET
   @Path("/unconfirmed/info/{id}")
   @Operation(
-    summary = "Get transaction that is in the UTX",
-    method = "GET"
+    summary = "Get transaction that is in the UTX"
   )
   @Parameters(
     Array(
@@ -189,10 +189,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
       }
   }
 
+  @POST
   @Path("/calculateFee")
   @Operation(
-    summary = "Calculates a fee for a transaction",
-    method = "POST"
+    summary = "Calculates a fee for a transaction"
   )
   @RequestBody(
     description = "Transaction data including type and optional timestamp in milliseconds",
@@ -222,10 +222,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     }
   }
 
+  @POST
   @Path("/sign")
   @Operation(
-    summary = "Sign a transaction",
-    method = "POST"
+    summary = "Sign a transaction"
   )
   @RequestBody(
     description = "Transaction data including type and optional timestamp in milliseconds",
@@ -244,10 +244,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     } ~ signWithSigner
   }
 
+  @POST
   @Path("/sign/{signerAddress}")
   @Operation(
-    summary = "Sign a transaction by a private key of signer address",
-    method = "POST"
+    summary = "Sign a transaction by a private key of signer address"
   )
   @Parameters(
     Array(
@@ -282,10 +282,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
       .fold(ApiError.fromValidationError, _.json())
   }
 
+  @POST
   @Path("/sponsor")
   @Operation(
-    summary = "Sponsor a transaction",
-    method = "POST"
+    summary = "Sponsor a transaction"
   )
   @RequestBody(
     description = "Transaction data including type and optional timestamp in milliseconds",
@@ -304,10 +304,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     } ~ signWithSigner
   }
 
+  @POST
   @Path("/sponsor/{signerAddress}")
   @Operation(
-    summary = "Sponsor a transaction by a private key of signer address",
-    method = "POST"
+    summary = "Sponsor a transaction by a private key of signer address"
   )
   @Parameters(
     Array(
@@ -342,10 +342,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
       .fold(ApiError.fromValidationError, _.json())
   }
 
+  @POST
   @Path("/broadcast")
   @Operation(
-    summary = "Broadcasts a signed transaction",
-    method = "POST"
+    summary = "Broadcasts a signed transaction"
   )
   @RequestBody(
     description = "Transaction data including type and signature",

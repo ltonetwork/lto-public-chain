@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Route
 import com.ltonetwork.network.{PeerDatabase, PeerInfo}
 import com.ltonetwork.settings.RestAPISettings
 import io.netty.channel.Channel
-import jakarta.ws.rs.Path
+import jakarta.ws.rs.{GET, POST, Path}
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
@@ -34,10 +34,10 @@ case class PeersApiRoute(settings: RestAPISettings,
       allPeers ~ connectedPeers ~ blacklistedPeers ~ suspendedPeers ~ connect ~ clearBlacklist
     }
 
+  @GET
   @Path("/all")
   @Operation(
-    summary = "Peer list",
-    method = "GET"
+    summary = "Peer list"
   )
   @ApiResponses(
     Array(
@@ -59,10 +59,10 @@ case class PeersApiRoute(settings: RestAPISettings,
             .toList)))
   }
 
+  @GET
   @Path("/connected")
   @Operation(
-    summary = "Connected peers list",
-    method = "GET"
+    summary = "Connected peers list"
   )
   @ApiResponses(
     Array(
@@ -87,10 +87,10 @@ case class PeersApiRoute(settings: RestAPISettings,
     complete(Json.obj("peers" -> JsArray(peers)))
   }
 
+  @POST
   @Path("/connect")
   @Operation(
-    summary = "Connect to peer",
-    method = "POST"
+    summary = "Connect to peer"
   )
   @RequestBody(
     description = "Json with data",
@@ -111,10 +111,10 @@ case class PeersApiRoute(settings: RestAPISettings,
     }
   }
 
+  @GET
   @Path("/blacklisted")
   @Operation(
-    summary = "Blacklisted peers list",
-    method = "GET"
+    summary = "Blacklisted peers list"
   )
   @ApiResponses(
     Array(
@@ -129,10 +129,10 @@ case class PeersApiRoute(settings: RestAPISettings,
           .toList))
   }
 
+  @GET
   @Path("/suspended")
   @Operation(
-    summary = "Suspended peers list",
-    method = "GET"
+    summary = "Suspended peers list"
   )
   @ApiResponses(
     Array(
@@ -144,10 +144,10 @@ case class PeersApiRoute(settings: RestAPISettings,
         peerDatabase.detailedSuspended.take(MaxPeersInResponse).map { case (h, t) => Json.obj("hostname" -> h.toString, "timestamp" -> t) }.toList))
   }
 
+  @POST
   @Path("/clearblacklist")
   @Operation(
-    summary = "Remove all blacklisted peers",
-    method = "POST"
+    summary = "Remove all blacklisted peers"
   )
   @ApiResponses(
     Array(

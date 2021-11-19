@@ -29,8 +29,8 @@ import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
 import io.swagger.v3.oas.annotations.tags.Tag
 import monix.eval.{Coeval, Task}
 import play.api.libs.json._
+import jakarta.ws.rs.{DELETE, GET, POST, Path}
 
-import jakarta.ws.rs.Path
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
@@ -65,10 +65,10 @@ case class DebugApiRoute(ws: LtoSettings,
     blocks ~ state ~ info ~ stateAtHeight ~ rollback ~ rollbackTo ~ blacklist ~ portfolios ~ minerInfo ~ historyInfo ~ configInfo ~ print
   }
 
+  @GET
   @Path("/blocks/{howMany}")
   @Operation(
     summary = "Get sizes and full hashes for last blocks",
-    method = "GET"
   )
   @Parameters(
     Array(
@@ -90,10 +90,10 @@ case class DebugApiRoute(ws: LtoSettings,
     }
   }
 
+  @POST
   @Path("/print")
   @Operation(
-    summary = "Prints a string at DEBUG level, strips to 100 chars",
-    method = "POST"
+    summary = "Prints a string at DEBUG level, strips to 100 chars"
   )
   @RequestBody(
     description = "Json with data",
@@ -113,10 +113,10 @@ case class DebugApiRoute(ws: LtoSettings,
     }
   }
 
+  @GET
   @Path("/portfolios/{address}")
   @Operation(
-    summary = "Get current portfolio considering pessimistic transactions in the UTX pool",
-    method = "GET"
+    summary = "Get current portfolio considering pessimistic transactions in the UTX pool"
   )
   @Parameters(
     Array(
@@ -148,20 +148,20 @@ case class DebugApiRoute(ws: LtoSettings,
     }
   }
 
+  @GET
   @Path("/state")
   @Operation(
-    summary = "Get current state",
-    method = "GET"
+    summary = "Get current state"
   )
   @ApiResponses(Array(new ApiResponse(responseCode = "200", description = "Json state")))
   def state: Route = (path("state") & get & withAuth) {
     complete(ng.ltoDistribution(ng.height).map { case (a, b) => a.stringRepr -> b })
   }
 
+  @GET
   @Path("/stateAtHeight/{height}")
   @Operation(
-    summary = "Get state at specified height",
-    method = "GET"
+    summary = "Get state at specified height"
   )
   @Parameters(
     Array(
@@ -195,10 +195,10 @@ case class DebugApiRoute(ws: LtoSettings,
     }.runAsyncLogErr
   }
 
+  @POST
   @Path("/rollback")
   @Operation(
-    summary = "Removes all blocks after given height",
-    method = "POST"
+    summary = "Removes all blocks after given height"
   )
   @RequestBody(
     description = "Json with data",
@@ -225,10 +225,10 @@ case class DebugApiRoute(ws: LtoSettings,
     } ~ complete(StatusCodes.BadRequest)
   }
 
+  @GET
   @Path("/info")
   @Operation(
-    summary = "All info you need to debug",
-    method = "GET"
+    summary = "All info you need to debug"
   )
   @ApiResponses(
     Array(
@@ -246,10 +246,10 @@ case class DebugApiRoute(ws: LtoSettings,
       ))
   }
 
+  @GET
   @Path("/minerInfo")
   @Operation(
-    summary = "All miner info you need to debug",
-    method = "GET"
+    summary = "All miner info you need to debug"
   )
   @ApiResponses(
     Array(
@@ -268,10 +268,10 @@ case class DebugApiRoute(ws: LtoSettings,
     })
   }
 
+  @GET
   @Path("/historyInfo")
   @Operation(
-    summary = "All history info you need to debug",
-    method = "GET"
+    summary = "All history info you need to debug"
   )
   @ApiResponses(
     Array(
@@ -284,10 +284,10 @@ case class DebugApiRoute(ws: LtoSettings,
 
   }
 
+  @GET
   @Path("/configInfo")
   @Operation(
-    summary = "Currently running node config",
-    method = "GET"
+    summary = "Currently running node config"
   )
   @Parameters(
     Array(
@@ -308,10 +308,10 @@ case class DebugApiRoute(ws: LtoSettings,
     complete(if (full) fullConfig else ltoConfig)
   }
 
+  @DELETE
   @Path("/rollback-to/{signature}")
   @Operation(
-    summary = "Rollback the state to the block with a given signature",
-    method = "DELETE"
+    summary = "Rollback the state to the block with a given signature"
   )
   @Parameters(
     Array(
@@ -335,10 +335,10 @@ case class DebugApiRoute(ws: LtoSettings,
     }
   }
 
+  @POST
   @Path("/blacklist")
   @Operation(
-    summary = "Moving peer to blacklist",
-    method = "POST"
+    summary = "Moving peer to blacklist"
   )
   @RequestBody(
     description = "IP address of node",

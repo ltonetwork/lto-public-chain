@@ -7,10 +7,9 @@ import com.ltonetwork.crypto
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.state.diffs.CommonValidation
 import com.ltonetwork.utils.{Base58, Time}
-import jakarta.ws.rs.Path
-import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
-import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import jakarta.ws.rs.{GET, POST, Path}
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.{Content, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -33,10 +32,10 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
     compile ~ estimate ~ time ~ hashFast ~ hashSecure
   }
 
+  @POST
   @Path("/script/compile")
   @Operation(
-    summary = "Compiles string code to base64 script representation",
-    method = "POST"
+    summary = "Compiles string code to base64 script representation"
   )
   @RequestBody(
     description = "Script code",
@@ -69,10 +68,10 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
     }
   }
 
+  @POST
   @Path("/script/estimate")
   @Operation(
-    summary = "Estimates compiled code in Base64 representation",
-    method = "POST"
+    summary = "Estimates compiled code in Base64 representation"
   )
   @RequestBody(
     description = "Compiled Base64 code",
@@ -113,10 +112,10 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
     }
   }
 
+  @GET
   @Path("/time")
   @Operation(
-    summary = "Current Node time (UTC)",
-    method = "GET"
+    summary = "Current Node time (UTC)"
   )
   @ApiResponses(
     Array(
@@ -129,10 +128,10 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
     complete(Json.obj("system" -> System.currentTimeMillis(), "NTP" -> timeService.correctedTime()))
   }
 
+  @POST
   @Path("/hash/secure")
   @Operation(
-    summary = "Return SecureHash of specified message: `blake2b(sha256(message))`",
-    method = "POST"
+    summary = "Return SecureHash of specified message: `blake2b(sha256(message))`"
   )
   @RequestBody(
     description = "Message to hash",
@@ -154,10 +153,10 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
     }
   }
 
+  @POST
   @Path("/hash/fast")
   @Operation(
-    summary = "Return `blake2b(message)` of specified message",
-    method = "POST"
+    summary = "Return `blake2b(message)` of specified message"
   )
   @RequestBody(
     description = "Message to hash",

@@ -17,7 +17,7 @@ import com.ltonetwork.utils.{Base58, Time}
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
-import jakarta.ws.rs.Path
+import jakarta.ws.rs.{GET, POST, Path}
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
@@ -49,10 +49,10 @@ case class AddressApiRoute(settings: RestAPISettings,
         effectiveBalance ~ effectiveBalanceWithConfirmations ~ scriptInfo
     } ~ root
 
+  @GET
   @Path("/scriptInfo/{address}")
   @Operation(
-    summary = "Account's script",
-    method = "GET"
+    summary = "Account's script"
   )
   @Parameters(
     Array(
@@ -74,10 +74,10 @@ case class AddressApiRoute(settings: RestAPISettings,
     )
   }
 
+  @POST
   @Path("/verify/{address}")
   @Operation(
-    summary = "Check a signature of a message signed by an account",
-    method = "POST"
+    summary = "Check a signature of a message signed by an account"
   )
   @Parameters(
     Array(
@@ -106,10 +106,10 @@ case class AddressApiRoute(settings: RestAPISettings,
     }
   }
 
+  @POST
   @Path("/verifyText/{address}")
   @Operation(
-    summary = "Check a signature of a message signed by an account",
-    method = "POST"
+    summary = "Check a signature of a message signed by an account"
   )
   @Parameters(
     Array(
@@ -136,10 +136,10 @@ case class AddressApiRoute(settings: RestAPISettings,
     verifyPath(address, decode = false)
   }
 
+  @GET
   @Path("/balance/{address}")
   @Operation(
-    summary = "Account's balance",
-    method = "GET"
+    summary = "Account's balance"
   )
   @Parameters(
     Array(
@@ -156,10 +156,10 @@ case class AddressApiRoute(settings: RestAPISettings,
     complete(balanceJson(address))
   }
 
+  @GET
   @Path("/balance/details/{address}")
   @Operation(
-    summary = "Account's balances",
-    method = "GET"
+    summary = "Account's balances"
   )
   @Parameters(
     Array(
@@ -183,10 +183,10 @@ case class AddressApiRoute(settings: RestAPISettings,
         .getOrElse(InvalidAddress))
   }
 
+  @GET
   @Path("/balance/history/{address}")
   @Operation(
-    summary = "Balance history of address",
-    method = "GET"
+    summary = "Balance history of address"
   )
   @Parameters(
     Array(
@@ -205,10 +205,10 @@ case class AddressApiRoute(settings: RestAPISettings,
     }
   }
 
+  @GET
   @Path("/balance/{address}/{confirmations}")
   @Operation(
-    summary = "Balance of address after confirmations",
-    method = "GET"
+    summary = "Balance of address after confirmations"
   )
   @Parameters(
     Array(
@@ -235,10 +235,10 @@ case class AddressApiRoute(settings: RestAPISettings,
     }
   }
 
+  @GET
   @Path("/effectiveBalance/{address}")
   @Operation(
-    summary = "Account's effective balance",
-    method = "GET"
+    summary = "Account's effective balance"
   )
   @Parameters(
     Array(
@@ -257,10 +257,10 @@ case class AddressApiRoute(settings: RestAPISettings,
     }
   }
 
+  @GET
   @Path("/effectiveBalance/{address}/{confirmations}")
   @Operation(
-    summary = "Effective balance of address after confirmations",
-    method = "GET"
+    summary = "Effective balance of address after confirmations"
   )
   @Parameters(
     Array(
@@ -289,10 +289,10 @@ case class AddressApiRoute(settings: RestAPISettings,
     }
   }
 
+  @GET
   @Path("/validate/{address}")
   @Operation(
-    summary = "Check whether address is valid or not",
-    method = "GET"
+    summary = "Check whether address is valid or not"
   )
   @Parameters(
     Array(
@@ -309,10 +309,10 @@ case class AddressApiRoute(settings: RestAPISettings,
     complete(Validity(address, Address.fromString(address).isRight))
   }
 
+  @GET
   @Path("/")
   @Operation(
     summary = "Get wallet accounts addresses; deprecated: use `/wallet/addresses` instead",
-    method = "GET",
     deprecated = true
   )
   def root: Route = (path("addresses") & get) {
@@ -433,10 +433,10 @@ case class AddressApiRoute(settings: RestAPISettings,
     }
   }
 
+  @GET
   @Path("/publicKey/{publicKey}")
   @Operation(
-    summary = "Generate an address from public key",
-    method = "GET"
+    summary = "Generate an address from public key"
   )
   @Parameters(
     Array(

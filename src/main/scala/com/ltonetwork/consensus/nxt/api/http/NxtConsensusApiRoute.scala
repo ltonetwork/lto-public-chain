@@ -6,7 +6,7 @@ import com.ltonetwork.api.http.{ApiRoute, CommonApiFunctions, InvalidAddress}
 import com.ltonetwork.consensus.GeneratingBalanceProvider
 import com.ltonetwork.settings.{FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.Blockchain
-import jakarta.ws.rs.Path
+import jakarta.ws.rs.{GET, Path}
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.Schema
@@ -24,10 +24,10 @@ case class NxtConsensusApiRoute(settings: RestAPISettings, blockchain: Blockchai
       algo ~ basetarget ~ baseTargetId ~ generationSignature ~ generationSignatureId ~ generatingBalance
     }
 
+  @GET
   @Path("/generatingbalance/{address}")
   @Operation(
-    summary = "Account's generating balance (same as balance atm)",
-    method = "GET"
+    summary = "Account's generating balance (same as balance atm)"
   )
   @Parameters(
     Array(
@@ -48,10 +48,10 @@ case class NxtConsensusApiRoute(settings: RestAPISettings, blockchain: Blockchai
     }
   }
 
+  @GET
   @Path("/generationsignature/{blockId}")
   @Operation(
-    summary = "Generation signature of a block with specified id",
-    method = "GET"
+    summary = "Generation signature of a block with specified id"
   )
   @Parameters(
     Array(
@@ -70,19 +70,19 @@ case class NxtConsensusApiRoute(settings: RestAPISettings, blockchain: Blockchai
     }
   }
 
+  @GET
   @Path("/generationsignature")
   @Operation(
-    summary = "Generation signature of the last block",
-    method = "GET"
+    summary = "Generation signature of the last block"
   )
   def generationSignature: Route = (path("generationsignature") & get) {
     complete(Json.obj("generationSignature" -> blockchain.lastBlock.get.consensusData.generationSignature.base58))
   }
 
+  @GET
   @Path("/basetarget/{blockId}")
   @Operation(
-    summary = "Base target of a block with specified id",
-    method = "GET"
+    summary = "Base target of a block with specified id"
   )
   @Parameters(
     Array(
@@ -101,10 +101,10 @@ case class NxtConsensusApiRoute(settings: RestAPISettings, blockchain: Blockchai
     }
   }
 
+  @GET
   @Path("/basetarget")
   @Operation(
-    summary = "Base target of the last block",
-    method = "GET"
+    summary = "Base target of the last block"
   )
   def basetarget: Route = (path("basetarget") & get) {
     complete(
@@ -114,10 +114,10 @@ case class NxtConsensusApiRoute(settings: RestAPISettings, blockchain: Blockchai
       ))
   }
 
+  @GET
   @Path("/algo")
   @Operation(
-    summary = "Shows which consensus algorithm is being using",
-    method = "GET"
+    summary = "Shows which consensus algorithm is being using"
   )
   def algo: Route = (path("algo") & get) {
     complete(Json.obj("consensusAlgo" -> "Fair Proof-of-Stake (FairPoS)"))

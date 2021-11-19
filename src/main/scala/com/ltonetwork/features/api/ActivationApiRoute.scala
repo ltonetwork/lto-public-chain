@@ -5,11 +5,8 @@ import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.features.{BlockchainFeatureStatus, BlockchainFeatures}
 import com.ltonetwork.settings.{FeaturesSettings, FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.Blockchain
-import jakarta.ws.rs.Path
-import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
-import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
-import io.swagger.v3.oas.annotations.parameters.RequestBody
+import jakarta.ws.rs.{GET, Path}
+import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import play.api.libs.json.Json
 import com.ltonetwork.api.http.{ApiRoute, CommonApiFunctions}
@@ -30,10 +27,10 @@ case class ActivationApiRoute(settings: RestAPISettings,
     status
   }
 
+  @GET
   @Path("/status")
   @Operation(
-    summary = "Get activation status",
-    method = "GET"
+    summary = "Get activation status"
   )
   @ApiResponses(
     Array(
