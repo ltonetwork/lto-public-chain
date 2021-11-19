@@ -1,6 +1,10 @@
+from e2e.common import node
+from behave import *
+
 def before_all(context):
-    pass
+    if node.is_node_up() is False:
+        node.start_node()
 
 
 def after_all(context):
-    pass
+    node.stop_node()

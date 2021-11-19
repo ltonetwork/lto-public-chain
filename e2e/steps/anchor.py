@@ -1,5 +1,5 @@
 from behave import *
-from e2e.utils import tools
+from e2e.common import tools
 
 
 @when(u'{user} anchors "{hash}"')

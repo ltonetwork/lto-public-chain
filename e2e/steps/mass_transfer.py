@@ -1,5 +1,5 @@
 from behave import *
-from e2e.utils import tools
+from e2e.common import tools
 
 
 @when(u'{sender} tries to do a mass-transfer of {amount1} lto to {receiver1} and {amount2} lto to {receiver2}')

@@ -13,7 +13,7 @@ import random
 import polling
 import requests
 import hashlib
-import config
+from e2e.common import config
 
 CHAIN_ID = config.chain_id
 URL = config.node_url
