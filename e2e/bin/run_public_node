@@ -3,7 +3,6 @@
 set -Cue -o pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${0}")/../.." ; pwd)"  # Absolute path to project
-PUBLIC_NODE_DIR="${PROJECT_DIR}/public_node_docker"  # Absolute path to public node
 
 (
   cd "$PROJECT_DIR"
