@@ -1,6 +1,6 @@
 import lto
 from behave import *
-import tools
+from e2e.utils import tools
 
 TRANSFER_FEE = lto.Transfer.DEFAULT_TX_FEE
 

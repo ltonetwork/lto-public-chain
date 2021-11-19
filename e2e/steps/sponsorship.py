@@ -1,6 +1,6 @@
 import lto
 from behave import *
-import tools
+from e2e.utils import tools
 
 
 @given('{user1} is not sponsoring {user2}')

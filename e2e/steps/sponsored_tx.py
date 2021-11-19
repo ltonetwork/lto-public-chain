@@ -1,5 +1,5 @@
 from behave import *
-import tools
+from e2e.utils import tools
 
 
 @when(u'{user} anchors {hash} sponsored by {sponsor}')

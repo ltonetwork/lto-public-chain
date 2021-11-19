@@ -1,6 +1,6 @@
 import lto
 from behave import *
-import tools
+from e2e.utils import tools
 
 
 @when(u'{sender} tries to make an association with {recipient} of type {type:d}')

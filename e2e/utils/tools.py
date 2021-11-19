@@ -13,12 +13,12 @@ import random
 import polling
 import requests
 import hashlib
+import config
 
-CHAIN_ID = 'T'
-URL2 = 'https://testnet.lto.network'
-URL = 'http://116.203.167.231:6869'
+CHAIN_ID = config.chain_id
+URL = config.node_url
 NODE = PublicNode(URL)
-ROOT_SEED = 'fragile because fox snap picnic mean art observe vicious program chicken purse text hidden chest'
+ROOT_SEED = config.seed
 ROOT_ACCOUNT = AccountFactory(CHAIN_ID).create_from_seed(ROOT_SEED)
 last_transaction_success = None
 USERS = {}
