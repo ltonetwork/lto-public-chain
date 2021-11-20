@@ -1,6 +1,7 @@
 import subprocess
 import polling
 import requests
+import os
 
 from e2e.common import config
 
@@ -14,7 +15,8 @@ def stop_node():
 
 
 def start_node():
-    subprocess.call("../bin/run_public_node", shell=True)
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    subprocess.run(dir_path + "/../bin/run_public_node", shell=True, check=True)
 
 
 def is_node_up():
