@@ -8,13 +8,14 @@ import io.netty.buffer.{ByteBuf, Unpooled}
 import io.netty.channel.embedded.EmbeddedChannel
 import org.scalacheck.Gen
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 import com.ltonetwork.network.message.{MessageSpec, Message => ScorexMessage}
 
 import scala.concurrent.duration.DurationInt
 
-class LegacyFrameCodecSpec extends FreeSpec with Matchers with MockFactory with PropertyChecks with TransactionGen {
+class LegacyFrameCodecSpec extends AnyFreeSpec with Matchers with MockFactory with ScalaCheckDrivenPropertyChecks with TransactionGen {
 
   "should handle multiple messages" in forAll(Gen.nonEmptyListOf(transferV1Gen)) { origTxs =>
     val codec = new LegacyFrameCodec(PeerDatabase.NoOp, 3.minutes)

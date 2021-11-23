@@ -3,9 +3,10 @@ package com.ltonetwork.settings
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class LtoSettingsSpecification extends FlatSpec with Matchers {
+class LtoSettingsSpecification extends AnyFlatSpec with Matchers {
   private val home = System.getProperty("user.home")
 
   private def config(configName: String) =

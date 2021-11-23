@@ -4,13 +4,14 @@ import cats.implicits._
 import com.ltonetwork.lang.v1.FunctionHeader
 import com.ltonetwork.lang.v1.compiler.Terms._
 import com.ltonetwork.state.EitherExt2
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.lang.v1.evaluator.FunctionIds._
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.PureContext
 
-class ScriptCompilerV1Test extends PropSpec with PropertyChecks with Matchers {
+class ScriptCompilerV1Test extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers {
   import ScriptCompilerV1Test._
 
   property("compile script with specified version") {

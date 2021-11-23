@@ -8,15 +8,16 @@ import com.ltonetwork.state.diffs.{assertDiffAndState, assertDiffEi, produce}
 import com.ltonetwork.utils.dummyCompilerContext
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.transfer._
 
-class TransactionFieldAccessTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
+class TransactionFieldAccessTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink {
 
   private def preconditionsTransferAndLease(code: String): Gen[(GenesisTransaction, SetScriptTransaction, LeaseTransaction, TransferTransaction)] = {
     val untyped = Parser(code).get.value

@@ -1,9 +1,10 @@
 package com.ltonetwork.settings
 
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class RestAPISettingsSpecification extends FlatSpec with Matchers {
+class RestAPISettingsSpecification extends AnyFlatSpec with Matchers {
   "RestAPISettings" should "read values" in {
     val config   = ConfigFactory.parseString("""
         |lto {

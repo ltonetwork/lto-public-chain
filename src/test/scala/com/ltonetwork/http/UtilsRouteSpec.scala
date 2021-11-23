@@ -9,13 +9,13 @@ import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.state.diffs.CommonValidation
 import com.ltonetwork.utils.{Base58, Time}
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.{JsObject, JsValue}
-import com.ltonetwork.api.http.{TooBigArrayAllocation, UtilsApiRoute}
+import com.ltonetwork.api.http.UtilsApiRoute
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 
-class UtilsRouteSpec extends RouteSpec("/utils") with RestAPISettingsHelper with PropertyChecks {
+class UtilsRouteSpec extends RouteSpec("/utils") with RestAPISettingsHelper with ScalaCheckDrivenPropertyChecks {
   private val route = UtilsApiRoute(
     new Time {
       def correctedTime(): Long = System.currentTimeMillis()

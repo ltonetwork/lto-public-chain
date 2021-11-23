@@ -9,12 +9,14 @@ import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.history
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.produce
-import org.scalatest.words.ShouldVerb
-import org.scalatest.{FreeSpec, Ignore, Matchers}
+import org.scalatest.verbs.ShouldVerb
+import org.scalatest.Ignore
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.freespec.AnyFreeSpec
 import com.ltonetwork.block.Block
 
 @Ignore
-class BlockchainUpdaterTest extends FreeSpec with Matchers with HistoryTest with ShouldVerb with WithState {
+class BlockchainUpdaterTest extends AnyFreeSpec with Matchers with HistoryTest with ShouldVerb with WithState {
 
   private val ApprovalPeriod = 100
 

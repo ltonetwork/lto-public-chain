@@ -10,7 +10,7 @@ import com.ltonetwork.{NoShrink, TestTime, TestWallet, crypto}
 import io.netty.channel.group.ChannelGroup
 import org.scalacheck.Gen
 import org.scalamock.scalatest.PathMockFactory
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json._
 import com.ltonetwork.account.Address
 import com.ltonetwork.api.http.{AddressApiRoute, ApiKeyNotValid}
@@ -20,7 +20,7 @@ import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 class AddressRouteSpec
     extends RouteSpec("/addresses")
     with PathMockFactory
-    with PropertyChecks
+    with ScalaCheckDrivenPropertyChecks
     with RestAPISettingsHelper
     with TestWallet
     with NoShrink {

@@ -3,10 +3,11 @@ package com.ltonetwork.settings
 import com.typesafe.config.ConfigFactory
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import scala.concurrent.duration._
 
-class MinerSettingsSpecification extends FlatSpec with Matchers {
+class MinerSettingsSpecification extends AnyFlatSpec with Matchers {
   "MinerSettings" should "read values" in {
     val config = ConfigFactory.parseString("""
         |lto {

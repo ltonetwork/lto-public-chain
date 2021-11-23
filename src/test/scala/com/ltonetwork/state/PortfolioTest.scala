@@ -2,10 +2,10 @@ package com.ltonetwork.state
 
 import java.nio.charset.StandardCharsets
 
-import cats._
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
-class PortfolioTest extends FunSuite with Matchers {
+class PortfolioTest extends AnyFunSuite with Matchers {
   test("pessimistic - should return only withdraws") {
     val Seq(fooKey, barKey, bazKey) = Seq("foo", "bar", "baz").map(x => ByteStr(x.getBytes(StandardCharsets.UTF_8)))
 

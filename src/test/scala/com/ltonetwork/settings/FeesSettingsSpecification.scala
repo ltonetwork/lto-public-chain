@@ -2,9 +2,10 @@ package com.ltonetwork.settings
 
 import com.typesafe.config.ConfigException.WrongType
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class FeesSettingsSpecification extends FlatSpec with Matchers {
+class FeesSettingsSpecification extends AnyFlatSpec with Matchers {
   "FeesSettings" should "read values" in {
     val config = ConfigFactory.parseString("""lto {
         |  network.file = "xxx"

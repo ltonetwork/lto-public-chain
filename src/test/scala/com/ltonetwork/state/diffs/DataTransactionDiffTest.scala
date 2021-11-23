@@ -4,15 +4,16 @@ import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, DataEntry, EitherExt2, IntegerDataEntry}
 import com.ltonetwork.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.settings.TestFunctionalitySettings
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 
-class DataTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
+class DataTransactionDiffTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
 
   val fs = TestFunctionalitySettings.Disabled
 

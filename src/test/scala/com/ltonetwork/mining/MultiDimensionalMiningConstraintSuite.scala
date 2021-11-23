@@ -4,14 +4,15 @@ import com.ltonetwork.state.Blockchain
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalamock.scalatest.PathMockFactory
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 import com.ltonetwork.transaction.Transaction
 
 class MultiDimensionalMiningConstraintSuite
-    extends FreeSpec
+    extends AnyFreeSpec
     with Matchers
-    with PropertyChecks
+    with ScalaCheckDrivenPropertyChecks
     with PathMockFactory
     with TransactionGen
     with NoShrink {

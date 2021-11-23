@@ -3,10 +3,11 @@ package com.ltonetwork.transaction.api.http.assets
 import com.ltonetwork.api.http.requests.TransferRequest
 import com.ltonetwork.state._
 import com.ltonetwork.utils.Base58
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json
 
-class SignedRequestsTest extends FunSuite with Matchers {
+class SignedRequestsTest extends AnyFunSuite with Matchers {
 
   test("TransferRequest json parsing works") {
     val json =

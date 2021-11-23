@@ -6,14 +6,14 @@ import com.ltonetwork.state.diffs.produce
 import com.ltonetwork.{NoShrink, TransactionGen, crypto}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.matchers.should.Matchers
 import com.ltonetwork.block.Block
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
-import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.transfer._
 
-class BlockSpecification extends PropSpec with PropertyChecks with TransactionGen with Matchers with NoShrink {
+class BlockSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TransactionGen with Matchers with NoShrink {
 
   val time = System.currentTimeMillis() - 5000
 

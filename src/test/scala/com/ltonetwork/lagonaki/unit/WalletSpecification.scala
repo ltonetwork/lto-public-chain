@@ -6,9 +6,10 @@ import java.nio.file.Files
 import com.ltonetwork.settings.WalletSettings
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.wallet.Wallet
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
-class WalletSpecification extends FunSuite with Matchers {
+class WalletSpecification extends AnyFunSuite with Matchers {
 
   private val walletSize = 10
   def newW()             = Wallet(WalletSettings(None, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption, None, None))

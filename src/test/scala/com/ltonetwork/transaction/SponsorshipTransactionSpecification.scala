@@ -6,13 +6,16 @@ import com.ltonetwork.api.http.requests.{CancelSponsorshipRequest, SponsorshipRe
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
 import com.ltonetwork.utils.Base58
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
-import play.api.libs.json.{Format, Json}
+import org.scalatest.Assertion
+import org.scalatest.Inspectors.forEvery
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import play.api.libs.json.Json
 
 import scala.util.Try
 
-class SponsorshipTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class SponsorshipTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen {
 
   private def checkSerialization(tx: SponsorshipTransactionBase, parser: Array[Byte] => Try[SponsorshipTransactionBase]): Assertion = {
     val parsed = parser(tx.bytes()).get

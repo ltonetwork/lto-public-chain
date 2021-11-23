@@ -3,13 +3,14 @@ package com.ltonetwork.state.diffs.smart.predef
 import com.ltonetwork.state._
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
-import org.scalatest.{Matchers, PropSpec}
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.Address
 import com.ltonetwork.transaction.Transaction
 import play.api.libs.json.Json // For string escapes.
 
-class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
+class TransactionBindingsTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink {
   def provenPart(t: Transaction): String = {
     def pg(i: Int) = s"let proof$i = t.proofs[$i] == base58'${t.proofs.proofs.applyOrElse(i, (_: Int) => ByteStr.empty).base58}'"
     s"""

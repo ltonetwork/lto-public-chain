@@ -17,10 +17,11 @@ import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 import com.ltonetwork.{NoShrink, TestTime, TransactionGen, history}
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.freespec.AnyFreeSpec
 
-class RollbackSpec extends FreeSpec with Matchers with WithState with TransactionGen with PropertyChecks with NoShrink {
+class RollbackSpec extends AnyFreeSpec with Matchers with WithState with TransactionGen with ScalaCheckDrivenPropertyChecks with NoShrink {
   private val time   = new TestTime
   private def nextTs = time.getTimestamp()
 

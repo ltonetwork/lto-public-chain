@@ -25,12 +25,13 @@ import com.ltonetwork._
 import org.scalacheck.Gen
 import org.scalacheck.Gen._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.freespec.AnyFreeSpec
 
 import scala.concurrent.duration._
 
-class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with PropertyChecks with TransactionGen with NoShrink with WithDB {
+class UtxPoolSpecification extends AnyFreeSpec with Matchers with MockFactory with ScalaCheckDrivenPropertyChecks with TransactionGen with NoShrink with WithDB {
 
   private val calculatorSettings = FeesSettings(
     Map[Byte, Seq[FeeSettings]](

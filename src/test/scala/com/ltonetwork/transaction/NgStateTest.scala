@@ -6,11 +6,12 @@ import com.ltonetwork.state.{Diff, EitherExt2, NgState}
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.transaction.transfer._
 
-class NgStateTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
+class NgStateTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink {
 
   def preconditionsAndPayments(amt: Int): Gen[(GenesisTransaction, Seq[TransferTransaction])] =
     for {

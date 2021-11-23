@@ -10,15 +10,17 @@ import com.ltonetwork.state.diffs._
 import com.ltonetwork.state.diffs.smart._
 import com.ltonetwork.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatestplus.scalacheck.Checkers
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.transfer._
 
-class SigVerifyPerformanceTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
+class SigVerifyPerformanceTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink with WithDB {
 
   private val AmtOfTxs = 10000
 

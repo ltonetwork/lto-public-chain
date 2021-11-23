@@ -2,11 +2,12 @@ package com.ltonetwork.settings
 
 import com.typesafe.config.ConfigFactory
 import com.ltonetwork.state.ByteStr
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 
-class BlockchainSettingsSpecification extends FlatSpec with Matchers {
+class BlockchainSettingsSpecification extends AnyFlatSpec with Matchers {
   "BlockchainSettings" should "read custom values" in {
     val config   = loadConfig(ConfigFactory.parseString("""lto {
         |  directory = "/lto"

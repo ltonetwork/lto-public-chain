@@ -7,10 +7,11 @@ import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 
-class CommonValidationTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with WithState with NoShrink {
+class CommonValidationTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with WithState with NoShrink {
 
 //  def preconditionsAndTransactions(transferFee:Long, leaseFee: Long, leaseCancelFee: Long): Gen[(GenesisTransaction, TransferTransaction)] = for {
 //    master    <- accountGen

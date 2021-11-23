@@ -1,10 +1,12 @@
 package com.ltonetwork.network
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{FreeSpec, Matchers, OneInstancePerTest}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.OneInstancePerTest
 import scorex.crypto.signatures.Curve25519._
 
-class CheckpointSpecification extends FreeSpec with Matchers with MockFactory with OneInstancePerTest {
+class CheckpointSpecification extends AnyFreeSpec with Matchers with MockFactory with OneInstancePerTest {
 
   private val maxRollback = 10
 

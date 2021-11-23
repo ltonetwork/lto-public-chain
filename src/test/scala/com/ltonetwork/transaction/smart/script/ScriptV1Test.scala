@@ -4,14 +4,15 @@ import com.ltonetwork.lang.v1.FunctionHeader
 import com.ltonetwork.lang.v1.compiler.Terms._
 import com.ltonetwork.lang.v1.testing.TypedScriptGen
 import com.ltonetwork.state.diffs.produce
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import scodec.bits.ByteVector
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.lang.v1.evaluator.FunctionIds._
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.PureContext
 
-class ScriptV1Test extends PropSpec with PropertyChecks with Matchers with TypedScriptGen {
+class ScriptV1Test extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TypedScriptGen {
 
   property("ScriptV1.apply should permit BOOLEAN scripts") {
     forAll(BOOLEANgen(10)) { expr =>

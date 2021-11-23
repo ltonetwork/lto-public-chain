@@ -16,9 +16,10 @@ import com.ltonetwork.utils.{Time, TimeImpl}
 import com.ltonetwork.{RequestGen, WithDB}
 import com.typesafe.config.ConfigFactory
 import org.scalacheck.Gen
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.freespec.AnyFreeSpec
 
-class LevelDBWriterSpec extends FreeSpec with Matchers with WithDB with RequestGen {
+class LevelDBWriterSpec extends AnyFreeSpec with Matchers with WithDB with RequestGen {
   "Slice" - {
     "drops tail" in {
       LevelDBWriter.slice(Seq(10, 7, 4), 7, 10) shouldEqual Seq(10, 7)

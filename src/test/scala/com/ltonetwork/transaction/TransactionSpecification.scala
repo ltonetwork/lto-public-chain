@@ -2,12 +2,13 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.state.EitherExt2
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.transaction.transfer._
 
-class TransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class TransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen {
 
   property("transaction fields should be constructed in a right way") {
     forAll(bytes32gen, bytes32gen, timestampGen, positiveLongGen, positiveLongGen) {

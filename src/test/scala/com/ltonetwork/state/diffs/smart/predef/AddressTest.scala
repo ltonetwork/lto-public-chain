@@ -2,12 +2,13 @@ package com.ltonetwork.state.diffs.smart.predef
 
 import com.ltonetwork.state._
 import com.ltonetwork.{NoShrink, TransactionGen}
-import org.scalatest.{Matchers, PropSpec}
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import scodec.bits.ByteVector
 import com.ltonetwork.account.Address
 
-class AddressTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
+class AddressTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink {
   property("should calculate address from public key") {
     forAll(accountGen) { acc =>
       val script =

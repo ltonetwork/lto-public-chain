@@ -3,11 +3,12 @@ package com.ltonetwork.settings
 import com.typesafe.config.ConfigFactory
 import com.ltonetwork.network.InvalidBlockStorageImpl.InvalidBlockStorageSettings
 import com.ltonetwork.settings.SynchronizationSettings.{HistoryReplierSettings, MicroblockSynchronizerSettings, UtxSynchronizerSettings}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 
-class SynchronizationSettingsSpecification extends FlatSpec with Matchers {
+class SynchronizationSettingsSpecification extends AnyFlatSpec with Matchers {
   "SynchronizationSettings" should "read values" in {
     val config = ConfigFactory.parseString("""
         |lto {

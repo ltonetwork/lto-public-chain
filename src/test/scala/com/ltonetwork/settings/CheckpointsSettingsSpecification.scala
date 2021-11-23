@@ -2,9 +2,10 @@ package com.ltonetwork.settings
 
 import com.typesafe.config.ConfigFactory
 import com.ltonetwork.state.ByteStr
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class CheckpointsSettingsSpecification extends FlatSpec with Matchers {
+class CheckpointsSettingsSpecification extends AnyFlatSpec with Matchers {
   "CheckpointsSettings" should "read values" in {
     val config   = ConfigFactory.parseString("""
         |lto {

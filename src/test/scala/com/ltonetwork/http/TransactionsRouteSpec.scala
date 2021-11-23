@@ -17,8 +17,8 @@ import com.ltonetwork.utils._
 import io.netty.channel.group.ChannelGroup
 import org.scalacheck.Gen._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.JsValue.jsValueToJsLookup
 import play.api.libs.json._
 
@@ -29,7 +29,7 @@ class TransactionsRouteSpec
     with Matchers
     with TransactionGen
     with BlockGen
-    with PropertyChecks
+    with ScalaCheckDrivenPropertyChecks
     with NoShrink {
 
   import TransactionsApiRoute.MaxTransactionsPerRequest

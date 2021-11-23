@@ -2,12 +2,13 @@ package com.ltonetwork.consensus
 
 import cats.data.NonEmptyList
 import cats.implicits._
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.PrivateKeyAccount
 
 import scala.util.Random
 
-class FairPoSCalculatorTest extends PropSpec with Matchers {
+class FairPoSCalculatorTest extends AnyPropSpec with Matchers {
 
   import PoSCalculator._
 

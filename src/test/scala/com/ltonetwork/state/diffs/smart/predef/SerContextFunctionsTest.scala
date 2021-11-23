@@ -4,16 +4,16 @@ import com.ltonetwork.{NoShrink, TransactionGen}
 import com.ltonetwork.lang.v1.Serde
 import com.ltonetwork.lang.v1.compiler.CompilerV1
 import com.ltonetwork.lang.v1.parser.Parser
-import com.ltonetwork.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, IntegerDataEntry, StringDataEntry}
+import com.ltonetwork.state.ByteStr
 import com.ltonetwork.utils.{Base58, dummyCompilerContext}
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.{Address, PublicKeyAccount}
 import com.ltonetwork.transaction.Proofs
 import com.ltonetwork.transaction.transfer.TransferTransaction
-import scorex.crypto.encode.Base64
 
-class SerContextFunctionsTest extends PropSpec with PropertyChecks with Matchers with NoShrink with TransactionGen {
+class SerContextFunctionsTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with NoShrink with TransactionGen {
   ignore("check serializion of script with all functions") {
     val ttx = TransferTransaction
       .create(

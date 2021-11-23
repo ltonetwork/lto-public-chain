@@ -9,8 +9,9 @@ import com.ltonetwork.state.diffs.smart._
 import com.ltonetwork.utils._
 import com.ltonetwork.{NoShrink, TransactionGen, crypto}
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction._
@@ -19,7 +20,7 @@ import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.transfer._
 
-class MultiSig2of3Test extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
+class MultiSig2of3Test extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink {
 
   def multisigTypedExpr(pk0: PublicKeyAccount, pk1: PublicKeyAccount, pk2: PublicKeyAccount): EXPR = {
     val script =

@@ -6,13 +6,17 @@ import com.ltonetwork.api.http.requests.IssueAssociationRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.utils.Base58
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.Assertion
+import org.scalatest.Inspectors.forEvery
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.OptionValues
+import org.scalatest.propspec.AnyPropSpec
 import play.api.libs.json.Json
 
 import scala.util.Try
 
-class AssociationTransactionSpecification extends PropSpec with PropertyChecks with OptionValues with Matchers with TransactionGen {
+class AssociationTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with OptionValues with Matchers with TransactionGen {
 
   private def checkSerialization(tx: AssociationTransaction, parser: Array[Byte] => Try[AssociationTransaction]): Assertion = {
     val bytes  = tx.bytes()

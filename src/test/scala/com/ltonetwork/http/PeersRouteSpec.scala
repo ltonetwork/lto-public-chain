@@ -8,11 +8,11 @@ import com.ltonetwork.network.{PeerDatabase, PeerInfo}
 import io.netty.channel.Channel
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import com.ltonetwork.api.http.{ApiKeyNotValid, PeersApiRoute}
 
-class PeersRouteSpec extends RouteSpec("/peers") with RestAPISettingsHelper with PropertyChecks with MockFactory {
+class PeersRouteSpec extends RouteSpec("/peers") with RestAPISettingsHelper with ScalaCheckDrivenPropertyChecks with MockFactory {
 
   import PeersRouteSpec._
 

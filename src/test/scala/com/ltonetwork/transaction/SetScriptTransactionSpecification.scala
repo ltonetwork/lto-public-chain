@@ -7,11 +7,13 @@ import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.ScriptCompilerV1Test.compiledScript
 import com.ltonetwork.utils.Base58
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
+import org.scalatest.Inspectors.forEvery
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import play.api.libs.json.Json
 
-class SetScriptTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class SetScriptTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen {
   property("serialization roundtrip versions") {
     forEvery(versionTable(SetScriptTransaction)) { version =>
       forAll(setScriptTransactionGen(version)) { tx: SetScriptTransaction =>

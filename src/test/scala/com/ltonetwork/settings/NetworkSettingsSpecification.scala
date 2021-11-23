@@ -4,11 +4,12 @@ import java.net.InetSocketAddress
 
 import com.typesafe.config.ConfigFactory
 import net.ceedubs.ficus.Ficus._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 
-class NetworkSettingsSpecification extends FlatSpec with Matchers {
+class NetworkSettingsSpecification extends AnyFlatSpec with Matchers {
 
   "NetworkSpecification" should "read values from config" in {
     val config          = loadConfig(ConfigFactory.parseString("""lto.network {

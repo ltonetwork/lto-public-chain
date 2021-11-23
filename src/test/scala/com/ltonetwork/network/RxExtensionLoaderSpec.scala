@@ -10,14 +10,15 @@ import io.netty.channel.local.LocalChannel
 import monix.eval.{Coeval, Task}
 import monix.reactive.Observable
 import monix.reactive.subjects.{PublishSubject => PS}
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 import com.ltonetwork.block.Block
 import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.transaction.ValidationError.GenericError
 
 import scala.concurrent.duration._
 
-class RxExtensionLoaderSpec extends FreeSpec with Matchers with TransactionGen with RxScheduler with BlockGen {
+class RxExtensionLoaderSpec extends AnyFreeSpec with Matchers with TransactionGen with RxScheduler with BlockGen {
 
   val MaxRollback = 10
   type Applier = (Channel, ExtensionBlocks) => Task[Either[ValidationError, Option[BigInt]]]

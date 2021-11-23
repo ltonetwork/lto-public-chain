@@ -9,10 +9,11 @@ import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state.{Blockchain, Diff, EitherExt2}
 import com.ltonetwork.transaction.genesis.GenesisTransaction
-import org.scalatest.{FreeSpecLike, Matchers}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.freespec.AnyFreeSpecLike
 import scorex.crypto.signatures.Curve25519._
 
-class BlockDifferTest extends FreeSpecLike with Matchers with BlockGen with WithState {
+class BlockDifferTest extends AnyFreeSpecLike with Matchers with BlockGen with WithState {
 
   private val TransactionFee = 100000000L
 
