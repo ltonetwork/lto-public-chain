@@ -18,7 +18,8 @@ case class IssueAssociationTransaction private (version: Byte,
                                                 expires: Option[Long],
                                                 hash: Option[ByteStr],
                                                 sponsor: Option[PublicKeyAccount],
-                                                proofs: Proofs)
+                                                proofs: Proofs,
+                                                effectiveSponsor: Option[Address] = None)
     extends AssociationTransaction {
 
   override def builder: TransactionBuilder.For[IssueAssociationTransaction]      = IssueAssociationTransaction
@@ -35,6 +36,9 @@ case class IssueAssociationTransaction private (version: Byte,
         expires.fold(Json.obj())(e => Json.obj("expires" -> e)) ++
         hash.fold(Json.obj())(h => Json.obj("hash"       -> h.base58))
     ))
+
+  override def withEffectiveSponsor(effectiveSponsor: Option[Address]): IssueAssociationTransaction =
+    this.copy(effectiveSponsor = effectiveSponsor)
 }
 
 object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociationTransaction] {

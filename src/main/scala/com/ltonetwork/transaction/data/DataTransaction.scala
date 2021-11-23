@@ -3,7 +3,7 @@ package com.ltonetwork.transaction.data
 import cats.implicits._
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.KeyTypes.ED25519
-import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
@@ -19,7 +19,8 @@ case class DataTransaction private (version: Byte,
                                     fee: Long,
                                     data: List[DataEntry[_]],
                                     sponsor: Option[PublicKeyAccount],
-                                    proofs: Proofs)
+                                    proofs: Proofs,
+                                    effectiveSponsor: Option[Address] = None)
     extends Transaction {
 
   override def builder: TransactionBuilder.For[DataTransaction]      = DataTransaction
@@ -29,6 +30,9 @@ case class DataTransaction private (version: Byte,
   val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj("data" -> Json.toJson(data)))
 
   implicit val dataItemFormat: Format[DataEntry[_]] = DataEntry.Format
+
+  override def withEffectiveSponsor(effectiveSponsor: Option[Address]): DataTransaction =
+    this.copy(effectiveSponsor = effectiveSponsor)
 }
 
 object DataTransaction extends TransactionBuilder.For[DataTransaction] {

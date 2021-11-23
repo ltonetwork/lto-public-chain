@@ -23,7 +23,8 @@ case class MassTransferTransaction private (version: Byte,
                                             transfers: List[ParsedTransfer],
                                             attachment: Array[Byte],
                                             sponsor: Option[PublicKeyAccount],
-                                            proofs: Proofs)
+                                            proofs: Proofs,
+                                            effectiveSponsor: Option[Address] = None)
     extends Transaction
     with Transaction.HardcodedV1 {
 
@@ -41,6 +42,9 @@ case class MassTransferTransaction private (version: Byte,
 
   def compactJson(recipients: Set[Address]): JsObject =
     json() ++ Json.obj("transfers" -> MassTransferTransaction.toJson(transfers.filter(t => recipients.contains(t.address))))
+
+  override def withEffectiveSponsor(effectiveSponsor: Option[Address]): MassTransferTransaction =
+    this.copy(effectiveSponsor = effectiveSponsor)
 }
 
 object MassTransferTransaction extends TransactionBuilder.For[MassTransferTransaction] {

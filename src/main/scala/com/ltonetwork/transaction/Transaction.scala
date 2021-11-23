@@ -45,7 +45,8 @@ trait Transaction extends BytesSerializable with JsonSerializable {
 
   override def hashCode(): Int = id().hashCode()
 
-  def withKnownFeeSponsor(sponsor: Option[Address]): this.type = this.copy(effectiveSponsor = sponsor)
+  def withEffectiveSponsor(effectiveSponsor: Option[Address]): Transaction
+  def withEffectiveSponsor(effectiveSponsor: Address): Transaction = withEffectiveSponsor(Some(effectiveSponsor))
 }
 
 object Transaction {
@@ -103,9 +104,12 @@ object Transaction {
       case _                                           => Json.obj()
     }
 
+    private def effectiveSponsorJson: JsObject =
+      effectiveSponsor.map(addr => Json.obj("effectiveSponsor" -> addr)).getOrElse(Json.obj())
+
     //noinspection ScalaStyle
     def ++(txSpecificJson: JsObject): JsObject =
       headerJson ++ senderJson ++ sponsorJson ++
-        Json.obj("fee" -> fee, "timestamp" -> timestamp) ++ txSpecificJson ++ proofsJson
+        Json.obj("fee" -> fee, "timestamp" -> timestamp) ++ txSpecificJson ++ proofsJson ++ effectiveSponsorJson
   }
 }

@@ -2,7 +2,7 @@ package com.ltonetwork.transaction.lease
 
 import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.KeyTypes.ED25519
-import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.Transaction.{HardcodedV1, SigProofsSwitch}
@@ -20,7 +20,8 @@ case class CancelLeaseTransaction private (version: Byte,
                                            fee: Long,
                                            leaseId: ByteStr,
                                            sponsor: Option[PublicKeyAccount],
-                                           proofs: Proofs)
+                                           proofs: Proofs,
+                                           effectiveSponsor: Option[Address] = None)
     extends Transaction
     with HardcodedV1
     with SigProofsSwitch {
@@ -36,6 +37,9 @@ case class CancelLeaseTransaction private (version: Byte,
       "timestamp" -> timestamp,
       "leaseId"   -> leaseId.base58
     ))
+
+  override def withEffectiveSponsor(effectiveSponsor: Option[Address]): CancelLeaseTransaction =
+    this.copy(effectiveSponsor = effectiveSponsor)
 }
 
 object CancelLeaseTransaction extends TransactionBuilder.For[CancelLeaseTransaction] {

@@ -17,7 +17,8 @@ case class RevokeAssociationTransaction private (version: Byte,
                                                  assocType: Int,
                                                  hash: Option[ByteStr],
                                                  sponsor: Option[PublicKeyAccount],
-                                                 proofs: Proofs)
+                                                 proofs: Proofs,
+                                                 effectiveSponsor: Option[Address] = None)
     extends AssociationTransaction {
 
   override def builder: TransactionBuilder.For[RevokeAssociationTransaction]      = RevokeAssociationTransaction
@@ -33,6 +34,9 @@ case class RevokeAssociationTransaction private (version: Byte,
       ) ++
         hash.map(h => Json.obj("hash" -> h.base58)).getOrElse(Json.obj())
     ))
+
+  override def withEffectiveSponsor(effectiveSponsor: Option[Address]): RevokeAssociationTransaction =
+    this.copy(effectiveSponsor = effectiveSponsor)
 }
 
 object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssociationTransaction] {

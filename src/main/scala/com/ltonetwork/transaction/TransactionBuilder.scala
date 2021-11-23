@@ -1,6 +1,6 @@
 package com.ltonetwork.transaction
 
-import com.ltonetwork.account.{AddressScheme, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{Address, AddressScheme, PrivateKeyAccount, PublicKeyAccount}
 
 import scala.util.Try
 

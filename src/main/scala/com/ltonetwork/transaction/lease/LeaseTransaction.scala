@@ -21,7 +21,8 @@ case class LeaseTransaction private (version: Byte,
                                      recipient: Address,
                                      amount: Long,
                                      sponsor: Option[PublicKeyAccount],
-                                     proofs: Proofs)
+                                     proofs: Proofs,
+                                     effectiveSponsor: Option[Address] = None)
     extends Transaction
     with HardcodedV1
     with SigProofsSwitch {
@@ -35,6 +36,9 @@ case class LeaseTransaction private (version: Byte,
       "recipient" -> recipient.stringRepr,
       "amount"    -> amount
     ))
+
+  override def withEffectiveSponsor(effectiveSponsor: Option[Address]): LeaseTransaction =
+    this.copy(effectiveSponsor = effectiveSponsor)
 }
 
 object LeaseTransaction extends TransactionBuilder.For[LeaseTransaction] {

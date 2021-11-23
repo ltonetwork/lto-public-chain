@@ -15,13 +15,17 @@ case class CancelSponsorshipTransaction private (version: Byte,
                                                  fee: Long,
                                                  recipient: Address,
                                                  sponsor: Option[PublicKeyAccount],
-                                                 proofs: Proofs)
+                                                 proofs: Proofs,
+                                                 effectiveSponsor: Option[Address] = None)
     extends SponsorshipTransactionBase {
 
   override def builder: TransactionBuilder.For[CancelSponsorshipTransaction]      = CancelSponsorshipTransaction
   private def serializer: TransactionSerializer.For[CancelSponsorshipTransaction] = builder.serializer(version)
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
+
+  override def withEffectiveSponsor(effectiveSponsor: Option[Address]): CancelSponsorshipTransaction =
+    this.copy(effectiveSponsor = effectiveSponsor)
 }
 
 object CancelSponsorshipTransaction extends TransactionBuilder.For[CancelSponsorshipTransaction] {

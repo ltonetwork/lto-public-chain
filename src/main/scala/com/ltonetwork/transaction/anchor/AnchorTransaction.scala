@@ -1,7 +1,7 @@
 package com.ltonetwork.transaction.anchor
 
 import cats.data.{Validated, ValidatedNel}
-import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.state._
 import com.ltonetwork.utils.base58Length
@@ -16,7 +16,8 @@ case class AnchorTransaction private (version: Byte,
                                       fee: Long,
                                       anchors: List[ByteStr],
                                       sponsor: Option[PublicKeyAccount],
-                                      proofs: Proofs)
+                                      proofs: Proofs,
+                                      effectiveSponsor: Option[Address])
     extends Transaction {
 
   override def builder: TransactionBuilder.For[AnchorTransaction]      = AnchorTransaction
@@ -24,6 +25,9 @@ case class AnchorTransaction private (version: Byte,
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
   val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj("anchors" -> Json.toJson(anchors)))
+
+  override def withEffectiveSponsor(effectiveSponsor: Option[Address]): AnchorTransaction =
+    this.copy(effectiveSponsor = effectiveSponsor)
 }
 
 object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {

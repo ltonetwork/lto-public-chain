@@ -13,7 +13,12 @@ import play.api.libs.json.{JsObject, Json}
 
 import scala.util.Try
 
-case class GenesisTransaction private (version: Byte, chainId: Byte, timestamp: Long, recipient: Address, amount: Long, proofs: Proofs)
+case class GenesisTransaction private (version: Byte,
+                                       chainId: Byte,
+                                       timestamp: Long,
+                                       recipient: Address,
+                                       amount: Long,
+                                       proofs: Proofs)
     extends Transaction
     with SigProofsSwitch {
 
@@ -22,6 +27,7 @@ case class GenesisTransaction private (version: Byte, chainId: Byte, timestamp: 
 
   override def sender: PublicKeyAccount          = PublicKeyAccount.Dummy
   override def sponsor: Option[PublicKeyAccount] = None
+  override def effectiveSponsor: Option[Address] = None
 
   override def builder: TransactionBuilder.For[GenesisTransaction]      = GenesisTransaction
   private def serializer: TransactionSerializer.For[GenesisTransaction] = builder.serializer(version)
@@ -41,6 +47,9 @@ case class GenesisTransaction private (version: Byte, chainId: Byte, timestamp: 
 
   override protected def prefixByte: Coeval[Array[Byte]]  = Coeval.evalOnce(Array.emptyByteArray)
   override protected def footerBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Array.emptyByteArray)
+
+  override def withEffectiveSponsor(effectiveSponsor: Option[Address]): GenesisTransaction =
+    throw new Exception("Genesis transactions can't be sponsored")
 }
 
 object GenesisTransaction extends TransactionBuilder.For[GenesisTransaction] {

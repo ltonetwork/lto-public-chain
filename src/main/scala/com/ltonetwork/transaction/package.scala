@@ -1,7 +1,7 @@
 package com.ltonetwork
 
 import cats.data.ValidatedNel
-import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.block.{Block, MicroBlock}
 
 package object transaction {
@@ -25,5 +25,4 @@ package object transaction {
       case None             => tx // sponsorWith(None) does *not* clear an existing sponsor
       case Some(privateKey) => sign(tx, privateKey, Some(privateKey))
     }
-  }
 }

@@ -23,7 +23,8 @@ case class TransferTransaction private (version: Byte,
                                         amount: Long,
                                         attachment: Array[Byte],
                                         sponsor: Option[PublicKeyAccount],
-                                        proofs: Proofs)
+                                        proofs: Proofs,
+                                        effectiveSponsor: Option[Address] = None)
     extends Transaction
     with HardcodedV1
     with SigProofsSwitch {
@@ -51,6 +52,9 @@ case class TransferTransaction private (version: Byte,
     if (version == 1) Array.emptyByteArray
     else super[Transaction].footerBytes()
   )
+
+  override def withEffectiveSponsor(effectiveSponsor: Option[Address]): TransferTransaction =
+    this.copy(effectiveSponsor = effectiveSponsor)
 }
 
 object TransferTransaction extends TransactionBuilder.For[TransferTransaction] {

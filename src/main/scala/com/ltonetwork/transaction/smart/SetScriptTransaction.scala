@@ -19,7 +19,8 @@ case class SetScriptTransaction private (version: Byte,
                                          fee: Long,
                                          script: Option[Script],
                                          sponsor: Option[PublicKeyAccount],
-                                         proofs: Proofs)
+                                         proofs: Proofs,
+                                         effectiveSponsor: Option[Address] = None)
     extends Transaction {
 
   override def builder: TransactionBuilder.For[SetScriptTransaction]      = SetScriptTransaction
@@ -27,6 +28,9 @@ case class SetScriptTransaction private (version: Byte,
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
   val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj("script" -> script.map(_.bytes().base64)))
+
+  override def withEffectiveSponsor(effectiveSponsor: Option[Address]): SetScriptTransaction =
+    this.copy(effectiveSponsor = effectiveSponsor)
 }
 
 object SetScriptTransaction extends TransactionBuilder.For[SetScriptTransaction] {

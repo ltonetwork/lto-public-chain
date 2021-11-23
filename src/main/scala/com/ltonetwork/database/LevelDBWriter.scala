@@ -303,7 +303,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     }
 
     for ((id, address) <- effectiveSponsors) {
-      rw.put(Keys.transactionFeeSponsor(id), Some(address))
+      rw.put(Keys.transactionEffectiveSponsor(id), Some(address))
     }
 
     val activationWindowSize = fs.activationWindowSize(height)
@@ -453,7 +453,9 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     }
   }
   override def transactionInfo(id: ByteStr): Option[(Int, Transaction)] = readOnly(db =>
-    db.get(Keys.transactionInfo(id)).map(x => x case (id, tx) => (id, tx.withKnownFeeSponsor(db.get(Keys.transactionFeeSponsor(id)))))
+    db.get(Keys.transactionInfo(id)).map(Function.tupled(
+      (h: Int, tx: Transaction) => (h, db.get(Keys.transactionEffectiveSponsor(id)).fold(tx)(tx.withEffectiveSponsor))
+    )(_))
   )
 
   override def transactionHeight(id: ByteStr): Option[Int] = readOnly(db => db.get(Keys.transactionHeight(id)))
