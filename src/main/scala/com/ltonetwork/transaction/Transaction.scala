@@ -24,7 +24,7 @@ trait Transaction extends BytesSerializable with JsonSerializable {
   def timestamp: Long
   def sponsor: Option[PublicKeyAccount]
   def proofs: Proofs
-  def feeSponsor: Option[Address]
+  def effectiveSponsor: Option[Address]
 
   protected def prefixByte: Coeval[Array[Byte]] = Coeval.evalOnce(Array(0: Byte))
   private def sponsorBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
@@ -45,7 +45,7 @@ trait Transaction extends BytesSerializable with JsonSerializable {
 
   override def hashCode(): Int = id().hashCode()
 
-  def withKnownFeeSponsor(sponsor: Option[Address]): this.type = this.copy(feeSponsor = sponsor)
+  def withKnownFeeSponsor(sponsor: Option[Address]): this.type = this.copy(effectiveSponsor = sponsor)
 }
 
 object Transaction {

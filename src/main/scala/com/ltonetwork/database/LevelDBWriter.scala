@@ -192,7 +192,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   data: Map[BigInt, AccountDataInfo],
                                   assocs: List[(Int, AssociationTransaction)],
                                   sponsorship: Map[BigInt, List[Address]],
-                                  feeSponsors: Map[ByteStr, Address]): Unit = readWrite { rw =>
+                                  effectiveSponsors: Map[ByteStr, Address]): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
     rw.put(Keys.height, height)
@@ -302,7 +302,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(Keys.transactionInfo(id), Some((height, tx)))
     }
 
-    for ((id, address) <- feeSponsors) {
+    for ((id, address) <- effectiveSponsors) {
       rw.put(Keys.transactionFeeSponsor(id), Some(address))
     }
 

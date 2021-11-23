@@ -7,7 +7,7 @@ import com.ltonetwork.transaction.Transaction
 import com.ltonetwork.transaction.smart.script.Script
 
 case class Diff(transactions: Map[ByteStr, (Int, Transaction, Set[Address])],
-                feeSponsors: Map[ByteStr, Address],
+                effectiveSponsors: Map[ByteStr, Address],
                 portfolios: Map[Address, Portfolio],
                 sponsoredBy: Map[Address, List[Address]], // multiple sponsors, first priority
                 leaseState: Map[ByteStr, Boolean],
@@ -38,7 +38,7 @@ object Diff {
             accountData: Map[Address, AccountDataInfo] = Map.empty): Diff =
     Diff(
       transactions = Map((tx.id(), (height, tx, portfolios.keys.toSet))),
-      feeSponsors = Map.empty,
+      effectiveSponsors = Map.empty,
       portfolios = portfolios,
       sponsoredBy = sponsoredBy,
       leaseState = leaseState,
@@ -46,9 +46,9 @@ object Diff {
       accountData = accountData,
     )
 
-  def fee(tx: Transaction, feeSponsor: Option[Address], portfolios: Map[Address, Portfolio]): Diff = {
-    val feeSponsors = feeSponsor.map(address => Map((tx.id(), address))).getOrElse(Map.empty)
-    new Diff(Map.empty, feeSponsors, portfolios, Map.empty, Map.empty, Map.empty, Map.empty)
+  def fee(tx: Transaction, effectiveSponsor: Option[Address], portfolios: Map[Address, Portfolio]): Diff = {
+    val effectiveSponsors = effectiveSponsor.map(address => Map((tx.id(), address))).getOrElse(Map.empty)
+    new Diff(Map.empty, effectiveSponsors, portfolios, Map.empty, Map.empty, Map.empty, Map.empty)
   }
 
   val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
@@ -59,7 +59,7 @@ object Diff {
     override def combine(older: Diff, newer: Diff): Diff =
       Diff(
         transactions = older.transactions ++ newer.transactions,
-        feeSponsors = older.feeSponsors ++ newer.feeSponsors,
+        effectiveSponsors = older.effectiveSponsors ++ newer.effectiveSponsors,
         portfolios = older.portfolios.combine(newer.portfolios),
         sponsoredBy = older.sponsoredBy ++ newer.sponsoredBy, // whole list overriding
         leaseState = older.leaseState ++ newer.leaseState,

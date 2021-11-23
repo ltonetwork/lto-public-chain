@@ -58,9 +58,9 @@ object TransactionDiffer {
               .getOrElse(feeAccount)
 
             // Effective fee sponsor. None if the fee is paid by the sender.
-            val feeSponsor = if (feePayer == tx.sender.toAddress) None else Some(feePayer)
+            val effectiveSponsor = if (feePayer == tx.sender.toAddress) None else Some(feePayer)
 
-            Monoid.combine(d, Diff.fee(tx, feeSponsor, Map(feePayer -> Portfolio(-tx.fee))))
+            Monoid.combine(d, Diff.fee(tx, effectiveSponsor, Map(feePayer -> Portfolio(-tx.fee))))
           }
       }
       positiveDiff <- BalanceDiffValidation(blockchain, currentBlockHeight, settings)(diff)
