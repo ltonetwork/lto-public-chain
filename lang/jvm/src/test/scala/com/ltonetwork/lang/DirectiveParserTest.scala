@@ -2,10 +2,12 @@ package com.ltonetwork.lang
 
 import com.ltonetwork.lang.directives.DirectiveKey.LANGUAGE_VERSION
 import com.ltonetwork.lang.directives.{Directive, DirectiveParser}
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.matchers.should.Matchers
 
-class DirectiveParserTest extends PropSpec with PropertyChecks with Matchers {
+
+class DirectiveParserTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers {
 
   def parse(s: String): List[Directive] = DirectiveParser(s)
 

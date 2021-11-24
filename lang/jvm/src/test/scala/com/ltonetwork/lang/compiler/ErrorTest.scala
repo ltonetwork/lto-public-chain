@@ -6,11 +6,12 @@ import com.ltonetwork.lang.v1.parser.BinaryOperation.SUM_OP
 import com.ltonetwork.lang.v1.parser.Expressions
 import com.ltonetwork.lang.v1.parser.Expressions.Pos.AnyPos
 import com.ltonetwork.lang.v1.testing.ScriptGen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.matchers.should.Matchers
 import scodec.bits.ByteVector
 
-class ErrorTest extends PropSpec with PropertyChecks with Matchers with ScriptGen with NoShrink {
+class ErrorTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with ScriptGen with NoShrink {
 
   import com.ltonetwork.lang.v1.parser.Expressions._
 

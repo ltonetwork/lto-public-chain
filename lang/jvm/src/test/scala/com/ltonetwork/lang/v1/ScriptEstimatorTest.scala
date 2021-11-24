@@ -13,10 +13,11 @@ import com.ltonetwork.lang.v1.evaluator.ctx.impl.lto.Types.transferTransactionTy
 import com.ltonetwork.lang.v1.parser.Parser
 import com.ltonetwork.lang.v1.testing.ScriptGen
 import monix.eval.Coeval
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.matchers.should.Matchers
 
-class ScriptEstimatorTest extends PropSpec with PropertyChecks with Matchers with ScriptGen with NoShrink {
+class ScriptEstimatorTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with ScriptGen with NoShrink {
   val Plus  = FunctionHeader.Native(SUM_LONG)
   val Minus = FunctionHeader.Native(SUB_LONG)
   val Gt    = FunctionHeader.Native(GT_LONG)

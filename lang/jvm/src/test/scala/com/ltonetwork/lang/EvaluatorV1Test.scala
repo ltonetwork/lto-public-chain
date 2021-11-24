@@ -20,14 +20,15 @@ import com.ltonetwork.lang.v1.{CTX, FunctionHeader}
 import scorex.crypto.hash.{Blake2b256, Keccak256, Sha256}
 import com.ltonetwork.utils.{Base58, Base64}
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.matchers.should.Matchers
 import scodec.bits.ByteVector
 import scorex.crypto.signatures.{Curve25519, PublicKey, Signature}
 
 import scala.util.Try
 
-class EvaluatorV1Test extends PropSpec with PropertyChecks with Matchers with ScriptGen with NoShrink {
+class EvaluatorV1Test extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with ScriptGen with NoShrink {
 
   private val defaultCryptoContext = CryptoContext.build(Global)
 

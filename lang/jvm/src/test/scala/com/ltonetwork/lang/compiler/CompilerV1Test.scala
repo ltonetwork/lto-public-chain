@@ -13,11 +13,12 @@ import com.ltonetwork.lang.v1.parser.{Expressions, Parser}
 import com.ltonetwork.lang.v1.parser.Expressions.Pos
 import com.ltonetwork.lang.v1.parser.Expressions.Pos.AnyPos
 import com.ltonetwork.lang.v1.testing.ScriptGen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.matchers.should.Matchers
 import scodec.bits.ByteVector
 
-class CompilerV1Test extends PropSpec with PropertyChecks with Matchers with ScriptGen with NoShrink {
+class CompilerV1Test extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with ScriptGen with NoShrink {
 
   property("should infer generic function return type") {
     import com.ltonetwork.lang.v1.parser.Expressions._
