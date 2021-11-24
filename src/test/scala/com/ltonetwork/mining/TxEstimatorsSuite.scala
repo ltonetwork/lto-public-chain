@@ -4,12 +4,13 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.lang.v1.compiler.Terms
 import com.ltonetwork.state.{Blockchain, ByteStr, EitherExt2}
 import org.scalamock.scalatest.PathMockFactory
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 import com.ltonetwork.account.{Address, PrivateKeyAccount}
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.transfer.TransferTransaction
 
-class TxEstimatorsSuite extends FreeSpec with Matchers with PathMockFactory with TransactionGen {
+class TxEstimatorsSuite extends AnyFreeSpec with Matchers with PathMockFactory with TransactionGen {
   "scriptRunNumber" - {
     "smart account" - {
       "should not count transactions going from a regular account" in {
