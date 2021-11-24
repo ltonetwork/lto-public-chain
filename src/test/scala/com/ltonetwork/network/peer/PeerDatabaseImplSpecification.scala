@@ -8,10 +8,10 @@ import com.typesafe.config.ConfigFactory
 import com.ltonetwork.network.PeerDatabaseImpl
 import com.ltonetwork.settings.NetworkSettings
 import net.ceedubs.ficus.Ficus._
-import org.scalatest.freespec.AnyFreeSpecLike
+import org.scalatest.freespec.PathAnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
 
-class PeerDatabaseImplSpecification extends AnyFreeSpecLike with Matchers {
+class PeerDatabaseImplSpecification extends PathAnyFreeSpecLike with Matchers {
 
   private val config1   = ConfigFactory.parseString("""lto.network {
       |  file = null
