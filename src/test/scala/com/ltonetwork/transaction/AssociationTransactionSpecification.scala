@@ -8,7 +8,7 @@ import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAsso
 import com.ltonetwork.utils.Base58
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.Assertion
-import org.scalatest.Inspectors.forEvery
+import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.OptionValues
 import org.scalatest.propspec.AnyPropSpec
@@ -16,7 +16,7 @@ import play.api.libs.json.Json
 
 import scala.util.Try
 
-class AssociationTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with OptionValues with Matchers with TransactionGen {
+class AssociationTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with OptionValues with TableDrivenPropertyChecks with Matchers with TransactionGen {
 
   private def checkSerialization(tx: AssociationTransaction, parser: Array[Byte] => Try[AssociationTransaction]): Assertion = {
     val bytes  = tx.bytes()

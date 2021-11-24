@@ -4,9 +4,9 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import org.scalacheck.Arbitrary
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.scalatest.Inspectors.forEvery
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.libs.json.Json
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.transaction.ValidationError.GenericError
@@ -14,7 +14,7 @@ import com.ltonetwork.transaction.transfer.MassTransferTransaction.{MaxTransferC
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.Base58
 
-class MassTransferTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen {
+class MassTransferTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
 
   property("serialization roundtrip version") {
     forEvery(versionTable(MassTransferTransaction)) { version =>

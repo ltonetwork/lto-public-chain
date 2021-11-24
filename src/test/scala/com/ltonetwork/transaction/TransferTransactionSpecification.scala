@@ -4,7 +4,7 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.Assertion
-import org.scalatest.Inspectors.forEvery
+import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import play.api.libs.json.Json
@@ -14,7 +14,7 @@ import com.ltonetwork.state.diffs._
 import com.ltonetwork.utils.Base58
 import org.scalacheck.Gen
 
-class TransferTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen {
+class TransferTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
 
   private def checkSerialization(tx: TransferTransaction): Assertion = {
     val recovered = TransferTransaction.parseBytes(tx.bytes()).get

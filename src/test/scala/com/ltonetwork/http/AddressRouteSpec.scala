@@ -11,6 +11,7 @@ import io.netty.channel.group.ChannelGroup
 import org.scalacheck.Gen
 import org.scalamock.scalatest.PathMockFactory
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.libs.json._
 import com.ltonetwork.account.Address
 import com.ltonetwork.api.http.{AddressApiRoute, ApiKeyNotValid}
@@ -21,6 +22,7 @@ class AddressRouteSpec
     extends RouteSpec("/addresses")
     with PathMockFactory
     with ScalaCheckDrivenPropertyChecks
+    with TableDrivenPropertyChecks
     with RestAPISettingsHelper
     with TestWallet
     with NoShrink {

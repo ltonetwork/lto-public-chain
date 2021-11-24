@@ -5,12 +5,12 @@ import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.lease.CancelLeaseTransaction
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.scalatest.Inspectors.forEvery
+import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import play.api.libs.json.Json
 
-class CancelLeaseTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen {
+class CancelLeaseTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
 
   private def assertTxs(first: CancelLeaseTransaction, second: CancelLeaseTransaction): Unit = {
     first.leaseId shouldEqual second.leaseId
