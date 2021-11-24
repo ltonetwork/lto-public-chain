@@ -6,7 +6,6 @@ import java.util.concurrent.ConcurrentHashMap
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
-//import akka.stream.ActorMaterializer
 import cats.instances.all._
 import com.typesafe.config._
 import com.ltonetwork.account.{Address, AddressScheme}
@@ -201,7 +200,6 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
     }
 
     implicit val as: ActorSystem                 = actorSystem
-//    implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     if (settings.restAPISettings.enable) {
       def loadBalanceHistory(address: Address): Seq[(Int, Long)] = db.readOnly { rdb =>

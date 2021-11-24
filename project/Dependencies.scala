@@ -98,13 +98,13 @@ object Dependencies {
   lazy val commons_net = Seq("commons-net" % "commons-net" % "3.+")
   lazy val scalatest   = Seq(
     "org.scalatest" %% "scalatest" % "3.1.4",
+    "org.scalatestplus" %% "scalacheck-1-14" % "3.2.0.0",
     "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0"
   )
   lazy val scalactic   = Seq("org.scalactic" %% "scalactic" % "3.1.4")
   lazy val cats        = Seq("org.typelevel" %% "cats-core" % "1.1.0")
   lazy val scalacheck = Seq(
     "org.scalacheck"      %% "scalacheck"      % "1.13.5",
-    "org.scalatestplus" %% "scalacheck-1-14" % "3.2.0.0",
     "io.github.amrhassan" %% "scalacheck-cats" % "0.4.0" % Test
   )
   lazy val kindProjector = "org.spire-math" %% "kind-projector" % "0.9.6"
