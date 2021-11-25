@@ -168,6 +168,10 @@ object GenesisBlockGenerator extends App {
          |        ]
          |      }
          |    }
+         |  }
+         |  miner {
+         |    micro-block-interval = ${Math.min((settings.averageBlockDelay.toMillis / 10).floor.toInt, 5000)}ms
+         |    min-micro-block-age = 0s
          |  }$walletSettings
          |}
          |""".stripMargin

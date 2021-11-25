@@ -39,16 +39,16 @@ Feature: Sponsorship
 
   Scenario: Sponsorship with second sponsor
     Given Alice is sponsoring Bob
-    And Dick is sponsoring Bob
-    And Bob has 10 LTO
-    And Charlie has 0 LTO
-    And Alice has 10 LTO
-    And Dick has 10 LTO
+     And Dick is sponsoring Bob
+     And Alice has 10 LTO
+     And Bob has 10 LTO
+     And Charlie has 0 LTO
+     And Dick has 10 LTO
     When Bob transfers 5 lto to Charlie
     Then Alice has 10 lto
-    And Dick has 9 LTO
-    And Bob has 5 lto
-    And Charlie has 5 lto
+     And Dick has 9 LTO
+     And Bob has 5 lto
+     And Charlie has 5 lto
 
   Scenario: Sponsorship fall through to second sponsor
     Given Alice is sponsoring Bob

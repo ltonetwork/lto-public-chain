@@ -13,6 +13,7 @@ import random
 import polling
 import requests
 import hashlib
+from time import sleep
 from e2e.common import config
 
 CHAIN_ID = config.chain_id
@@ -23,6 +24,12 @@ ROOT_ACCOUNT = AccountFactory(CHAIN_ID).create_from_seed(ROOT_SEED)
 last_transaction_success = None
 USERS = {}
 
+
+def assert_that(value):
+    assert value, ''
+
+def assert_equals(value1, value2):
+    assert value1 == value2, f'{value1} is not {value2}'
 
 def generate_account():
     return AccountFactory(CHAIN_ID).create()
@@ -39,12 +46,13 @@ def funds_for_transaction(user, tx_fee):
 
 
 def poll_tx(id):
-    return polling.poll(
+    response = polling.poll(
         lambda: requests.get('%s%s' % (URL, ('/transactions/info/%s' % id)), headers='').json(),
         check_success=lambda response: 'id' in response,
-        step=1,
-        timeout=180
+        step=0.1,
+        timeout=5
     )
+    return response
 
 
 def transfer_to(recipient="", amount=0, sender="", version=None):

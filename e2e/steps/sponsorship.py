@@ -5,20 +5,15 @@ from e2e.common import tools
 
 @given('{user1} is not sponsoring {user2}')
 def step_impl(context, user1, user2):
-    try:
-        assert tools.is_sponsoring(user1, user2) == False
-    except:
+    if tools.is_sponsoring(user1, user2):
         tools.funds_for_transaction(user1, lto.CancelSponsorship.DEFAULT_SPONSORSHIP_FEE)
         tools.cancel_sponsorship(user2, user1)
-
+    
 @given('{user1} is sponsoring {user2}')
 def step_impl(context, user1, user2):
-    try:
-        assert tools.is_sponsoring(user1, user2) == True
-    except:
+    if not tools.is_sponsoring(user1, user2):
         tools.funds_for_transaction(user1, lto.Sponsorship.DEFAULT_SPONSORSHIP_FEE)
         tools.sponsor(user2, user1)
-
 
 @when('{user1} tries to sponsor {user2}')
 def step_impl(context, user1, user2):

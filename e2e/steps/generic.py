@@ -1,44 +1,42 @@
 import lto
 from behave import *
-from e2e.common import tools
+from e2e.common.tools import *
 
 TRANSFER_FEE = lto.Transfer.DEFAULT_TX_FEE
 
 
 @given('{user} has a new account')
 def step_impl(context, user):
-    tools.USERS.update({user: tools.generate_account()})
+    USERS.update({user: generate_account()})
 
 
 @given('{user} has {balance} lto')
 def step_impl(context, user, balance):
-    balance = tools.convert_balance(balance)
-    user_balance = tools.get_balance(user)
-    try:
-        assert user_balance == balance
-    except:
-        if user_balance < balance:
-            transfer = tools.transfer_to(recipient=user, amount=balance - user_balance)
+    balance = convert_balance(balance)
+    user_balance = get_balance(user)
+    
+    if user_balance < balance:
+        transfer = transfer_to(recipient=user, amount=balance - user_balance)
+    elif user_balance > balance:
+        if user_balance - balance <= TRANSFER_FEE:
+            transfer = transfer_to(recipient=user, amount=TRANSFER_FEE)
+        user_balance = get_balance(user)
+        transfer = transfer_to(amount=user_balance - (balance + TRANSFER_FEE), sender=user)
 
-        else:
-            if user_balance - balance <= TRANSFER_FEE:
-                transfer = tools.transfer_to(recipient=user, amount=TRANSFER_FEE)
-            user_balance = tools.get_balance(user)
-            transfer = tools.transfer_to(amount=user_balance - (balance + TRANSFER_FEE), sender=user)
-    assert tools.get_balance(user) == balance
+    assert_equals(get_balance(user), balance)
 
 
 @then('{user} has {balance} lto')
 def step_impl(context, user, balance):
-    balance = tools.convert_balance(balance)
-    assert tools.get_balance(user) == balance
+    balance = convert_balance(balance)
+    assert_equals(get_balance(user), balance)
 
 
 @then('The transaction fails')
 def step_impl(context):
-    assert tools.last_transaction_success == False
+    assert_that(not last_transaction_success)
 
 
 @then('The transaction is successful')
 def step_impl(context):
-    assert tools.last_transaction_success == True
+    assert_that(last_transaction_success)

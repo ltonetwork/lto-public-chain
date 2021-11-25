@@ -11,7 +11,8 @@ def header():
 
 
 def stop_node():
-    return requests.post(config.node_url + "/node/stop", header())
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    subprocess.run(dir_path + "/../bin/stop_public_node", shell=True, check=True)
 
 
 def start_node():
@@ -22,9 +23,9 @@ def start_node():
 def is_node_up():
     try:
         polling.poll(
-            lambda: requests.get(config.node_url + "/"), header() == 200,
+            lambda: requests.get(config.node_url + "/", headers=header()).status_code == 200,
             step=1,
-            timeout=180
+            timeout=10
         )
         return True
     except:

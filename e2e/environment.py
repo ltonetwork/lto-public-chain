@@ -1,16 +1,15 @@
 from e2e.common import node
 
-NODE_RUNNING = False
+started_node = False
 
 
 def before_all(context):
-    global NODE_RUNNING
-    if node.is_node_up() is False:
+    global started_node
+    
+    if not node.is_node_up():
         node.start_node()
-    else:
-        NODE_RUNNING = True
-
+        started_node = True
 
 def after_all(context):
-    if NODE_RUNNING is False:
+    if started_node:
         node.stop_node()
