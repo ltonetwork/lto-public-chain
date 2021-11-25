@@ -3,11 +3,11 @@ import sbt._
 
 object Dependencies {
 
-  def akkaModule(module: String) = "com.typesafe.akka" %% s"akka-$module" % "2.6.16"
+  def akkaModule(module: String) = ("com.typesafe.akka" %% s"akka-$module" % "2.6.16").exclude("org.scalatest", "scalatest")
 
   def swaggerModule(module: String) = ("io.swagger.core.v3" % s"swagger-$module" % "2.1.11").exclude("com.google.guava", "guava")
 
-  def akkaHttpModule(module: String) = "com.typesafe.akka" %% module % "10.2.7"
+  def akkaHttpModule(module: String) = ("com.typesafe.akka" %% module % "10.2.7").exclude("org.scalatest", "scalatest")
 
   def nettyModule(module: String) = "io.netty" % s"netty-$module" % "4.1.24.Final"
 
@@ -104,7 +104,7 @@ object Dependencies {
   lazy val scalactic   = Seq("org.scalactic" %% "scalactic" % "3.1.4")
   lazy val cats        = Seq("org.typelevel" %% "cats-core" % "1.1.0")
   lazy val scalacheck = Seq(
-    "org.scalacheck"      %% "scalacheck"      % "1.13.5",
+    "org.scalacheck"      %% "scalacheck"      % "1.13.5" % Test,
     "io.github.amrhassan" %% "scalacheck-cats" % "0.4.0" % Test
   )
   lazy val kindProjector = "org.spire-math" %% "kind-projector" % "0.9.6"
