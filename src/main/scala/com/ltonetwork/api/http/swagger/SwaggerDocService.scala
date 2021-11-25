@@ -6,7 +6,8 @@ import com.ltonetwork.Version
 import com.ltonetwork.settings.RestAPISettings
 import io.swagger.v3.oas.models.info.{Info, License}
 import io.swagger.v3.oas.models.servers.Server
-import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.oas.models.{Components, OpenAPI}
+import io.swagger.v3.oas.models.security.SecurityScheme
 
 class SwaggerDocService(val actorSystem: ActorSystem, val apiClasses: Set[Class[_]], settings: RestAPISettings)
     extends SwaggerHttpService {
@@ -23,8 +24,16 @@ class SwaggerDocService(val actorSystem: ActorSystem, val apiClasses: Set[Class[
     .description("The Web Interface to the LTO Public Node API")
     .license(license)
 
+  val scheme = new SecurityScheme()
+  scheme.setType(SecurityScheme.Type.HTTP)
+  scheme.setScheme("bearer")
+  scheme.setBearerFormat("JWT")
+  override val components = Option(new Components().addSecuritySchemes("bearerAuth", scheme))
+
   //Let swagger-ui determine the host and port
   override val swaggerConfig: OpenAPI = new OpenAPI()
     .addServersItem(new Server().url(SwaggerHttpService.prependSlashIfNecessary(basePath)))
     .info(info)
+
+  swaggerConfig.setComponents(components.get)
 }
