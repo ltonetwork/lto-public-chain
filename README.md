@@ -79,7 +79,7 @@ pip install -r e2e/requirements.txt
 
 Running the whole suite:
 ```
-behave --tags=-skip
+behave
 ```
 
 Running a specific feature:

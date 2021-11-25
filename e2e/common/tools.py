@@ -15,6 +15,7 @@ import requests
 import hashlib
 from time import sleep
 from e2e.common import config
+import sys
 
 CHAIN_ID = config.chain_id
 URL = config.node_url
@@ -22,8 +23,15 @@ NODE = PublicNode(URL)
 ROOT_SEED = config.seed
 ROOT_ACCOUNT = AccountFactory(CHAIN_ID).create_from_seed(ROOT_SEED)
 last_transaction_success = None
+transactions = []
 USERS = {}
 
+def reset():
+    global last_transaction_success, transactions, USERS
+    
+    last_transaction_success = None
+    transactions.clear()
+    USERS.clear()
 
 def assert_that(value):
     assert value, ''
@@ -46,6 +54,8 @@ def funds_for_transaction(user, tx_fee):
 
 
 def poll_tx(id):
+    transactions.append(id)
+    
     response = polling.poll(
         lambda: requests.get('%s%s' % (URL, ('/transactions/info/%s' % id)), headers='').json(),
         check_success=lambda response: 'id' in response,

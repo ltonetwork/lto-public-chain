@@ -8,7 +8,7 @@ Feature: Anchor
     When Alice anchors (<version>) "1234"
     Then Alice has 4.65 lto
     # Endpoint /address/transactions is broken
-    #And There is an anchor transaction with hash "1234" signed by Alice
+    #And there is an anchor transaction with hash "1234" signed by Alice
 
     Examples:
       | version |
@@ -18,4 +18,4 @@ Feature: Anchor
   Scenario: Unsuccessful anchor transaction because of insufficient funds
     Given Alice has 0 lto
     When Alice tries to anchor
-    Then The transaction fails
+    Then the transaction fails

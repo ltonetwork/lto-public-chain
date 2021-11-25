@@ -25,18 +25,27 @@ def step_impl(context, user, balance):
 
     assert_equals(get_balance(user), balance)
 
-
 @then('{user} has {balance} lto')
 def step_impl(context, user, balance):
     balance = convert_balance(balance)
     assert_equals(get_balance(user), balance)
 
 
-@then('The transaction fails')
+@then('the transaction fails')
 def step_impl(context):
     assert_that(not last_transaction_success)
 
 
-@then('The transaction is successful')
+@then('the transaction is successful')
 def step_impl(context):
     assert_that(last_transaction_success)
+
+@given('wait')
+@given('wait {seconds} seconds')
+@when('wait')
+@when('wait {seconds} seconds')
+@then('wait')
+@then('wait {seconds} seconds')
+def wait(context, seconds=3):
+    sleep(seconds)
+
