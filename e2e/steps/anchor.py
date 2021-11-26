@@ -3,8 +3,8 @@ from e2e.common.tools import *
 from lto.transactions.anchor import Anchor
 import random
 
-def anchor(context, user="", hash="", sponsor="", version=None):
 
+def anchor(context, user="", hash="", sponsor="", version=None):
     if not user:
         account = ROOT_ACCOUNT
     else:
@@ -37,6 +37,7 @@ def anchor(context, user="", hash="", sponsor="", version=None):
 def step_impl(context, user, version=None, hash='', sponsor=None):
     anchor(context, user, hash, sponsor=sponsor, version=version)
 
+
 @when('{user} tries to anchor')
 @when('{user} tries to anchor "{hash}"')
 @when('{user} tries to anchor "{hash}" sponsored by {sponsor}')
@@ -45,6 +46,7 @@ def step_impl(context, user, hash='', sponsor=None):
         anchor(context, user, hash, sponsor)
     except:
         pass
+
 
 @then('There is an anchor transaction with hash "{hash}" signed by {user}')
 def step_impl(context, hash, user):

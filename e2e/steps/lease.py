@@ -1,63 +1,127 @@
 import lto
 from behave import *
-from e2e.common import tools
+from e2e.common.tools import NODE
+from e2e.common.tools import poll_tx
+from e2e.common.tools import convert_balance
+from e2e.common.tools import funds_for_transaction
+from lto.transactions.lease import Lease
+from lto.transactions.cancel_lease import CancelLease
+
+
+def is_leasing(context, account1, account2, amount=""):
+    account1 = context.users[account1]
+    account2 = context.users[account2]
+    lease_list = NODE.lease_list(account1.address)
+    for lease in lease_list:
+        if lease['recipient'] == account2.address:
+            if amount:
+                if lease['amount'] == amount:
+                    return True
+            else:
+                return True
+    return False
+
+
+def get_lease_id(context, account1, account2):
+    lease_list = NODE.lease_list(context, account1.address)
+    for lease in lease_list:
+        if lease['recipient'] == account2.address:
+            return lease['id']
+    raise Exception("No Lease Id Found")
+
+
+def cancel_lease(context, account1, account2, version=None):
+    account1 = context.users[account1]
+    account2 = context.users[account2]
+
+    lease_id = get_lease_id(context, account1, account2)
+    transaction = CancelLease(lease_id)
+    transaction.version = version or CancelLease.DEFAULT_VERSION
+    transaction.sign_with(account1)
+    try:
+        tx = transaction.broadcast_to(NODE)
+        poll_tx(tx.id)
+        context.last_tx_success = True
+        return tx
+    except:
+        context.last_tx_success = False
+        raise
+
+
+def lease(context, account1, account2, amount="", version=None):
+    if not amount:
+        amount = 100000000
+    amount = int(amount)
+    account1 = context.users[account1]
+    account2 = context.users[account2]
+
+    transaction = Lease(recipient=account2.address, amount=amount)
+    transaction.version = version or Lease.DEFAULT_VERSION
+    transaction.sign_with(account1)
+    try:
+        tx = transaction.broadcast_to(NODE)
+        poll_tx(tx.id)
+        context.last_tx_success = True
+        return tx
+    except:
+        context.last_tx_success = False
+        raise
 
 
 @given('{user1} is not leasing to {user2}')
 def step_impl(context, user1, user2):
     try:
-        assert tools.is_leasing(user1, user2) is False
+        assert is_leasing(context, user1, user2) is False
     except:
-        tools.funds_for_transaction(user1, lto.CancelLease.DEFAULT_CANCEL_LEASE_FEE)
-        tools.cancel_lease(user1, user2)
+        funds_for_transaction(context, user1, lto.CancelLease.DEFAULT_FEE)
+        cancel_lease(context, user1, user2)
 
 
 @when('{user1} tries to cancel the lease to {user2}')
 def step_impl(context, user1, user2):
     try:
-        tools.cancel_lease(user1, user2)
+        cancel_lease(context, user1, user2)
     except:
-        tools.last_tx_success = False
+        context.last_tx_success = False
 
 
 @given('{user1} is leasing {amount} lto to {user2}')
 def step_impl(context, user1, amount, user2):
-    amount = tools.convert_balance(amount)
+    amount = convert_balance(amount)
     try:
-        assert tools.is_leasing(user1, user2, amount) is True
+        assert is_leasing(context, user1, user2, amount) is True
     except:
-        tools.funds_for_transaction(user1, lto.Lease.DEFAULT_LEASE_FEE + amount)
-        tools.lease(user1, user2, amount)
+        funds_for_transaction(context, user1, lto.Lease.DEFAULT_FEE + amount)
+        lease(context, user1, user2, amount)
 
 
 @when('{user1} leases {amount} lto to {user2}')
 @when('{user1} leases (v{version:d}) {amount} lto to {user2}')
 def step_impl(context, user1, amount, user2, version=None):
-    amount = tools.convert_balance(amount)
-    tools.lease(user1, user2, amount, version)
+    amount = convert_balance(amount)
+    lease(context, user1, user2, amount, version)
 
 
 @when('{user1} cancel the lease to {user2}')
 @when('{user1} cancel the lease (v{version:d}) to {user2}')
 def step_impl(context, user1, user2, version=None):
-    tools.cancel_lease(user1, user2, version)
+    cancel_lease(context, user1, user2, version)
 
 
 @when('{user1} tries to lease {amount} lto to {user2}')
 def step_impl(context, user1, amount, user2):
     try:
-        tools.lease(user1, user2, amount)
+        lease(context, user1, user2, amount)
     except:
         pass
 
 
-
 @then('{user1} is leasing {amount} lto to {user2}')
 def step_impl(context, user1, amount, user2):
-    amount = tools.convert_balance(amount)
-    assert tools.is_leasing(user1, user2, amount) is True
+    amount = convert_balance(amount)
+    assert is_leasing(context, user1, user2, amount) is True
 
 
 @then('{user1} is not leasing to {user2}')
 def step_impl(context, user1, user2):
-    assert tools.is_leasing(user1, user2) is False
+    assert is_leasing(context, user1, user2) is False

@@ -13,9 +13,11 @@ def step_impl(context, user):
 def step_impl(context):
     assert not context.last_tx_success, "transaction was successful"
 
+
 @then('the transaction is successful')
 def step_impl(context):
     assert context.last_tx_success, "transaction failed"
+
 
 @given('wait')
 @given('wait {seconds} seconds')
@@ -25,4 +27,3 @@ def step_impl(context):
 @then('wait {seconds} seconds')
 def wait(context, seconds=3):
     sleep(seconds)
-

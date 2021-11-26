@@ -9,8 +9,8 @@ from e2e.common.tools import assert_equals
 
 from lto.transactions.transfer import Transfer
 
-def transfer_to(context, recipient="", amount=0, sender="", version=None):
 
+def transfer_to(context, recipient="", amount=0, sender="", version=None):
     if not recipient:
         recipient_account = ROOT_ACCOUNT
     else:
@@ -34,7 +34,6 @@ def transfer_to(context, recipient="", amount=0, sender="", version=None):
         raise
 
 
-
 @given('{user} has {balance} lto')
 def step_impl(context, user, balance):
     balance = convert_balance(balance)
@@ -55,6 +54,7 @@ def step_impl(context, user, balance):
 def step_impl(context, user, balance):
     balance = convert_balance(balance)
     assert_equals(get_balance(context.users[user].address), balance)
+
 
 @when('{sender} transfers {amount} lto to {recipient}')
 @when('{sender} transfers (v{version:d}) {amount} lto to {recipient}')
