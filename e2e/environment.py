@@ -12,24 +12,26 @@ def before_all(context):
 def after_all(context):
     if context.started_node:
         node.stop_node()
-        
+
+def before_feature(context, feature):
+    context.users = {}
+    context.txids = []
+    context.last_tx_success = None
+
 def after_scenario(context, scenario):
     if (scenario.status == Status.failed):
         print_users()
         print_txs()
-    tools.reset()
 
-def print_users():
-    if (tools.USERS):
+def print_users(users):
+    if users:
         print('      Users:')
-        
-    for user, account in tools.USERS.items():
+    for user, account in users.items():
         print(f'        \033[1m\33[90m{user: <8}\33[0m\33[90m {account.address}\33[0m')
 
-def print_txs():
-    if (tools.transactions):
+def print_txs(txids):
+    if txids:
         print('      Transactions:')
-
-    for txid in tools.transactions:
+    for txid in txids:
         print(f'        \33[90m{txid}\33[0m')
 

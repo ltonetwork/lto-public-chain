@@ -7,8 +7,7 @@ TRANSFER_FEE = lto.Transfer.DEFAULT_TX_FEE
 
 @given('{user} has a new account')
 def step_impl(context, user):
-    USERS.update({user: generate_account()})
-
+    context.users.update({user: generate_account()})
 
 @given('{user} has {balance} lto')
 def step_impl(context, user, balance):
@@ -33,12 +32,11 @@ def step_impl(context, user, balance):
 
 @then('the transaction fails')
 def step_impl(context):
-    assert_that(not last_transaction_success)
-
+    assert not last_transaction_success, "transaction was successful"
 
 @then('the transaction is successful')
 def step_impl(context):
-    assert_that(last_transaction_success)
+    assert last_transaction_success, "transaction failed"
 
 @given('wait')
 @given('wait {seconds} seconds')

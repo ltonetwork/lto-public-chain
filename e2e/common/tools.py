@@ -33,18 +33,18 @@ def reset():
     transactions.clear()
     USERS.clear()
 
-def assert_that(value):
-    assert value, ''
-
 def assert_equals(value1, value2):
     assert value1 == value2, f'{value1} is not {value2}'
+
+def assert_contains(value, set):
+    assert value in set, f'{value} is not in {set}'
+
 
 def generate_account():
     return AccountFactory(CHAIN_ID).create()
 
-
-def get_balance(user):
-    return NODE.balance(USERS[user].address)
+def get_balance(address):
+    return NODE.balance(address)
 
 
 def funds_for_transaction(user, tx_fee):
@@ -91,39 +91,11 @@ def transfer_to(recipient="", amount=0, sender="", version=None):
         raise
 
 
-def anchor(user="", hash="", sponsor="", version=None):
-    global last_transaction_success
-
-    if not user:
-        account = ROOT_ACCOUNT
-    else:
-        account = USERS[user]
-
-    if not hash:
-        hash = ''.join(random.choice('qwertyuiopasdfghjklzxcvbnm') for _ in range(6))
-    transaction = Anchor(encode_hahs(hash))
-    transaction.version = version or Anchor.DEFAULT_VERSION
-    transaction.sign_with(account)
-
-    if sponsor:
-        sponsor_account = USERS[sponsor]
-        transaction.sponsor_with(sponsor_account)
-
-    try:
-        tx = transaction.broadcast_to(NODE)
-        poll_tx(tx.id)
-        last_transaction_success = True
-        return tx
-    except:
-        last_transaction_success = False
-        raise
-
-
 def convert_balance(balance):
     return int(float(balance) * 100000000)
 
 
-def encode_hahs(hash):
+def encode_hash(hash):
     return hashlib.sha256(hash.encode('utf-8')).hexdigest()
 
 
