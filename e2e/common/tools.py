@@ -47,8 +47,7 @@ def poll_tx(context, id):
         lambda: requests.get('%s%s' % (URL, ('/transactions/info/%s' % id)), headers='').json(),
         check_success=lambda response: 'id' in response,
         step=0.1,
-        timeout=180
-        # timeout=5
+        timeout=5
     )
     return response
 
