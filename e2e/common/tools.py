@@ -41,7 +41,8 @@ def funds_for_transaction(context, user, tx_fee):
         transfer_to(context, user, tx_fee - balance)
 
 
-def poll_tx(id):
+def poll_tx(context, id):
+    context.tx_ids.append(id)
     response = polling.poll(
         lambda: requests.get('%s%s' % (URL, ('/transactions/info/%s' % id)), headers='').json(),
         check_success=lambda response: 'id' in response,

@@ -40,7 +40,7 @@ def cancel_lease(context, account1, account2, version=None):
     transaction.sign_with(account1)
     try:
         tx = transaction.broadcast_to(NODE)
-        poll_tx(tx.id)
+        poll_tx(context, tx.id)
         context.last_tx_success = True
         return tx
     except:
@@ -60,7 +60,7 @@ def lease(context, account1, account2, amount="", version=None):
     transaction.sign_with(account1)
     try:
         tx = transaction.broadcast_to(NODE)
-        poll_tx(tx.id)
+        poll_tx(context, tx.id)
         context.last_tx_success = True
         return tx
     except:

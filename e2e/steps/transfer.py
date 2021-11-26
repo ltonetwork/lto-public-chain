@@ -26,7 +26,7 @@ def transfer_to(context, recipient="", amount=0, sender="", version=None):
     transaction.sign_with(sender_account)
     try:
         tx = transaction.broadcast_to(NODE)
-        poll_tx(tx.id)
+        poll_tx(context, tx.id)
         context.last_tx_success = True
         return tx
     except:

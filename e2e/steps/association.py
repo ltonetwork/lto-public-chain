@@ -16,7 +16,7 @@ def association(context, user1, user2, type, hash="", version=None):
 
     try:
         tx = transaction.broadcast_to(NODE)
-        poll_tx(tx.id)
+        poll_tx(context, tx.id)
         context.last_tx_success = True
         return tx
     except:
@@ -49,7 +49,7 @@ def revoke_association(context, user1, user2, type, hash="", version=None):
 
     try:
         tx = transaction.broadcast_to(NODE)
-        poll_tx(tx.id)
+        poll_tx(context, tx.id)
         context.last_tx_success = True
         return tx
     except:
@@ -60,15 +60,15 @@ def revoke_association(context, user1, user2, type, hash="", version=None):
 @given('{sender} has an association with {recipient} of type {type:d}')
 @given('{sender} has an association with {recipient} of type {type:d} and anchor {hash}')
 def step_impl(context, sender, recipient, type, hash=""):
-    if not is_associated(sender, recipient):
-        funds_for_transaction(sender, lto.Association.DEFAULT_FEE)
-        association(sender, recipient, type, hash)
-        assert is_associated(sender, recipient), 'Failed to issue association'
+    if not is_associated(context, sender, recipient):
+        funds_for_transaction(context, sender, lto.Association.DEFAULT_FEE)
+        association(context, sender, recipient, type, hash)
+        assert is_associated(context, sender, recipient), 'Failed to issue association'
 
 
 @given('{sender} does not have an association with {recipient} of type {type:d}')
 def step_impl(context, sender, recipient, type):
-    if is_associated(sender, recipient):
+    if is_associated(context, sender, recipient):
         funds_for_transaction(sender, lto.RevokeAssociation.DEFAULT_FEE)
         revoke_association(sender, recipient, type, hash)
         assert revoke_association(context, sender, recipient), 'Failed to revoke association'
