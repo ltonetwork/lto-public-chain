@@ -1,13 +1,14 @@
 from behave import *
 from e2e.common.tools import *
+from lto.transactions.anchor import Anchor
+import random
 
 def anchor(context, user="", hash="", sponsor="", version=None):
-    global last_transaction_success
 
     if not user:
         account = ROOT_ACCOUNT
     else:
-        account = USERS[user]
+        account = context.users[user]
 
     if not hash:
         hash = ''.join(random.choice('qwertyuiopasdfghjklzxcvbnm') for _ in range(6))
@@ -17,7 +18,7 @@ def anchor(context, user="", hash="", sponsor="", version=None):
     transaction.sign_with(account)
 
     if sponsor:
-        sponsor_account = USERS[sponsor]
+        sponsor_account = context.users[sponsor]
         transaction.sponsor_with(sponsor_account)
 
     try:

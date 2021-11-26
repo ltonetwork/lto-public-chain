@@ -17,7 +17,7 @@ def step_impl(context, user1, user2):
     try:
         tools.cancel_lease(user1, user2)
     except:
-        tools.last_transaction_success = False
+        tools.last_tx_success = False
 
 
 @given('{user1} is leasing {amount} lto to {user2}')

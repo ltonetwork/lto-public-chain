@@ -1,5 +1,4 @@
 from e2e.common import node
-from e2e.common import tools
 from behave.model_core import Status
 
 def before_all(context):
@@ -25,7 +24,7 @@ def after_scenario(context, scenario):
 
 def print_users(users):
     if users:
-        print('      Users:')
+        print('      users:')
     for user, account in users.items():
         print(f'        \033[1m\33[90m{user: <8}\33[0m\33[90m {account.address}\33[0m')
 
