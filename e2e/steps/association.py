@@ -1,6 +1,6 @@
 import lto
 from behave import *
-from e2e.common.tools import poll_tx
+from e2e.common.tools import broadcast
 from e2e.common.tools import NODE
 from e2e.common.tools import funds_for_transaction
 from lto.transactions.association import Association
@@ -14,14 +14,7 @@ def association(context, user1, user2, type, hash="", version=None):
     transaction.version = version or Association.DEFAULT_VERSION
     transaction.sign_with(user1)
 
-    try:
-        tx = transaction.broadcast_to(NODE)
-        poll_tx(context, tx.id)
-        context.last_tx_success = True
-        return tx
-    except:
-        context.last_tx_success = False
-        raise
+    broadcast(context, transaction)
 
 
 def is_associated(context, user1, user2):
@@ -47,14 +40,7 @@ def revoke_association(context, user1, user2, type, hash="", version=None):
     transaction.version = version or RevokeAssociation.DEFAULT_VERSION
     transaction.sign_with(user1)
 
-    try:
-        tx = transaction.broadcast_to(NODE)
-        poll_tx(context, tx.id)
-        context.last_tx_success = True
-        return tx
-    except:
-        context.last_tx_success = False
-        raise
+    broadcast(context, transaction)
 
 
 @given('{sender} has an association with {recipient} of type {type:d}')

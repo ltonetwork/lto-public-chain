@@ -1,7 +1,6 @@
 from behave import *
 from e2e.common.tools import convert_balance
-from e2e.common.tools import NODE
-from e2e.common.tools import poll_tx
+from e2e.common.tools import broadcast
 from lto.transactions.mass_transfer import MassTransfer
 
 
@@ -18,14 +17,7 @@ def mass_transfer(context, transfers, sender, version=None):
     transaction = MassTransfer(process_input(context, transfers))
     transaction.version = version or MassTransfer.DEFAULT_VERSION
     transaction.sign_with(sender)
-    try:
-        tx = transaction.broadcast_to(NODE)
-        poll_tx(context, tx.id)
-        context.last_tx_success = True
-        return tx
-    except:
-        context.last_tx_success = False
-        raise
+    broadcast(context, transaction)
 
 
 @when(u'{sender} tries to do a mass-transfer of {amount1} lto to {receiver1} and {amount2} lto to {receiver2}')

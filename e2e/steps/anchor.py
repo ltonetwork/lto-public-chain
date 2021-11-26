@@ -21,14 +21,7 @@ def anchor(context, user="", hash="", sponsor="", version=None):
         sponsor_account = context.users[sponsor]
         transaction.sponsor_with(sponsor_account)
 
-    try:
-        tx = transaction.broadcast_to(NODE)
-        poll_tx(context, tx.id)
-        context.last_tx_success = True
-        return tx
-    except:
-        context.last_tx_success = False
-        raise
+    broadcast(context, transaction)
 
 
 @when(u'{user} anchors "{hash}"')

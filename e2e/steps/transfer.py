@@ -1,10 +1,8 @@
 from behave import *
 from e2e.common.tools import ROOT_ACCOUNT
-from e2e.common.tools import NODE
-from e2e.common.tools import poll_tx
 from e2e.common.tools import convert_balance
 from e2e.common.tools import get_balance
-from e2e.common.tools import poll_tx
+from e2e.common.tools import broadcast
 from e2e.common.tools import assert_equals
 
 from lto.transactions.transfer import Transfer
@@ -24,14 +22,7 @@ def transfer_to(context, recipient="", amount=0, sender="", version=None):
     transaction = Transfer(recipient_account.address, amount)
     transaction.version = version or Transfer.DEFAULT_VERSION
     transaction.sign_with(sender_account)
-    try:
-        tx = transaction.broadcast_to(NODE)
-        poll_tx(context, tx.id)
-        context.last_tx_success = True
-        return tx
-    except:
-        context.last_tx_success = False
-        raise
+    broadcast(context, transaction)
 
 
 @given('{user} has {balance} lto')

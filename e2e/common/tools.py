@@ -53,6 +53,16 @@ def poll_tx(context, id):
     return response
 
 
+def broadcast(context, transaction):
+    try:
+        tx = transaction.broadcast_to(NODE)
+        poll_tx(context, tx.id)
+        context.last_tx_success = True
+        return tx
+    except:
+        context.last_tx_success = False
+        raise
+
 def convert_balance(balance):
     return int(float(balance) * 100000000)
 

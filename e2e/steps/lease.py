@@ -1,7 +1,7 @@
 import lto
 from behave import *
 from e2e.common.tools import NODE
-from e2e.common.tools import poll_tx
+from e2e.common.tools import broadcast
 from e2e.common.tools import convert_balance
 from e2e.common.tools import funds_for_transaction
 from lto.transactions.lease import Lease
@@ -23,7 +23,7 @@ def is_leasing(context, account1, account2, amount=""):
 
 
 def get_lease_id(context, account1, account2):
-    lease_list = NODE.lease_list(context, account1.address)
+    lease_list = NODE.lease_list(account1.address)
     for lease in lease_list:
         if lease['recipient'] == account2.address:
             return lease['id']
@@ -38,14 +38,7 @@ def cancel_lease(context, account1, account2, version=None):
     transaction = CancelLease(lease_id)
     transaction.version = version or CancelLease.DEFAULT_VERSION
     transaction.sign_with(account1)
-    try:
-        tx = transaction.broadcast_to(NODE)
-        poll_tx(context, tx.id)
-        context.last_tx_success = True
-        return tx
-    except:
-        context.last_tx_success = False
-        raise
+    broadcast(context, transaction)
 
 
 def lease(context, account1, account2, amount="", version=None):
@@ -58,14 +51,7 @@ def lease(context, account1, account2, amount="", version=None):
     transaction = Lease(recipient=account2.address, amount=amount)
     transaction.version = version or Lease.DEFAULT_VERSION
     transaction.sign_with(account1)
-    try:
-        tx = transaction.broadcast_to(NODE)
-        poll_tx(context, tx.id)
-        context.last_tx_success = True
-        return tx
-    except:
-        context.last_tx_success = False
-        raise
+    broadcast(context, transaction)
 
 
 @given('{user1} is not leasing to {user2}')

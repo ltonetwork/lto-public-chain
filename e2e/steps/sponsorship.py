@@ -2,7 +2,7 @@ from behave import *
 import lto
 from e2e.common.tools import funds_for_transaction
 from e2e.common.tools import NODE
-from e2e.common.tools import poll_tx
+from e2e.common.tools import broadcast
 from lto.transactions.sponsorship import Sponsorship
 from lto.transactions.cancel_sponsorship import CancelSponsorship
 
@@ -19,15 +19,7 @@ def sponsor(context, sponsored, sponsoring, version=None):
     transaction = Sponsorship(sponsored.address)
     transaction.version = version or Sponsorship.DEFAULT_VERSION
     transaction.sign_with(sponsoring)
-
-    try:
-        tx = transaction.broadcast_to(NODE)
-        poll_tx(context, tx.id)
-        context.last_tx_success = True
-        return tx
-    except:
-        context.last_tx_success = False
-        raise
+    broadcast(context, transaction)
 
 
 def cancel_sponsorship(context, sponsored, sponsoring, version=None):
@@ -36,14 +28,7 @@ def cancel_sponsorship(context, sponsored, sponsoring, version=None):
     transaction = CancelSponsorship(sponsored.address)
     transaction.version = version or CancelSponsorship.DEFAULT_VERSION
     transaction.sign_with(sponsoring)
-    try:
-        tx = transaction.broadcast_to(NODE)
-        poll_tx(context, tx.id)
-        context.last_tx_success = True
-        return tx
-    except:
-        context.last_tx_success = False
-        raise
+    broadcast(context, transaction)
 
 
 @given('{user1} is not sponsoring {user2}')
