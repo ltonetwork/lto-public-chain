@@ -57,7 +57,7 @@ def lease(context, account1, account2, amount="", version=None):
 @given('{user1} is not leasing to {user2}')
 def step_impl(context, user1, user2):
     try:
-        assert is_leasing(context, user1, user2) is False
+        assert not is_leasing(context, user1, user2), f'{user1} is leasing to {user2}'
     except:
         funds_for_transaction(context, user1, lto.CancelLease.DEFAULT_FEE)
         cancel_lease(context, user1, user2)
@@ -75,7 +75,7 @@ def step_impl(context, user1, user2):
 def step_impl(context, user1, amount, user2):
     amount = convert_balance(amount)
     try:
-        assert is_leasing(context, user1, user2, amount) is True
+        assert is_leasing(context, user1, user2, amount), f'{user1} is not leasing to {user2}'
     except:
         funds_for_transaction(context, user1, lto.Lease.DEFAULT_FEE + amount)
         lease(context, user1, user2, amount)
@@ -105,9 +105,9 @@ def step_impl(context, user1, amount, user2):
 @then('{user1} is leasing {amount} lto to {user2}')
 def step_impl(context, user1, amount, user2):
     amount = convert_balance(amount)
-    assert is_leasing(context, user1, user2, amount) is True
+    assert is_leasing(context, user1, user2, amount), f'{user1} is not leasing to {user2}'
 
 
 @then('{user1} is not leasing to {user2}')
 def step_impl(context, user1, user2):
-    assert is_leasing(context, user1, user2) is False
+    assert not is_leasing(context, user1, user2), f'{user1} is leasing to {user2}'

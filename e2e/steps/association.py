@@ -95,9 +95,9 @@ def step_impl(context, sender, recipient, type):
 
 @then('{sender} is associated with {recipient}')
 def step_impl(context, sender, recipient):
-    assert is_associated(context, sender, recipient)
+    assert is_associated(context, sender, recipient), f'{sender} is not associated with{recipient}'
 
 
 @then('{sender} is not associated with {recipient}')
 def step_impl(context, sender, recipient):
-    assert not is_associated(context, sender, recipient)
+    assert not is_associated(context, sender, recipient), f'{sender} is associated with{recipient}'

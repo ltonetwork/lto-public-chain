@@ -75,9 +75,9 @@ def step_impl(context, user1, user2, version=None):
 
 @then('{user1} is sponsoring {user2}')
 def step_impl(context, user1, user2):
-    assert is_sponsoring(context, user1, user2) is True
+    assert is_sponsoring(context, user1, user2), f'{user1} is not sponsoring {user2}'
 
 
 @then('{user1} is not sponsoring {user2}')
 def step_impl(context, user1, user2):
-    assert is_sponsoring(context, user1, user2) is False
+    assert not is_sponsoring(context, user1, user2), f'{user1} is sponsoring {user2}'
