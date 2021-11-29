@@ -1,5 +1,6 @@
 from e2e.common import node
 from behave.model_core import Status
+from e2e.common.tools import get_balance
 
 
 def before_all(context):
@@ -23,15 +24,15 @@ def before_feature(context, feature):
 
 def after_scenario(context, scenario):
     if scenario.status == Status.failed:
-        print_users()
-        print_txs()
+        print_users(context.users)
+        print_txs(context.tx_ids)
 
 
 def print_users(users):
     if users:
         print('      users:')
     for user, account in users.items():
-        print(f'        \033[1m\33[90m{user: <8}\33[0m\33[90m {account.address}\33[0m')
+        print(f'        \033[1m\33[90m{user: <8}\33[0m\33[90m {account.address}\33[0m\33[90m {get_balance(account.address)}\33[0m')
 
 
 def print_txs(tx_ids):
