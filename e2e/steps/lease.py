@@ -12,14 +12,15 @@ def is_leasing(context, account1, account2, amount=""):
     account1 = context.users[account1]
     account2 = context.users[account2]
     lease_list = NODE.lease_list(account1.address)
+    leases = []
     for lease in lease_list:
         if lease['recipient'] == account2.address:
             if amount:
                 if lease['amount'] == amount:
-                    return True
+                    leases.append(lease)
             else:
-                return True
-    return False
+                leases.append(lease)
+    return leases
 
 
 def get_lease_id(context, account1, account2):
@@ -105,9 +106,11 @@ def step_impl(context, user1, amount, user2):
 @then('{user1} is leasing {amount} lto to {user2}')
 def step_impl(context, user1, amount, user2):
     amount = convert_balance(amount)
-    assert is_leasing(context, user1, user2, amount), f'{user1} is not leasing to {user2}'
+    value = is_leasing(context, user1, user2, amount)
+    assert value, f'{user1} is not leasing to {user2}'
 
 
 @then('{user1} is not leasing to {user2}')
 def step_impl(context, user1, user2):
-    assert not is_leasing(context, user1, user2), f'{user1} is leasing to {user2}'
+    value = is_leasing(context, user1, user2)
+    assert not value, f'{value}'

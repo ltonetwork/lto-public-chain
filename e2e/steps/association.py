@@ -21,15 +21,12 @@ def is_associated(context, user1, user2):
     user1 = context.users[user1]
     user2 = context.users[user2]
 
-    listOutgoing = NODE.wrapper(api='/associations/status/{}'.format(user1.address))['outgoing']
-    assType = []
-    for association in listOutgoing:
+    list_outgoing = NODE.wrapper(api='/associations/status/{}'.format(user1.address))['outgoing']
+    ass_list = []
+    for association in list_outgoing:
         if 'revokeTransactionId' not in association and association['party'] == user2.address:
-            assType.append([association['associationType'], association['hash']])
-    if not assType:
-        return False
-    else:
-        return assType
+            ass_list.append(association)
+    return ass_list
 
 
 def revoke_association(context, user1, user2, type, hash="", version=None):
@@ -55,9 +52,9 @@ def step_impl(context, sender, recipient, type, hash=""):
 @given('{sender} does not have an association with {recipient} of type {type:d}')
 def step_impl(context, sender, recipient, type):
     if is_associated(context, sender, recipient):
-        funds_for_transaction(sender, lto.RevokeAssociation.DEFAULT_FEE)
+        funds_for_transaction(context, sender, lto.RevokeAssociation.DEFAULT_FEE)
         revoke_association(sender, recipient, type, hash)
-        assert revoke_association(context, sender, recipient), 'Failed to revoke association'
+        assert revoke_association(context, sender, recipient, type), 'Failed to revoke association'
 
 
 @when('{sender} issues an association with {recipient} of type {type:d}')
@@ -95,9 +92,11 @@ def step_impl(context, sender, recipient, type):
 
 @then('{sender} is associated with {recipient}')
 def step_impl(context, sender, recipient):
-    assert is_associated(context, sender, recipient), f'{sender} is not associated with{recipient}'
+    value = is_associated(context, sender, recipient)
+    assert value, f'{sender} is not associated with{recipient}'
 
 
 @then('{sender} is not associated with {recipient}')
 def step_impl(context, sender, recipient):
-    assert not is_associated(context, sender, recipient), f'{sender} is associated with{recipient}'
+    value = is_associated(context, sender, recipient)
+    assert not value, f'{value}'

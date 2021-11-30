@@ -7,10 +7,14 @@ from lto.transactions.sponsorship import Sponsorship
 from lto.transactions.cancel_sponsorship import CancelSponsorship
 
 
-def is_sponsoring(context, account1, account2):
-    account1 = context.users[account1]
-    account2 = context.users[account2]
-    return account1.address in NODE.sponsorship_list(account2.address)['sponsor']
+def is_sponsoring(context, user1, user2):
+    account1 = context.users[user1]
+    account2 = context.users[user2]
+    sponsorships = NODE.sponsorship_list(account2.address)
+    if account1.address in sponsorships['sponsor']:
+        return sponsorships
+    else:
+        return None
 
 
 def sponsor(context, sponsored, sponsoring, version=None):
@@ -75,9 +79,11 @@ def step_impl(context, user1, user2, version=None):
 
 @then('{user1} is sponsoring {user2}')
 def step_impl(context, user1, user2):
-    assert is_sponsoring(context, user1, user2), f'{user1} is not sponsoring {user2}'
+    value = is_sponsoring(context, user1, user2)
+    assert value, f'{user1} is not sponsoring {user2}'
 
 
 @then('{user1} is not sponsoring {user2}')
 def step_impl(context, user1, user2):
-    assert not is_sponsoring(context, user1, user2), f'{user1} is sponsoring {user2}'
+    value = is_sponsoring(context, user1, user2)
+    assert not value, f'{value}'
