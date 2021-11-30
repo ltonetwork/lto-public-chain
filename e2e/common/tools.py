@@ -21,10 +21,6 @@ def assert_equals(value1, value2):
     assert value1 == value2, f'{value1} is not {value2}'
 
 
-def assert_contains(value, set):
-    assert value in set, f'{value} is not in {set}'
-
-
 def generate_account():
     return AccountFactory(CHAIN_ID).create()
 
@@ -47,7 +43,7 @@ def poll_tx(context, id):
         lambda: requests.get('%s%s' % (URL, ('/transactions/info/%s' % id)), headers='').json(),
         check_success=lambda response: 'id' in response,
         step=0.1,
-        timeout=5
+        timeout=180
     )
     return response
 
