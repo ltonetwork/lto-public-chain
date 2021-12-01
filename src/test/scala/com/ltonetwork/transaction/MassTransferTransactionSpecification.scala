@@ -3,16 +3,18 @@ package com.ltonetwork.transaction
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import org.scalacheck.Arbitrary
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.libs.json.Json
-import com.ltonetwork.account.{AddressScheme, PublicKeyAccount}
+import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.{MaxTransferCount, ParsedTransfer, Transfer}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.Base58
 
-class MassTransferTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class MassTransferTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
 
   property("serialization roundtrip version") {
     forEvery(versionTable(MassTransferTransaction)) { version =>

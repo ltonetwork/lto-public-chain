@@ -1,11 +1,12 @@
 package com.ltonetwork.utils
 
 import org.scalacheck.Gen
-import org.scalatest.{Matchers, PropSpec}
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.matchers.should.Matchers
 import scorex.crypto.encode.{Base58 => scorexBase58}
 
-class Base58Test extends PropSpec with PropertyChecks with Matchers {
+class Base58Test extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers {
 
   private val Base58Chars  = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
   private val IllegalChars = "+/=-_0lIO"

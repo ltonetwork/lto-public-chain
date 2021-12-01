@@ -14,12 +14,13 @@ import com.ltonetwork.transaction.BlockchainUpdater
 import com.ltonetwork.utils.{Time, TimeImpl}
 import com.ltonetwork.{TransactionGen, WithDB}
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.freespec.AnyFreeSpec
 
 import scala.concurrent.duration._
 import scala.util.Random
 
-class FPPoSSelectorTest extends FreeSpec with Matchers with WithDB with TransactionGen {
+class FPPoSSelectorTest extends AnyFreeSpec with Matchers with WithDB with TransactionGen {
 
   import FPPoSSelectorTest._
 

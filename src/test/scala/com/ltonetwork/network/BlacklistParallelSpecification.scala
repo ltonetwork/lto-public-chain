@@ -5,9 +5,10 @@ import java.net.{InetAddress, InetSocketAddress}
 import com.typesafe.config.ConfigFactory
 import com.ltonetwork.settings.{NetworkSettings, loadConfig}
 import net.ceedubs.ficus.Ficus._
-import org.scalatest.{FeatureSpec, GivenWhenThen, ParallelTestExecution}
+import org.scalatest.featurespec.AnyFeatureSpec
+import org.scalatest.{GivenWhenThen, ParallelTestExecution}
 
-class BlacklistParallelSpecification extends FeatureSpec with GivenWhenThen with ParallelTestExecution {
+class BlacklistParallelSpecification extends AnyFeatureSpec with GivenWhenThen with ParallelTestExecution {
 
   private val config = loadConfig(ConfigFactory.parseString("""lto.network {
       |  known-peers = []

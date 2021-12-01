@@ -1,12 +1,14 @@
 package com.ltonetwork.account
 
 import com.ltonetwork.{TransactionGen, crypto}
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatestplus.scalacheck.Checkers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.matchers.should.Matchers
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.state.EitherExt2
 
-class AccountSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class AccountSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Checkers with Matchers with TransactionGen {
   property("Account serialization round trip") {
     forAll(accountGen) { account: PrivateKeyAccount =>
       val bytes   = account.bytes.arr

@@ -2,10 +2,11 @@ package com.ltonetwork.transaction.api.http.leasing
 
 import com.ltonetwork.api.http.requests.{CancelLeaseRequest, LeaseRequest}
 import com.ltonetwork.state.ByteStr
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json
 
-class LeaseRequestsTests extends FunSuite with Matchers {
+class LeaseRequestsTests extends AnyFunSuite with Matchers {
 
   test("LeaseRequest") {
     val json =

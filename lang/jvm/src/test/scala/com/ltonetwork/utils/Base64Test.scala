@@ -1,10 +1,11 @@
 package com.ltonetwork.utils
 
 import org.scalacheck.Gen
-import org.scalatest.{Matchers, PropSpec}
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.matchers.should.Matchers
 
-class Base64Test extends PropSpec with PropertyChecks with Matchers {
+class Base64Test extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers {
 
   private val Base64Chars  = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/"
   private val IllegalChars = "!@#$%^&*()_-?/.,<>|\';:`~"

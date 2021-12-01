@@ -2,12 +2,13 @@ package com.ltonetwork.db
 
 import com.ltonetwork.network.{BlockCheckpoint, Checkpoint}
 import com.ltonetwork.state.EitherExt2
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.freespec.AnyFreeSpec
 
 import scala.util.Random
 
-class StorageCodecsSpec extends FreeSpec with Matchers with PropertyChecks {
+class StorageCodecsSpec extends AnyFreeSpec with Matchers with ScalaCheckDrivenPropertyChecks {
   private val signatureLength = 64
   private val signature = Array.fill(signatureLength) {
     0.toByte

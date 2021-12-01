@@ -1,18 +1,18 @@
 package com.ltonetwork.state.diffs
 
-import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.state.{EitherExt2, LeaseBalance, Portfolio}
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.{Address, PrivateKeyAccount}
 import com.ltonetwork.settings.TestFunctionalitySettings
 import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
 
-class MassTransferTransactionDiffTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
+class MassTransferTransactionDiffTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink {
 
   val fs = TestFunctionalitySettings.Enabled
 

@@ -6,15 +6,17 @@ import com.ltonetwork.state.DataEntry._
 import com.ltonetwork.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, DataEntry, EitherExt2, IntegerDataEntry, StringDataEntry}
 import com.ltonetwork.utils.Base58
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
-import play.api.libs.json.{Format, Json}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.Assertion
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import play.api.libs.json.Json
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.api.http.requests.DataRequest
 import com.ltonetwork.transaction.data.DataTransaction
 import scorex.crypto.encode.Base64
 
-class DataTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen {
 
   private def checkSerialization(tx: DataTransaction): Assertion = {
     val parsed = DataTransaction.parseBytes(tx.bytes()).get

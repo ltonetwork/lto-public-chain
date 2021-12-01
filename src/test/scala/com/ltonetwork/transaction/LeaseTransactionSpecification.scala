@@ -6,11 +6,13 @@ import com.ltonetwork.api.http.requests.LeaseRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.utils.Base58
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.libs.json.Json
 
-class LeaseTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class LeaseTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
 
   private def assertTxs(first: LeaseTransaction, second: LeaseTransaction): Unit = {
     first.sender.address shouldEqual second.sender.address

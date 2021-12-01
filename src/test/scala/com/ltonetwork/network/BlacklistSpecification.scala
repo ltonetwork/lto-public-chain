@@ -5,9 +5,10 @@ import java.net.{InetAddress, InetSocketAddress}
 import com.typesafe.config.ConfigFactory
 import com.ltonetwork.settings.NetworkSettings
 import net.ceedubs.ficus.Ficus._
-import org.scalatest.{FeatureSpec, GivenWhenThen}
+import org.scalatest.featurespec.AnyFeatureSpec
+import org.scalatest.GivenWhenThen
 
-class BlacklistSpecification extends FeatureSpec with GivenWhenThen {
+class BlacklistSpecification extends AnyFeatureSpec with GivenWhenThen {
   private val config = ConfigFactory.parseString("""lto.network {
       |  known-peers = []
       |  file = null

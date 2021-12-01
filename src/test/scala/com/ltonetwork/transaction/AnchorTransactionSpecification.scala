@@ -6,11 +6,14 @@ import com.ltonetwork.api.http.requests.AnchorRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.utils.Base58
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.Assertion
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.libs.json.Json
 
-class AnchorTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class AnchorTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
 
   private def checkSerialization(tx: AnchorTransaction): Assertion = {
     val tryParse = AnchorTransaction.parseBytes(tx.bytes())

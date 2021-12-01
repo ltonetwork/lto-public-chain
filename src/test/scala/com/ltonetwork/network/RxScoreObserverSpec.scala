@@ -6,11 +6,12 @@ import io.netty.channel.Channel
 import io.netty.channel.local.LocalChannel
 import monix.eval.Coeval
 import monix.reactive.subjects.PublishSubject
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 
-class RxScoreObserverSpec extends FreeSpec with Matchers with TransactionGen with RxScheduler {
+class RxScoreObserverSpec extends AnyFreeSpec with Matchers with TransactionGen with RxScheduler {
   override def testSchedulerName = "test-rx-score-observer"
 
   def withObserver(f: (Coeval[Seq[SyncWith]], PublishSubject[BigInt], PublishSubject[(Channel, BigInt)], PublishSubject[Channel]) => Any) = {

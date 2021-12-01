@@ -3,12 +3,13 @@ package com.ltonetwork.network
 import com.ltonetwork.TransactionGen
 import io.netty.channel.embedded.EmbeddedChannel
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration.DurationInt
 
-class BrokenConnectionDetectorSpec extends FreeSpec with Matchers with MockFactory with PropertyChecks with TransactionGen {
+class BrokenConnectionDetectorSpec extends AnyFreeSpec with Matchers with MockFactory with ScalaCheckDrivenPropertyChecks with TransactionGen {
 
   "should not close an active connection until the timeout" in {
     val handler = new BrokenConnectionDetector(400.millis)

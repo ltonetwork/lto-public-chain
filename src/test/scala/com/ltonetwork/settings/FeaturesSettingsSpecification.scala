@@ -3,9 +3,10 @@ package com.ltonetwork.settings
 import com.typesafe.config.ConfigFactory
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class FeaturesSettingsSpecification extends FlatSpec with Matchers {
+class FeaturesSettingsSpecification extends AnyFlatSpec with Matchers {
   "FeaturesSettings" should "read values" in {
     val config = ConfigFactory.parseString("""
         |lto {

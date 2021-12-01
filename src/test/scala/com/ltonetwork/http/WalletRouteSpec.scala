@@ -6,9 +6,9 @@ import play.api.libs.json.JsObject
 import com.ltonetwork.api.http.{ApiKeyNotValid, WalletApiRoute}
 import com.ltonetwork.utils.Base58
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
-class WalletRouteSpec extends RouteSpec("/wallet") with RestAPISettingsHelper with TestWallet with PropertyChecks {
+class WalletRouteSpec extends RouteSpec("/wallet") with RestAPISettingsHelper with TestWallet with ScalaCheckDrivenPropertyChecks {
   private val route = WalletApiRoute(restAPISettings, testWallet).route
 
   private val allAccounts  = testWallet.privateKeyAccounts

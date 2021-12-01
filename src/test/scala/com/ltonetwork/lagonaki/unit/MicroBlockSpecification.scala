@@ -4,16 +4,16 @@ import com.ltonetwork.mining.Miner
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.produce
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.words.ShouldVerb
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.verbs.ShouldVerb
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.block.{Block, MicroBlock}
-import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.transfer._
 
 import scala.util.Random
 
-class MicroBlockSpecification extends FunSuite with Matchers with MockFactory with ShouldVerb {
+class MicroBlockSpecification extends AnyFunSuite with Matchers with MockFactory with ShouldVerb {
 
   val prevResBlockSig  = ByteStr(Array.fill(Block.BlockIdLength)(Random.nextInt(100).toByte))
   val totalResBlockSig = ByteStr(Array.fill(Block.BlockIdLength)(Random.nextInt(100).toByte))

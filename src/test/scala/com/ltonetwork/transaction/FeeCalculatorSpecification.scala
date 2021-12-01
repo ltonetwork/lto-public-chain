@@ -12,10 +12,12 @@ import com.ltonetwork.transaction.sponsorship.SponsorshipTransactionBase
 import com.ltonetwork.transaction.transfer._
 import org.scalacheck.Gen
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Assertion, Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.Assertion
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 
-class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen with MockFactory {
+class FeeCalculatorSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with MockFactory {
 
   private val configString =
     """lto {

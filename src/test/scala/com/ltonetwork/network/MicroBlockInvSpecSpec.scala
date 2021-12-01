@@ -4,11 +4,12 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.state.ByteStr
 import org.scalacheck.Gen
 import org.scalatest.concurrent.Eventually
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 import scorex.crypto.signatures.Curve25519._
 
-class MicroBlockInvSpecSpec extends FreeSpec with Matchers with PropertyChecks with Eventually with TransactionGen {
+class MicroBlockInvSpecSpec extends AnyFreeSpec with Matchers with ScalaCheckDrivenPropertyChecks with Eventually with TransactionGen {
 
   private val microBlockInvGen: Gen[MicroBlockInv] = for {
     acc          <- accountGen

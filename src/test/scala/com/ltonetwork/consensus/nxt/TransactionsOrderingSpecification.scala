@@ -1,14 +1,16 @@
 package com.ltonetwork.consensus.nxt
 
-import com.ltonetwork.state.{ByteStr, EitherExt2}
-import org.scalatest.{Assertions, Matchers, PropSpec}
+import com.ltonetwork.state.EitherExt2
+import org.scalatest.Assertions
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.{Address, PrivateKeyAccount}
 import com.ltonetwork.consensus.TransactionsOrdering
 import com.ltonetwork.transaction.transfer._
 
 import scala.util.Random
 
-class TransactionsOrderingSpecification extends PropSpec with Assertions with Matchers {
+class TransactionsOrderingSpecification extends AnyPropSpec with Assertions with Matchers {
 
   def sender: PrivateKeyAccount = PrivateKeyAccount(Array.fill(32)(0))
   def recipient: Address        = Address.fromString("3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg").explicitGet()

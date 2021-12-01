@@ -8,12 +8,13 @@ import io.netty.channel.Channel
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.group.ChannelGroup
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration.DurationInt
 import scala.util.Random
 
-class ClientSpec extends FreeSpec with Matchers with MockFactory with TransactionGen {
+class ClientSpec extends AnyFreeSpec with Matchers with MockFactory with TransactionGen {
 
   private val clientHandshake = new Handshake(
     applicationName = "ltoI",

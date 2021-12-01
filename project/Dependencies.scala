@@ -3,11 +3,11 @@ import sbt._
 
 object Dependencies {
 
-  def akkaModule(module: String) = "com.typesafe.akka" %% s"akka-$module" % "2.4.19"
+  def akkaModule(module: String) = ("com.typesafe.akka" %% s"akka-$module" % "2.6.16").exclude("org.scalatest", "scalatest")
 
-  def swaggerModule(module: String) = ("io.swagger" % s"swagger-$module" % "1.5.16").exclude("com.google.guava", "guava")
+  def swaggerModule(module: String) = ("io.swagger.core.v3" % s"swagger-$module" % "2.1.11").exclude("com.google.guava", "guava")
 
-  def akkaHttpModule(module: String) = "com.typesafe.akka" %% module % "10.0.9"
+  def akkaHttpModule(module: String) = ("com.typesafe.akka" %% module % "10.2.7").exclude("org.scalatest", "scalatest")
 
   def nettyModule(module: String) = "io.netty" % s"netty-$module" % "4.1.24.Final"
 
@@ -41,7 +41,7 @@ object Dependencies {
     "com.google.guava"  % "guava"      % "21.0",
     "com.typesafe.play" %% "play-json" % "2.6.9"
   )
-  lazy val akka = Seq("actor", "slf4j").map(akkaModule)
+  lazy val akka = Seq("actor", "slf4j", "actor-typed", "serialization-jackson").map(akkaModule)
 
   lazy val db = Seq(
     "org.ethereum" % "leveldbjni-all" % "1.18.3"
@@ -54,10 +54,11 @@ object Dependencies {
     "net.logstash.logback" % "logstash-logback-encoder" % "4.11"
   )
 
-  lazy val http = Seq("core", "annotations", "models", "jaxrs").map(swaggerModule) ++ Seq(
-    "io.swagger"                   %% "swagger-scala-module" % "1.0.4",
-    "com.github.swagger-akka-http" %% "swagger-akka-http"    % "0.9.2",
-    akkaHttpModule("akka-http")
+  lazy val http = Seq("core", "annotations", "models", "jaxrs2", "jaxrs2-servlet-initializer-v2").map(swaggerModule) ++ Seq(
+    "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.5.2",
+    "com.github.swagger-akka-http" %% "swagger-akka-http"    % "2.6.0",
+    "jakarta.ws.rs"                 % "jakarta.ws.rs-api"    % "3.0.0",
+      akkaHttpModule("akka-http")
   )
 
   lazy val matcher = Seq(
@@ -95,11 +96,15 @@ object Dependencies {
     ExclusionRule("com.google.guava", "guava")
   ))
   lazy val commons_net = Seq("commons-net" % "commons-net" % "3.+")
-  lazy val scalatest   = Seq("org.scalatest" %% "scalatest" % "3.0.3")
-  lazy val scalactic   = Seq("org.scalactic" %% "scalactic" % "3.0.3")
+  lazy val scalatest   = Seq(
+    "org.scalatest" %% "scalatest" % "3.1.4",
+    "org.scalatestplus" %% "scalacheck-1-14" % "3.2.0.0",
+    "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0"
+  )
+  lazy val scalactic   = Seq("org.scalactic" %% "scalactic" % "3.1.4")
   lazy val cats        = Seq("org.typelevel" %% "cats-core" % "1.1.0")
   lazy val scalacheck = Seq(
-    "org.scalacheck"      %% "scalacheck"      % "1.13.5",
+    "org.scalacheck"      %% "scalacheck"      % "1.13.5" % Test,
     "io.github.amrhassan" %% "scalacheck-cats" % "0.4.0" % Test
   )
   lazy val kindProjector = "org.spire-math" %% "kind-projector" % "0.9.6"

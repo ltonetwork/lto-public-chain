@@ -4,9 +4,10 @@ import com.typesafe.config.ConfigFactory
 import com.ltonetwork.state.ByteStr
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class WalletSettingsSpecification extends FlatSpec with Matchers {
+class WalletSettingsSpecification extends AnyFlatSpec with Matchers {
   "WalletSettings" should "read values from config" in {
     val config   = loadConfig(ConfigFactory.parseString("""lto.wallet {
         |  password: "some string as password"

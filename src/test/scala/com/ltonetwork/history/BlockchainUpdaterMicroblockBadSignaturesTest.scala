@@ -2,20 +2,20 @@ package com.ltonetwork.history
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.PrivateKeyAccount
-import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs._
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 import org.scalacheck.Gen
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import scorex.crypto.signatures.Curve25519._
 
 class BlockchainUpdaterMicroblockBadSignaturesTest
-    extends PropSpec
-    with PropertyChecks
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
     with DomainScenarioDrivenPropertyCheck
     with Matchers
     with TransactionGen {

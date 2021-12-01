@@ -2,11 +2,12 @@ package com.ltonetwork.crypto
 
 import com.ltonetwork.crypto
 import com.ltonetwork.account.KeyTypes._
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.PrivateKeyAccount
 
-class SigningFunctionsSpecification extends PropSpec with PropertyChecks with Matchers {
+class SigningFunctionsSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers {
 
   property("signed message should be verifiable with appropriate ED25519 public key") {
     forAll(sizeRange(10)) { (seed1: Array[Byte], seed2: Array[Byte], message1: Array[Byte], message2: Array[Byte]) =>

@@ -7,11 +7,12 @@ import com.ltonetwork.state.diffs._
 import com.ltonetwork.state.diffs.smart._
 import com.ltonetwork.utils.dummyCompilerContext
 import com.ltonetwork.{NoShrink, TransactionGen}
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.lagonaki.mocks.TestBlock
 
-class OnlyTransferIsAllowedTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
+class OnlyTransferIsAllowedTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink {
 
   property("transfer is allowed but lease is not due to predicate") {
 

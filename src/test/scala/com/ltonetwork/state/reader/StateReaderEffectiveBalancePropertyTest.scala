@@ -6,14 +6,15 @@ import com.ltonetwork.state.{EitherExt2, LeaseBalance}
 import com.ltonetwork.state.diffs._
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.settings.TestFunctionalitySettings.Enabled
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.LeaseTransaction
 
-class StateReaderEffectiveBalancePropertyTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
+class StateReaderEffectiveBalancePropertyTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink {
   property("No-interactions genesis account's effectiveBalance doesn't depend on depths") {
     val setup: Gen[(GenesisTransaction, Int, Int, Int)] = for {
       master <- accountGen

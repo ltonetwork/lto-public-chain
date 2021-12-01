@@ -9,10 +9,11 @@ import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
-class HandshakeDecoderSpec extends FreeSpec with Matchers with MockFactory with PropertyChecks with TransactionGen with NoShrink {
+class HandshakeDecoderSpec extends AnyFreeSpec with Matchers with MockFactory with ScalaCheckDrivenPropertyChecks with TransactionGen with NoShrink {
 
   "should read a handshake and remove itself from the pipeline" in {
     var mayBeDecodedHandshake: Option[Handshake] = None

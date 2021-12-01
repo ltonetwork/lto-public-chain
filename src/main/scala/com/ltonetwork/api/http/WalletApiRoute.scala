@@ -1,20 +1,25 @@
 package com.ltonetwork.api.http
 
-import javax.ws.rs.Path
 import akka.http.scaladsl.server.Route
 import com.ltonetwork.account.Address
 import com.ltonetwork.api.http.AddressApiRoute.Signed
 import com.ltonetwork.crypto
 import com.ltonetwork.settings.RestAPISettings
-import io.swagger.annotations._
 import play.api.libs.json.{JsArray, JsBoolean, JsString, Json}
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.wallet.Wallet
+import jakarta.ws.rs.{DELETE, GET, POST, Path}
+import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import io.swagger.v3.oas.annotations.parameters.RequestBody
+import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
+import io.swagger.v3.oas.annotations.tags.Tag
 
 import java.nio.charset.StandardCharsets
 
 @Path("/wallet")
-@Api(value = "/wallet")
+@Tag(name="wallet")
 case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends ApiRoute {
 
   override lazy val route =
@@ -24,16 +29,22 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
 
   val MaxAddressesPerRequest = 1000
 
+  @GET
   @Path("/addresses")
-  @ApiOperation(value = "Addresses", notes = "Get wallet accounts addresses", httpMethod = "GET")
+  @Operation(
+    summary = "Get wallet accounts addresses"
+  )
   def addresses: Route = (path("addresses") & get) {
     val accounts = wallet.privateKeyAccounts
     val json     = JsArray(accounts.map(a => JsString(a.address)))
     complete(json)
   }
 
+  @POST
   @Path("/addresses")
-  @ApiOperation(value = "Create", notes = "Create a new account in the wallet (if it exists)", httpMethod = "POST")
+  @Operation(
+    summary = "Create a new account in the wallet (if it exists)"
+  )
   def createAddress: Route = (path("addresses") & post & withAuth) {
     wallet.generateNewAccount() match {
       case Right(Some(pka)) => complete(Json.obj("address" -> pka.address))
@@ -42,12 +53,22 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
     }
   }
 
+  @DELETE
   @Path("/addresses/{address}")
-  @ApiOperation(value = "Delete", notes = "Remove the account with address {address} from the wallet", httpMethod = "DELETE")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Remove the account with address from the wallet"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def deleteAddress: Route = path("addresses" / Segment) { address =>
     (delete & withAuth) {
       if (Address.fromString(address).isLeft) {
@@ -62,13 +83,29 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
     }
   }
 
+  @GET
   @Path("/addresses/seq/{from}/{to}")
-  @ApiOperation(value = "Seq", notes = "Get wallet accounts addresses", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Get wallet accounts addresses"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "from", value = "Start address", required = true, dataType = "integer", paramType = "path"),
-      new ApiImplicitParam(name = "to", value = "address", required = true, dataType = "integer", paramType = "path")
-    ))
+      new Parameter(
+        name = "from",
+        description = "Start wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[Int]),
+        in = ParameterIn.PATH
+      ),
+      new Parameter(
+        name = "to",
+        description = "End wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[Int]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def seq: Route = {
     (path("addresses" / "seq" / IntNumber / IntNumber) & get) {
       case (start, end) =>
@@ -82,18 +119,34 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
     }
   }
 
+  @POST
   @Path("/sign/{address}")
-  @ApiOperation(value = "Sign", notes = "Sign a message with a private key associated with {address}", httpMethod = "POST")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Sign a message with a private key associated with address"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "message", value = "Message to sign as a plain string", required = true, paramType = "body", dataType = "string"),
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
+  @RequestBody(
+    description = "Message to sign as a plain string",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String]),
+    )),
+    required = true
+  )
   @ApiResponses(
     Array(
       new ApiResponse(
-        code = 200,
-        message =
+        responseCode = "200",
+        description =
           "Json with error or json like {\"message\": \"Base58-encoded\",\"publickey\": \"Base58-encoded\", \"signature\": \"Base58-encoded\"}"
       )
     ))
@@ -103,18 +156,34 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
     }
   }
 
+  @POST
   @Path("/signText/{address}")
-  @ApiOperation(value = "Sign", notes = "Sign a message with a private key associated with {address}", httpMethod = "POST")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Sign a message with a private key associated with address"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "message", value = "Message to sign as a plain string", required = true, paramType = "body", dataType = "string"),
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
+  @RequestBody(
+    description = "Message to sign as a plain string",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String]),
+    )),
+    required = true
+  )
   @ApiResponses(
     Array(
       new ApiResponse(
-        code = 200,
-        message = "Json with error or json like {\"message\": \"plain text\",\"publickey\": \"Base58-encoded\", \"signature\": \"Base58-encoded\"}")
+        responseCode = "200",
+        description = "Json with error or json like {\"message\": \"plain text\",\"publickey\": \"Base58-encoded\", \"signature\": \"Base58-encoded\"}")
     ))
   def signText: Route = {
     path("signText" / Segment) { address =>

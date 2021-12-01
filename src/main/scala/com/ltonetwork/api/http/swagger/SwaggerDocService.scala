@@ -1,33 +1,39 @@
 package com.ltonetwork.api.http.swagger
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
-import com.github.swagger.akka.model.{Info, License}
-import com.github.swagger.akka.{HasActorSystem, SwaggerHttpService}
+import com.github.swagger.akka.SwaggerHttpService
 import com.ltonetwork.Version
 import com.ltonetwork.settings.RestAPISettings
-import io.swagger.models.{Scheme, Swagger}
+import io.swagger.v3.oas.models.info.{Info, License}
+import io.swagger.v3.oas.models.servers.Server
+import io.swagger.v3.oas.models.{Components, OpenAPI}
+import io.swagger.v3.oas.models.security.SecurityScheme
 
-import scala.reflect.runtime.universe.Type
-
-class SwaggerDocService(val actorSystem: ActorSystem, val materializer: ActorMaterializer, val apiTypes: Seq[Type], settings: RestAPISettings)
-    extends SwaggerHttpService
-    with HasActorSystem {
+class SwaggerDocService(val actorSystem: ActorSystem, val apiClasses: Set[Class[_]], settings: RestAPISettings)
+    extends SwaggerHttpService {
 
   override val host: String = settings.bindAddress + ":" + settings.port
-  override val info: Info = Info(
-    "The Web Interface to the LTO Public Node API",
-    Version.VersionString,
-    "LTO Public Full Node",
-    "License: Apache License, Version 2.0",
-    None,
-    Some(License("Apache License, Version 2.0", "https://github.com/legalthings/PublicNode/blob/master/LICENSE"))
-  )
+
+  val license = new License()
+  license.setName("Apache License, Version 2.0")
+  license.setUrl("https://github.com/legalthings/PublicNode/blob/master/LICENSE")
+
+  override val info = new Info()
+    .title("LTO Public Full Node")
+    .version(Version.VersionString)
+    .description("The Web Interface to the LTO Public Node API")
+    .license(license)
+
+  val scheme = new SecurityScheme()
+  scheme.setType(SecurityScheme.Type.HTTP)
+  scheme.setScheme("bearer")
+  scheme.setBearerFormat("JWT")
+  override val components = Option(new Components().addSecuritySchemes("bearerAuth", scheme))
 
   //Let swagger-ui determine the host and port
-  override val swaggerConfig: Swagger = new Swagger()
-    .basePath(prependSlashIfNecessary(basePath))
+  override val swaggerConfig: OpenAPI = new OpenAPI()
+    .addServersItem(new Server().url(SwaggerHttpService.prependSlashIfNecessary(basePath)))
     .info(info)
-    .scheme(Scheme.HTTP)
-    .scheme(Scheme.HTTPS)
+
+  swaggerConfig.setComponents(components.get)
 }

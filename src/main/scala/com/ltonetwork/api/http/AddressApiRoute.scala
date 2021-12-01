@@ -17,15 +17,18 @@ import com.ltonetwork.utils.{Base58, Time}
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
-import io.swagger.annotations._
-
-import javax.ws.rs.Path
+import jakarta.ws.rs.{GET, POST, Path}
+import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import io.swagger.v3.oas.annotations.parameters.RequestBody
+import io.swagger.v3.oas.annotations.tags.Tag
 import play.api.libs.json._
 
 import scala.util.{Failure, Success, Try}
 
 @Path("/addresses")
-@Api(value = "/addresses/")
+@Tag(name="addresses")
 case class AddressApiRoute(settings: RestAPISettings,
                            wallet: Wallet,
                            blockchain: Blockchain,
@@ -46,12 +49,22 @@ case class AddressApiRoute(settings: RestAPISettings,
         effectiveBalance ~ effectiveBalanceWithConfirmations ~ scriptInfo
     } ~ root
 
+  @GET
   @Path("/scriptInfo/{address}")
-  @ApiOperation(value = "Details for account", notes = "Account's script", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Account's script"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def scriptInfo: Route = (path("scriptInfo" / Segment) & get) { address =>
     complete(
       Address
@@ -61,62 +74,104 @@ case class AddressApiRoute(settings: RestAPISettings,
     )
   }
 
+  @POST
   @Path("/verify/{address}")
-  @ApiOperation(value = "Verify", notes = "Check a signature of a message signed by an account", httpMethod = "POST")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Check a signature of a message signed by an account"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path"),
-      new ApiImplicitParam(
-        name = "body",
-        value = "Json with data",
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
         required = true,
-        paramType = "body",
-        dataType = "com.ltonetwork.api.http.SignedMessage",
-        defaultValue =
-          "{\n\t\"message\":\"Base58-encoded message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}"
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
       )
-    ))
+    )
+  )
+  @RequestBody(
+    description = "Json with data",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[com.ltonetwork.api.http.SignedMessage]),
+      examples = Array(new ExampleObject(
+        value = "{\n\t\"message\":\"Base58-encoded message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}"
+      ))
+    )),
+    required = true
+  )
   def verify: Route = {
     path("verify" / Segment) { address =>
       verifyPath(address, decode = true)
     }
   }
 
+  @POST
   @Path("/verifyText/{address}")
-  @ApiOperation(value = "Verify text", notes = "Check a signature of a message signed by an account", httpMethod = "POST")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Check a signature of a message signed by an account"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path"),
-      new ApiImplicitParam(
-        name = "body",
-        value = "Json with data",
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
         required = true,
-        paramType = "body",
-        dataType = "com.ltonetwork.api.http.SignedMessage",
-        defaultValue =
-          "{\n\t\"message\":\"Plain message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}"
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
       )
-    ))
+    )
+  )
+  @RequestBody(
+    description = "Json with data",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[com.ltonetwork.api.http.SignedMessage]),
+      examples = Array(new ExampleObject(
+        value = "{\n\t\"message\":\"Plain message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}",
+      ))
+    )),
+    required = true
+  )
   def verifyText: Route = path("verifyText" / Segment) { address =>
     verifyPath(address, decode = false)
   }
 
+  @GET
   @Path("/balance/{address}")
-  @ApiOperation(value = "Balance", notes = "Account's balance", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Account's balance"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def balance: Route = (path("balance" / Segment) & get) { address =>
     complete(balanceJson(address))
   }
 
+  @GET
   @Path("/balance/details/{address}")
-  @ApiOperation(value = "Details for balance", notes = "Account's balances", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Account's balances"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def balanceDetails: Route = (path("balance" / "details" / Segment) & get) { address =>
     complete(
       Address
@@ -128,25 +183,51 @@ case class AddressApiRoute(settings: RestAPISettings,
         .getOrElse(InvalidAddress))
   }
 
+  @GET
   @Path("/balance/history/{address}")
-  @ApiOperation(value = "Balance history", notes = "Balance history of {address}", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Balance history of address"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def balanceHistory: Route = {
     (path("balance" / "history" / Segment) & get) { address =>
       complete(balanceHistoryJson(address));
     }
   }
 
+  @GET
   @Path("/balance/{address}/{confirmations}")
-  @ApiOperation(value = "Confirmed balance", notes = "Balance of {address} after {confirmations}", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Balance of address after confirmations"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "confirmations", value = "0", required = true, dataType = "integer", paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      ),
+      new Parameter(
+        name = "address",
+        description = "Number of confirmations",
+        required = true,
+        schema = new Schema(implementation = classOf[Int]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def balanceWithConfirmations: Route = {
     (path("balance" / Segment / IntNumber) & get) {
       case (address, confirmations) =>
@@ -154,25 +235,51 @@ case class AddressApiRoute(settings: RestAPISettings,
     }
   }
 
+  @GET
   @Path("/effectiveBalance/{address}")
-  @ApiOperation(value = "Balance", notes = "Account's balance", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Account's effective balance"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def effectiveBalance: Route = {
     path("effectiveBalance" / Segment) { address =>
       complete(effectiveBalanceJson(address, 0))
     }
   }
 
+  @GET
   @Path("/effectiveBalance/{address}/{confirmations}")
-  @ApiOperation(value = "Confirmed balance", notes = "Balance of {address} after {confirmations}", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Effective balance of address after confirmations"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "confirmations", value = "0", required = true, dataType = "integer", paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      ),
+      new Parameter(
+        name = "address",
+        description = "Number of confirmations",
+        required = true,
+        schema = new Schema(implementation = classOf[Int]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def effectiveBalanceWithConfirmations: Route = {
     path("effectiveBalance" / Segment / IntNumber) {
       case (address, confirmations) =>
@@ -182,18 +289,32 @@ case class AddressApiRoute(settings: RestAPISettings,
     }
   }
 
+  @GET
   @Path("/validate/{address}")
-  @ApiOperation(value = "Validate", notes = "Check whether address {address} is valid or not", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Check whether address is valid or not"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def validate: Route = (path("validate" / Segment) & get) { address =>
     complete(Validity(address, Address.fromString(address).isRight))
   }
 
+  @GET
   @Path("/")
-  @ApiOperation(value = "Addresses", notes = "Get wallet accounts addresses. Deprecated: use `/wallet/addresses` instead", httpMethod = "GET")
+  @Operation(
+    summary = "Get wallet accounts addresses; deprecated: use `/wallet/addresses` instead",
+    deprecated = true
+  )
   def root: Route = (path("addresses") & get) {
     redirect("/wallet/addresses", StatusCodes.PermanentRedirect)
   }
@@ -312,12 +433,22 @@ case class AddressApiRoute(settings: RestAPISettings,
     }
   }
 
+  @GET
   @Path("/publicKey/{publicKey}")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Generate an address from public key"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "publicKey", value = "Public key Base58-encoded", required = true, paramType = "path", dataType = "string")
-    ))
-  @ApiOperation(value = "Address from Public Key", notes = "Generate a address from public key", httpMethod = "GET")
+      new Parameter(
+        name = "publicKey",
+        description = "Public key Base58-encoded",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def publicKey: Route = (path("publicKey" / Segment) & get) { publicKey =>
     Base58.decode(publicKey) match {
       case Success(pubKeyBytes) =>

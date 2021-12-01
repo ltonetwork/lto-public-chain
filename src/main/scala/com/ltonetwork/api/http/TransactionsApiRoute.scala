@@ -17,16 +17,20 @@ import com.ltonetwork.utils._
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
-import io.swagger.annotations._
 import play.api.libs.json._
+import jakarta.ws.rs.{GET, POST, Path}
+import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import io.swagger.v3.oas.annotations.parameters.RequestBody
+import io.swagger.v3.oas.annotations.tags.Tag
 
 import java.util.NoSuchElementException
-import javax.ws.rs.Path
 import scala.util.Success
 import scala.util.control.Exception
 
 @Path("/transactions")
-@Api(value = "/transactions")
+@Tag(name="transactions")
 case class TransactionsApiRoute(settings: RestAPISettings,
                                 functionalitySettings: FunctionalitySettings,
                                 feesSettings: FeesSettings,
@@ -49,17 +53,29 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   private val invalidLimit = StatusCodes.BadRequest -> Json.obj("message" -> "invalid.limit")
 
   //TODO implement general pagination
+  @GET
   @Path("/address/{address}/limit/{limit}")
-  @ApiOperation(value = "Address", notes = "Get list of transactions where specified address has been involved", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Get list of transactions where specified address has been involved"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "address", value = "Wallet address ", required = true, dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "limit",
-                           value = "Specified number of records to be returned",
-                           required = true,
-                           dataType = "integer",
-                           paramType = "path")
-    ))
+      new Parameter(
+        name = "address",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      ),
+      new Parameter(
+        name = "limit",
+        description = "Specified number of records to be returned",
+        required = true,
+        schema = new Schema(implementation = classOf[Int]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def addressLimit: Route = (pathPrefix("address") & get) {
     pathPrefix(Segment) { address =>
       Address.fromString(address) match {
@@ -87,12 +103,22 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     }
   }
 
+  @GET
   @Path("/info/{id}")
-  @ApiOperation(value = "Info", notes = "Get transaction info", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Get transaction info"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "id", value = "transaction id ", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "id",
+        description = "Transaction id",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def info: Route = (pathPrefix("info") & get) {
     pathEndOrSingleSlash {
       complete(InvalidSignature)
@@ -109,26 +135,42 @@ case class TransactionsApiRoute(settings: RestAPISettings,
       }
   }
 
+  @GET
   @Path("/unconfirmed")
-  @ApiOperation(value = "Unconfirmed", notes = "Get list of unconfirmed transactions", httpMethod = "GET")
+  @Operation(
+    summary = "Get list of unconfirmed transactions"
+  )
   def unconfirmed: Route = (pathPrefix("unconfirmed") & get) {
     pathEndOrSingleSlash {
       complete(JsArray(utx.all.map(txToExtendedJson)))
     } ~ utxSize ~ utxTransactionInfo
   }
 
+  @GET
   @Path("/unconfirmed/size")
-  @ApiOperation(value = "Size of UTX pool", notes = "Get number of unconfirmed transactions in the UTX pool", httpMethod = "GET")
+  @Operation(
+    summary = "Get number of unconfirmed transactions in the UTX pool"
+  )
   def utxSize: Route = (pathPrefix("size") & get) {
     complete(Json.obj("size" -> JsNumber(utx.size)))
   }
 
+  @GET
   @Path("/unconfirmed/info/{id}")
-  @ApiOperation(value = "Transaction Info", notes = "Get transaction that is in the UTX", httpMethod = "GET")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Get transaction that is in the UTX"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "id", value = "Transaction id ", required = true, dataType = "string", paramType = "path")
-    ))
+      new Parameter(
+        name = "id",
+        description = "Transaction id",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
   def utxTransactionInfo: Route = (pathPrefix("info") & get) {
     pathEndOrSingleSlash {
       complete(InvalidSignature)
@@ -147,16 +189,18 @@ case class TransactionsApiRoute(settings: RestAPISettings,
       }
   }
 
+  @POST
   @Path("/calculateFee")
-  @ApiOperation(value = "Calculate fee", notes = "Calculates a fee for a transaction", httpMethod = "POST")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "json",
-                           required = true,
-                           dataType = "string",
-                           paramType = "body",
-                           value = "Transaction data including type and optional timestamp in milliseconds")
-    ))
+  @Operation(
+    summary = "Calculates a fee for a transaction"
+  )
+  @RequestBody(
+    description = "Transaction data including type and optional timestamp in milliseconds",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String]),
+    )),
+    required = true
+  )
   def calculateFee: Route = (pathPrefix("calculateFee") & post) {
     pathEndOrSingleSlash {
       handleExceptions(jsonExceptionHandler) {
@@ -178,16 +222,18 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     }
   }
 
+  @POST
   @Path("/sign")
-  @ApiOperation(value = "Sign a transaction", notes = "Sign a transaction", httpMethod = "POST")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "json",
-                           required = true,
-                           dataType = "string",
-                           paramType = "body",
-                           value = "Transaction data including type and optional timestamp in milliseconds")
-    ))
+  @Operation(
+    summary = "Sign a transaction"
+  )
+  @RequestBody(
+    description = "Transaction data including type and optional timestamp in milliseconds",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String])
+    )),
+    required = true
+  )
   def sign: Route = (pathPrefix("sign") & post & withAuth) {
     pathEndOrSingleSlash {
       handleExceptions(jsonExceptionHandler) {
@@ -198,17 +244,29 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     } ~ signWithSigner
   }
 
+  @POST
   @Path("/sign/{signerAddress}")
-  @ApiOperation(value = "Sign a transaction by a private key of signer address", notes = "Sign a transaction", httpMethod = "POST")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Sign a transaction by a private key of signer address"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "signerAddress", value = "Wallet address", required = true, dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "json",
-                           required = true,
-                           dataType = "string",
-                           paramType = "body",
-                           value = "Transaction data including type and optional timestamp in milliseconds")
-    ))
+      new Parameter(
+        name = "signerAddress",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
+  @RequestBody(
+    description = "Transaction data including type and optional timestamp in milliseconds",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String])
+    )),
+    required = true
+  )
   def signWithSigner: Route = pathPrefix(Segment) { signerAddress =>
     handleExceptions(jsonExceptionHandler) {
       json[JsObject] { jsv =>
@@ -224,16 +282,18 @@ case class TransactionsApiRoute(settings: RestAPISettings,
       .fold(ApiError.fromValidationError, _.json())
   }
 
+  @POST
   @Path("/sponsor")
-  @ApiOperation(value = "Sponsor a transaction", notes = "Sponsor a transaction", httpMethod = "POST")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "json",
-                           required = true,
-                           dataType = "string",
-                           paramType = "body",
-                           value = "Transaction data including type and optional timestamp in milliseconds")
-    ))
+  @Operation(
+    summary = "Sponsor a transaction"
+  )
+  @RequestBody(
+    description = "Transaction data including type and optional timestamp in milliseconds",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String])
+    )),
+    required = true
+  )
   def sponsor: Route = (pathPrefix("sign") & post & withAuth) {
     pathEndOrSingleSlash {
       handleExceptions(jsonExceptionHandler) {
@@ -244,17 +304,29 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     } ~ signWithSigner
   }
 
+  @POST
   @Path("/sponsor/{signerAddress}")
-  @ApiOperation(value = "Sponsor a transaction by a private key of signer address", notes = "Sponsor a transaction", httpMethod = "POST")
-  @ApiImplicitParams(
+  @Operation(
+    summary = "Sponsor a transaction by a private key of signer address"
+  )
+  @Parameters(
     Array(
-      new ApiImplicitParam(name = "signerAddress", value = "Wallet address", required = true, dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "json",
-                           required = true,
-                           dataType = "string",
-                           paramType = "body",
-                           value = "Transaction data including type and optional timestamp in milliseconds")
-    ))
+      new Parameter(
+        name = "signerAddress",
+        description = "Wallet address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
+  @RequestBody(
+    description = "Transaction data including type and optional timestamp in milliseconds",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String])
+    )),
+    required = true
+  )
   def sponsorWithSigner: Route = pathPrefix(Segment) { signerAddress =>
     handleExceptions(jsonExceptionHandler) {
       json[JsObject] { jsv =>
@@ -270,16 +342,18 @@ case class TransactionsApiRoute(settings: RestAPISettings,
       .fold(ApiError.fromValidationError, _.json())
   }
 
+  @POST
   @Path("/broadcast")
-  @ApiOperation(value = "Broadcasts a signed transaction", notes = "Broadcasts a signed transaction", httpMethod = "POST")
-  @ApiImplicitParams(
-    Array(
-      new ApiImplicitParam(name = "json",
-                           value = "Transaction data including type and signature",
-                           required = true,
-                           dataType = "string",
-                           paramType = "body")
-    ))
+  @Operation(
+    summary = "Broadcasts a signed transaction"
+  )
+  @RequestBody(
+    description = "Transaction data including type and signature",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[String])
+    )),
+    required = true
+  )
   def broadcast: Route = (pathPrefix("broadcast") & post) {
     handleExceptions(jsonExceptionHandler) {
       json[JsObject] {

@@ -3,12 +3,14 @@ package com.ltonetwork.state.diffs.smart.predef
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs._
 import com.ltonetwork.{NoShrink, TransactionGen, account}
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Assertions, Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.Assertions
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.Address
 import org.scalacheck.Gen
 
-class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
+class CommonFunctionsTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with  TransactionGen with NoShrink {
 
   property("Some/None/extract/isDefined") {
     val some3 = "if true then 3 else unit"

@@ -1,12 +1,13 @@
 package com.ltonetwork.lang
 
 import com.ltonetwork.lang.v1.compiler.Types._
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 import Common._
 import com.ltonetwork.lang.v1.compiler.TypeInferrer
 import com.ltonetwork.lang.v1.evaluator.ctx.CaseType
 
-class TypeInferrerTest extends FreeSpec with Matchers {
+class TypeInferrerTest extends AnyFreeSpec with Matchers {
 
   val typeparamT = TYPEPARAM('T')
   val typeparamG = TYPEPARAM('G')

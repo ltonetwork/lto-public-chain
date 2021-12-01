@@ -7,7 +7,8 @@ import com.ltonetwork.state.{BlockchainUpdaterImpl, _}
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.{TransactionGen, WithDB}
 import org.scalacheck.Gen
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.freespec.AnyFreeSpec
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.utils.{Time, TimeImpl}
 import com.ltonetwork.block.Block
@@ -16,7 +17,7 @@ import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.{Script, ScriptCompiler}
 import com.ltonetwork.transaction.BlockchainUpdater
 
-class ScriptCacheTest extends FreeSpec with Matchers with WithDB with TransactionGen {
+class ScriptCacheTest extends AnyFreeSpec with Matchers with WithDB with TransactionGen {
 
   val CACHE_SIZE = 1
   val AMOUNT     = 10000000000L

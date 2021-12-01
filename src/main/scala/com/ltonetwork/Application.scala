@@ -6,7 +6,6 @@ import java.util.concurrent.ConcurrentHashMap
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
-import akka.stream.ActorMaterializer
 import cats.instances.all._
 import com.typesafe.config._
 import com.ltonetwork.account.{Address, AddressScheme}
@@ -201,7 +200,6 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
     }
 
     implicit val as: ActorSystem                 = actorSystem
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     if (settings.restAPISettings.enable) {
       def loadBalanceHistory(address: Address): Seq[(Int, Long)] = db.readOnly { rdb =>
@@ -257,23 +255,27 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
         ActivationApiRoute(settings.restAPISettings, settings.blockchainSettings.functionalitySettings, settings.featuresSettings, blockchainUpdater)
       )
 
-      val apiTypes = Seq(
-        typeOf[NodeApiRoute],
-        typeOf[BlocksApiRoute],
-        typeOf[TransactionsApiRoute],
-        typeOf[NxtConsensusApiRoute],
-        typeOf[WalletApiRoute],
-        typeOf[LeaseApiRoute],
-        typeOf[SponsorshipApiRoute],
-        typeOf[UtilsApiRoute],
-        typeOf[PeersApiRoute],
-        typeOf[AddressApiRoute],
-        typeOf[AssociationsApiRoute],
-        typeOf[DebugApiRoute],
-        typeOf[ActivationApiRoute]
+      val apiTypes: Set[Class[_]] = Set(
+        classOf[NodeApiRoute],
+        classOf[BlocksApiRoute],
+        classOf[TransactionsApiRoute],
+        classOf[NxtConsensusApiRoute],
+        classOf[WalletApiRoute],
+        classOf[LeaseApiRoute],
+        classOf[SponsorshipApiRoute],
+        classOf[UtilsApiRoute],
+        classOf[PeersApiRoute],
+        classOf[AddressApiRoute],
+        classOf[AssociationsApiRoute],
+        classOf[DebugApiRoute],
+        classOf[ActivationApiRoute]
       )
       val combinedRoute = CompositeHttpService(actorSystem, apiTypes, apiRoutes, settings.restAPISettings).loggingCompositeRoute
-      val httpFuture    = Http().bindAndHandle(combinedRoute, settings.restAPISettings.bindAddress, settings.restAPISettings.port)
+
+      val httpFuture    =
+        Http(actorSystem)
+        .newServerAt(settings.restAPISettings.bindAddress, settings.restAPISettings.port)
+        .bindFlow(combinedRoute)
       serverBinding = Await.result(httpFuture, 20.seconds)
       log.info(s"REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
     }

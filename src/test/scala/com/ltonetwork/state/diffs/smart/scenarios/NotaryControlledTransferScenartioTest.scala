@@ -13,10 +13,11 @@ import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.utils._
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 
-class NotaryControlledTransferScenartioTest extends PropSpec with PropertyChecks with Matchers with TransactionGen with NoShrink {
+class NotaryControlledTransferScenartioTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink {
   val preconditions: Gen[(Seq[GenesisTransaction], DataTransaction, TransferTransaction, DataTransaction, DataTransaction, TransferTransaction)] =
     for {
       company  <- accountGen

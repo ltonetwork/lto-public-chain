@@ -4,8 +4,9 @@ import com.ltonetwork._
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.ENOUGH_AMT
 import org.scalacheck.Gen
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.block.{Block, MicroBlock, SignerData}
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
@@ -15,7 +16,7 @@ import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.transaction.Transaction
 
-class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with DomainScenarioDrivenPropertyCheck with Matchers with TransactionGen {
+class BlockchainUpdaterLiquidBlockTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with DomainScenarioDrivenPropertyCheck with Matchers with TransactionGen {
 
   private val preconditionsAndPayments: Gen[(Block, Block, Seq[MicroBlock])] = for {
     richAccount        <- accountGen

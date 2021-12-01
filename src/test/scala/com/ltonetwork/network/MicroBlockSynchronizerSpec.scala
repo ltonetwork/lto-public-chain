@@ -7,11 +7,12 @@ import io.netty.channel.Channel
 import io.netty.channel.embedded.EmbeddedChannel
 import monix.reactive.Observable
 import monix.reactive.subjects.{PublishSubject => PS}
-import org.scalatest._
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 
-class MicroBlockSynchronizerSpec extends FreeSpec with Matchers with TransactionGen with RxScheduler with BlockGen {
+class MicroBlockSynchronizerSpec extends AnyFreeSpec with Matchers with TransactionGen with RxScheduler with BlockGen {
   override def testSchedulerName: String = "test-microblock-synchronizer"
 
   val defaultSettings = MicroblockSynchronizerSettings(1.second, 1.minute, 1.minute)

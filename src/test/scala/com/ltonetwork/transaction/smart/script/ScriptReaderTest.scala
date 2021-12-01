@@ -5,9 +5,10 @@ import com.ltonetwork.lang.ScriptVersion.Versions.V1
 import com.ltonetwork.lang.v1.Serde
 import com.ltonetwork.lang.v1.compiler.Terms.TRUE
 import com.ltonetwork.state.diffs.produce
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.freespec.AnyFreeSpec
 
-class ScriptReaderTest extends FreeSpec with Matchers {
+class ScriptReaderTest extends AnyFreeSpec with Matchers {
   val checksumLength = 4
 
   "should parse all bytes for V1" in {

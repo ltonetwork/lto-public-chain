@@ -1,7 +1,6 @@
 package com.ltonetwork
 
 import com.ltonetwork.settings.WalletSettings
-import com.ltonetwork.state.ByteStr
 import com.ltonetwork.wallet.Wallet
 
 trait TestWallet {

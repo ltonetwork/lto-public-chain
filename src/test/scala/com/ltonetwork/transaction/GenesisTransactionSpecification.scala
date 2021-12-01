@@ -2,13 +2,14 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.utils.Base58
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 
-class GenesisTransactionSpecification extends PropSpec with PropertyChecks with Matchers {
+class GenesisTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers {
 
   private val defaultRecipient = PublicKeyAccount(Array.fill(32)(0: Byte))
 

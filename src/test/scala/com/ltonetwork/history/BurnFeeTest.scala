@@ -9,10 +9,11 @@ import com.ltonetwork.state.diffs.{BlockDiffer, ENOUGH_AMT}
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer.TransferTransaction
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
 
-class BurnFeeTest extends PropSpec with PropertyChecks with DomainScenarioDrivenPropertyCheck with Matchers with TransactionGen {
+class BurnFeeTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with DomainScenarioDrivenPropertyCheck with Matchers with TransactionGen {
   type Setup = (GenesisTransaction, TransferTransaction)
 
   val burnFeeEnabledSettings: LtoSettings = settings.copy(
