@@ -23,10 +23,10 @@ before_script:
 script:
   - sbt -J-Xms128m -J-Xmx1248m -J-XX:+UseConcMarkSweepGC -J-XX:+CMSClassUnloadingEnabled -J"--add-opens=java.base/jdk.internal.ref=ALL-UNNAMED" checkPR
 
-cache:
-  directories:
-    - $HOME/.ivy2/cache
-    - $HOME/.sbt
+cache: false
+#  directories:
+#    - $HOME/.ivy2/cache
+#    - $HOME/.sbt
 before_cache:
   # Cleanup the cached directories to avoid unnecessary cache updates
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
