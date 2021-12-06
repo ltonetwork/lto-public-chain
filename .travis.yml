@@ -17,6 +17,7 @@ jdk: openjdk11
 scala: 2.12.9
 
 before_install:
+  - rm -rf /home/travis/.cache
   - unset _JAVA_OPTIONS
   - unset SBT_OPTS
   - export JAVA_TOOL_OPTIONS="-Xmx1548m"
