@@ -1,7 +1,5 @@
 dist: focal
 language: scala
-# Use container-based infrastructure
-sudo: false
 
 addons:
   apt:
@@ -17,7 +15,6 @@ jdk: openjdk11
 scala: 2.12.9
 
 before_install:
-  - rm -rf /home/travis/.cache
   - unset _JAVA_OPTIONS
   - unset SBT_OPTS
   - export JAVA_TOOL_OPTIONS="-Xmx1548m"
@@ -28,12 +25,12 @@ before_script:
   - pip install -r e2e/requirements.txt
 script:
   - sbt -J-Xms128m -J-Xmx1248m -J-XX:+UseConcMarkSweepGC -J-XX:+CMSClassUnloadingEnabled -J"--add-opens=java.base/jdk.internal.ref=ALL-UNNAMED" checkPR
-  - behave --tags=-skip
+  - behave
 
-cache: false
-#  directories:
-#    - $HOME/.ivy2/cache
-#    - $HOME/.sbt
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
 before_cache:
   # Cleanup the cached directories to avoid unnecessary cache updates
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
