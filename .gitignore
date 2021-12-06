@@ -4,6 +4,8 @@
 .ensime_cache/
 waves.directory_IS_UNDEFINED/
 lto.directory_IS_UNDEFINED/
+.vscode
+
 # scala build folders and files
 target
 *.tgz
@@ -14,7 +16,6 @@ target
 *.*~
 
 # dotfiles
-.dockerignore
 .editorconfig
 .DS_Store
 
@@ -23,19 +24,20 @@ target
 
 # local settings
 localsettings.json
+genesis.conf
 local.conf
-custom.conf
+lto-custom.conf
 
 # Text files
-*.txt
 *.ods
 *.csv
 *.dat
-
-# standalone docker
-Dockerfile
 
 package
 !src/package
 native
 .bsp
+
+# python
+*__pycache__*
+.venv

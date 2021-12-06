@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -Cue -o pipefail
+
+docker stop lto_public_node_e2e
+

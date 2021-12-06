@@ -16,12 +16,18 @@ branches:
 jdk: openjdk11
 scala: 2.12.9
 
-before_script:
+before_install:
   - unset _JAVA_OPTIONS
   - unset SBT_OPTS
   - export JAVA_TOOL_OPTIONS="-Xmx1548m"
+install:
+  - sbt build
+
+before_script:
+  - pip install -r e2e/requirements.txt
 script:
   - sbt -J-Xms128m -J-Xmx1248m -J-XX:+UseConcMarkSweepGC -J-XX:+CMSClassUnloadingEnabled -J"--add-opens=java.base/jdk.internal.ref=ALL-UNNAMED" checkPR
+  - behave --tags=-skip
 
 cache:
   directories:

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -Cue -o pipefail
+
+PROJECT_DIR="$(cd "$(dirname "${0}")/../.." ; pwd)"  # Absolute path to project
+
+(
+  cd "$PROJECT_DIR"
+
+  docker build . -t ltonetwork/public-node:dev
+  docker run -d --rm -p 6869:6869 -e LTO_NETWORK=CUSTOM -e LTO_ENABLE_REST_API=true -e LTO_API_KEY=open --name=lto_public_node_e2e ltonetwork/public-node:dev
+  sleep 5
+  docker logs lto_public_node_e2e
+)
+
