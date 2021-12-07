@@ -5,7 +5,7 @@ object Dependencies {
 
   def akkaModule(module: String) = ("com.typesafe.akka" %% s"akka-$module" % "2.6.16").exclude("org.scalatest", "scalatest")
 
-  def swaggerModule(module: String) = ("io.swagger.core.v3" % s"swagger-$module" % "2.1.11").exclude("com.google.guava", "guava")
+  def swaggerModule(module: String) = ("io.swagger.core.v3" % s"swagger-$module-jakarta" % "2.1.11").exclude("com.google.guava", "guava")
 
   def akkaHttpModule(module: String) = ("com.typesafe.akka" %% module % "10.2.7").exclude("org.scalatest", "scalatest")
 
@@ -55,9 +55,9 @@ object Dependencies {
   )
 
   lazy val http = Seq("core", "annotations", "models", "jaxrs2", "jaxrs2-servlet-initializer-v2").map(swaggerModule) ++ Seq(
-    "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.5.2",
-    "com.github.swagger-akka-http" %% "swagger-akka-http"    % "2.6.0",
-    "jakarta.ws.rs"                 % "jakarta.ws.rs-api"    % "3.0.0",
+    "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.5.2" exclude("org.scalatest", "scalatest"),
+    "com.github.swagger-akka-http" %% "swagger-akka-http"    % "2.6.0" exclude("org.scalatest", "scalatest"),
+    "jakarta.ws.rs"                 % "jakarta.ws.rs-api"    % "3.0.0" exclude("org.scalatest", "scalatest"),
       akkaHttpModule("akka-http")
   )
 
@@ -89,7 +89,10 @@ object Dependencies {
     "org.typelevel" %%% "cats-effect"  % "0.10.1"
   ))
   lazy val scodec      = Def.setting(Seq("org.scodec" %%% "scodec-core" % "1.10.3"))
-  lazy val fastparse   = Def.setting(Seq("com.lihaoyi" %%% "fastparse" % "1.0.0", "org.bykn" %%% "fastparse-cats-core" % "0.1.0"))
+  lazy val fastparse   = Def.setting(Seq(
+    "com.lihaoyi" %%% "fastparse" % "1.0.0",
+    "org.bykn" %%% "fastparse-cats-core" % "0.1.0" exclude("org.scalatest", "scalatest")
+  ))
   lazy val ficus       = Seq("com.iheart" %% "ficus" % "1.4.2")
   lazy val scorex      = Seq("org.scorexfoundation" %% "scrypto" % "2.0.4" excludeAll(
     ExclusionRule("org.slf4j", "slf4j-api"),

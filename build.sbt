@@ -84,7 +84,8 @@ inTask(assembly)(
     assemblyMergeStrategy := {
       case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.concat
       case PathList("META-INF", "aop.xml")                      => aopMerge
-      case PathList("org", "bouncycastle", xs @ _*)             => MergeStrategy.first
+      case PathList("META-INF", xs @ _*)                        => MergeStrategy.discard
+      case "module-info.class"                                  => MergeStrategy.discard
       case other                                                => (assembly / assemblyMergeStrategy).value(other)
     }
   ))
@@ -221,7 +222,7 @@ lazy val lang =
           Dependencies.fp ++
           Dependencies.scalacheck ++
           Dependencies.scorex ++
-          Dependencies.scalatest ++
+          Dependencies.scalatest.map(_ % "test") ++
           Dependencies.scalactic ++
           Dependencies.monix.value ++
           Dependencies.scodec.value ++
