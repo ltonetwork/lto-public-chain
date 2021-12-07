@@ -3,17 +3,18 @@ import sbt._
 
 object Dependencies {
 
-  def akkaModule(module: String) = ("com.typesafe.akka" %% s"akka-$module" % "2.6.16").exclude("org.scalatest", "scalatest")
+  val excludeScalaTest = ExclusionRule(organization = "org.scalatest")
+  val asyncHttpClient = "org.asynchttpclient" % "async-http-client" % "2.4.7"
+
+  def akkaModule(module: String) = ("com.typesafe.akka" %% s"akka-$module" % "2.6.16").excludeAll(excludeScalaTest)
 
   def swaggerModule(module: String) = ("io.swagger.core.v3" % s"swagger-$module-jakarta" % "2.1.11").exclude("com.google.guava", "guava")
 
-  def akkaHttpModule(module: String) = ("com.typesafe.akka" %% module % "10.2.7").exclude("org.scalatest", "scalatest")
+  def akkaHttpModule(module: String) = ("com.typesafe.akka" %% module % "10.2.7").excludeAll(excludeScalaTest)
 
   def nettyModule(module: String) = "io.netty" % s"netty-$module" % "4.1.24.Final"
 
   def kamonModule(v: String)(module: String) = "io.kamon" %% s"kamon-$module" % v
-
-  val asyncHttpClient = "org.asynchttpclient" % "async-http-client" % "2.4.7"
 
   lazy val network = Seq("handler", "buffer", "codec").map(nettyModule) ++ Seq(
     "org.bitlet" % "weupnp" % "0.1.4",
@@ -78,8 +79,8 @@ object Dependencies {
   }.map(_.exclude("org.asynchttpclient", "async-http-client"))
 
   lazy val fp = Seq(
-    "org.typelevel"       %% "cats-core"       % "1.1.0",
-    "org.typelevel"       %% "cats-mtl-core"       % "0.2.1",
+    ("org.typelevel"       %% "cats-core"       % "1.1.0").excludeAll(excludeScalaTest),
+    ("org.typelevel"       %% "cats-mtl-core"       % "0.2.1").excludeAll(excludeScalaTest),
     "io.github.amrhassan" %% "scalacheck-cats" % "0.4.0" % Test
   )
   lazy val meta        = Seq("com.chuusai" %% "shapeless" % "2.3.3")
@@ -91,7 +92,7 @@ object Dependencies {
   lazy val scodec      = Def.setting(Seq("org.scodec" %%% "scodec-core" % "1.10.3"))
   lazy val fastparse   = Def.setting(Seq(
     "com.lihaoyi" %%% "fastparse" % "1.0.0",
-    "org.bykn" %%% "fastparse-cats-core" % "0.1.0" exclude("org.scalatest", "scalatest")
+    ("org.bykn" %%% "fastparse-cats-core" % "0.1.0").excludeAll(excludeScalaTest)
   ))
   lazy val ficus       = Seq("com.iheart" %% "ficus" % "1.4.2")
   lazy val scorex      = Seq("org.scorexfoundation" %% "scrypto" % "2.0.4" excludeAll(
@@ -105,7 +106,7 @@ object Dependencies {
     "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0"
   )
   lazy val scalactic   = Seq("org.scalactic" %% "scalactic" % "3.1.4")
-  lazy val cats        = Seq("org.typelevel" %% "cats-core" % "1.1.0")
+  lazy val cats        = Seq(("org.typelevel" %% "cats-core" % "1.1.0").excludeAll(excludeScalaTest))
   lazy val scalacheck = Seq(
     "org.scalacheck"      %% "scalacheck"      % "1.13.5" % Test,
     "io.github.amrhassan" %% "scalacheck-cats" % "0.4.0" % Test
