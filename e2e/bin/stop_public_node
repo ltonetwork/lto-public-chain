@@ -2,5 +2,7 @@
 
 set -Cue -o pipefail
 
-docker stop lto_public_node_e2e
+test -f /tmp/docker.lto_public_node.cid || exit 0
+
+docker stop $(cat /tmp/docker.lto_public_node.cid)
 
