@@ -7,24 +7,26 @@ from lto.transactions.association import Association
 from lto.transactions.revoke_association import RevokeAssociation
 
 
-def association(context, user1, user2, type, hash="", version=None):
-    user1 = context.users[user1]
-    user2 = context.users[user2]
-    transaction = Association(user2.address, association_type=type, anchor=hash)
+def association(context, sender, recipient, type, hash="", version=None):
+    sender = context.users[sender]
+    recipient = context.users[recipient]
+    
+    transaction = Association(recipient.address, association_type=type, anchor=hash)
     transaction.version = version or Association.DEFAULT_VERSION
-    transaction.sign_with(user1)
+    transaction.sign_with(sender)
 
     broadcast(context, transaction)
 
 
-def is_associated(context, user1, user2):
-    user1 = context.users[user1]
-    user2 = context.users[user2]
+def is_associated(context, sender, recipient):
+    sender = context.users[sender]
+    recipient = context.users[recipient]
 
-    list_outgoing = NODE.wrapper(api='/associations/status/{}'.format(user1.address))['outgoing']
+    list_outgoing = NODE.wrapper(api='/associations/status/{}'.format(sender.address))['outgoing']
     ass_list = []
     for association in list_outgoing:
-        if 'revokeTransactionId' not in association and association['party'] == user2.address:
+        if 'revokeTransactionId' not in association and association['party'] == recipient.address:
+            association['sender'] = sender.address
             ass_list.append(association)
     return ass_list
 
@@ -54,7 +56,7 @@ def step_impl(context, sender, recipient, type):
     if is_associated(context, sender, recipient):
         funds_for_transaction(context, sender, lto.RevokeAssociation.DEFAULT_FEE)
         revoke_association(sender, recipient, type, hash)
-        assert revoke_association(context, sender, recipient, type), 'Failed to revoke association'
+        assert not is_associated(context, sender, recipient, type), 'Failed to revoke association'
 
 
 @when('{sender} issues an association with {recipient} of type {type:d}')
@@ -93,7 +95,7 @@ def step_impl(context, sender, recipient, type):
 @then('{sender} is associated with {recipient}')
 def step_impl(context, sender, recipient):
     value = is_associated(context, sender, recipient)
-    assert value, f'{sender} is not associated with{recipient}'
+    assert value, '{} is not associated with {}'.format(context.users[sender], context.users[recipient])
 
 
 @then('{sender} is not associated with {recipient}')

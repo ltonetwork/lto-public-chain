@@ -25,5 +25,5 @@ def step_impl(context):
 @when('wait {seconds} seconds')
 @then('wait')
 @then('wait {seconds} seconds')
-def wait(context, seconds=3):
+def wait(context, seconds=5):
     sleep(seconds)

@@ -38,6 +38,7 @@ Feature: Lease
   Scenario: Transfer fails because LTO intended for transfer is being leased
     Given Alice has 10 lto
     And Alice is leasing 5 lto to Bob
-    When Alice tries to transfer 5 lto to Bob
+    When Alice tries to transfer 6 lto to Bob
     Then the transaction fails
+    And Alice has 10 lto
 
