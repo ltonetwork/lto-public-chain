@@ -22,10 +22,10 @@ install:
   - sbt build
 
 before_script:
-  - pip install -r e2e/requirements.txt
+  - pip install -q -r e2e/requirements.txt
 script:
   - sbt -J-Xms128m -J-Xmx1248m -J-XX:+UseConcMarkSweepGC -J-XX:+CMSClassUnloadingEnabled -J"--add-opens=java.base/jdk.internal.ref=ALL-UNNAMED" checkPR
-  - behave
+  - behave -f plain --no-timings
 
 cache:
   directories:
