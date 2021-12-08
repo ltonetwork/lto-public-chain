@@ -82,11 +82,10 @@ inTask(assembly)(
     test := {},
     assemblyJarName := s"lto-public-all-${version.value}.jar",
     assemblyMergeStrategy := {
-      case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.concat
-      case PathList("META-INF", "aop.xml")                      => aopMerge
-      case PathList("META-INF", xs @ _*)                        => MergeStrategy.discard
-      case "module-info.class"                                  => MergeStrategy.discard
-      case other                                                => (assembly / assemblyMergeStrategy).value(other)
+      case PathList("META-INF", "io.netty.versions.properties")                     => MergeStrategy.concat
+      case PathList("META-INF", "aop.xml")                                          => aopMerge
+      case PathList(xs @ _*) if xs.lastOption.fold(false)(_ == "module-info.class") => MergeStrategy.discard
+      case other                                                                    => (assembly / assemblyMergeStrategy).value(other)
     }
   ))
 

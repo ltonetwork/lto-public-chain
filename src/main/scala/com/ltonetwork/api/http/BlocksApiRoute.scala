@@ -23,7 +23,7 @@ import scala.concurrent._
 import scala.util.Try
 
 @Path("/blocks")
-@Tag(name="blocks")
+@Tag(name = "blocks")
 case class BlocksApiRoute(settings: RestAPISettings,
                           blockchain: Blockchain,
                           allChannels: ChannelGroup,
@@ -381,9 +381,10 @@ case class BlocksApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Checkpoint message",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[com.ltonetwork.network.Checkpoint]),
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[com.ltonetwork.network.Checkpoint]),
+      )),
     required = true
   )
   @ApiResponses(

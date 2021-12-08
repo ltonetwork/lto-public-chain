@@ -36,7 +36,7 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 @Path("/debug")
-@Tag(name="debug")
+@Tag(name = "debug")
 case class DebugApiRoute(ws: LtoSettings,
                          wallet: Wallet,
                          ng: NG,
@@ -97,12 +97,14 @@ case class DebugApiRoute(ws: LtoSettings,
   )
   @RequestBody(
     description = "Json with data",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[com.ltonetwork.http.DebugMessage]),
-      examples = Array(new ExampleObject(
-        value = "{\n\t\"message\": \"foo\"\n}",
-      ))
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[com.ltonetwork.http.DebugMessage]),
+        examples = Array(
+          new ExampleObject(
+            value = "{\n\t\"message\": \"foo\"\n}",
+          ))
+      )),
     required = true
   )
   @ApiResponses(Array(new ApiResponse(responseCode = "200", description = "Json portfolio")))
@@ -202,12 +204,14 @@ case class DebugApiRoute(ws: LtoSettings,
   )
   @RequestBody(
     description = "Json with data",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[com.ltonetwork.http.RollbackParams]),
-      examples = Array(new ExampleObject(
-        value = "{\n\t\"rollbackTo\": 3,\n\t\"returnTransactionsToUTX\": false\n}",
-      ))
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[com.ltonetwork.http.RollbackParams]),
+        examples = Array(
+          new ExampleObject(
+            value = "{\n\t\"rollbackTo\": 3,\n\t\"returnTransactionsToUTX\": false\n}",
+          ))
+      )),
     required = true
   )
   @ApiResponses(
@@ -342,9 +346,10 @@ case class DebugApiRoute(ws: LtoSettings,
   )
   @RequestBody(
     description = "IP address of node",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String]),
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String]),
+      )),
     required = true
   )
   @ApiResponses(

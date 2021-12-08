@@ -28,7 +28,7 @@ import play.api.libs.json._
 import scala.util.{Failure, Success, Try}
 
 @Path("/addresses")
-@Tag(name="addresses")
+@Tag(name = "addresses")
 case class AddressApiRoute(settings: RestAPISettings,
                            wallet: Wallet,
                            blockchain: Blockchain,
@@ -92,12 +92,14 @@ case class AddressApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Json with data",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[com.ltonetwork.api.http.SignedMessage]),
-      examples = Array(new ExampleObject(
-        value = "{\n\t\"message\":\"Base58-encoded message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}"
-      ))
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[com.ltonetwork.api.http.SignedMessage]),
+        examples = Array(
+          new ExampleObject(
+            value = "{\n\t\"message\":\"Base58-encoded message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}"
+          ))
+      )),
     required = true
   )
   def verify: Route = {
@@ -124,12 +126,15 @@ case class AddressApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Json with data",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[com.ltonetwork.api.http.SignedMessage]),
-      examples = Array(new ExampleObject(
-        value = "{\n\t\"message\":\"Plain message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}",
-      ))
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[com.ltonetwork.api.http.SignedMessage]),
+        examples = Array(
+          new ExampleObject(
+            value =
+              "{\n\t\"message\":\"Plain message\",\n\t\"signature\":\"Base58-encoded signature\",\n\t\"publickey\":\"Base58-encoded public key\"\n}",
+          ))
+      )),
     required = true
   )
   def verifyText: Route = path("verifyText" / Segment) { address =>

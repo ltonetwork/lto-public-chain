@@ -1,5 +1,6 @@
 from lto.accounts.account_factory_ed25519 import AccountFactoryED25519 as AccountFactory
 from lto.public_node import PublicNode
+from lto.transactions.transfer import Transfer
 import polling
 import requests
 import hashlib
@@ -11,10 +12,6 @@ NODE = PublicNode(URL)
 ROOT_SEED = config.seed
 ROOT_ACCOUNT = AccountFactory(CHAIN_ID).create_from_seed(ROOT_SEED)
 
-
-# last_tx_success = None
-# transactions = []
-# users = {}
 
 
 def assert_equals(value1, value2):
@@ -31,10 +28,17 @@ def get_balance(address):
 
 def funds_for_transaction(context, user, tx_fee):
     account = context.users[user]
+    transaction = Transfer(account.address, tx_fee)
+    transaction.sign_with(ROOT_ACCOUNT)
+    broadcast(context, transaction)
+
+def minimum_balance(context, user, amount):
+    account = context.users[user]
     balance = get_balance(account.address)
-    if tx_fee > balance:
-        from e2e.steps.transfer import transfer_to
-        transfer_to(context, user, tx_fee - balance)
+    if balance < amount:
+        transaction = Transfer(account.address, amount - balance)
+        transaction.sign_with(ROOT_ACCOUNT)
+        broadcast(context, transaction)
 
 
 def poll_tx(context, id):

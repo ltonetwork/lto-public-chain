@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import java.nio.charset.StandardCharsets
 
 @Path("/wallet")
-@Tag(name="wallet")
+@Tag(name = "wallet")
 case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends ApiRoute {
 
   override lazy val route =
@@ -137,9 +137,10 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
   )
   @RequestBody(
     description = "Message to sign as a plain string",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String]),
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String]),
+      )),
     required = true
   )
   @ApiResponses(
@@ -174,16 +175,19 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
   )
   @RequestBody(
     description = "Message to sign as a plain string",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String]),
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String]),
+      )),
     required = true
   )
   @ApiResponses(
     Array(
       new ApiResponse(
         responseCode = "200",
-        description = "Json with error or json like {\"message\": \"plain text\",\"publickey\": \"Base58-encoded\", \"signature\": \"Base58-encoded\"}")
+        description =
+          "Json with error or json like {\"message\": \"plain text\",\"publickey\": \"Base58-encoded\", \"signature\": \"Base58-encoded\"}"
+      )
     ))
   def signText: Route = {
     path("signText" / Segment) { address =>
