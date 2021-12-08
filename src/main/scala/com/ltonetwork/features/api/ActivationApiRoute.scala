@@ -14,7 +14,7 @@ import com.ltonetwork.utils.ScorexLogging
 import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
 
 @Path("/activation")
-@Tag(name="activation")
+@Tag(name = "activation")
 case class ActivationApiRoute(settings: RestAPISettings,
                               functionalitySettings: FunctionalitySettings,
                               featuresSettings: FeaturesSettings,

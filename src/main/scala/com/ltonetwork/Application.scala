@@ -199,7 +199,7 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
       upnp.addPort(addr.getPort)
     }
 
-    implicit val as: ActorSystem                 = actorSystem
+    implicit val as: ActorSystem = actorSystem
 
     if (settings.restAPISettings.enable) {
       def loadBalanceHistory(address: Address): Seq[(Int, Long)] = db.readOnly { rdb =>
@@ -272,10 +272,10 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
       )
       val combinedRoute = CompositeHttpService(actorSystem, apiTypes, apiRoutes, settings.restAPISettings).loggingCompositeRoute
 
-      val httpFuture    =
+      val httpFuture =
         Http(actorSystem)
-        .newServerAt(settings.restAPISettings.bindAddress, settings.restAPISettings.port)
-        .bindFlow(combinedRoute)
+          .newServerAt(settings.restAPISettings.bindAddress, settings.restAPISettings.port)
+          .bindFlow(combinedRoute)
       serverBinding = Await.result(httpFuture, 20.seconds)
       log.info(s"REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
     }

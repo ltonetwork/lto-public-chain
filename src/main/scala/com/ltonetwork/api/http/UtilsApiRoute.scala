@@ -17,7 +17,7 @@ import play.api.libs.json.Json
 import com.ltonetwork.transaction.smart.script.{Script, ScriptCompiler}
 
 @Path("/utils")
-@Tag(name="utils")
+@Tag(name = "utils")
 case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends ApiRoute {
 
   import UtilsApiRoute._
@@ -39,9 +39,10 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   )
   @RequestBody(
     description = "Script code",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String]),
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String]),
+      )),
     required = true
   )
   @ApiResponses(
@@ -75,9 +76,10 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   )
   @RequestBody(
     description = "Compiled Base64 code",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String]),
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String]),
+      )),
     required = true
   )
   @ApiResponses(
@@ -86,7 +88,7 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
         responseCode = "200",
         description = "base64 or error"
       )
-  ))
+    ))
   def estimate: Route = path("script" / "estimate") {
     (post & entity(as[String])) { code =>
       complete(
@@ -135,9 +137,10 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   )
   @RequestBody(
     description = "Message to hash",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String]),
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String]),
+      )),
     required = true
   )
   @ApiResponses(
@@ -160,9 +163,10 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   )
   @RequestBody(
     description = "Message to hash",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String]),
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String]),
+      )),
     required = true
   )
   @ApiResponses(

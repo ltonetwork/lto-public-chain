@@ -30,7 +30,7 @@ import scala.util.Success
 import scala.util.control.Exception
 
 @Path("/transactions")
-@Tag(name="transactions")
+@Tag(name = "transactions")
 case class TransactionsApiRoute(settings: RestAPISettings,
                                 functionalitySettings: FunctionalitySettings,
                                 feesSettings: FeesSettings,
@@ -196,9 +196,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Transaction data including type and optional timestamp in milliseconds",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String]),
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String]),
+      )),
     required = true
   )
   def calculateFee: Route = (pathPrefix("calculateFee") & post) {
@@ -229,9 +230,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Transaction data including type and optional timestamp in milliseconds",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String])
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String])
+      )),
     required = true
   )
   def sign: Route = (pathPrefix("sign") & post & withAuth) {
@@ -262,9 +264,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Transaction data including type and optional timestamp in milliseconds",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String])
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String])
+      )),
     required = true
   )
   def signWithSigner: Route = pathPrefix(Segment) { signerAddress =>
@@ -289,9 +292,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Transaction data including type and optional timestamp in milliseconds",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String])
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String])
+      )),
     required = true
   )
   def sponsor: Route = (pathPrefix("sign") & post & withAuth) {
@@ -322,9 +326,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Transaction data including type and optional timestamp in milliseconds",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String])
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String])
+      )),
     required = true
   )
   def sponsorWithSigner: Route = pathPrefix(Segment) { signerAddress =>
@@ -349,9 +354,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Transaction data including type and signature",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String])
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String])
+      )),
     required = true
   )
   def broadcast: Route = (pathPrefix("broadcast") & post) {

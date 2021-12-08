@@ -20,7 +20,7 @@ import play.api.libs.json._
 import scala.collection.JavaConverters._
 
 @Path("/peers")
-@Tag(name="peers")
+@Tag(name = "peers")
 case class PeersApiRoute(settings: RestAPISettings,
                          connectToPeer: InetSocketAddress => Unit,
                          peerDatabase: PeerDatabase,
@@ -94,12 +94,14 @@ case class PeersApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Json with data",
-    content = Array(new Content(
-      schema = new Schema(implementation = classOf[String]),
-      examples = Array(new ExampleObject(
-        value = "{\n\t\"host\":\"127.0.0.1\",\n\t\"port\":\"9084\"\n}"
-      ))
-    )),
+    content = Array(
+      new Content(
+        schema = new Schema(implementation = classOf[String]),
+        examples = Array(
+          new ExampleObject(
+            value = "{\n\t\"host\":\"127.0.0.1\",\n\t\"port\":\"9084\"\n}"
+          ))
+      )),
     required = true
   )
   def connect: Route = (path("connect") & post & withAuth) {

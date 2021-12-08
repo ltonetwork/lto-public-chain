@@ -9,8 +9,7 @@ import io.swagger.v3.oas.models.servers.Server
 import io.swagger.v3.oas.models.{Components, OpenAPI}
 import io.swagger.v3.oas.models.security.SecurityScheme
 
-class SwaggerDocService(val actorSystem: ActorSystem, val apiClasses: Set[Class[_]], settings: RestAPISettings)
-    extends SwaggerHttpService {
+class SwaggerDocService(val actorSystem: ActorSystem, val apiClasses: Set[Class[_]], settings: RestAPISettings) extends SwaggerHttpService {
 
   override val host: String = settings.bindAddress + ":" + settings.port
 
