@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[[ "$DOCKER_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit
+[[ "$DOCKER_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 0
 
 MINOR_VERSION="${DOCKER_TAG%.*}"
 docker tag $IMAGE_NAME $DOCKER_REPO:$MINOR_VERSION
