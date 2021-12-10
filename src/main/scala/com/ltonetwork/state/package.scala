@@ -47,8 +47,11 @@ package object state {
   }
 
   implicit class BlockchainExt(blockchain: Blockchain) extends ScorexLogging {
-    def assocExists(tx: AssociationTransaction): Boolean =
-      blockchain.associations(tx.sender).outgoing.map(_._2).exists(as => tx.assoc == as.assoc)
+    def assocExists(tx: AssociationTransaction): Boolean = {
+      blockchain.associations(tx.sender).outgoing.map(_._2).exists(as => tx.assoc == as.assoc) &&
+      // https://github.com/ltonetwork/lto-public-chain/issues/111
+      blockchain.associations(tx.sender).outgoing.map(_._2).maxBy(_.timestamp).typeId == 16
+    }
 
     def isEmpty: Boolean = blockchain.height == 0
 

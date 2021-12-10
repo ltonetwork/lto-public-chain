@@ -41,13 +41,11 @@ Feature: Association
     When Alice tries to revoke an association with Bob of type 1
     Then The transaction fails
 
-  @skip
-  # https://github.com/ltonetwork/lto-public-chain/issues/103
   Scenario: Reissue a revoked association
     Given Alice has an association with Bob of type 5
     And Alice has 10 lto
     When Alice revokes the association with Bob of type 5
-    And Alice tries to issues an association with Bob of type 5
+    And Alice tries to issue an association with Bob of type 5
     Then Alice has 8 lto
     And Alice is not associated with Bob
     
