@@ -28,10 +28,10 @@ trait ApiRoute extends Directives with CommonApiFunctions with ApiMarshallers {
   }
 
   def withAuth: Directive0 = apiKeyHash.fold[Directive0](complete(ApiKeyNotValid)) { hashFromSettings =>
-    optionalHeaderValueByType[api_key](()).flatMap {
+    optionalHeaderValueByType(api_key).flatMap {
       case Some(k) if crypto.secureHash(k.value.getBytes()).sameElements(hashFromSettings) => pass
       case _ =>
-        optionalHeaderValueByType[deprecated_api_key](()).flatMap {
+        optionalHeaderValueByType(deprecated_api_key).flatMap {
           case Some(k) if crypto.secureHash(k.value.getBytes()).sameElements(hashFromSettings) => pass
           case _                                                                               => complete(ApiKeyNotValid)
         }

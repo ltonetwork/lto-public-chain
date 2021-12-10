@@ -221,7 +221,7 @@ lazy val lang =
           Dependencies.fp ++
           Dependencies.scalacheck ++
           Dependencies.scorex ++
-          Dependencies.scalatest.map(_ % "test") ++
+          Dependencies.scalatest ++
           Dependencies.scalactic ++
           Dependencies.monix.value ++
           Dependencies.scodec.value ++
@@ -253,7 +253,7 @@ lazy val node = project
         Dependencies.http ++
         Dependencies.akka ++
         Dependencies.serialization ++
-        Dependencies.testKit.map(_ % "test") ++
+        Dependencies.testKit ++
         Dependencies.logging ++
         Dependencies.matcher ++
         Dependencies.metrics ++
