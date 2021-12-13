@@ -6,7 +6,6 @@ import sbt.internal.inc.ReflectUtilities
 import sbtassembly.MergeStrategy
 
 enablePlugins(JavaServerAppPackaging, JDebPackaging, SystemdPlugin, GitVersioning)
-ThisBuild / scalafmtOnCompile := true
 
 val versionSource = Def.task {
   val versionFile      = (Compile / sourceManaged).value / "com" / "ltonetwork" / "Version.scala"
