@@ -21,8 +21,8 @@ class BlacklistSpecification extends AnyFeatureSpec with GivenWhenThen {
   info("I want to blacklist other peers for certain time")
   info("So I can give them another chance after")
 
-  feature("Blacklist") {
-    scenario("Peer blacklist another peer") {
+  Feature("Blacklist") {
+    Scenario("Peer blacklist another peer") {
 
       Given("Peer database is empty")
       val peerDatabase = new PeerDatabaseImpl(networkSettings)

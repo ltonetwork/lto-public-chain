@@ -22,7 +22,7 @@ class BlacklistParallelSpecification extends AnyFeatureSpec with GivenWhenThen w
   info("I want to blacklist other peers for certain time")
   info("So I can give them another chance after")
 
-  feature("Blacklist") {
+  Feature("Blacklist") {
 
     val peerDatabase = new PeerDatabaseImpl(networkSettings)
 
@@ -36,7 +36,7 @@ class BlacklistParallelSpecification extends AnyFeatureSpec with GivenWhenThen w
     def isBlacklisted(address: InetSocketAddress): Boolean =
       peerDatabase.blacklistedHosts.contains(address.getAddress)
 
-    scenario("Peer blacklist another peer") {
+    Scenario("Peer blacklist another peer") {
 
       Given("Peer database is empty")
       assert(peerDatabase.knownPeers.isEmpty)
@@ -66,7 +66,7 @@ class BlacklistParallelSpecification extends AnyFeatureSpec with GivenWhenThen w
       assert(peerDatabase.knownPeers.contains(address1))
     }
 
-    scenario("Peer blacklist few peers") {
+    Scenario("Peer blacklist few peers") {
 
       Given("Peer database is empty")
       assert(peerDatabase.knownPeers.isEmpty)
