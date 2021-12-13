@@ -265,14 +265,3 @@ lazy val node = project
         Dependencies.monix.value
   )
   .dependsOn(langJVM)
-
-lazy val it = project
-  .dependsOn(node)
-
-lazy val generator = project
-  .dependsOn(it)
-  .settings(libraryDependencies += "com.github.scopt" %% "scopt" % "3.6.0")
-
-lazy val benchmark = project
-  .enablePlugins(JmhPlugin)
-  .dependsOn(node % "compile->compile;test->test", langJVM % "compile->compile;test->test")
