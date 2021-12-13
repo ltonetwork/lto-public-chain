@@ -196,14 +196,13 @@ def allProjects: List[ProjectReference] = ReflectUtilities.allVals[Project](this
   p: ProjectReference
 }
 
-addCommandAlias("checkPR", """; Global / checkPRRaw""")
-lazy val checkPRRaw = taskKey[Unit]("Build a project and run unit tests")
-checkPRRaw in Global := {
+addCommandAlias("testAll", """; Global / testAllRaw""")
+lazy val testAllRaw = taskKey[Unit]("Build a project and run unit tests")
+testAllRaw in Global := {
   try {
     clean.all(ScopeFilter(inProjects(allProjects: _*), inConfigurations(Compile))).value
   } finally {
     test.all(ScopeFilter(inProjects(langJVM, node), inConfigurations(Test))).value
-    compile.all(ScopeFilter(inProjects(generator, benchmark), inConfigurations(Test))).value
   }
 }
 
