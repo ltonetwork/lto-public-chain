@@ -8,6 +8,7 @@ import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
+import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.transfer._
 
 object RealTransactionWrapper {
@@ -52,6 +53,7 @@ object RealTransactionWrapper {
         )
       case ss: SetScriptTransaction => Tx.SetScript(proven(ss), ss.script.map(_.bytes()).map(toByteVector))
       case a: AnchorTransaction     => Tx.Anchor(proven(a))
+      case r: RegisterTransaction   => Tx.Register(proven(r), r.keys.map(k => com.ltonetwork.lang.v1.traits.PublicKey(ByteVector(k.publicKey))).toIndexedSeq)
     }
   }
 }

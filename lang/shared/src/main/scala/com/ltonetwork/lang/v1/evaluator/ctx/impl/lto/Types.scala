@@ -83,6 +83,7 @@ object Types {
     ) ++ header ++ proven
   )
   val anchorTransactionType    = CaseType("AnchorTransaction", List() ++ header ++ proven)
+  val registerTransactionType  = CaseType("RegisterTransaction", List() ++ header ++ proven)
   val obsoleteTransactionTypes = List(genesisTransactionType)
 
   val activeTransactionTypes = List(
@@ -91,7 +92,8 @@ object Types {
     leaseCancelTransactionType,
     massTransferTransactionType,
     setScriptTransactionType,
-    anchorTransactionType
+    anchorTransactionType,
+    registerTransactionType
   )
 
   val transactionTypes = obsoleteTransactionTypes ++ activeTransactionTypes
