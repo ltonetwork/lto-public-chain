@@ -22,12 +22,8 @@ before_install:
 before_script:
   - pip install -q -r e2e/requirements.txt
 script:
-<<<<<<< HEAD
   - sbt testAll
-=======
-  - sbt test
   - sbt build
->>>>>>> aaed25fc2... Travis do GitHub release on new tag.
   - behave -f plain --no-timings
 
 before_deploy:
