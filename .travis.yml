@@ -18,7 +18,7 @@ scala: 2.12.9
 before_install:
   - unset _JAVA_OPTIONS
   - unset SBT_OPTS
-  - export JAVA_TOOL_OPTIONS="-Xmx1548m"
+  - unset JAVA_TOOL_OPTIONS
 
 before_script:
   - pip install -q -r e2e/requirements.txt
