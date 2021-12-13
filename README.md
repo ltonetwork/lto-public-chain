@@ -1,7 +1,7 @@
 ![github-banner](https://user-images.githubusercontent.com/100821/108692834-6a115200-74fd-11eb-92df-ee07bf62b386.png)
 
 # Public Chain 
-In the `master` branch there is a code with functions that is under development. The latest release for each network can be found in the [Releases section], you can switch to the corresponding tag and build the application.
+In the `master` branch there is a code with functions that is under development. The latest release for each network can be found in the [Releases section](https://github.com/ltonetwork/lto-public-chain/releases), you can switch to the corresponding tag and build the application.
 
 To build the node localy, run
 ```
@@ -67,7 +67,7 @@ docker run -p 6869:6869 -p 6863:6863 -e LTO_NETWORK=TESTNET -e LTO_HEAP_SIZE=2g 
 ## Unit tests
 
 ```
-sbt checkPR
+sbt test
 ```
 
 ## End-to-end tests
