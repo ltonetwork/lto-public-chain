@@ -17,6 +17,7 @@ import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAsso
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
+import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
@@ -24,6 +25,7 @@ import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, Spo
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.{MaxTransferCount, ParsedTransfer}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.TimeImpl
+import org.scalacheck.rng.Seed
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{BeforeAndAfterAll, Suite}
 import org.scalatest.prop.TableDrivenPropertyChecks._
@@ -69,6 +71,9 @@ trait TransactionGenBase extends ScriptGen {
 
   def accountGen(keyType: KeyType): Gen[PrivateKeyAccount] = bytes32gen.map(seed => PrivateKeyAccount(seed, keyType))
   def accountGen(): Gen[PrivateKeyAccount]                 = accountGen(ED25519)
+
+  def accountGenRandom(): Gen[PrivateKeyAccount] =
+    accountGen(Gen.oneOf(KeyTypes.all).pureApply(Gen.Parameters.default, Seed.random(), 100))
 
   val addressGen: Gen[Address] = accountGen.map(PublicKeyAccount.toAddress(_))
 
@@ -449,4 +454,17 @@ trait TransactionGenBase extends ScriptGen {
       fee       <- smallFeeGen
       sponsor   <- sponsorGen(version)
     } yield CancelSponsorshipTransaction.signed(version, timestamp, sender, fee, recipient).sponsorWith(sponsor).explicitGet()
+
+  def registerTransactionGen: Gen[RegisterTransaction]                = versionGen(RegisterTransaction).flatMap(registerTransactionGen)
+  def registerTransactionGen(version: Byte): Gen[RegisterTransaction] = registerTransactionGen(version, ED25519)
+  def registerTransactionGen(version: Byte, keyType: KeyType): Gen[RegisterTransaction] =
+    for {
+      sender    <- accountGen(keyType)
+      timestamp <- timestampGen
+      size      <- Gen.chooseNum(1, RegisterTransaction.MaxEntryCount)
+      data      <- Gen.containerOfN[Array, PublicKeyAccount](size, accountGenRandom())
+      sponsor   <- sponsorGen(version)
+      fee     = 15000000
+      keys = data.toList
+    } yield RegisterTransaction.signed(version, timestamp, sender, fee, keys).sponsorWith(sponsor).explicitGet()
 }
