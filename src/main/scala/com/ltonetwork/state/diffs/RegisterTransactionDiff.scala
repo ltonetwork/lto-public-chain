@@ -10,7 +10,7 @@ import com.ltonetwork.transaction.register.RegisterTransaction
 object RegisterTransactionDiff {
   def apply(blockchain: Blockchain, height: Int)(tx: RegisterTransaction): Either[ValidationError, Diff] = {
     (
-      if (blockchain.isFeatureActivated(BlockchainFeatures.Cobalt, height))
+      if (blockchain.isFeatureActivated(BlockchainFeatures.CobaltAlloy, height))
         for {
           _ <- Either.cond(tx.keys.forall(k => k.publicKey.length == k.keyType.length), (), GenericError("Invalid key length on one or more of the provided keys"))
           _ <- Either.cond(tx.keys.lengthCompare(RegisterTransaction.MaxEntryCount) <= 0, (), GenericError(s"Keys count should be <= $RegisterTransaction.MaxEntryCount"))
