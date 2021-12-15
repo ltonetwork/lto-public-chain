@@ -29,7 +29,7 @@ case class RegisterTransaction private (version: Byte,
 
 object RegisterTransaction extends TransactionBuilder.For[RegisterTransaction] {
 
-  override val typeId: Byte                 = 17
+  override val typeId: Byte                 = 20
   override val supportedVersions: Set[Byte] = Set(3)
 
   val MaxEntryCount: Int = 100
