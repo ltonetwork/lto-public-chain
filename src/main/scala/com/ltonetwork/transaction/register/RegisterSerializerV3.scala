@@ -1,8 +1,7 @@
 package com.ltonetwork.transaction.register
 
-import com.google.common.primitives.{Bytes, Longs}
+import com.google.common.primitives.{Bytes, Longs, Shorts}
 import com.ltonetwork.serialization._
-import com.ltonetwork.state._
 import com.ltonetwork.transaction.register.RegisterTransaction.create
 import com.ltonetwork.transaction.{TransactionParser, TransactionSerializer}
 
@@ -20,7 +19,8 @@ object RegisterSerializerV3 extends TransactionSerializer.For[RegisterTransactio
       Longs.toByteArray(timestamp),
       Deser.serializeAccount(sender),
       Longs.toByteArray(fee),
-      Deser.serializeArrays(keys.map(k => Deser.serializeAccount(k))),
+      Shorts.toByteArray(keys.length.toShort),
+      Deser.serializeArraysWithoutLength(keys.map(k => Deser.serializeAccount(k))),
     )
   }
 
