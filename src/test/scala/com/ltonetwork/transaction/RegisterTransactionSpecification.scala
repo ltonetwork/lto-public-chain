@@ -13,7 +13,12 @@ import org.scalatest.propspec.AnyPropSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.Json
 
-class RegisterTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
+class RegisterTransactionSpecification
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
+    with TableDrivenPropertyChecks
+    with Matchers
+    with TransactionGen {
 
   private def checkSerialization(tx: RegisterTransaction): Assertion = {
     val tryParse = RegisterTransaction.parseBytes(tx.bytes())
@@ -66,24 +71,27 @@ class RegisterTransactionSpecification extends AnyPropSpec with ScalaCheckDriven
 
       req.keys zip tx.keys foreach {
         case (re, te) =>
-          re shouldEqual te
+          re.keyType shouldEqual te.toKey._1.toString
+          re.publicKey shouldEqual te.toKey._2
       }
     }
   }
 
-  //TODO: Will fail, get correct proof.
   property(testName = "JSON format validation") {
     val js = Json.parse("""{
                        "type": 20,
                        "version": 3,
-                       "id": "Aa5LusYsEDYVkWozd1BYRLVqbwWeJid3xiBrd2KetM5j",
+                       "id": "DB23XJSkkSLEjZtp8Q8VjjYUuxRQgdYGtd2E2x2smVt4",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
                        "timestamp": 1526911531530,
                        "keys": [
-                         "D6HmGZqpXCyAqpz8mCAfWijYDWsPKncKe5v3jq1nTpf5"
+                         {
+                           "keyType": "ed25519",
+                           "publicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z"
+                         }
                        ],
                        "proofs": [
                          "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
@@ -91,8 +99,8 @@ class RegisterTransactionSpecification extends AnyPropSpec with ScalaCheckDriven
                        }
   """)
 
-    val key = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet()
-    val proof  = ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get
+    val key   = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet()
+    val proof = ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get
 
     val tx = RegisterTransaction
       .create(
@@ -110,12 +118,11 @@ class RegisterTransactionSpecification extends AnyPropSpec with ScalaCheckDriven
     tx.json() shouldEqual js
   }
 
-  //TODO: Will fail, get correct proof.
   property(testName = "JSON format validation for sponsored tx") {
     val js = Json.parse("""{
                        "type": 20,
                        "version": 3,
-                       "id": "DoQgKL1vp9sHgwJv3BU4FqbJVKbLHd76pnnCT5LZRin1",
+                       "id": "DB23XJSkkSLEjZtp8Q8VjjYUuxRQgdYGtd2E2x2smVt4",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
@@ -125,7 +132,10 @@ class RegisterTransactionSpecification extends AnyPropSpec with ScalaCheckDriven
                        "fee": 100000,
                        "timestamp": 1526911531530,
                        "keys": [
-                         "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z"
+                         {
+                           "keyType": "ed25519",
+                           "publicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z"
+                         }
                        ],
                        "proofs": [
                          "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94",
