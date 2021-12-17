@@ -18,6 +18,8 @@ trait PublicKeyAccount {
 
   override lazy val toString: String = this.toAddress.address
 
+  def toKey: (KeyType, String) = (keyType, Base58.encode(publicKey))
+
   def verify(signature: Array[Byte], message: Array[Byte]): Boolean = crypto.verify(signature, message, this)
 }
 
