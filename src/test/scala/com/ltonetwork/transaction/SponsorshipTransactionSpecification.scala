@@ -15,7 +15,12 @@ import play.api.libs.json.Json
 
 import scala.util.Try
 
-class SponsorshipTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
+class SponsorshipTransactionSpecification
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
+    with TableDrivenPropertyChecks
+    with Matchers
+    with TransactionGen {
 
   private def checkSerialization(tx: SponsorshipTransactionBase, parser: Array[Byte] => Try[SponsorshipTransactionBase]): Assertion = {
     val parsed = parser(tx.bytes()).get

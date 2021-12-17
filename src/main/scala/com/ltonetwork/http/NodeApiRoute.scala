@@ -1,17 +1,18 @@
 package com.ltonetwork.http
 
-import java.time.Instant
 import akka.http.scaladsl.server.Route
 import com.ltonetwork.Shutdownable
+import com.ltonetwork.api.http.{ApiRoute, CommonApiFunctions}
 import com.ltonetwork.settings.{Constants, RestAPISettings}
 import com.ltonetwork.state.Blockchain
-import jakarta.ws.rs.{GET, POST, Path}
+import com.ltonetwork.utils.ScorexLogging
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.{GET, POST, Path}
 import play.api.libs.json.Json
-import com.ltonetwork.api.http.{ApiRoute, CommonApiFunctions}
-import com.ltonetwork.utils.ScorexLogging
+
+import java.time.Instant
 
 @Path("/node")
 @Tag(name = "node")

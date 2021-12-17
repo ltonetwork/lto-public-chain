@@ -1,11 +1,10 @@
 package com.ltonetwork.network
 
-import java.net.InetSocketAddress
-
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter}
 
+import java.net.InetSocketAddress
 import scala.concurrent.duration.FiniteDuration
 
 class PeerSynchronizer(peerDatabase: PeerDatabase, peerRequestInterval: FiniteDuration) extends ChannelInboundHandlerAdapter with ScorexLogging {

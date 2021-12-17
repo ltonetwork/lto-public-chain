@@ -1,8 +1,5 @@
 package com.ltonetwork.network
 
-import java.net.{InetAddress, InetSocketAddress}
-import java.util.concurrent.TimeUnit
-
 import com.google.common.cache.CacheBuilder
 import com.google.common.collect.EvictingQueue
 import com.ltonetwork.settings.NetworkSettings
@@ -10,6 +7,8 @@ import com.ltonetwork.utils.{JsonFileStorage, ScorexLogging}
 import io.netty.channel.Channel
 import io.netty.channel.socket.nio.NioSocketChannel
 
+import java.net.{InetAddress, InetSocketAddress}
+import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 import scala.collection._
 import scala.concurrent.duration.FiniteDuration

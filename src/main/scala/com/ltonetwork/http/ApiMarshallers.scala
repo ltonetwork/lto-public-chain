@@ -1,15 +1,16 @@
 package com.ltonetwork.http
 
-import scala.util.control.Exception.nonFatalCatch
-import scala.util.control.NoStackTrace
 import akka.http.scaladsl.marshalling.{Marshaller, PredefinedToEntityMarshallers, ToEntityMarshaller, ToResponseMarshaller}
 import akka.http.scaladsl.model.MediaTypes.{`application/json`, `text/plain`}
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, PredefinedFromEntityUnmarshallers, Unmarshaller}
 import akka.util.ByteString
-import play.api.libs.json._
 import com.ltonetwork.api.http.ApiError
 import com.ltonetwork.transaction.{Transaction, ValidationError}
+import play.api.libs.json._
+
+import scala.util.control.Exception.nonFatalCatch
+import scala.util.control.NoStackTrace
 
 case class PlayJsonException(cause: Option[Throwable] = None, errors: Seq[(JsPath, Seq[JsonValidationError])] = Seq.empty)
     extends IllegalArgumentException

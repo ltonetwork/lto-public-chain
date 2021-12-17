@@ -1,7 +1,5 @@
 package com.ltonetwork.lang.v1.evaluator.ctx.impl
 
-import java.nio.charset.StandardCharsets
-
 import cats.data.EitherT
 import com.ltonetwork.lang.v1.CTX
 import com.ltonetwork.lang.v1.compiler.Terms._
@@ -13,6 +11,7 @@ import com.ltonetwork.lang.v1.parser.BinaryOperation
 import com.ltonetwork.lang.v1.parser.BinaryOperation._
 import scodec.bits.ByteVector
 
+import java.nio.charset.StandardCharsets
 import scala.util.Try
 
 object PureContext {

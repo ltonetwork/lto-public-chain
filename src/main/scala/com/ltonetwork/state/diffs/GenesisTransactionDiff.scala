@@ -1,8 +1,8 @@
 package com.ltonetwork.state.diffs
 
-import com.ltonetwork.state.{Diff, LeaseBalance, Portfolio}
-import com.ltonetwork.transaction.ValidationError.GenericError
+import com.ltonetwork.state.{Diff, Portfolio}
 import com.ltonetwork.transaction.ValidationError
+import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 
 import scala.util.{Left, Right}

@@ -1,26 +1,24 @@
 package com.ltonetwork.api.http
 
-import java.security.SecureRandom
-
 import akka.http.scaladsl.server.Route
 import com.ltonetwork.crypto
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.state.diffs.CommonValidation
+import com.ltonetwork.transaction.smart.script.{Script, ScriptCompiler}
 import com.ltonetwork.utils.{Base58, Time}
-import jakarta.ws.rs.{GET, POST, Path}
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.{Content, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.{GET, POST, Path}
 import play.api.libs.json.Json
-import com.ltonetwork.transaction.smart.script.{Script, ScriptCompiler}
+
+import java.security.SecureRandom
 
 @Path("/utils")
 @Tag(name = "utils")
 case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends ApiRoute {
-
-  import UtilsApiRoute._
 
   private def seed(length: Int) = {
     val seed = new Array[Byte](length)

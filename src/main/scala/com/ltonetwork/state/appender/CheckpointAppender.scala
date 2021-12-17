@@ -3,13 +3,13 @@ package com.ltonetwork.state.appender
 import com.ltonetwork.mining.Miner
 import com.ltonetwork.network.{BlockCheckpoint, Checkpoint, PeerDatabase, id}
 import com.ltonetwork.state.{Blockchain, ByteStr}
+import com.ltonetwork.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel.Channel
 import io.netty.channel.group.ChannelGroup
 import kamon.Kamon
 import monix.eval.Task
 import monix.execution.Scheduler
-import com.ltonetwork.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
 
 object CheckpointAppender extends ScorexLogging {
   def apply(checkpointService: CheckpointService,

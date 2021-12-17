@@ -1,7 +1,5 @@
 package com.ltonetwork.wallet
 
-import java.io.File
-
 import com.google.common.primitives.{Bytes, Ints}
 import com.ltonetwork.account.{Address, PrivateKeyAccount}
 import com.ltonetwork.crypto
@@ -12,6 +10,7 @@ import com.ltonetwork.transaction.ValidationError.{AccountBasedWallet, MissingSe
 import com.ltonetwork.utils.{JsonFileStorage, randomBytes, _}
 import play.api.libs.json._
 
+import java.io.File
 import scala.collection.concurrent.TrieMap
 import scala.util.control.NonFatal
 

@@ -1,7 +1,6 @@
 package com.ltonetwork.account
 
 import scala.util.{Failure, Success, Try}
-import scala.util.control.Exception.allCatch
 
 case class KeyType private (id: Byte, length: Short, reference: String) {
   override def toString: String = reference

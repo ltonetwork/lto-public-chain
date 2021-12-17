@@ -14,7 +14,12 @@ import com.ltonetwork.state.diffs._
 import com.ltonetwork.utils.Base58
 import org.scalacheck.Gen
 
-class TransferTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
+class TransferTransactionSpecification
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
+    with TableDrivenPropertyChecks
+    with Matchers
+    with TransactionGen {
 
   private def checkSerialization(tx: TransferTransaction): Assertion = {
     val recovered = TransferTransaction.parseBytes(tx.bytes()).get

@@ -1,11 +1,11 @@
 package com.ltonetwork.lang
 
+import com.ltonetwork.lang.Common._
+import com.ltonetwork.lang.v1.compiler.TypeInferrer
 import com.ltonetwork.lang.v1.compiler.Types._
+import com.ltonetwork.lang.v1.evaluator.ctx.CaseType
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
-import Common._
-import com.ltonetwork.lang.v1.compiler.TypeInferrer
-import com.ltonetwork.lang.v1.evaluator.ctx.CaseType
 
 class TypeInferrerTest extends AnyFreeSpec with Matchers {
 

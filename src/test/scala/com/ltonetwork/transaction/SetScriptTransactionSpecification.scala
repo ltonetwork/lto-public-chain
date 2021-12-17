@@ -13,7 +13,12 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import play.api.libs.json.Json
 
-class SetScriptTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
+class SetScriptTransactionSpecification
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
+    with TableDrivenPropertyChecks
+    with Matchers
+    with TransactionGen {
   property("serialization roundtrip versions") {
     forEvery(versionTable(SetScriptTransaction)) { version =>
       forAll(setScriptTransactionGen(version)) { tx: SetScriptTransaction =>

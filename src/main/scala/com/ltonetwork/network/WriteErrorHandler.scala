@@ -1,10 +1,10 @@
 package com.ltonetwork.network
 
-import java.nio.channels.ClosedChannelException
-
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel._
+
+import java.nio.channels.ClosedChannelException
 
 @Sharable
 class WriteErrorHandler extends ChannelOutboundHandlerAdapter with ScorexLogging {

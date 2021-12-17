@@ -13,9 +13,9 @@ import com.ltonetwork.lang.v1.evaluator.ctx.impl.lto.Types.transferTransactionTy
 import com.ltonetwork.lang.v1.parser.Parser
 import com.ltonetwork.lang.v1.testing.ScriptGen
 import monix.eval.Coeval
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.scalatest.propspec.AnyPropSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class ScriptEstimatorTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with ScriptGen with NoShrink {
   val Plus  = FunctionHeader.Native(SUM_LONG)

@@ -1,11 +1,10 @@
 package com.ltonetwork.network
 
-import java.io.IOException
-
 import com.ltonetwork.utils.{ScorexLogging, forceStopApplication}
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter}
 
+import java.io.IOException
 import scala.util.control.NonFatal
 @Sharable
 class FatalErrorHandler extends ChannelInboundHandlerAdapter with ScorexLogging {

@@ -1,9 +1,13 @@
 package com.ltonetwork.network
 
+import com.ltonetwork.block.Block
+import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.network.RxExtensionLoader.ApplierState.Buffer
 import com.ltonetwork.network.RxExtensionLoader.LoaderState.WithPeer
 import com.ltonetwork.network.RxScoreObserver.{ChannelClosedAndSyncWith, SyncWith}
 import com.ltonetwork.state.ByteStr
+import com.ltonetwork.transaction.ValidationError
+import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel._
 import monix.eval.{Coeval, Task}
@@ -11,10 +15,6 @@ import monix.execution.CancelableFuture
 import monix.execution.schedulers.SchedulerService
 import monix.reactive.subjects.{ConcurrentSubject, Subject}
 import monix.reactive.{Observable, Observer}
-import com.ltonetwork.block.Block
-import com.ltonetwork.block.Block.BlockId
-import com.ltonetwork.transaction.ValidationError
-import com.ltonetwork.transaction.ValidationError.GenericError
 
 import scala.concurrent.duration._
 

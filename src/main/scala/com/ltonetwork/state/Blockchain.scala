@@ -4,10 +4,10 @@ import com.ltonetwork.account.Address
 import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.block.{Block, BlockHeader}
 import com.ltonetwork.state.reader.LeaseDetails
-import com.ltonetwork.transaction.lease.LeaseTransaction
-import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.Transaction
 import com.ltonetwork.transaction.association.AssociationTransaction
+import com.ltonetwork.transaction.lease.LeaseTransaction
+import com.ltonetwork.transaction.smart.script.Script
 
 trait Blockchain {
 

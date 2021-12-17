@@ -1,10 +1,9 @@
 package com.ltonetwork
 
-import java.net.{InetSocketAddress, SocketAddress, URI}
-import java.util.concurrent.Callable
-
 import cats.Eq
+import com.ltonetwork.block.Block
 import com.ltonetwork.state.ByteStr
+import com.ltonetwork.transaction.Transaction
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel.group.{ChannelGroup, ChannelGroupFuture, ChannelMatcher}
 import io.netty.channel.local.LocalAddress
@@ -15,9 +14,9 @@ import io.netty.util.concurrent.{EventExecutorGroup, ScheduledFuture}
 import monix.eval.Coeval
 import monix.execution.Scheduler
 import monix.reactive.Observable
-import com.ltonetwork.block.Block
-import com.ltonetwork.transaction.Transaction
 
+import java.net.{InetSocketAddress, SocketAddress, URI}
+import java.util.concurrent.Callable
 import scala.concurrent.duration._
 
 package object network extends ScorexLogging {

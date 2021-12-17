@@ -1,7 +1,7 @@
 package com.ltonetwork.api.http.requests
 
-import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.account.KeyTypes.keyType
+import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.transaction.ValidationError.{GenericError, InvalidPublicKey}
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}

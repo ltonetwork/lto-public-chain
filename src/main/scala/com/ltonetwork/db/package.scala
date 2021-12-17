@@ -1,10 +1,10 @@
 package com.ltonetwork
 
-import java.io.File
-
+import com.ltonetwork.database.ReadOnlyDB
 import com.ltonetwork.utils.ScorexLogging
-import com.ltonetwork.database.{ReadOnlyDB, RW}
 import org.iq80.leveldb.{DB, Options, ReadOptions}
+
+import java.io.File
 
 package object db extends ScorexLogging {
 

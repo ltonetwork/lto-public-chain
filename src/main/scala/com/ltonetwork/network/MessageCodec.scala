@@ -1,12 +1,11 @@
 package com.ltonetwork.network
 
-import java.util
-
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.MessageToMessageCodec
 
+import java.util
 import scala.util.{Failure, Success}
 
 @Sharable

@@ -1,11 +1,14 @@
 package com.ltonetwork.state.appender
 
+import com.ltonetwork.block.Block
 import com.ltonetwork.consensus.PoSSelector
 import com.ltonetwork.metrics.{BlockStats, Instrumented, Metrics}
 import com.ltonetwork.mining.Miner
 import com.ltonetwork.network.{InvalidBlockStorage, PeerDatabase, formatBlocks, id}
 import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state._
+import com.ltonetwork.transaction.ValidationError.GenericError
+import com.ltonetwork.transaction._
 import com.ltonetwork.utils.{ScorexLogging, Time}
 import com.ltonetwork.utx.UtxPool
 import io.netty.channel.Channel
@@ -13,9 +16,6 @@ import io.netty.channel.group.ChannelGroup
 import monix.eval.{Coeval, Task}
 import monix.execution.Scheduler
 import org.influxdb.dto.Point
-import com.ltonetwork.block.Block
-import com.ltonetwork.transaction.ValidationError.GenericError
-import com.ltonetwork.transaction._
 
 import scala.util.{Left, Right}
 

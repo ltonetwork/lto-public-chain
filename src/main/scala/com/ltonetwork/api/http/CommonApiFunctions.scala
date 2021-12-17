@@ -1,8 +1,8 @@
 package com.ltonetwork.api.http
 
 import akka.http.scaladsl.server.Directive1
-import com.ltonetwork.state.{Blockchain, ByteStr}
 import com.ltonetwork.block.Block
+import com.ltonetwork.state.{Blockchain, ByteStr}
 import com.ltonetwork.transaction.TransactionBuilders
 
 trait CommonApiFunctions { this: ApiRoute =>

@@ -1,11 +1,11 @@
 package com.ltonetwork.network
 
+import com.ltonetwork.block.Block
+import com.ltonetwork.transaction.Transaction
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{Channel, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import monix.reactive.subjects.ConcurrentSubject
-import com.ltonetwork.block.Block
-import com.ltonetwork.transaction.Transaction
 
 @Sharable
 class MessageObserver extends ChannelInboundHandlerAdapter with ScorexLogging {

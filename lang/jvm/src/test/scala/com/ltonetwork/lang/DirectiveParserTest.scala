@@ -2,9 +2,9 @@ package com.ltonetwork.lang
 
 import com.ltonetwork.lang.directives.DirectiveKey.LANGUAGE_VERSION
 import com.ltonetwork.lang.directives.{Directive, DirectiveParser}
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.scalatest.propspec.AnyPropSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 
 class DirectiveParserTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers {

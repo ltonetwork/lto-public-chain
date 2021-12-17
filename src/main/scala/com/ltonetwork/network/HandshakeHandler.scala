@@ -1,8 +1,5 @@
 package com.ltonetwork.network
 
-import java.util
-import java.util.concurrent.{ConcurrentMap, TimeUnit}
-
 import com.ltonetwork.network.Handshake.InvalidHandshakeException
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.buffer.ByteBuf
@@ -13,6 +10,8 @@ import io.netty.handler.codec.ReplayingDecoder
 import io.netty.util.AttributeKey
 import io.netty.util.concurrent.ScheduledFuture
 
+import java.util
+import java.util.concurrent.{ConcurrentMap, TimeUnit}
 import scala.concurrent.duration.FiniteDuration
 
 class HandshakeDecoder(peerDatabase: PeerDatabase) extends ReplayingDecoder[Void] with ScorexLogging {

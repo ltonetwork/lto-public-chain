@@ -1,10 +1,10 @@
 package com.ltonetwork.network
 
+import com.ltonetwork.network.message.{Message => ScorexMessage}
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelDuplexHandler, ChannelHandlerContext, ChannelPromise}
 import kamon.Kamon
 import kamon.metric.instrument.{Histogram, Memory}
-import com.ltonetwork.network.message.{Message => ScorexMessage}
 
 @Sharable
 class TrafficWatcher extends ChannelDuplexHandler {

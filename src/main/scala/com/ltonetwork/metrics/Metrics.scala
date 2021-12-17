@@ -1,8 +1,5 @@
 package com.ltonetwork.metrics
 
-import java.net.URI
-import java.util.concurrent.TimeUnit
-
 import com.ltonetwork.utils.{ScorexLogging, TimeImpl}
 import monix.eval.Task
 import monix.execution.Scheduler
@@ -10,6 +7,8 @@ import monix.execution.schedulers.SchedulerService
 import org.influxdb.dto.Point
 import org.influxdb.{InfluxDB, InfluxDBFactory}
 
+import java.net.URI
+import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.util.control.NonFatal

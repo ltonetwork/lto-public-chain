@@ -1,13 +1,13 @@
 package com.ltonetwork.network
 
-import java.net.InetSocketAddress
-
-import com.ltonetwork.crypto
-import com.ltonetwork.state.ByteStr
-import monix.eval.Coeval
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.block.{Block, MicroBlock}
+import com.ltonetwork.crypto
+import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.{Signed, Transaction}
+import monix.eval.Coeval
+
+import java.net.InetSocketAddress
 
 sealed trait Message
 

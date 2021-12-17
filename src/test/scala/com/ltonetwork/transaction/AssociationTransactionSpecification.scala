@@ -16,7 +16,13 @@ import play.api.libs.json.Json
 
 import scala.util.Try
 
-class AssociationTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with OptionValues with TableDrivenPropertyChecks with Matchers with TransactionGen {
+class AssociationTransactionSpecification
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
+    with OptionValues
+    with TableDrivenPropertyChecks
+    with Matchers
+    with TransactionGen {
 
   private def checkSerialization(tx: AssociationTransaction, parser: Array[Byte] => Try[AssociationTransaction]): Assertion = {
     val bytes  = tx.bytes()

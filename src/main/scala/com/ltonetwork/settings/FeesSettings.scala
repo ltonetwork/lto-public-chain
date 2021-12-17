@@ -1,8 +1,8 @@
 package com.ltonetwork.settings
 
+import com.ltonetwork.settings.Constants.TransactionNames
 import com.typesafe.config.Config
 import net.ceedubs.ficus.Ficus._
-import com.ltonetwork.settings.Constants.TransactionNames
 
 import scala.collection.JavaConverters._
 

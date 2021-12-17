@@ -1,9 +1,9 @@
 package com.ltonetwork.lang
 
 import com.ltonetwork.lang.v1.BaseGlobal
+import com.ltonetwork.seasalt.sign.Ed25519
 import com.ltonetwork.utils.{Base58, Base64}
 import scorex.crypto.hash.{Blake2b256, Keccak256, Sha256}
-import com.ltonetwork.seasalt.sign.Ed25519
 
 object Global extends BaseGlobal {
   def base58Encode(input: Array[Byte]): Either[String, String] =

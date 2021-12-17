@@ -7,10 +7,10 @@ import com.ltonetwork.lang.v1.evaluator.ctx.impl.PureContext
 import com.ltonetwork.lang.v1.parser.Expressions
 import com.ltonetwork.lang.v1.testing.ScriptGen
 import com.ltonetwork.lang.v1.{FunctionHeader, Serde}
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.Assertion
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import scodec.bits.ByteVector
 
 class SerdeTest extends AnyFreeSpec with ScalaCheckDrivenPropertyChecks with Matchers with ScriptGen with NoShrink {

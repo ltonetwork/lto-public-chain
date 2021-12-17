@@ -1,13 +1,12 @@
 package com.ltonetwork.lang.v1
 
-import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
-
 import com.ltonetwork.lang.v1.compiler.Terms._
 import monix.eval.Coeval
 import scodec.bits.ByteVector
 
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import scala.util.Try
 
 object Serde {

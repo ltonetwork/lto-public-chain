@@ -1,7 +1,6 @@
 package com.ltonetwork.utils
 
 import java.util.Arrays
-
 import scala.util.Try
 
 object Base58 {
