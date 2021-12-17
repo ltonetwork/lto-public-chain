@@ -3,7 +3,7 @@ package com.ltonetwork.api.http.requests
 import cats.implicits._
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state.ByteStr
-import com.ltonetwork.transaction.ValidationError.{InvalidAddress, Validation}
+import com.ltonetwork.transaction.ValidationError.Validation
 import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import com.ltonetwork.utils.Time

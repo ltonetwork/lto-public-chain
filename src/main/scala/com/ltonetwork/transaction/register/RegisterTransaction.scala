@@ -9,22 +9,24 @@ import monix.eval.Coeval
 import play.api.libs.json._
 
 case class RegisterTransaction private (version: Byte,
-                                      chainId: Byte,
-                                      timestamp: Long,
-                                      sender: PublicKeyAccount,
-                                      fee: Long,
-                                      keys: List[PublicKeyAccount],
-                                      sponsor: Option[PublicKeyAccount],
-                                      proofs: Proofs)
-  extends Transaction {
+                                        chainId: Byte,
+                                        timestamp: Long,
+                                        sender: PublicKeyAccount,
+                                        fee: Long,
+                                        keys: List[PublicKeyAccount],
+                                        sponsor: Option[PublicKeyAccount],
+                                        proofs: Proofs)
+    extends Transaction {
 
   override def builder: TransactionBuilder.For[RegisterTransaction]      = RegisterTransaction
   private def serializer: TransactionSerializer.For[RegisterTransaction] = builder.serializer(version)
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
-  val json: Coeval[JsObject]         = Coeval.evalOnce(jsonBase ++ Json.obj("keys" -> Json.toJson(
-    keys.map(key => Json.obj("keyType" -> key.keyType.reference, "publicKey" -> Base58.encode(key.publicKey)))
-  )))
+  val json: Coeval[JsObject] = Coeval.evalOnce(
+    jsonBase ++ Json.obj(
+      "keys" -> Json.toJson(
+        keys.map(key => Json.obj("keyType" -> key.keyType.reference, "publicKey" -> Base58.encode(key.publicKey)))
+      )))
 }
 
 object RegisterTransaction extends TransactionBuilder.For[RegisterTransaction] {
@@ -44,12 +46,10 @@ object RegisterTransaction extends TransactionBuilder.For[RegisterTransaction] {
         Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
         Validated.condNel(keys.lengthCompare(MaxEntryCount) <= 0, (), ValidationError.TooBigArray),
-        Validated.condNel(keys.forall(k => k.publicKey.length == k.keyType.length),
-          (),
-          ValidationError.GenericError(s"Invalid key length")),
+        Validated.condNel(keys.forall(k => k.publicKey.length == k.keyType.length), (), ValidationError.GenericError(s"Invalid key length")),
         Validated.condNel(keys.map(_.publicKey).distinct.lengthCompare(keys.size) == 0,
-          (),
-          ValidationError.GenericError("Duplicate key in one tx found")),
+                          (),
+                          ValidationError.GenericError("Duplicate key in one tx found")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee())
       )
     }
@@ -70,6 +70,10 @@ object RegisterTransaction extends TransactionBuilder.For[RegisterTransaction] {
              proofs: Proofs): Either[ValidationError, TransactionT] =
     RegisterTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, keys, sponsor, proofs).validatedEither
 
-  def signed(version: Byte, timestamp: Long, sender: PrivateKeyAccount, fee: Long, keys: List[PublicKeyAccount]): Either[ValidationError, TransactionT] =
+  def signed(version: Byte,
+             timestamp: Long,
+             sender: PrivateKeyAccount,
+             fee: Long,
+             keys: List[PublicKeyAccount]): Either[ValidationError, TransactionT] =
     create(version, None, timestamp, sender, fee, keys, None, Proofs.empty).signWith(sender)
 }
