@@ -45,10 +45,10 @@ object RegisterRequest {
     def toAccount: Validation[PublicKeyAccount] = PublicKeyAccount.fromBase58String(keyType, publicKey)
   }
 
+  implicit val jsonFormatKey: Format[RegisterRequest.Key] = Json.format[RegisterRequest.Key]
+
   implicit val jsonFormat: Format[RegisterRequest] = Format(
     Json.reads[RegisterRequest],
     Json.writes[RegisterRequest].transform((json: JsObject) => Json.obj("type" -> RegisterTransaction.typeId.toInt) ++ json)
   )
-
-  implicit val jsonFormatKey: Format[RegisterRequest.Key] = Json.format[RegisterRequest.Key]
 }
