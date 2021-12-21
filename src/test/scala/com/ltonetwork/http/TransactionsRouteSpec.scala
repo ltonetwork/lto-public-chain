@@ -38,7 +38,7 @@ class TransactionsRouteSpec
   private val blockchain  = mock[Blockchain]
   private val utx         = mock[UtxPool]
   private val allChannels = mock[ChannelGroup]
-  private val allAccounts  = wallet.privateKeyAccounts
+  private val allAccounts = wallet.privateKeyAccounts
   private val feesSettings = FeesSettings(
     Map[Byte, Seq[FeeSettings]](
       TransferTransaction.typeId     -> Seq(FeeSettings("BASE", 1.lto)),
@@ -168,11 +168,11 @@ class TransactionsRouteSpec
       "TransferTransaction" in {
         val sender: PrivateKeyAccount = allAccounts.head
         val transferTx = Json.obj(
-          "type" -> 4,
-          "version" -> 2,
-          "amount" -> 1000000,
-          "fee" -> 100 * 1000 * 1000L,
-          "sender" -> sender.address,
+          "type"      -> 4,
+          "version"   -> 2,
+          "amount"    -> 1000000,
+          "fee"       -> 100 * 1000 * 1000L,
+          "sender"    -> sender.address,
           "recipient" -> accountGen.sample.get.toAddress
         )
 

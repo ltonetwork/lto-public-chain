@@ -1,9 +1,9 @@
 package com.ltonetwork.utils
 
 import org.scalacheck.Gen
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.scalatest.propspec.AnyPropSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import scorex.crypto.encode.{Base58 => scorexBase58}
 
 class Base58Test extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers {

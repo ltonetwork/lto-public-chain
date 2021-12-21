@@ -1,7 +1,6 @@
 package com.ltonetwork.state.diffs
 
 import cats.implicits._
-import com.ltonetwork.account.Address
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError

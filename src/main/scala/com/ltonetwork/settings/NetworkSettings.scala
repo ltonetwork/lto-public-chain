@@ -1,15 +1,14 @@
 package com.ltonetwork.settings
 
-import java.io.File
-import java.net.{InetSocketAddress, URI}
-
 import com.google.common.base.Charsets
-import com.typesafe.config.Config
 import com.ltonetwork.network.TrafficLogger
+import com.typesafe.config.Config
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.ceedubs.ficus.readers.ValueReader
 
+import java.io.File
+import java.net.{InetSocketAddress, URI}
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Random
 

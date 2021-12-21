@@ -14,7 +14,12 @@ import com.ltonetwork.transaction.transfer.MassTransferTransaction.{MaxTransferC
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.Base58
 
-class MassTransferTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
+class MassTransferTransactionSpecification
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
+    with TableDrivenPropertyChecks
+    with Matchers
+    with TransactionGen {
 
   property("serialization roundtrip version") {
     forEvery(versionTable(MassTransferTransaction)) { version =>

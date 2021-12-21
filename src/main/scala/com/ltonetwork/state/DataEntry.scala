@@ -1,11 +1,11 @@
 package com.ltonetwork.state
 
-import java.nio.charset.StandardCharsets.UTF_8
-
 import com.google.common.primitives.{Longs, Shorts}
+import com.ltonetwork.serialization.Deser
 import com.ltonetwork.state.DataEntry._
 import play.api.libs.json._
-import com.ltonetwork.serialization.Deser
+
+import java.nio.charset.StandardCharsets.UTF_8
 
 sealed abstract class DataEntry[T](val key: String, val value: T) {
   def valueBytes: Array[Byte]

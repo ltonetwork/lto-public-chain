@@ -10,7 +10,12 @@ import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 
-class BlockchainUpdaterBlockOnlyTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with DomainScenarioDrivenPropertyCheck with Matchers with TransactionGen {
+class BlockchainUpdaterBlockOnlyTest
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
+    with DomainScenarioDrivenPropertyCheck
+    with Matchers
+    with TransactionGen {
 
   def preconditionsAndPayments(paymentsAmt: Int): Gen[(GenesisTransaction, Seq[TransferTransaction])] =
     for {

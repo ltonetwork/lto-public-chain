@@ -1,10 +1,10 @@
 package com.ltonetwork.network
 
-import java.net.{InetAddress, SocketAddress}
-
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.socket.SocketChannel
+
+import java.net.{InetAddress, SocketAddress}
 
 sealed trait PeerKey
 case object PeerKey {

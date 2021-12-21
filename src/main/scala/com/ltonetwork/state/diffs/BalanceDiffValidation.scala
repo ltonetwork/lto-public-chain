@@ -1,12 +1,12 @@
 package com.ltonetwork.state.diffs
 
 import cats.implicits._
+import com.ltonetwork.account.Address
 import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.settings.FunctionalitySettings
-import com.ltonetwork.state.{Blockchain, ByteStr, Diff, LeaseBalance, Portfolio}
-import com.ltonetwork.account.Address
-import com.ltonetwork.utils.ScorexLogging
+import com.ltonetwork.state.{Blockchain, Diff, LeaseBalance, Portfolio}
 import com.ltonetwork.transaction.ValidationError.AccountBalanceError
+import com.ltonetwork.utils.ScorexLogging
 
 import scala.util.{Left, Right}
 

@@ -1,9 +1,9 @@
 package com.ltonetwork.lang.v1.testing
 
-import com.ltonetwork.lang.v1.parser.Parser.keywords
 import com.ltonetwork.lang.v1.parser.BinaryOperation
 import com.ltonetwork.lang.v1.parser.BinaryOperation._
 import com.ltonetwork.lang.v1.parser.Expressions._
+import com.ltonetwork.lang.v1.parser.Parser.keywords
 import org.scalacheck._
 import scodec.bits.ByteVector
 import scorex.crypto.encode.Base58

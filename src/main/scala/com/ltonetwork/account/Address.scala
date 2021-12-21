@@ -1,12 +1,13 @@
 package com.ltonetwork.account
 
-import java.nio.ByteBuffer
 import com.ltonetwork.crypto
 import com.ltonetwork.state.ByteStr
-import com.ltonetwork.utils.{Base58, ScorexLogging, base58Length}
 import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.transaction.ValidationError.InvalidAddress
-import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Reads, Writes}
+import com.ltonetwork.utils.{Base58, ScorexLogging, base58Length}
+import play.api.libs.json._
+
+import java.nio.ByteBuffer
 
 sealed trait Address {
   val bytes: ByteStr

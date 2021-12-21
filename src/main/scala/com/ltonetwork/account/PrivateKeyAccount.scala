@@ -2,8 +2,8 @@ package com.ltonetwork.account
 
 import com.ltonetwork.account.KeyTypes._
 import com.ltonetwork.crypto
-import com.ltonetwork.utils.Base58
 import com.ltonetwork.transaction.ValidationError.GenericError
+import com.ltonetwork.utils.Base58
 
 import scala.util.{Failure, Success}
 

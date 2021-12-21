@@ -1,16 +1,17 @@
 package com.ltonetwork.block
 
 import com.google.common.primitives.{Bytes, Ints}
+import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.block.Block.{BlockId, transParseBytes}
 import com.ltonetwork.crypto
 import com.ltonetwork.mining.Miner.MaxTransactionsPerMicroblock
 import com.ltonetwork.state._
-import monix.eval.Coeval
-import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.utils.ScorexLogging
-import com.ltonetwork.block.Block.{BlockId, transParseBytes}
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction._
+import com.ltonetwork.utils.ScorexLogging
+import monix.eval.Coeval
 import scorex.crypto.signatures.Curve25519._
+
 import scala.util.{Failure, Try}
 
 case class MicroBlock(version: Byte,

@@ -1,11 +1,10 @@
 package com.ltonetwork.network
 
-import java.net.InetAddress
-
 import com.ltonetwork.settings.UPnPSettings
 import com.ltonetwork.utils.ScorexLogging
 import org.bitlet.weupnp.{GatewayDevice, GatewayDiscover}
 
+import java.net.InetAddress
 import scala.collection.JavaConverters._
 import scala.util.Try
 

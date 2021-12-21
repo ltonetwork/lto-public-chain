@@ -1,6 +1,5 @@
 package com.ltonetwork.lang
 
-import java.nio.ByteBuffer
 import cats.data.EitherT
 import cats.kernel.Monoid
 import com.ltonetwork.lang.Common._
@@ -8,24 +7,25 @@ import com.ltonetwork.lang.ExprEvaluator.Log
 import com.ltonetwork.lang.v1.compiler.CompilerV1
 import com.ltonetwork.lang.v1.compiler.Terms._
 import com.ltonetwork.lang.v1.compiler.Types._
-import com.ltonetwork.lang.v1.evaluator.{EvaluatorV1, FunctionIds}
 import com.ltonetwork.lang.v1.evaluator.FunctionIds._
 import com.ltonetwork.lang.v1.evaluator.ctx._
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.PureContext._
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.lto.LtoContext
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.{CryptoContext, EnvironmentFunctions, PureContext}
+import com.ltonetwork.lang.v1.evaluator.{EvaluatorV1, FunctionIds}
 import com.ltonetwork.lang.v1.testing.ScriptGen
 import com.ltonetwork.lang.v1.traits.Environment
 import com.ltonetwork.lang.v1.{CTX, FunctionHeader}
-import scorex.crypto.hash.{Blake2b256, Keccak256, Sha256}
 import com.ltonetwork.utils.{Base58, Base64}
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.scalatest.propspec.AnyPropSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import scodec.bits.ByteVector
+import scorex.crypto.hash.{Blake2b256, Keccak256, Sha256}
 import scorex.crypto.signatures.{Curve25519, PublicKey, Signature}
 
+import java.nio.ByteBuffer
 import scala.util.Try
 
 class EvaluatorV1Test extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with ScriptGen with NoShrink {

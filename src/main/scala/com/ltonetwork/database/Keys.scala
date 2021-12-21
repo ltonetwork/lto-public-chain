@@ -1,7 +1,5 @@
 package com.ltonetwork.database
 
-import java.nio.ByteBuffer
-
 import com.google.common.base.Charsets.UTF_8
 import com.google.common.primitives.{Ints, Longs, Shorts}
 import com.ltonetwork.account.Address
@@ -10,6 +8,8 @@ import com.ltonetwork.serialization.Deser
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.Transaction
 import com.ltonetwork.transaction.smart.script.{Script, ScriptReader}
+
+import java.nio.ByteBuffer
 
 object Keys {
   private def h(prefix: Short, height: Int): Array[Byte] =

@@ -10,7 +10,12 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import play.api.libs.json.Json
 
-class CancelLeaseTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
+class CancelLeaseTransactionSpecification
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
+    with TableDrivenPropertyChecks
+    with Matchers
+    with TransactionGen {
 
   private def assertTxs(first: CancelLeaseTransaction, second: CancelLeaseTransaction): Unit = {
     first.leaseId shouldEqual second.leaseId

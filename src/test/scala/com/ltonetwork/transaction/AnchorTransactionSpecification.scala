@@ -13,7 +13,12 @@ import org.scalatest.propspec.AnyPropSpec
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.libs.json.Json
 
-class AnchorTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
+class AnchorTransactionSpecification
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
+    with TableDrivenPropertyChecks
+    with Matchers
+    with TransactionGen {
 
   private def checkSerialization(tx: AnchorTransaction): Assertion = {
     val tryParse = AnchorTransaction.parseBytes(tx.bytes())

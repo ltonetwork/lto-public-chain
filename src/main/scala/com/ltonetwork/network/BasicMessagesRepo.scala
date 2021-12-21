@@ -1,17 +1,17 @@
 package com.ltonetwork.network
 
-import java.net.{InetAddress, InetSocketAddress}
-import java.util
-
 import com.google.common.primitives.{Bytes, Ints}
-import com.ltonetwork.mining.Miner.MaxTransactionsPerMicroblock
-import com.ltonetwork.state.ByteStr
 import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.block.{Block, MicroBlock}
+import com.ltonetwork.mining.Miner.MaxTransactionsPerMicroblock
 import com.ltonetwork.network.message.Message._
 import com.ltonetwork.network.message._
+import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.{Transaction, TransactionBuilders}
 import scorex.crypto.signatures.Curve25519._
+
+import java.net.{InetAddress, InetSocketAddress}
+import java.util
 import scala.util.Try
 
 object GetPeersSpec extends MessageSpec[GetPeers.type] {

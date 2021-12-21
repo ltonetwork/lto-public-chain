@@ -17,13 +17,13 @@ import com.ltonetwork.utils._
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
-import play.api.libs.json._
-import jakarta.ws.rs.{GET, POST, Path}
-import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import io.swagger.v3.oas.annotations.media.{Content, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
+import jakarta.ws.rs.{GET, POST, Path}
+import play.api.libs.json._
 
 import java.util.NoSuchElementException
 import scala.util.Success

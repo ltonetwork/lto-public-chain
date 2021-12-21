@@ -1,9 +1,9 @@
 package com.ltonetwork.network
 
 import com.google.common.primitives.{Bytes, Ints}
-import play.api.libs.json._
 import com.ltonetwork.utils.Base58
 import io.swagger.v3.oas.annotations.media.Schema
+import play.api.libs.json._
 import scorex.crypto.signatures.Curve25519._
 
 import scala.collection.immutable.Stream

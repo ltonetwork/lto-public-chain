@@ -1,7 +1,5 @@
 package com.ltonetwork.network
 
-import java.util.concurrent.TimeUnit
-
 import cats._
 import cats.implicits._
 import com.google.common.cache.CacheBuilder
@@ -11,6 +9,7 @@ import monix.eval.Coeval
 import monix.execution.Scheduler
 import monix.reactive.Observable
 
+import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
 

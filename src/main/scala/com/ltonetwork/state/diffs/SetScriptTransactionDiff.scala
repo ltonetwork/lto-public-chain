@@ -1,6 +1,6 @@
 package com.ltonetwork.state.diffs
 
-import com.ltonetwork.state.{Diff, LeaseBalance, Portfolio}
+import com.ltonetwork.state.Diff
 import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 

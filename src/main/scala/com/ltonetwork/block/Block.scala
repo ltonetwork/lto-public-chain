@@ -1,22 +1,21 @@
 package com.ltonetwork.block
 
-import java.nio.ByteBuffer
-import cats._
 import com.google.common.primitives.{Bytes, Ints, Longs}
-import com.ltonetwork.crypto
-import com.ltonetwork.settings.GenesisSettings
-import com.ltonetwork.state._
-import monix.eval.Coeval
-import play.api.libs.json.{JsObject, Json}
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.block.fields.FeaturesBlockField
 import com.ltonetwork.consensus.nxt.{NxtConsensusBlockField, NxtLikeConsensusBlockData}
-import com.ltonetwork.utils.ScorexLogging
+import com.ltonetwork.crypto
+import com.ltonetwork.settings.GenesisSettings
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.genesis.GenesisTransaction
+import com.ltonetwork.utils.ScorexLogging
+import monix.eval.Coeval
+import play.api.libs.json.{JsObject, Json}
 import scorex.crypto.signatures.Curve25519._
 
+import java.nio.ByteBuffer
 import scala.util.{Failure, Try}
 
 class BlockHeader(val timestamp: Long,
@@ -120,8 +119,6 @@ case class Block private (override val timestamp: Long,
                           override val featureVotes: Set[Short])
     extends BlockHeader(timestamp, version, reference, signerData, consensusData, transactionData.length, featureVotes)
     with Signed {
-
-  import Block._
 
   val sender: PublicKeyAccount = signerData.generator
   val signature: ByteStr       = signerData.signature

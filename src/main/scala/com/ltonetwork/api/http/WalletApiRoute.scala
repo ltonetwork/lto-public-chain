@@ -5,16 +5,16 @@ import com.ltonetwork.account.Address
 import com.ltonetwork.api.http.AddressApiRoute.Signed
 import com.ltonetwork.crypto
 import com.ltonetwork.settings.RestAPISettings
-import play.api.libs.json.{JsArray, JsBoolean, JsString, Json}
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.wallet.Wallet
-import jakarta.ws.rs.{DELETE, GET, POST, Path}
-import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import io.swagger.v3.oas.annotations.media.{Content, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
 import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
+import jakarta.ws.rs.{DELETE, GET, POST, Path}
+import play.api.libs.json.{JsArray, JsBoolean, JsString, Json}
 
 import java.nio.charset.StandardCharsets
 

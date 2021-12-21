@@ -1,14 +1,14 @@
 package com.ltonetwork.state
 
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.{Lock, ReentrantReadWriteLock}
-
 import cats.kernel.Monoid
 import com.google.common.cache.CacheBuilder
-import com.ltonetwork.utils.ScorexLogging
 import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.block.{Block, MicroBlock}
 import com.ltonetwork.transaction.{DiscardedMicroBlocks, Transaction}
+import com.ltonetwork.utils.ScorexLogging
+
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.{Lock, ReentrantReadWriteLock}
 
 class NgState(val base: Block, val baseBlockDiff: Diff, val baseBlockCarry: Long, val approvedFeatures: Set[Short]) extends ScorexLogging {
   import NgState._

@@ -1,7 +1,5 @@
 package com.ltonetwork
 
-import java.nio.ByteBuffer
-
 import com.google.common.base.Charsets.UTF_8
 import com.google.common.io.ByteStreams.{newDataInput, newDataOutput}
 import com.google.common.io.{ByteArrayDataInput, ByteArrayDataOutput}
@@ -9,6 +7,8 @@ import com.google.common.primitives.{Ints, Shorts}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.smart.script.{Script, ScriptReader}
 import com.ltonetwork.transaction.{Transaction, TransactionBuilders}
+
+import java.nio.ByteBuffer
 
 package object database {
   implicit class ByteArrayDataOutputExt(val output: ByteArrayDataOutput) extends AnyVal {

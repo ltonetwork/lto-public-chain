@@ -1,8 +1,6 @@
 package com.ltonetwork.api.http
 
 import cats.Applicative
-import com.ltonetwork.account.KeyType
-import com.ltonetwork.account.KeyTypes.{ED25519, SECP256K1, SECP256R1}
 import com.ltonetwork.crypto.{digestLength, signatureLength}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError._

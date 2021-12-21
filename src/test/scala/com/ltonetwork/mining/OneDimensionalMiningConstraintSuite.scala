@@ -9,7 +9,13 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import com.ltonetwork.transaction.Transaction
 
-class OneDimensionalMiningConstraintSuite extends AnyFreeSpec with Matchers with ScalaCheckDrivenPropertyChecks with PathMockFactory with TransactionGen with NoShrink {
+class OneDimensionalMiningConstraintSuite
+    extends AnyFreeSpec
+    with Matchers
+    with ScalaCheckDrivenPropertyChecks
+    with PathMockFactory
+    with TransactionGen
+    with NoShrink {
   "OneDimensionalMiningConstraint" - {
     "should be empty if the limit is 0, but not overfilled" in {
       val tank = createConstConstraint(0, 1)

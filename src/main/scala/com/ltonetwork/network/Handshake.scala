@@ -1,9 +1,9 @@
 package com.ltonetwork.network
 
-import java.net.{InetAddress, InetSocketAddress}
-
 import com.google.common.base.Charsets
 import io.netty.buffer.ByteBuf
+
+import java.net.{InetAddress, InetSocketAddress}
 
 case class Handshake(applicationName: String,
                      applicationVersion: (Int, Int, Int),

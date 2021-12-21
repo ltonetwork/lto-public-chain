@@ -8,9 +8,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.RouteResult.Complete
 import akka.http.scaladsl.server.directives.{DebuggingDirectives, LoggingMagnet}
 import akka.http.scaladsl.server.{Directive0, Route, RouteResult}
-import akka.actor.ActorSystem
-import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.api.http.swagger.SwaggerDocService
+import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.utils.ScorexLogging
 
 case class CompositeHttpService(system: ActorSystem, apiTypes: Set[Class[_]], routes: Seq[ApiRoute], settings: RestAPISettings)

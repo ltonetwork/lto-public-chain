@@ -1,7 +1,7 @@
 package com.ltonetwork.lang.v1.compiler
 
-import com.ltonetwork.lang.v1.compiler.Types._
 import com.ltonetwork.lang._
+import com.ltonetwork.lang.v1.compiler.Types._
 import com.ltonetwork.lang.v1.evaluator.ctx.DefinedType
 
 object TypeInferrer {

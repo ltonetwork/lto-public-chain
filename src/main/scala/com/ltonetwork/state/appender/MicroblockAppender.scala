@@ -1,10 +1,13 @@
 package com.ltonetwork.state.appender
 
 import cats.data.EitherT
+import com.ltonetwork.block.MicroBlock
 import com.ltonetwork.metrics.{BlockStats, Instrumented}
 import com.ltonetwork.network.MicroBlockSynchronizer.MicroblockData
 import com.ltonetwork.network._
 import com.ltonetwork.state.Blockchain
+import com.ltonetwork.transaction.ValidationError.{InvalidSignature, MicroBlockAppendError}
+import com.ltonetwork.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
 import com.ltonetwork.utils.ScorexLogging
 import com.ltonetwork.utx.UtxPool
 import io.netty.channel.Channel
@@ -12,9 +15,6 @@ import io.netty.channel.group.ChannelGroup
 import kamon.Kamon
 import monix.eval.Task
 import monix.execution.Scheduler
-import com.ltonetwork.block.MicroBlock
-import com.ltonetwork.transaction.ValidationError.{InvalidSignature, MicroBlockAppendError}
-import com.ltonetwork.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
 
 import scala.util.{Left, Right}
 

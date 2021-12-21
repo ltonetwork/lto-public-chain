@@ -4,9 +4,9 @@ import com.ltonetwork.crypto
 import com.ltonetwork.db.{CheckpointCodec, PropertiesStorage, SubStorage}
 import com.ltonetwork.network.Checkpoint
 import com.ltonetwork.settings.CheckpointsSettings
-import org.iq80.leveldb.DB
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.{CheckpointService, ValidationError}
+import org.iq80.leveldb.DB
 
 class CheckpointServiceImpl(db: DB, settings: CheckpointsSettings)
     extends SubStorage(db, "checkpoints")

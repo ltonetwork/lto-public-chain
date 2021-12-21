@@ -9,7 +9,13 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 
-class CommonValidationTimeTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink with WithState {
+class CommonValidationTimeTest
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
+    with Matchers
+    with TransactionGen
+    with NoShrink
+    with WithState {
 
   property("disallows too old transacions") {
     forAll(for {

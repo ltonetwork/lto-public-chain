@@ -1,6 +1,5 @@
 package com.ltonetwork.database
 
-import java.util
 import cats.syntax.monoid._
 import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
 import com.ltonetwork.account.Address
@@ -10,6 +9,7 @@ import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.smart.script.Script
 
+import java.util
 import scala.collection.JavaConverters._
 
 trait Caches extends Blockchain {

@@ -1,11 +1,8 @@
 package com.ltonetwork.http
 
-import java.net.{InetAddress, InetSocketAddress, URI}
-import java.util.concurrent.ConcurrentMap
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
-import com.typesafe.config.{ConfigObject, ConfigRenderOptions}
 import com.ltonetwork.account.Address
 import com.ltonetwork.api.http._
 import com.ltonetwork.block.Block
@@ -19,18 +16,21 @@ import com.ltonetwork.transaction._
 import com.ltonetwork.utils.{Base58, ScorexLogging}
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
+import com.typesafe.config.{ConfigObject, ConfigRenderOptions}
 import io.netty.channel.Channel
 import io.netty.channel.group.ChannelGroup
-import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
 import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
+import jakarta.ws.rs.{DELETE, GET, POST, Path}
 import monix.eval.{Coeval, Task}
 import play.api.libs.json._
-import jakarta.ws.rs.{DELETE, GET, POST, Path}
 
+import java.net.{InetAddress, InetSocketAddress, URI}
+import java.util.concurrent.ConcurrentMap
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}

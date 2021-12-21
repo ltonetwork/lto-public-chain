@@ -16,7 +16,12 @@ import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.transaction.Transaction
 
-class BlockchainUpdaterLiquidBlockTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with DomainScenarioDrivenPropertyCheck with Matchers with TransactionGen {
+class BlockchainUpdaterLiquidBlockTest
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
+    with DomainScenarioDrivenPropertyCheck
+    with Matchers
+    with TransactionGen {
 
   private val preconditionsAndPayments: Gen[(Block, Block, Seq[MicroBlock])] = for {
     richAccount        <- accountGen

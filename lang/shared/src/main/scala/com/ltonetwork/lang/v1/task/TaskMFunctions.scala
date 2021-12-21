@@ -1,8 +1,8 @@
 package com.ltonetwork.lang.v1.task
 
 import cats.data.Kleisli
-import monix.eval.Coeval
 import cats.implicits._
+import monix.eval.Coeval
 
 trait TaskMFunctions {
 

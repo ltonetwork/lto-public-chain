@@ -1,9 +1,9 @@
 package com.ltonetwork.block.fields
 
-import java.nio.ByteBuffer
-
-import play.api.libs.json._
 import com.ltonetwork.block.BlockField
+import play.api.libs.json._
+
+import java.nio.ByteBuffer
 
 case class FeaturesBlockField(version: Byte, override val value: Set[Short]) extends BlockField[Set[Short]] {
   override val name = "features"

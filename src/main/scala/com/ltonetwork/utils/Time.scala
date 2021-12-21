@@ -1,12 +1,11 @@
 package com.ltonetwork.utils
 
-import java.net.{InetAddress, SocketTimeoutException}
-
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.execution.schedulers.SchedulerService
 import org.apache.commons.net.ntp.NTPUDPClient
 
+import java.net.{InetAddress, SocketTimeoutException}
 import scala.concurrent.duration.DurationInt
 
 trait Time {
