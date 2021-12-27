@@ -6,7 +6,6 @@ import sbt.internal.inc.ReflectUtilities
 import sbtassembly.MergeStrategy
 
 enablePlugins(JavaServerAppPackaging, JDebPackaging, SystemdPlugin, GitVersioning)
-ThisBuild / scalafmtOnCompile := true
 
 val versionSource = Def.task {
   val versionFile      = (Compile / sourceManaged).value / "com" / "ltonetwork" / "Version.scala"
@@ -196,14 +195,13 @@ def allProjects: List[ProjectReference] = ReflectUtilities.allVals[Project](this
   p: ProjectReference
 }
 
-addCommandAlias("checkPR", """; Global / checkPRRaw""")
-lazy val checkPRRaw = taskKey[Unit]("Build a project and run unit tests")
-checkPRRaw in Global := {
+addCommandAlias("testAll", """; Global / testAllRaw""")
+lazy val testAllRaw = taskKey[Unit]("Build a project and run unit tests")
+testAllRaw in Global := {
   try {
     clean.all(ScopeFilter(inProjects(allProjects: _*), inConfigurations(Compile))).value
   } finally {
     test.all(ScopeFilter(inProjects(langJVM, node), inConfigurations(Test))).value
-    compile.all(ScopeFilter(inProjects(generator, benchmark), inConfigurations(Test))).value
   }
 }
 
@@ -221,7 +219,7 @@ lazy val lang =
           Dependencies.fp ++
           Dependencies.scalacheck ++
           Dependencies.scorex ++
-          Dependencies.scalatest.map(_ % "test") ++
+          Dependencies.scalatest ++
           Dependencies.scalactic ++
           Dependencies.monix.value ++
           Dependencies.scodec.value ++
@@ -253,7 +251,7 @@ lazy val node = project
         Dependencies.http ++
         Dependencies.akka ++
         Dependencies.serialization ++
-        Dependencies.testKit.map(_ % "test") ++
+        Dependencies.testKit ++
         Dependencies.logging ++
         Dependencies.matcher ++
         Dependencies.metrics ++
@@ -266,14 +264,3 @@ lazy val node = project
         Dependencies.monix.value
   )
   .dependsOn(langJVM)
-
-lazy val it = project
-  .dependsOn(node)
-
-lazy val generator = project
-  .dependsOn(it)
-  .settings(libraryDependencies += "com.github.scopt" %% "scopt" % "3.6.0")
-
-lazy val benchmark = project
-  .enablePlugins(JmhPlugin)
-  .dependsOn(node % "compile->compile;test->test", langJVM % "compile->compile;test->test")

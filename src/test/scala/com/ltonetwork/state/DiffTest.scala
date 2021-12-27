@@ -11,6 +11,5 @@ class DiffTest extends AnyFunSuite with Matchers {
     val d1      = Diff.empty.copy(portfolios = Map(address -> Portfolio(1, LeaseBalance.empty)))
     val d2      = Diff.empty.copy(portfolios = Map(address -> Portfolio(2, LeaseBalance.empty)))
     val r       = Monoid.combine(d1, d2)
-    println(r)
   }
 }

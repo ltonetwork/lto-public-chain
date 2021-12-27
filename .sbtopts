@@ -1,0 +1,4 @@
+-J-Xms128m
+-J-Xmx1248m
+-J-XX:+CMSClassUnloadingEnabled
+-J--add-opens=java.base/jdk.internal.ref=ALL-UNNAMED

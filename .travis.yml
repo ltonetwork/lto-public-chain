@@ -10,6 +10,7 @@ branches:
   only:
     - master
     - travis
+    - /^v\d+\.\d+\.\d+$/
 
 jdk: openjdk11
 scala: 2.12.9
@@ -17,16 +18,30 @@ scala: 2.12.9
 before_install:
   - unset _JAVA_OPTIONS
   - unset SBT_OPTS
-  - export JAVA_TOOL_OPTIONS="-Xmx1548m"
-install:
-  - sbt build
+  - unset JAVA_TOOL_OPTIONS
 
 before_script:
   - pip install -q -r e2e/requirements.txt
 script:
-  - sbt -J-Xms128m -J-Xmx1248m -J-XX:+UseConcMarkSweepGC -J-XX:+CMSClassUnloadingEnabled -J"--add-opens=java.base/jdk.internal.ref=ALL-UNNAMED" checkPR
+  - sbt testAll
+  - sbt build
   - behave -f plain --no-timings
 
+before_deploy:
+  - sbt packageAll -Dnetwork=mainnet
+  - sbt packageAll -Dnetwork=testnet -DpackageName=lto-testnet
+deploy:
+  provider: releases
+  api_key:
+    secure: "AuEE4cVdyRQ8eu4bDlog6H4RtBq1rsRLv69lXHQsAlqr/jrhGGsNHmDsMRBv64g9bB4i679dF6u08o6CjeplKq6mVo8SRNSLXh1yB5S+uvOe1WiLvXwKgWds8G2EAPYL/8iaWrXPfOjtnHSPC08OrIeHA58BvPny+1IGOAshanPQsGAdUAdF1/gmA13ygJT5+6jyohtCJJvs/rpyGjgygmfWCY2KFsU9C3MkYQwQMSdQXYufMlun7dDqSyluHIWjjV3ryu2ytzl7rWXBmJ4ioFwiVGglmAkXcE3gnHsqXJchq4YzR2xRPUynB1GkZUwtIiB5y5AgbUV2xe7O5vTLwQfitSMaUKzcXhFvz1aAu+o7U09PiQFoKhsjPOfnyeJVkC+fM9K8nqT/1O+bF/mXnU7k1IFygdelpRN/C0ibr9FeaUb2bCzjbzneHHFD9PICAeqBxgNcvCqdwiep1e1LXeSO9CDuSbTOdSIAfvo6oCgL79DIWWiHPNcu4gUv1KgkYCb6XRfIGls2jRO2zDcK6W1P90ckUq8gLRbafJDvoW+9JNuyByJuJUdruKnXRYmApmFLOxJOPN53HSQYbi3uOr6HVBrf1vXa37X0jL7U5mnPWVC4D2I+mQ5IUsIRQXeOCjfkhiUQ9aMIPKLivOvwefPQm9mb++lJcr/0lPwqUFM="
+  skip_cleanup: true
+  file_glob: true
+  file:
+    - target/lto-public-all-*.jar
+    - target/*.deb
+  on:
+    tags: true
+  
 cache:
   directories:
     - $HOME/.ivy2/cache
@@ -35,3 +50,4 @@ before_cache:
   # Cleanup the cached directories to avoid unnecessary cache updates
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
   - find $HOME/.sbt        -name "*.lock"               -print -delete
+
