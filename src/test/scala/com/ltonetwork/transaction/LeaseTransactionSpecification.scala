@@ -12,7 +12,12 @@ import org.scalatest.propspec.AnyPropSpec
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.libs.json.Json
 
-class LeaseTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TableDrivenPropertyChecks with Matchers with TransactionGen {
+class LeaseTransactionSpecification
+    extends AnyPropSpec
+    with ScalaCheckDrivenPropertyChecks
+    with TableDrivenPropertyChecks
+    with Matchers
+    with TransactionGen {
 
   private def assertTxs(first: LeaseTransaction, second: LeaseTransaction): Unit = {
     first.sender.address shouldEqual second.sender.address

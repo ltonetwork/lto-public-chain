@@ -1,7 +1,7 @@
 package com.ltonetwork.lang.v1.task
 
 import monix.eval.Coeval
-import monix.execution.atomic.{Atomic, _}
+import monix.execution.atomic._
 
 sealed trait CoevalRef[A] {
   def read: Coeval[A]

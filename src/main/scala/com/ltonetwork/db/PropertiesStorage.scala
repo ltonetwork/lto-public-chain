@@ -1,9 +1,9 @@
 package com.ltonetwork.db
 
-import java.nio.charset.StandardCharsets
-
 import com.google.common.primitives.Ints
 import org.iq80.leveldb.WriteBatch
+
+import java.nio.charset.StandardCharsets
 
 trait PropertiesStorage {
   this: Storage =>

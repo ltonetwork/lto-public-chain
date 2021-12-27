@@ -1,9 +1,9 @@
 package com.ltonetwork.network
 
-import java.net.{InetAddress, InetSocketAddress}
-
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel.Channel
+
+import java.net.{InetAddress, InetSocketAddress}
 
 trait PeerDatabase extends AutoCloseable {
 

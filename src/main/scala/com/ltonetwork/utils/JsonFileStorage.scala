@@ -1,12 +1,11 @@
 package com.ltonetwork.utils
 
-import java.io.{File, PrintWriter}
-import javax.crypto.Cipher
-import javax.crypto.spec.SecretKeySpec
-
 import play.api.libs.json.{Json, Reads, Writes}
 import scorex.crypto.encode.{Base64 => ScorexBase64}
 
+import java.io.{File, PrintWriter}
+import javax.crypto.Cipher
+import javax.crypto.spec.SecretKeySpec
 import scala.io.{BufferedSource, Source}
 
 object JsonFileStorage {

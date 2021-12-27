@@ -1,8 +1,8 @@
 package com.ltonetwork.network
 
-import java.util.concurrent.TimeUnit
-
 import com.google.common.cache.{Cache, CacheBuilder}
+import com.ltonetwork.block.Block.BlockId
+import com.ltonetwork.block.MicroBlock
 import com.ltonetwork.metrics.BlockStats
 import com.ltonetwork.settings.SynchronizationSettings.MicroblockSynchronizerSettings
 import com.ltonetwork.state.ByteStr
@@ -11,9 +11,8 @@ import monix.eval.{Coeval, Task}
 import monix.execution.CancelableFuture
 import monix.execution.schedulers.SchedulerService
 import monix.reactive.Observable
-import com.ltonetwork.block.Block.BlockId
-import com.ltonetwork.block.MicroBlock
 
+import java.util.concurrent.TimeUnit
 import scala.collection.mutable.{Set => MSet}
 import scala.concurrent.duration.FiniteDuration
 

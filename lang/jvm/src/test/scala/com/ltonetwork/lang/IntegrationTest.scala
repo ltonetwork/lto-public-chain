@@ -12,9 +12,9 @@ import com.ltonetwork.lang.v1.evaluator.ctx._
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.PureContext
 import com.ltonetwork.lang.v1.parser.Parser
 import com.ltonetwork.lang.v1.testing.ScriptGen
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.scalatest.propspec.AnyPropSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class IntegrationTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with ScriptGen with Matchers with NoShrink {
 

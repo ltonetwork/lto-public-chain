@@ -1,17 +1,17 @@
 package com.ltonetwork.features.api
 
 import akka.http.scaladsl.server.Route
+import com.ltonetwork.api.http.{ApiRoute, CommonApiFunctions}
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.features.{BlockchainFeatureStatus, BlockchainFeatures}
 import com.ltonetwork.settings.{FeaturesSettings, FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.Blockchain
-import jakarta.ws.rs.{GET, Path}
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.tags.Tag
-import play.api.libs.json.Json
-import com.ltonetwork.api.http.{ApiRoute, CommonApiFunctions}
 import com.ltonetwork.utils.ScorexLogging
+import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.{GET, Path}
+import play.api.libs.json.Json
 
 @Path("/activation")
 @Tag(name = "activation")

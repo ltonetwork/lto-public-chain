@@ -1,7 +1,5 @@
 package com.ltonetwork.utx
 
-import java.util.concurrent.ConcurrentHashMap
-
 import cats._
 import com.ltonetwork.account.Address
 import com.ltonetwork.consensus.TransactionsOrdering
@@ -21,6 +19,7 @@ import monix.eval.Task
 import monix.execution.Scheduler
 import monix.execution.schedulers.SchedulerService
 
+import java.util.concurrent.ConcurrentHashMap
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.{Left, Right}

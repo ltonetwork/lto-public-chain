@@ -1,7 +1,7 @@
 package com.ltonetwork.settings
 
-import com.typesafe.config.Config
 import com.ltonetwork.mining.Miner
+import com.typesafe.config.Config
 
 import scala.concurrent.duration.FiniteDuration
 

@@ -1,8 +1,8 @@
 package com.ltonetwork.utx
 
+import com.ltonetwork.account.Address
 import com.ltonetwork.mining.MultiDimensionalMiningConstraint
 import com.ltonetwork.state.{ByteStr, Diff, Portfolio}
-import com.ltonetwork.account.Address
 import com.ltonetwork.transaction._
 
 trait UtxPool extends AutoCloseable {

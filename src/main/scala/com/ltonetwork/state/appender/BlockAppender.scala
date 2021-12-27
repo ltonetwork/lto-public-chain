@@ -1,12 +1,15 @@
 package com.ltonetwork.state.appender
 
 import cats.data.EitherT
+import com.ltonetwork.block.Block
 import com.ltonetwork.consensus.PoSSelector
 import com.ltonetwork.metrics._
 import com.ltonetwork.mining.Miner
 import com.ltonetwork.network._
 import com.ltonetwork.settings.LtoSettings
 import com.ltonetwork.state.Blockchain
+import com.ltonetwork.transaction.ValidationError.{BlockAppendError, InvalidSignature}
+import com.ltonetwork.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
 import com.ltonetwork.utils.{ScorexLogging, Time}
 import com.ltonetwork.utx.UtxPool
 import io.netty.channel.Channel
@@ -14,9 +17,6 @@ import io.netty.channel.group.ChannelGroup
 import kamon.Kamon
 import monix.eval.Task
 import monix.execution.Scheduler
-import com.ltonetwork.block.Block
-import com.ltonetwork.transaction.ValidationError.{BlockAppendError, InvalidSignature}
-import com.ltonetwork.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
 
 import scala.util.Right
 

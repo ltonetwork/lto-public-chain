@@ -1,8 +1,8 @@
 package com.ltonetwork.actor
 
 import akka.actor.{ActorSystem, AllForOneStrategy, SupervisorStrategy, SupervisorStrategyConfigurator}
-import com.typesafe.config.Config
 import com.ltonetwork.utils.ScorexLogging
+import com.typesafe.config.Config
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration

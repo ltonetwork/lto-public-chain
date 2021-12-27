@@ -1,16 +1,15 @@
 package com.ltonetwork.network.client
 
-import java.io.IOException
-import java.net.InetSocketAddress
-import java.nio.channels.ClosedChannelException
-import java.util.concurrent.atomic.AtomicLong
-
 import com.ltonetwork.network.RawBytes
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel.Channel
 import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
 
+import java.io.IOException
+import java.net.InetSocketAddress
+import java.nio.channels.ClosedChannelException
+import java.util.concurrent.atomic.AtomicLong
 import scala.concurrent.{Future, Promise}
 
 class NetworkSender(chainId: Char, name: String, nonce: Long) extends ScorexLogging {

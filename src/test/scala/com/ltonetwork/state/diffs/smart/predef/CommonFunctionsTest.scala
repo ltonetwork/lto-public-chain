@@ -10,7 +10,7 @@ import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.Address
 import org.scalacheck.Gen
 
-class CommonFunctionsTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with  TransactionGen with NoShrink {
+class CommonFunctionsTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink {
 
   property("Some/None/extract/isDefined") {
     val some3 = "if true then 3 else unit"

@@ -1,8 +1,8 @@
 package com.ltonetwork.state.diffs
 
 import com.ltonetwork.state.{Blockchain, Diff}
-import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.ValidationError
+import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 
 object SponsorshipTransactionDiff {

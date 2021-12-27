@@ -5,9 +5,9 @@ import com.github.swagger.akka.SwaggerHttpService
 import com.ltonetwork.Version
 import com.ltonetwork.settings.RestAPISettings
 import io.swagger.v3.oas.models.info.{Info, License}
+import io.swagger.v3.oas.models.security.SecurityScheme
 import io.swagger.v3.oas.models.servers.Server
 import io.swagger.v3.oas.models.{Components, OpenAPI}
-import io.swagger.v3.oas.models.security.SecurityScheme
 
 class SwaggerDocService(val actorSystem: ActorSystem, val apiClasses: Set[Class[_]], settings: RestAPISettings) extends SwaggerHttpService {
 

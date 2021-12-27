@@ -1,13 +1,13 @@
 package com.ltonetwork.block
 
 import com.google.common.primitives.{Bytes, Longs}
+import com.ltonetwork.account.PublicKeyAccount
+import com.ltonetwork.serialization.{BytesSerializable, JsonSerializable}
 import com.ltonetwork.state.ByteStr
+import com.ltonetwork.transaction.Transaction
+import com.ltonetwork.utils.Base58
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
-import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.utils.Base58
-import com.ltonetwork.serialization.{BytesSerializable, JsonSerializable}
-import com.ltonetwork.transaction.Transaction
 
 abstract class BlockField[T] extends BytesSerializable with JsonSerializable {
   val name: String

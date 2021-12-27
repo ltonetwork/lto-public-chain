@@ -1,7 +1,7 @@
 package com.ltonetwork.state
 
-import play.api.libs.json._
 import com.ltonetwork.utils.{Base58, Base64}
+import play.api.libs.json._
 
 import scala.util.Try
 

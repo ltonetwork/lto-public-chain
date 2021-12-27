@@ -2,28 +2,27 @@ package com.ltonetwork.mining
 
 import cats.data.EitherT
 import cats.implicits._
+import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.block.Block._
+import com.ltonetwork.block.{Block, MicroBlock}
+import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
 import com.ltonetwork.consensus.{GeneratingBalanceProvider, PoSSelector}
 import com.ltonetwork.features.BlockchainFeatures
-import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.metrics.{BlockStats, HistogramExt, Instrumented}
 import com.ltonetwork.network._
 import com.ltonetwork.settings.{FunctionalitySettings, LtoSettings}
 import com.ltonetwork.state._
 import com.ltonetwork.state.appender.{BlockAppender, MicroblockAppender}
+import com.ltonetwork.transaction._
+import com.ltonetwork.utils.{ScorexLogging, Time}
 import com.ltonetwork.utx.UtxPool
+import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
 import kamon.Kamon
 import kamon.metric.instrument
 import monix.eval.Task
 import monix.execution.cancelables.{CompositeCancelable, SerialCancelable}
 import monix.execution.schedulers.SchedulerService
-import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.block.Block._
-import com.ltonetwork.block.{Block, MicroBlock}
-import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
-import com.ltonetwork.utils.{ScorexLogging, Time}
-import com.ltonetwork.transaction._
-import com.ltonetwork.wallet.Wallet
 
 import scala.collection.mutable.{Map => MMap}
 import scala.concurrent.Await

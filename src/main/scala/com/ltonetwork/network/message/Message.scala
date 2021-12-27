@@ -2,8 +2,8 @@ package com.ltonetwork.network.message
 
 import com.google.common.primitives.{Bytes, Ints}
 import com.ltonetwork.crypto
-import monix.eval.Coeval
 import com.ltonetwork.serialization.BytesSerializable
+import monix.eval.Coeval
 
 import scala.util.{Success, Try}
 

@@ -1,8 +1,8 @@
 package com.ltonetwork.state.patch
 
 import com.ltonetwork.state.{Blockchain, Diff, LeaseBalance, Portfolio}
-import com.ltonetwork.utils.ScorexLogging
 import com.ltonetwork.transaction.lease.LeaseTransaction
+import com.ltonetwork.utils.ScorexLogging
 
 object CancelLeaseOverflow extends ScorexLogging {
   def apply(blockchain: Blockchain): Diff = {

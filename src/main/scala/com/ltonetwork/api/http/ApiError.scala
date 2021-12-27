@@ -1,11 +1,11 @@
 package com.ltonetwork.api.http
 
 import akka.http.scaladsl.model.{StatusCode, StatusCodes}
+import com.ltonetwork.lang.ExprEvaluator.Log
 import com.ltonetwork.lang.v1.evaluator.ctx.LazyVal
 import com.ltonetwork.state.diffs.TransactionDiffer.TransactionValidationError
-import play.api.libs.json._
-import com.ltonetwork.lang.ExprEvaluator.Log
 import com.ltonetwork.transaction.{Transaction, ValidationError}
+import play.api.libs.json._
 
 case class ApiErrorResponse(error: Int, message: String)
 

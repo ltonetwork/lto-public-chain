@@ -2,9 +2,8 @@ package com.ltonetwork.account
 
 import com.ltonetwork.account.KeyTypes._
 import com.ltonetwork.crypto
-import com.ltonetwork.utils.base58Length
-import com.ltonetwork.utils.Base58
 import com.ltonetwork.transaction.ValidationError.InvalidAddress
+import com.ltonetwork.utils.{Base58, base58Length}
 
 trait PublicKeyAccount {
   def keyType: KeyType

@@ -1,8 +1,5 @@
 package com.ltonetwork.network.client
 
-import java.io.IOException
-import java.net.InetSocketAddress
-
 import com.ltonetwork.Version
 import com.ltonetwork.network.Handshake
 import com.ltonetwork.settings._
@@ -13,6 +10,8 @@ import io.netty.channel.group.ChannelGroup
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioSocketChannel
 
+import java.io.IOException
+import java.net.InetSocketAddress
 import scala.concurrent.{Future, Promise}
 
 class NetworkClient(chainId: Char, nodeName: String, nonce: Long, allChannels: ChannelGroup) extends ScorexLogging {

@@ -1,16 +1,15 @@
 package com.ltonetwork.network
 
-import java.util
-
 import com.google.common.cache.CacheBuilder
 import com.ltonetwork.crypto
+import com.ltonetwork.network.message.Message._
 import com.ltonetwork.utils.{Base64, ScorexLogging}
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled._
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ByteToMessageCodec
-import com.ltonetwork.network.message.Message._
 
+import java.util
 import scala.concurrent.duration.FiniteDuration
 import scala.util.control.NonFatal
 

@@ -1,15 +1,15 @@
 package com.ltonetwork.network
 
-import java.util.concurrent.TimeUnit
-
 import com.google.common.cache.CacheBuilder
 import com.ltonetwork.settings.SynchronizationSettings.UtxSynchronizerSettings
 import com.ltonetwork.state.ByteStr
+import com.ltonetwork.transaction.Transaction
 import com.ltonetwork.utx.UtxPool
 import io.netty.channel.Channel
 import io.netty.channel.group.{ChannelGroup, ChannelMatcher}
 import monix.execution.{CancelableFuture, Scheduler}
-import com.ltonetwork.transaction.Transaction
+
+import java.util.concurrent.TimeUnit
 
 object UtxPoolSynchronizer {
   def start(utx: UtxPool,

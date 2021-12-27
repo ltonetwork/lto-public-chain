@@ -1,13 +1,13 @@
 package com.ltonetwork.network
 
-import java.net.{InetAddress, InetSocketAddress}
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
-
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelHandlerContext}
 import io.netty.handler.ipfilter.AbstractRemoteAddressFilter
+
+import java.net.{InetAddress, InetSocketAddress}
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 @Sharable
 class InboundConnectionFilter(peerDatabase: PeerDatabase, maxInboundConnections: Int, maxConnectionsPerHost: Int)

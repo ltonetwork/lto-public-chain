@@ -3,9 +3,9 @@ package com.ltonetwork.lang.v1.testing
 import com.ltonetwork.lang.v1.FunctionHeader
 import com.ltonetwork.lang.v1.compiler.Terms._
 import com.ltonetwork.lang.v1.compiler.Types._
+import com.ltonetwork.lang.v1.evaluator.FunctionIds._
 import org.scalacheck._
 import scodec.bits.ByteVector
-import com.ltonetwork.lang.v1.evaluator.FunctionIds._
 
 trait TypedScriptGen {
 

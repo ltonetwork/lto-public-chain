@@ -5,7 +5,6 @@ import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.settings.MinerSettings
 import com.ltonetwork.state.Blockchain
-import com.ltonetwork.block.Block
 
 case class MiningConstraints(total: MiningConstraint, keyBlock: MiningConstraint, micro: MiningConstraint)
 

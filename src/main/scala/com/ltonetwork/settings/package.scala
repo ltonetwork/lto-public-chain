@@ -1,13 +1,12 @@
 package com.ltonetwork
 
-import java.io.File
-import java.net.{InetSocketAddress, URI}
-
-import com.typesafe.config.{Config, ConfigException, ConfigFactory, ConfigValueType}
 import com.ltonetwork.state.ByteStr
+import com.typesafe.config.{Config, ConfigException, ConfigFactory, ConfigValueType}
 import net.ceedubs.ficus.readers.namemappers.HyphenNameMapper
 import net.ceedubs.ficus.readers.{NameMapper, ValueReader}
 
+import java.io.File
+import java.net.{InetSocketAddress, URI}
 import scala.collection.JavaConverters._
 
 package object settings {

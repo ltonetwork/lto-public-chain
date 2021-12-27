@@ -2,20 +2,20 @@ package com.ltonetwork.lang.compiler
 
 import com.ltonetwork.lang.Common
 import com.ltonetwork.lang.Common._
-import com.ltonetwork.lang.v1.{FunctionHeader, compiler}
 import com.ltonetwork.lang.v1.compiler.Terms._
 import com.ltonetwork.lang.v1.compiler.Types._
 import com.ltonetwork.lang.v1.compiler.{CompilerContext, CompilerV1}
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.PureContext
 import com.ltonetwork.lang.v1.evaluator.ctx.impl.PureContext._
 import com.ltonetwork.lang.v1.parser.BinaryOperation.SUM_OP
-import com.ltonetwork.lang.v1.parser.{Expressions, Parser}
 import com.ltonetwork.lang.v1.parser.Expressions.Pos
 import com.ltonetwork.lang.v1.parser.Expressions.Pos.AnyPos
+import com.ltonetwork.lang.v1.parser.{Expressions, Parser}
 import com.ltonetwork.lang.v1.testing.ScriptGen
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.scalatest.propspec.AnyPropSpec
+import com.ltonetwork.lang.v1.{FunctionHeader, compiler}
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import scodec.bits.ByteVector
 
 class CompilerV1Test extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with ScriptGen with NoShrink {

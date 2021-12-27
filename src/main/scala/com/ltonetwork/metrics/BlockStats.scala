@@ -1,10 +1,10 @@
 package com.ltonetwork.metrics
 
+import com.ltonetwork.block.{Block, MicroBlock}
 import com.ltonetwork.network.{HandshakeHandler, MicroBlockInv}
 import com.ltonetwork.state.ByteStr
 import io.netty.channel.Channel
 import org.influxdb.dto.Point
-import com.ltonetwork.block.{Block, MicroBlock}
 
 object BlockStats {
 

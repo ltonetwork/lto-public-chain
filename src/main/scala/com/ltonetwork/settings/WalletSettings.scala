@@ -1,9 +1,8 @@
 package com.ltonetwork.settings
 
-import java.io.File
-
-import com.ltonetwork.crypto
 import com.ltonetwork.state.ByteStr
+
+import java.io.File
 
 case class WalletSettings(
     file: Option[File],

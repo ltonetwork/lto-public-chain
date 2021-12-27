@@ -31,7 +31,14 @@ import org.scalatest.freespec.AnyFreeSpec
 
 import scala.concurrent.duration._
 
-class UtxPoolSpecification extends AnyFreeSpec with Matchers with MockFactory with ScalaCheckDrivenPropertyChecks with TransactionGen with NoShrink with WithDB {
+class UtxPoolSpecification
+    extends AnyFreeSpec
+    with Matchers
+    with MockFactory
+    with ScalaCheckDrivenPropertyChecks
+    with TransactionGen
+    with NoShrink
+    with WithDB {
 
   private val calculatorSettings = FeesSettings(
     Map[Byte, Seq[FeeSettings]](

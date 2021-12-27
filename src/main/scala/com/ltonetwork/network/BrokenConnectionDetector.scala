@@ -1,11 +1,10 @@
 package com.ltonetwork.network
 
-import java.util.concurrent.{ConcurrentHashMap, ScheduledFuture}
-
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel._
 
+import java.util.concurrent.{ConcurrentHashMap, ScheduledFuture}
 import scala.concurrent.duration.FiniteDuration
 
 @Sharable

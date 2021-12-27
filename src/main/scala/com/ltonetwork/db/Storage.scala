@@ -1,11 +1,10 @@
 package com.ltonetwork.db
 
-import java.nio.charset.{Charset, StandardCharsets}
-
 import com.google.common.primitives.{Bytes, Ints}
 import com.ltonetwork.utils.{ScorexLogging, forceStopApplication}
 import org.iq80.leveldb.{DB, DBIterator, WriteBatch}
 
+import java.nio.charset.{Charset, StandardCharsets}
 import scala.collection.AbstractIterator
 import scala.util.control.NonFatal
 

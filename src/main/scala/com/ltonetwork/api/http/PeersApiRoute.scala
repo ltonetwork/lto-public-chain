@@ -1,22 +1,20 @@
 package com.ltonetwork.api.http
 
-import java.net.{InetAddress, InetSocketAddress}
-import java.util.concurrent.ConcurrentMap
-import java.util.stream.Collectors
-
 import akka.http.scaladsl.server.Route
 import com.ltonetwork.network.{PeerDatabase, PeerInfo}
 import com.ltonetwork.settings.RestAPISettings
 import io.netty.channel.Channel
-import jakarta.ws.rs.{GET, POST, Path}
-import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
-import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.{GET, POST, Path}
 import play.api.libs.json._
 
+import java.net.{InetAddress, InetSocketAddress}
+import java.util.concurrent.ConcurrentMap
+import java.util.stream.Collectors
 import scala.collection.JavaConverters._
 
 @Path("/peers")

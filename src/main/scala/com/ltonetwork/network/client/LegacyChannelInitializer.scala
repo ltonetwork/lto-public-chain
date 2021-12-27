@@ -1,13 +1,12 @@
 package com.ltonetwork.network.client
 
-import java.io.IOException
-
 import com.ltonetwork.network._
 import com.ltonetwork.utils.ScorexLogging
 import io.netty.channel._
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.{LengthFieldBasedFrameDecoder, LengthFieldPrepender}
 
+import java.io.IOException
 import scala.concurrent.Promise
 import scala.concurrent.duration._
 
