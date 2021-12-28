@@ -23,12 +23,15 @@ import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.{MaxTransferCount, ParsedTransfer}
 import com.ltonetwork.transaction.transfer._
-import com.ltonetwork.utils.TimeImpl
+import com.ltonetwork.utils.{Base64, TimeImpl}
+import org.scalacheck.Gen.Parameters
+import org.scalacheck.rng.Seed
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{BeforeAndAfterAll, Suite}
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.prop.TableFor1
 
+import java.nio.charset.Charset
 import scala.util.Random
 
 trait TransactionGen extends BeforeAndAfterAll with TransactionGenBase with ScriptGen {
@@ -112,6 +115,37 @@ trait TransactionGenBase extends ScriptGen {
       sponsor                   <- sponsorGen(version)
     } yield SetScriptTransaction.create(version, None, timestamp, sender, fee, script, sponsor, proofs).explicitGet()
 
+  def setScriptTransactionGenTest(): Gen[SetScriptTransaction] = {
+//    val bts = Array.concat(
+//      Array[Byte](1),
+//      Base64
+//        .decode("dHJ1ZQ")
+//        .get
+//    )
+//    val checksum = crypto.secureHash(bts).take(4)
+//    val fin      = Array.concat(bts, checksum)
+//    val str      = Base64.encode(fin)
+    val str =
+      "AQQAAAAHJG1hdGNoMAUAAAACdHgDCQAAAQAAAAIFAAAAByRtYXRjaDACAAAAE1RyYW5zZmVyVHJhbnNhY3Rpb24EAAAAAXQFAAAAByRtYXRjaDAHAwkAAAEAAAACBQAAAAckbWF0Y2gwAgAAABdNYXNzVHJhbnNmZXJUcmFuc2FjdGlvbgQAAAACbXQFAAAAByRtYXRjaDAHAwkAAAEAAAACBQAAAAckbWF0Y2gwAgAAABRTZXRTY3JpcHRUcmFuc2FjdGlvbgQAAAACc3MFAAAAByRtYXRjaDAHCQAB9AAAAAMIBQAAAAJ0eAAAAAlib2R5Qnl0ZXMJAAGRAAAAAggFAAAAAnR4AAAABnByb29mcwAAAAAAAAAAAAgFAAAAAnR4AAAAD3NlbmRlclB1YmxpY0tlebG/h+k="
+    val sender = accountGen(ED25519).pureApply(Parameters.default, Seed.random())
+    val ret = for {
+//      sender: PrivateKeyAccount <- accountGen(ED25519)
+      fee       <- smallFeeGen
+      timestamp <- timestampGen
+      proofs    <- proofsGen
+      script    <- Gen.option(Script.fromBase64String(str).explicitGet())
+      sponsor   <- sponsorGen(3)
+    } yield SetScriptTransaction.create(3, None, timestamp, sender, fee, script, sponsor, proofs).explicitGet()
+
+    Thread.sleep(5000)
+
+    for {
+      recipient                                  <- accountGen(ED25519)
+      (_, _, amount, timestamp, fee, attachment) <- transferParamGen()
+    } yield TransferTransaction.signed(3, timestamp, sender, fee, recipient, amount, attachment).explicitGet()
+
+    ret
+  }
   def selfSignedSetScriptTransactionGenP(sender: PrivateKeyAccount, script: Script, timestamp: Long): Gen[SetScriptTransaction] =
     for {
       fee <- smallFeeGen
