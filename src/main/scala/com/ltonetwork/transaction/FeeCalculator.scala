@@ -54,7 +54,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
           mapVar
             .get(RegisterTransaction.typeId)
             .toRight(GenericError("Variable fee is not defined for RegisterTransaction"))
-            .map(varFee => txMinBaseFee + varFee * tx.keys.size)
+            .map(varFee => txMinBaseFee + varFee * tx.accounts.size)
         case _ =>
           Right(txMinBaseFee)
       }

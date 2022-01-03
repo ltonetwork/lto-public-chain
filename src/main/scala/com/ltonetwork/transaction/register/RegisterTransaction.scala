@@ -13,7 +13,7 @@ case class RegisterTransaction private (version: Byte,
                                         timestamp: Long,
                                         sender: PublicKeyAccount,
                                         fee: Long,
-                                        keys: List[PublicKeyAccount],
+                                        accounts: List[PublicKeyAccount],
                                         sponsor: Option[PublicKeyAccount],
                                         proofs: Proofs)
     extends Transaction {
@@ -24,8 +24,8 @@ case class RegisterTransaction private (version: Byte,
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
   val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase ++ Json.obj(
-      "keys" -> Json.toJson(
-        keys.map(key => Json.obj("keyType" -> key.keyType.reference, "publicKey" -> Base58.encode(key.publicKey)))
+      "accounts" -> Json.toJson(
+        accounts.map(key => Json.obj("keyType" -> key.keyType.reference, "publicKey" -> Base58.encode(key.publicKey)))
       )))
 }
 
@@ -45,9 +45,9 @@ object RegisterTransaction extends TransactionBuilder.For[RegisterTransaction] {
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
-        Validated.condNel(keys.lengthCompare(MaxEntryCount) <= 0, (), ValidationError.TooBigArray),
-        Validated.condNel(keys.forall(k => k.publicKey.length == k.keyType.length), (), ValidationError.GenericError(s"Invalid key length")),
-        Validated.condNel(keys.map(_.publicKey).distinct.lengthCompare(keys.size) == 0,
+        Validated.condNel(accounts.lengthCompare(MaxEntryCount) <= 0, (), ValidationError.TooBigArray),
+        Validated.condNel(accounts.forall(k => k.publicKey.length == k.keyType.length), (), ValidationError.GenericError(s"Invalid key length")),
+        Validated.condNel(accounts.map(_.publicKey).distinct.lengthCompare(accounts.size) == 0,
                           (),
                           ValidationError.GenericError("Duplicate key in one tx found")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee())
@@ -65,15 +65,15 @@ object RegisterTransaction extends TransactionBuilder.For[RegisterTransaction] {
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             keys: List[PublicKeyAccount],
+             accounts: List[PublicKeyAccount],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    RegisterTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, keys, sponsor, proofs).validatedEither
+    RegisterTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, accounts, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
              sender: PrivateKeyAccount,
              fee: Long,
-             keys: List[PublicKeyAccount]): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, keys, None, Proofs.empty).signWith(sender)
+             accounts: List[PublicKeyAccount]): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, accounts, None, Proofs.empty).signWith(sender)
 }

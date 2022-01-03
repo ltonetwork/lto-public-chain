@@ -30,7 +30,7 @@ class RegisterTransactionSpecification
     parsed.fee shouldEqual tx.fee
     parsed.sponsor shouldEqual tx.sponsor
 
-    parsed.keys.zip(tx.keys).foreach {
+    parsed.accounts.zip(tx.accounts).foreach {
       case (r, t) =>
         r shouldEqual t
     }
@@ -69,7 +69,7 @@ class RegisterTransactionSpecification
       req.timestamp should be('defined)
       req.timestamp.get shouldEqual tx.timestamp
 
-      req.keys zip tx.keys foreach {
+      req.accounts zip tx.accounts foreach {
         case (re, te) =>
           re.keyType shouldEqual te.toKey._1.toString
           re.publicKey shouldEqual te.toKey._2
@@ -87,7 +87,7 @@ class RegisterTransactionSpecification
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
                        "timestamp": 1526911531530,
-                       "keys": [
+                       "accounts": [
                          {
                            "keyType": "ed25519",
                            "publicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z"
@@ -99,8 +99,8 @@ class RegisterTransactionSpecification
                        }
   """)
 
-    val key   = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet()
-    val proof = ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get
+    val account = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet()
+    val proof   = ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get
 
     val tx = RegisterTransaction
       .create(
@@ -109,7 +109,7 @@ class RegisterTransactionSpecification
         1526911531530L,
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         100000,
-        List(key),
+        List(account),
         None,
         Proofs(Seq(proof))
       )
@@ -122,7 +122,7 @@ class RegisterTransactionSpecification
     val js = Json.parse("""{
                        "type": 20,
                        "version": 3,
-                       "id": "DB23XJSkkSLEjZtp8Q8VjjYUuxRQgdYGtd2E2x2smVt4",
+                       "id": "7yerk1cuwCpotz9xG1Mm9yfk2TPPQmVvnJ7xVJbH3DfL",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
@@ -131,10 +131,14 @@ class RegisterTransactionSpecification
                        "sponsorPublicKey": "22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz",
                        "fee": 100000,
                        "timestamp": 1526911531530,
-                       "keys": [
+                       "accounts": [
                          {
                            "keyType": "ed25519",
                            "publicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z"
+                         },
+                         {
+                           "keyType": "ed25519",
+                           "publicKey": "22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz"
                          }
                        ],
                        "proofs": [
@@ -144,7 +148,11 @@ class RegisterTransactionSpecification
                        }
   """)
 
-    val key = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet()
+    val accounts = List(
+      PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
+      PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()
+    )
+
     val proofs = Seq(
       ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get,
       ByteStr.decodeBase58("2z2S3W9n9AatLQ4XmR5mPfZdGY3o27JY7Bf9c7GeD3GDhGykxuSEjKMkwh2yALDcBhdduFGLT1pXJww4Dg6eMHRx").get
@@ -157,7 +165,7 @@ class RegisterTransactionSpecification
         1526911531530L,
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         100000,
-        List(key),
+        accounts,
         Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
         Proofs(proofs)
       )

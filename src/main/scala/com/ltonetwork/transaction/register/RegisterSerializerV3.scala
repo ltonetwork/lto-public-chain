@@ -19,8 +19,8 @@ object RegisterSerializerV3 extends TransactionSerializer.For[RegisterTransactio
       Longs.toByteArray(timestamp),
       Deser.serializeAccount(sender),
       Longs.toByteArray(fee),
-      Shorts.toByteArray(keys.length.toShort),
-      Deser.serializeArraysWithoutLength(keys.map(k => Deser.serializeAccount(k))),
+      Shorts.toByteArray(accounts.length.toShort),
+      Deser.serializeArraysWithoutLength(accounts.map(k => Deser.serializeAccount(k))),
     )
   }
 

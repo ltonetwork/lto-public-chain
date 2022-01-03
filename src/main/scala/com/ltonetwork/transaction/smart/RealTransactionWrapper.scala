@@ -54,7 +54,7 @@ object RealTransactionWrapper {
       case ss: SetScriptTransaction => Tx.SetScript(proven(ss), ss.script.map(_.bytes()).map(toByteVector))
       case a: AnchorTransaction     => Tx.Anchor(proven(a))
       case r: RegisterTransaction =>
-        Tx.Register(proven(r), r.keys.map(k => com.ltonetwork.lang.v1.traits.PublicKey(ByteVector(k.publicKey))).toIndexedSeq)
+        Tx.Register(proven(r), r.accounts.map(k => com.ltonetwork.lang.v1.traits.PublicKey(ByteVector(k.publicKey))).toIndexedSeq)
     }
   }
 }

@@ -14,7 +14,7 @@ case class RegisterRequest(version: Option[Byte] = None,
                            senderKeyType: Option[String] = None,
                            senderPublicKey: Option[String] = None,
                            fee: Long,
-                           keys: List[RegisterRequest.Key],
+                           accounts: List[RegisterRequest.Account],
                            sponsorKeyType: Option[String] = None,
                            sponsorPublicKey: Option[String] = None,
                            signature: Option[ByteStr] = None,
@@ -25,15 +25,15 @@ case class RegisterRequest(version: Option[Byte] = None,
 
   def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, RegisterTransaction] =
     for {
-      validKeys   <- keys.traverse(_.toAccount)
-      validProofs <- toProofs(signature, proofs)
+      validAccounts <- accounts.traverse(_.toAccount)
+      validProofs   <- toProofs(signature, proofs)
       tx <- RegisterTransaction.create(
         version.getOrElse(RegisterTransaction.latestVersion),
         None,
         timestamp(time),
         sender,
         fee,
-        validKeys,
+        validAccounts,
         sponsor,
         validProofs
       )
@@ -41,11 +41,11 @@ case class RegisterRequest(version: Option[Byte] = None,
 }
 
 object RegisterRequest {
-  case class Key(keyType: String, publicKey: String) {
+  case class Account(keyType: String, publicKey: String) {
     def toAccount: Validation[PublicKeyAccount] = PublicKeyAccount.fromBase58String(keyType, publicKey)
   }
 
-  implicit val jsonFormatKey: Format[RegisterRequest.Key] = Json.format[RegisterRequest.Key]
+  implicit val jsonFormatKey: Format[RegisterRequest.Account] = Json.format[RegisterRequest.Account]
 
   implicit val jsonFormat: Format[RegisterRequest] = Format(
     Json.reads[RegisterRequest],

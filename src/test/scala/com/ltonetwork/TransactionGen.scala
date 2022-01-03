@@ -465,6 +465,6 @@ trait TransactionGenBase extends ScriptGen {
       data      <- Gen.containerOfN[Array, PublicKeyAccount](size, accountGenRandom())
       sponsor   <- sponsorGen(version)
       fee  = 15000000
-      keys = data.toList
-    } yield RegisterTransaction.signed(version, timestamp, sender, fee, keys).sponsorWith(sponsor).explicitGet()
+      accounts = data.toList
+    } yield RegisterTransaction.signed(version, timestamp, sender, fee, accounts).sponsorWith(sponsor).explicitGet()
 }

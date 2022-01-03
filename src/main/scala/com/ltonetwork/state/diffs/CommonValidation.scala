@@ -184,7 +184,7 @@ object CommonValidation {
     case _: AssociationTransaction       => Right(10)
     case _: SponsorshipTransaction       => Right(100)
     case _: CancelSponsorshipTransaction => Right(10)
-    case tx: RegisterTransaction         => Right(10 + tx.keys.size * 1)
+    case tx: RegisterTransaction         => Right(10 + tx.accounts.size * 1)
     case _                               => Left(UnsupportedTransactionType)
   }
 
