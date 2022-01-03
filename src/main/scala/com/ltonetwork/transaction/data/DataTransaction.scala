@@ -34,7 +34,7 @@ case class DataTransaction private (version: Byte,
 object DataTransaction extends TransactionBuilder.For[DataTransaction] {
 
   override val typeId: Byte                 = 12
-  override val supportedVersions: Set[Byte] = Set(1)
+  override val supportedVersions: Set[Byte] = Set(3)
 
   val MaxBytes: Int      = 150 * 1024
   val MaxEntryCount: Int = 100
@@ -52,7 +52,7 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
         Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), (), ValidationError.TooBigArray),
         Validated.condNel(!data.exists(_.key.isEmpty), (), ValidationError.GenericError("Empty key found")),
         Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, (), ValidationError.GenericError("Duplicate keys found")),
-        Try { Validated.condNel(bytes().length <= MaxBytes, (), ValidationError.TooBigArray) }.getOrElse(().validNel),
+        Validated.condNel(bytes().length <= MaxBytes, (), ValidationError.TooBigArray),
         Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
                           (),
@@ -65,7 +65,8 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
   }
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
-    case 1 => DataSerializerV1
+//    case 1 => DataSerializerV1
+    case 3 => DataSerializerV3
     case _ => UnknownSerializer
   }
 
