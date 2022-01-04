@@ -9,8 +9,6 @@ import com.ltonetwork.transaction.transfer.MassTransferTransaction
 
 class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
 
-  private val Kb = 1024
-
   private val map: Map[Byte, Long] = {
     settings.fees.flatMap { fs =>
       val transactionType = fs._1
@@ -37,8 +35,14 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
       txMinBaseFee <- Either.cond(map.contains(tx.typeId), map(tx.typeId), GenericError(s"Minimum fee is not defined for $txName"))
       minTxFee <- tx match {
         case tx: DataTransaction =>
-          val sizeInKb = 1 + (tx.bytes().length - 1) / Kb
-          Right(txMinBaseFee * sizeInKb)
+          // variable fee is applied per 100 bytes
+          val dataSize =
+            if (tx.data.nonEmpty) (tx.data.map(_.toBytes.length).sum / 100) + 1
+            else 0
+          mapVar
+            .get(DataTransaction.typeId)
+            .toRight(GenericError("Variable fee is not defined for DataTransaction"))
+            .map(varFee => txMinBaseFee + varFee * dataSize)
         case tx: AnchorTransaction =>
           mapVar
             .get(AnchorTransaction.typeId)
