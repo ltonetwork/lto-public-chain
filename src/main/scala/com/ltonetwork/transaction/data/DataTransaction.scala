@@ -1,10 +1,9 @@
 package com.ltonetwork.transaction.data
 
-import cats.implicits._
 import cats.data.{Validated, ValidatedNel}
+import cats.implicits._
 import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.crypto
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
 import monix.eval.Coeval
