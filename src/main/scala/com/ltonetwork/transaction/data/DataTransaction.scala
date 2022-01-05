@@ -45,14 +45,14 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
   implicit object Validator extends TxValidator[TransactionT] {
     def validate(tx: TransactionT): ValidatedNel[ValidationError, TransactionT] = {
       import tx._
-
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
         Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), (), ValidationError.TooBigArray),
         Validated.condNel(!data.exists(_.key.isEmpty), (), ValidationError.GenericError("Empty key found")),
         Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, (), ValidationError.GenericError("Duplicate keys found")),
-        Validated.condNel(bytes().length <= MaxBytes, (), ValidationError.TooBigArray),
+        // if version is not supported the validation crashes, hence the try-catch
+        Try { Validated.condNel(bytes().length <= MaxBytes, (), ValidationError.TooBigArray) }.getOrElse(().validNel),
         Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
                           (),

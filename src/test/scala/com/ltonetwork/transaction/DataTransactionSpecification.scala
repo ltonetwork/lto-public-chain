@@ -11,9 +11,11 @@ import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import play.api.libs.json.Json
-import com.ltonetwork.account.PublicKeyAccount
+import com.ltonetwork.account.{KeyType, KeyTypes, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.DataRequest
 import com.ltonetwork.transaction.data.DataTransaction
+import org.scalacheck.Gen.Parameters
+import org.scalacheck.rng.Seed
 import scorex.crypto.encode.Base64
 
 class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen {
@@ -50,10 +52,13 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
     forAll(dataTransactionGen, badTypeIdGen) {
       case (tx, badTypeId) =>
         val bytes      = tx.bytes()
-        val entryCount = Shorts.fromByteArray(bytes.drop(35))
+        val senderKeyLength = KeyTypes.keyType(bytes.apply(1 + 1 + 1 + 8 + 1)).get.length
+        // txTypeId + version + chainId + timestamp + senderKeyTypeId + senderKeyLength + fee
+        val baseBytesLength = 1 + 1 + 1 + 8 + 1 + senderKeyLength + 8
+        val entryCount = Shorts.fromByteArray(bytes.drop(baseBytesLength))
         if (entryCount > 0) {
-          val key1Length = Shorts.fromByteArray(bytes.drop(37))
-          val p          = 39 + key1Length
+          val key1Length = Shorts.fromByteArray(bytes.drop(baseBytesLength + 2))
+          val p          = baseBytesLength + 2 + key1Length
           bytes(p) = badTypeId.toByte
           val parsed = DataTransaction.parseBytes(bytes)
           parsed.isFailure shouldBe true
@@ -149,8 +154,8 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
   property(testName = "JSON format validation") {
     val js = Json.parse("""{
                        "type": 12,
-                       "version": 1,
-                       "id": "87SfuGJXH1cki2RGDH7WMTGnTXeunkc5mEjNKmmMdRzM",
+                       "version": 3,
+                       "id": "CsJPMx8MY3dLXKHu13zpL2vWfeU5mdDiyEF6APyKummd",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
@@ -184,7 +189,7 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
     val entry3 = BinaryDataEntry("blob", ByteStr(Base64.decode("YWxpY2U=")))
     val tx = DataTransaction
       .create(
-        1,
+        3,
         None,
         1526911531530L,
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
