@@ -1,4 +1,5 @@
 from lto.accounts.account_factory_ed25519 import AccountFactoryED25519 as AccountFactory
+from lto.accounts.account_factory_ecdsa import AccountFactoryECDSA
 from lto.public_node import PublicNode
 from lto.transactions.transfer import Transfer
 import polling
@@ -12,14 +13,15 @@ NODE = PublicNode(URL)
 ROOT_SEED = config.seed
 ROOT_ACCOUNT = AccountFactory(CHAIN_ID).create_from_seed(ROOT_SEED)
 
-
-
 def assert_equals(value1, value2):
     assert value1 == value2, f'{value1} is not {value2}'
 
 
-def generate_account():
-    return AccountFactory(CHAIN_ID).create()
+def generate_account(key_type = 'ed25519'):
+    if key_type == 'ed25519':
+        return AccountFactory(CHAIN_ID).create()
+    else:
+        return AccountFactoryECDSA(CHAIN_ID, key_type).create()
 
 
 def get_balance(address):

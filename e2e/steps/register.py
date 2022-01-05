@@ -5,7 +5,7 @@ from lto.transactions.register import Register
 
 def register(context, user=None, key_type="ed25519", public_key=None, version=None):
     account = context.users[user] if user else ROOT_ACCOUNT
-    register_account = {key_type, public_key}
+    register_account = {key_type, public_key} if public_key else generate_account(key_type)
 
     transaction = Register(register_account)
     transaction.version = version or Register.DEFAULT_VERSION
