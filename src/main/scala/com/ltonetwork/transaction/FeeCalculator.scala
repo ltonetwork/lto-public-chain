@@ -33,9 +33,8 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
   def minFee(tx: Transaction, blockchain: Blockchain, fs: FunctionalitySettings): Either[ValidationError, Long] = minFee(tx)
 
   def minFee(tx: Transaction): Either[ValidationError, Long] = {
-    val txName = Constants.TransactionNames(tx.typeId)
     for {
-      txMinBaseFee <- Either.cond(map.contains(tx.typeId), map(tx.typeId), GenericError(s"Minimum fee is not defined for $txName"))
+      txMinBaseFee <- Either.cond(map.contains(tx.typeId), map(tx.typeId), noMinFee(tx.typeId))
       minTxFee <- tx match {
         case tx: DataTransaction =>
           val sizeInKb = 1 + (tx.bytes().length - 1) / Kb
@@ -43,17 +42,17 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
         case tx: AnchorTransaction =>
           mapVar
             .get(AnchorTransaction.typeId)
-            .toRight(GenericError("Variable fee is not defined for AnchorTransaction"))
+            .toRight(GenericError("Variable fee is not defined for anchor transaction"))
             .map(varFee => txMinBaseFee + varFee * tx.anchors.size)
         case tx: MassTransferTransaction =>
           mapVar
             .get(MassTransferTransaction.typeId)
-            .toRight(GenericError("Can't find variable fee for MassTransferTransaction"))
+            .toRight(GenericError("Variable fee is not defined for mass transfer transaction"))
             .map(varFee => txMinBaseFee + varFee * tx.transfers.size)
         case tx: RegisterTransaction =>
           mapVar
             .get(RegisterTransaction.typeId)
-            .toRight(GenericError("Variable fee is not defined for RegisterTransaction"))
+            .toRight(GenericError("Variable fee is not defined for register transaction"))
             .map(varFee => txMinBaseFee + varFee * tx.accounts.size)
         case _ =>
           Right(txMinBaseFee)
@@ -61,19 +60,24 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     } yield minTxFee
   }
 
+  private def noMinFee(typeId: Byte): GenericError = {
+    val txName = Constants.TransactionNames.getOrElse(typeId, "unknown")
+    GenericError(s"Minimum fee is not defined for $txName transaction")
+  }
+
   def enoughFee[T <: Transaction](tx: T, blockchain: Blockchain, fs: FunctionalitySettings): Either[ValidationError, T] = enoughFee(tx)
 
   def enoughFee[T <: Transaction](tx: T): Either[ValidationError, T] = {
-    val txName     = Constants.TransactionNames(tx.typeId)
-    val txFeeValue = tx.fee
-
     for {
       minTxFee <- minFee(tx)
-      _ <- Either.cond(
-        txFeeValue >= minTxFee,
-        (),
-        InsufficientFee(s"Fee for ${txName} transaction ($txFeeValue) does not exceed minimal value of $minTxFee")
-      )
+      _ <- Either.cond(tx.fee >= minTxFee, (), insufficientFee(tx, minTxFee))
     } yield tx
+  }
+
+  private def insufficientFee[T <: Transaction](tx: T, minTxFee: Long): InsufficientFee = {
+    val txName     = Constants.TransactionNames.getOrElse(tx.typeId, "unknown")
+    val txFeeValue = tx.fee
+
+    InsufficientFee(s"Fee for ${txName} transaction ($txFeeValue) does not exceed minimal value of $minTxFee")
   }
 }

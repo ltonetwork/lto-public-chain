@@ -1,6 +1,5 @@
 package com.ltonetwork.transaction
 
-import com.google.common.primitives.Longs
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
