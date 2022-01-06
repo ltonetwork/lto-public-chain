@@ -18,6 +18,8 @@ trait PublicKeyAccount {
 
   override lazy val toString: String = this.toAddress.address
 
+  def toKey: (KeyType, String) = (keyType, Base58.encode(publicKey))
+
   def verify(signature: Array[Byte], message: Array[Byte]): Boolean = crypto.verify(signature, message, this)
 }
 
@@ -40,9 +42,15 @@ object PublicKeyAccount {
 
   def fromBase58String(keyType: KeyType, s: String): Either[InvalidAddress, PublicKeyAccount] =
     (for {
-      _     <- Either.cond(s.length <= base58Length(keyType.length), (), "Bad public key string length")
+      _     <- Either.cond(s.length <= base58Length(keyType.length), (), "Incorrect string length")
       bytes <- Base58.decode(s).toEither.left.map(ex => s"Unable to decode base58: ${ex.getMessage}")
-    } yield PublicKeyAccount(keyType, bytes)).left.map(err => InvalidAddress(s"Invalid sender: $err"))
+    } yield PublicKeyAccount(keyType, bytes)).left.map(err => InvalidAddress(s"Invalid public key: $err"))
+
+  def fromBase58String(kt: String, s: String): Either[InvalidAddress, PublicKeyAccount] =
+    for {
+      keyType <- keyType(kt).fold(err => Left(InvalidAddress(s"Invalid public key: $err")), keyType => Right(keyType))
+      account <- fromBase58String(keyType, s)
+    } yield account
 
   def fromBase58String(s: String): Either[InvalidAddress, PublicKeyAccount] =
     fromBase58String(ED25519, s)

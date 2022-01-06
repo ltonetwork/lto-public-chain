@@ -13,6 +13,7 @@ import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
+import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.sponsorship._
 import com.ltonetwork.transaction.transfer._
@@ -99,6 +100,7 @@ object CommonValidation {
       case (_: AssociationTransaction, 3)     => activationBarrier(BlockchainFeatures.Cobalt)
       case (_: SponsorshipTransactionBase, 1) => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
       case (_: SponsorshipTransactionBase, 3) => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: RegisterTransaction, 3)        => activationBarrier(BlockchainFeatures.CobaltAlloy)
 
       case _ => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
     }
@@ -182,6 +184,7 @@ object CommonValidation {
     case _: AssociationTransaction       => Right(10)
     case _: SponsorshipTransaction       => Right(100)
     case _: CancelSponsorshipTransaction => Right(10)
+    case tx: RegisterTransaction         => Right(10 + tx.accounts.size * 1)
     case _                               => Left(UnsupportedTransactionType)
   }
 

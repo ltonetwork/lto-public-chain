@@ -5,6 +5,7 @@ import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.{GenericError, InsufficientFee}
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.data.DataTransaction
+import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.transfer.MassTransferTransaction
 
 class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
@@ -49,6 +50,11 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
             .get(MassTransferTransaction.typeId)
             .toRight(GenericError("Can't find variable fee for MassTransferTransaction"))
             .map(varFee => txMinBaseFee + varFee * tx.transfers.size)
+        case tx: RegisterTransaction =>
+          mapVar
+            .get(RegisterTransaction.typeId)
+            .toRight(GenericError("Variable fee is not defined for RegisterTransaction"))
+            .map(varFee => txMinBaseFee + varFee * tx.accounts.size)
         case _ =>
           Right(txMinBaseFee)
       }
