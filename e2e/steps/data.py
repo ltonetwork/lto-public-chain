@@ -7,7 +7,8 @@ def set_data(context, user=None, data=None, version=None):
     account = context.users[user] if user else ROOT_ACCOUNT
 
     transaction = Data(data or {})
-    transaction.version = version or Data.DEFAULT_VERSION
+    transaction.version = version or 3
+    transaction.tx_fee = 110000000
     transaction.sign_with(account)
 
     broadcast(context, transaction)
