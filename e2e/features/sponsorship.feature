@@ -7,7 +7,7 @@ Feature: Sponsorship
     And Dick has a new account
 
   Scenario Outline: Successful sponsorship
-    Given Karen as a new <key_type> account
+    Given Karen has a new <key_type> account
     Given Karen has 10 lto
     When Karen sponsors (<version>) Bob
     Then Karen has 5 lto

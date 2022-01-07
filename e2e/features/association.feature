@@ -5,7 +5,7 @@ Feature: Association
     And Bob has a new account
 
   Scenario Outline: Successful issue association
-    Given Karen as a new <key_type> account
+    Given Karen has a new <key_type> account
     Given Karen does not have an association with Bob of type 1
     And Karen has 10 lto
     When Karen issues an association (<version>) with Bob of type 1
@@ -26,7 +26,7 @@ Feature: Association
 
   # Wait after association because of https://github.com/ltonetwork/lto-public-chain/issues/106
   Scenario Outline: Successful revoke association
-    Given Karen as a new <key_type> account
+    Given Karen has a new <key_type> account
     Given Karen has an association with Bob of type 1
     And Karen has 10 lto
     And wait

@@ -6,7 +6,7 @@ Feature: Mass Transfer
     And Charlie has a new account
 
   Scenario Outline: Successful mass-transfer
-    Given Karen as a new <key_type> account
+    Given Karen has a new <key_type> account
     Given Karen has 10 lto
     When Karen does a mass-transfer (<version>) of 2 lto to Bob and 1 lto to Charlie
     Then Karen has 5.8 lto
