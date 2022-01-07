@@ -107,14 +107,20 @@ object CommonValidation {
     }
   }
 
-  def disallowUnsupportedKeyTypes[T <: Transaction](tx: T): Either[ValidationError, T] = {
+  def disallowUnsupportedKeyTypes[T <: Transaction](blockchain: Blockchain, height: Int, tx: T): Either[ValidationError, T] = {
+    def activationBarrier(keyType: KeyType, b: BlockchainFeature) =
+      Either.cond(
+        blockchain.isFeatureActivated(b, height),
+        tx,
+        UnsupportedKeyType("Transaction with id " + tx.id.toString() + " key type " + keyType.reference + " not supported.")
+      )
 
     def disallowKeyTypes(keyType: KeyType) = keyType match {
-      case (KeyTypes.ED25519)   => Right(tx)
-      case (KeyTypes.SECP256K1) => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype SECP256K1 not supported."))
-      case (KeyTypes.SECP256R1) => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype SECP256R1 not supported."))
+      case KeyTypes.ED25519   => Right(tx)
+      case KeyTypes.SECP256K1 => activationBarrier(keyType, BlockchainFeatures.CobaltAlloy)
+      case KeyTypes.SECP256R1 => activationBarrier(keyType, BlockchainFeatures.CobaltAlloy)
 
-      case _ => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype not supported."))
+      case _ => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " key type not supported."))
     }
 
     for {
