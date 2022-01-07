@@ -7,15 +7,18 @@ Feature: Sponsorship
     And Dick has a new account
 
   Scenario Outline: Successful sponsorship
-    Given Alice has 10 lto
-    When Alice sponsors (<version>) Bob
-    Then Alice has 5 lto
-    And Alice is sponsoring Bob
+    Given Karen as a new <key_type> account
+    Given Karen has 10 lto
+    When Karen sponsors (<version>) Bob
+    Then Karen has 5 lto
+    And Karen is sponsoring Bob
 
     Examples:
-      | version |
-      | v1      |
-      | v3      |
+      | version | key_type  |
+      | v1      | ed25519   |
+      | v3      | ed25519   |
+      | v3      | secp256k1 |
+      | v3      | secp256r1 |
 
   Scenario: The sponsoring account pays for the transaction costs
     Given Alice is sponsoring Bob
@@ -69,16 +72,19 @@ Feature: Sponsorship
     Then the transaction fails
 
 Scenario Outline: Successful cancel sponsorship
-    Given Alice is sponsoring Bob
-    And Alice has 6 lto
-    When Alice cancels the sponsorship (<version>) for Bob
-    Then Alice has 1 lto
-    And Alice is not sponsoring Bob
+    Given Karen as a new <key_type> account
+    Given Karen is sponsoring Bob
+    And Karen has 6 lto
+    When Karen cancels the sponsorship (<version>) for Bob
+    Then Karen has 1 lto
+    And Karen is not sponsoring Bob
 
     Examples:
-      | version |
-      | v1      |
-      | v3      |
+      | version | key_type  |
+      | v1      | ed25519   |
+      | v3      | ed25519   |
+      | v3      | secp256k1 |
+      | v3      | secp256r1 |
 
   Scenario: Unsuccessful cancel sponsorship due to insufficient balance
     Given Alice has 0 lto
