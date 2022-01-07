@@ -99,7 +99,7 @@ object CommonValidation {
       case (_: AssociationTransaction, 3)     => activationBarrier(BlockchainFeatures.Cobalt)
       case (_: SponsorshipTransactionBase, 1) => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
       case (_: SponsorshipTransactionBase, 3) => activationBarrier(BlockchainFeatures.Cobalt)
-      case (_: DataTransaction, 3)            => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: DataTransaction, 3)            => activationBarrier(BlockchainFeatures.CobaltAlloy)
 
       case _ => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
     }
@@ -173,7 +173,6 @@ object CommonValidation {
     case _: AnchorTransaction          => Right(350)
     case _: AssociationTransaction     => Right(1000)
     case _: SponsorshipTransactionBase => Right(5000)
-    case tx: DataTransaction           => Right(1000 + dataTransactionBytes(tx) * 100)
     case _                             => Left(UnsupportedTransactionType)
   }
 
