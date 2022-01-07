@@ -74,6 +74,43 @@ case class AddressApiRoute(settings: RestAPISettings,
     )
   }
 
+  @Path("/data/{address}")
+  @Operation(summary = "Read all data posted by an account")
+  @Parameters(
+    Array(
+      new Parameter(
+        name = "address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    ))
+  def getData: Route = (path("data" / Segment) & get) { address =>
+    complete(accountData(address))
+  }
+
+  @Path("/data/{address}/{key}")
+  @Operation(summary = "Read data associated with an account and a key")
+  @Parameters(
+    Array(
+      new Parameter(
+        name = "address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      ),
+      new Parameter(
+        name = "key",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    ))
+  def getDataItem: Route = (path("data" / Segment / Segment.?) & get) {
+    case (address, keyOpt) =>
+      complete(accountData(address, keyOpt.getOrElse("")))
+  }
+
   @POST
   @Path("/verify/{address}")
   @Operation(

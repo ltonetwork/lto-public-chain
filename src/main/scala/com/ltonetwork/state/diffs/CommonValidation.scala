@@ -100,6 +100,7 @@ object CommonValidation {
       case (_: AssociationTransaction, 3)     => activationBarrier(BlockchainFeatures.Cobalt)
       case (_: SponsorshipTransactionBase, 1) => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
       case (_: SponsorshipTransactionBase, 3) => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: DataTransaction, 3)            => activationBarrier(BlockchainFeatures.CobaltAlloy)
       case (_: RegisterTransaction, 3)        => activationBarrier(BlockchainFeatures.CobaltAlloy)
 
       case _ => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
@@ -134,6 +135,10 @@ object CommonValidation {
         Left(Mistiming(s"Transaction ts ${tx.timestamp} is too old. Previous block time: $prevBlockTime"))
       case _ => Right(tx)
     }
+
+  private def dataTransactionBytes(tx: DataTransaction): Integer =
+    if (tx.data.nonEmpty) (tx.data.map(_.toBytes.length).sum / 100) + 1
+    else 0
 
   private def feeInUnitsVersion1(tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: GenesisTransaction       => Right(0)
@@ -184,6 +189,7 @@ object CommonValidation {
     case _: AssociationTransaction       => Right(10)
     case _: SponsorshipTransaction       => Right(100)
     case _: CancelSponsorshipTransaction => Right(10)
+    case tx: DataTransaction             => Right(10 + dataTransactionBytes(tx) * 1)
     case tx: RegisterTransaction         => Right(10 + tx.accounts.size * 1)
     case _                               => Left(UnsupportedTransactionType)
   }
