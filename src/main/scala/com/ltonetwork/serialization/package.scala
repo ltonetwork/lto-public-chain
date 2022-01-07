@@ -76,6 +76,14 @@ package object serialization {
       if (kt == 0) None else Some(getAccountWithKeyType(kt, buf))
     }
 
+    def getAll[T](callback: ByteBuffer => T): Seq[T] = {
+      val length = buf.getShort
+
+      (0 until length).foldLeft(Seq.empty[T]) {
+        case (acc, _) => acc :+ callback(buf)
+      }
+    }
+
     def getProofs: Proofs = Proofs.fromBytes(buf.getByteArray(buf.remaining())).explicitGet()
   }
 }

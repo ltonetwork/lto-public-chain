@@ -5,8 +5,9 @@ from time import sleep
 
 
 @given('{user} has a new account')
-def step_impl(context, user):
-    context.users.update({user: generate_account()})
+@given('{user} has a new {key_type} account')
+def step_impl(context, user, key_type=""):
+    context.users.update({user: generate_account(key_type)})
 
 
 @then('the transaction fails')

@@ -53,5 +53,7 @@ object Deser {
 
   def serializeArrays(bs: Seq[Array[Byte]]): Array[Byte] = Shorts.toByteArray(bs.length.toShort) ++ Bytes.concat(bs.map(serializeArray): _*)
 
+  def serializeArraysWithoutLength(bs: Seq[Array[Byte]]): Array[Byte] = Bytes.concat(bs: _*)
+
   def serializeAccount(account: PublicKeyAccount): Array[Byte] = Bytes.concat(Array(account.keyType.id), account.publicKey)
 }
