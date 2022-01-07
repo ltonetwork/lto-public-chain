@@ -2,6 +2,13 @@ from behave import *
 from e2e.common.tools import *
 from lto.transactions.data import Data
 
+def __cast_value(value):
+    if value.lower() == 'true':
+        return True
+    elif value.lower() == 'false':
+        return False
+    else:
+        return int(value)
 
 def set_data(context, user=None, data=None, version=None):
     account = context.users[user] if user else ROOT_ACCOUNT
@@ -13,26 +20,24 @@ def set_data(context, user=None, data=None, version=None):
 
     broadcast(context, transaction)
 
-
-@when(u'{user} sets data "{key}" to "{value}"')
-@when(u'{user} sets data (v{version}) "{key}" to "{value}"')
-def step_impl(context, user, key, value, version=None):
-    set_data(context, user, {key: value}, version)
-
 @when(u'{user} sets data "{key}" to {value}')
-@when(u'{user} sets data (v{version}) "{key}" to {value}')
-def step_impl(context, user, key, value, version=None):
-    if value.lower() == 'true':
-        value = True
-    elif value.lower() == 'false':
-        value = False
-    else:
-        value = int(value)
-    set_data(context, user, {key: value}, version)
+@when(u'{user} sets data "{key}" to "{str}"')
+@when(u'{user} sets data (v{version:d}) "{key}" to {value}')
+@when(u'{user} sets data (v{version:d}) "{key}" to "{str}"')
+def step_impl(context, user, key, str=None, value=None, version=None):
+    set_data(context, user, {key: str or __cast_value(value)}, version)
 
-@when('{user} tries to set data "{key}" to "{value}"')
-def step_impl(context, user, key, value):
+@when('{user} tries to set data "{key}" to {value}')
+@when('{user} tries to set data "{key}" to "{str}"')
+def step_impl(context, user, key, str=None, value=None):
     try:
-        set_data(context, user, key, value)
+        set_data(context, user, key, str or __cast_value(value))
     except:
         pass
+
+@then('{user} has data "{key}" with value {value}')
+@then('{user} has data "{key}" with value "{str}"')
+def step_impl(context, user, key, str=None, value=None):
+    data = get_data(context.users[user])
+    assert key in data, 'key "{}" is not set'.format(key)
+    assert data[key] == str or __cast_value(value)
