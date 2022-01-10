@@ -7,17 +7,19 @@ Feature: Data
     Given Karen has a new <key_type> account
     And Karen has 5 lto
     When Karen sets data (<version>) "foo" to "bar"
-    Then Karen has 4.65 lto
+    Then Karen has 3.9 lto
     And Karen has data "foo" with value "bar"
 
     Examples:
       | version | key_type  |
       | v3      | ed25519   |
+      | v3      | secp256k1 |
+      | v3      | secp256r1 |
 
   Scenario Outline: Set data with different data types
     Given Alice has 10 lto
-    #When Alice sets data "<key>" to <value>
-    Then Karen has data "<key>" with value <value>
+    When Alice sets data "<key>" to <value>
+    Then Alice has data "<key>" with value <value>
 
     Examples:
       | key       | value   |

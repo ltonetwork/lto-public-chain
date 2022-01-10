@@ -2,6 +2,7 @@ from behave import *
 from e2e.common.tools import *
 from lto.transactions.data import Data
 
+
 def __cast_value(value):
     if value.lower() == 'true':
         return True
@@ -10,15 +11,16 @@ def __cast_value(value):
     else:
         return int(value)
 
+
 def set_data(context, user=None, data=None, version=None):
     account = context.users[user] if user else ROOT_ACCOUNT
 
     transaction = Data(data or {})
-    transaction.version = version or 3
-    transaction.tx_fee = 110000000
+    transaction.version = version or Data.DEFAULT_VERSION
     transaction.sign_with(account)
 
     broadcast(context, transaction)
+
 
 @when(u'{user} sets data "{key}" to {value}')
 @when(u'{user} sets data "{key}" to "{str}"')
@@ -27,6 +29,7 @@ def set_data(context, user=None, data=None, version=None):
 def step_impl(context, user, key, str=None, value=None, version=None):
     set_data(context, user, {key: str or __cast_value(value)}, version)
 
+
 @when('{user} tries to set data "{key}" to {value}')
 @when('{user} tries to set data "{key}" to "{str}"')
 def step_impl(context, user, key, str=None, value=None):
@@ -34,6 +37,7 @@ def step_impl(context, user, key, str=None, value=None):
         set_data(context, user, key, str or __cast_value(value))
     except:
         pass
+
 
 @then('{user} has data "{key}" with value {value}')
 @then('{user} has data "{key}" with value "{str}"')
