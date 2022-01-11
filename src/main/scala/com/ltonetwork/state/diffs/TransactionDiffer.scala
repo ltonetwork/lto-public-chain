@@ -24,7 +24,7 @@ object TransactionDiffer {
       blockchain: Blockchain,
       tx: Transaction): Either[ValidationError, Diff] = {
     for {
-      _ <- CommonValidation.disallowUnsupportedKeyTypes(tx)
+      _ <- CommonValidation.disallowUnsupportedKeyTypes(blockchain, currentBlockHeight, tx)
       _ <- Verifier(blockchain, currentBlockHeight)(tx)
       _ <- CommonValidation.disallowTxFromFuture(settings, currentBlockTimestamp, tx)
       _ <- CommonValidation.disallowTxFromPast(prevBlockTimestamp, tx)
