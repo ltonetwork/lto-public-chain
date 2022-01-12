@@ -352,6 +352,14 @@ trait TransactionGenBase extends ScriptGen {
   def dataEntryGen(maxSize: Int, keyGen: Gen[String] = dataKeyGen): Gen[DataEntry[_]] =
     Gen.oneOf(longEntryGen(keyGen), booleanEntryGen(keyGen), binaryEntryGen(maxSize, keyGen), stringEntryGen(maxSize, keyGen))
 
+  def dataGen(size: Int): Gen[List[DataEntry[_]]] = {
+    val maxEntrySize = ((DataTransaction.MaxBytes / (size max 1)) - DataEntry.MaxKeySize) min DataEntry.MaxValueSize
+    Gen.listOfN(size, dataEntryGen(maxEntrySize max 64)) suchThat (data => data.flatMap(_.toBytes).toArray.length <= DataTransaction.MaxBytes)
+  }
+
+  def dataForScriptGen(size: Int): Gen[List[DataEntry[_]]] =
+    Gen.listOfN(size, dataEntryGen(200, dataScriptsKeyGen))
+
   val dataTransactionGen: Gen[DataTransaction] = dataTransactionGen(DataTransaction.MaxEntryCount)
 
   def dataTransactionGen(maxEntryCount: Int, useForScript: Boolean = false): Gen[DataTransaction] =
@@ -359,9 +367,8 @@ trait TransactionGenBase extends ScriptGen {
       sender    <- accountGen
       timestamp <- timestampGen
       size      <- Gen.choose(0, maxEntryCount)
-      fee          = 15000000
-      maxEntrySize = if (useForScript) 200 else (DataTransaction.MaxBytes - 122) / (size max 1) min DataEntry.MaxValueSize
-      data <- if (useForScript) Gen.listOfN(size, dataEntryGen(maxEntrySize, dataScriptsKeyGen)) else Gen.listOfN(size, dataEntryGen(maxEntrySize))
+      fee       = 15000000
+      data      <- if (useForScript) dataGen(size) else dataForScriptGen(size)
       uniq = data.foldRight(List.empty[DataEntry[_]]) { (e, es) =>
         if (es.exists(_.key == e.key)) es else e :: es
       }
