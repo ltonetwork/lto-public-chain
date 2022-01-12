@@ -143,7 +143,8 @@ object CommonValidation {
     }
 
   private def dataTransactionBytes(tx: DataTransaction): Integer =
-    if (tx.data.nonEmpty) (tx.data.map(_.toBytes.length).sum / 100) + 1
+    // variable fee is calculated per 256KB
+    if (tx.data.nonEmpty) (tx.data.map(_.toBytes.length).sum / (1024*256)) + 1
     else 0
 
   private def feeInUnitsVersion1(tx: Transaction): Either[ValidationError, Long] = tx match {

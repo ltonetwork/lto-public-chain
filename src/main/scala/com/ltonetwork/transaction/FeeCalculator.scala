@@ -36,9 +36,9 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
       txMinBaseFee <- Either.cond(map.contains(tx.typeId), map(tx.typeId), GenericError(s"Minimum fee is not defined for $txName"))
       minTxFee <- tx match {
         case tx: DataTransaction =>
-          // variable fee is applied per 100 bytes
+          // variable fee is calculated per 256KB
           val dataSize =
-            if (tx.data.nonEmpty) (tx.data.map(_.toBytes.length).sum / 100) + 1
+            if (tx.data.nonEmpty) (tx.data.map(_.toBytes.length).sum / (1024*256)) + 1
             else 0
           mapVar
             .get(DataTransaction.typeId)
