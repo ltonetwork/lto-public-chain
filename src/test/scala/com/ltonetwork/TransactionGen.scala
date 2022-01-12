@@ -360,7 +360,7 @@ trait TransactionGenBase extends ScriptGen {
       timestamp <- timestampGen
       size      <- Gen.choose(0, maxEntryCount)
       fee          = 15000000
-      maxEntrySize = if (useForScript) 200 else (DataTransaction.MaxBytes - 122) / (size max 1) min DataEntry.MaxValueSize
+      maxEntrySize = if (useForScript) 200 else DataTransaction.MaxBytes / size
       data <- if (useForScript) Gen.listOfN(size, dataEntryGen(maxEntrySize, dataScriptsKeyGen)) else Gen.listOfN(size, dataEntryGen(maxEntrySize))
       uniq = data.foldRight(List.empty[DataEntry[_]]) { (e, es) =>
         if (es.exists(_.key == e.key)) es else e :: es
