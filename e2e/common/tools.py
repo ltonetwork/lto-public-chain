@@ -1,7 +1,6 @@
-from lto.accounts.account_factory_ed25519 import AccountFactoryED25519 as AccountFactory
-from lto.accounts.account_factory_ecdsa import AccountFactoryECDSA
+from lto.accounts import AccountFactoryED25519 as AccountFactory, AccountFactoryECDSA
 from lto.public_node import PublicNode
-from lto.transactions.transfer import Transfer
+from lto.transactions import Transfer
 import polling
 import requests
 import hashlib

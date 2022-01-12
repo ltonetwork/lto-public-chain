@@ -1,12 +1,10 @@
 package com.ltonetwork.transaction.data
 
 import com.google.common.primitives.{Bytes, Longs, Shorts}
-import com.ltonetwork.account.PublicKeyAccount
 import com.ltonetwork.serialization._
 import com.ltonetwork.state.DataEntry
+import com.ltonetwork.transaction.TransactionSerializer
 import com.ltonetwork.transaction.data.DataTransaction.create
-import com.ltonetwork.transaction.{Proofs, TransactionSerializer}
-import scorex.crypto.signatures.Curve25519.KeyLength
 
 import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}

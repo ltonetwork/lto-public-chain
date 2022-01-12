@@ -33,9 +33,9 @@ case class DataTransaction private (version: Byte,
 object DataTransaction extends TransactionBuilder.For[DataTransaction] {
 
   override val typeId: Byte                 = 12
-  override val supportedVersions: Set[Byte] = Set(3)
+  override val supportedVersions: Set[Byte] = Set(1, 3)
 
-  val MaxBytes: Int      = 150 * 1024
+  val MaxBytes: Int      = 10 * 1024
   val MaxEntryCount: Int = 100
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
@@ -50,8 +50,7 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
         Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), (), ValidationError.TooBigArray),
         Validated.condNel(!data.exists(_.key.isEmpty), (), ValidationError.GenericError("Empty key found")),
         Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, (), ValidationError.GenericError("Duplicate keys found")),
-        // if version is not supported the validation crashes, hence the try-catch
-        Try { Validated.condNel(bytes().length <= MaxBytes, (), ValidationError.TooBigArray) }.getOrElse(().validNel),
+        Validated.condNel(data.flatMap(_.toBytes).toArray.length <= MaxBytes, (), ValidationError.TooBigArray),
         Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
                           (),
@@ -64,7 +63,7 @@ object DataTransaction extends TransactionBuilder.For[DataTransaction] {
   }
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
-//    case 1 => DataSerializerV1
+    case 1 => DataSerializerV1
     case 3 => DataSerializerV3
     case _ => UnknownSerializer
   }
