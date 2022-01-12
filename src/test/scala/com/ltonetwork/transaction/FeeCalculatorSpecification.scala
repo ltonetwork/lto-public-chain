@@ -37,6 +37,7 @@ class FeeCalculatorSpecification extends AnyPropSpec with ScalaCheckDrivenProper
       |    }
       |    data {
       |      BASE = 100000
+      |      VAR = 10000
       |    }
       |    issue-association {
       |      BASE = 100000000
