@@ -52,9 +52,10 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
     forAll(dataTransactionGen, badTypeIdGen) {
       case (tx, badTypeId) =>
         val bytes      = tx.bytes()
-        val senderKeyLength = KeyTypes.keyType(bytes.apply(1 + 1 + 1 + 8 + 1)).get.length
-        // txTypeId + version + chainId + timestamp + senderKeyTypeId + senderKeyLength + fee
-        val baseBytesLength = 1 + 1 + 1 + 8 + 1 + senderKeyLength + 8
+        val senderKeyLength = KeyTypes.ED25519.length
+        val baseBytesLength =
+          if (tx.version == 1) 1 + 1 + senderKeyLength + 8 + 8 // txTypeId + version + senderKeyLength + timestamp + fee
+          else 1 + 1 + 1 + 8 + 1 + senderKeyLength + 8 // txTypeId + version + chainId + timestamp + senderKeyTypeId + senderKeyLength + fee
         val entryCount = Shorts.fromByteArray(bytes.drop(baseBytesLength))
         if (entryCount > 0) {
           val key1Length = Shorts.fromByteArray(bytes.drop(baseBytesLength + 2))
@@ -96,6 +97,7 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
   property("positive validation cases") {
     import DataTransaction.MaxEntryCount
     import com.ltonetwork.state._
+    val maxValueRepeat = DataEntry.MaxValueSize - 6
     forAll(dataTransactionGen, dataEntryGen(500)) {
       case (DataTransaction(version, chainId, timestamp, sender, fee, data, sponsor, proofs), entry) =>
         def check(data: List[DataEntry[_]]): Assertion = {
@@ -104,14 +106,14 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
           checkSerialization(txEi.explicitGet())
         }
 
-        check(List.empty)                                                               // no data
-        check(List.tabulate(MaxEntryCount)(n => IntegerDataEntry(n.toString, n)))       // maximal data
-        check(List.tabulate(30)(n => StringDataEntry(n.toString, "a" * 5109)))          // maximal data
-        check(List(IntegerDataEntry("a" * MaxKeySize, 0xa)))                            // max key size
-        check(List(BinaryDataEntry("bin", ByteStr.empty)))                              // empty binary
-        check(List(BinaryDataEntry("bin", ByteStr(Array.fill(MaxValueSize)(1: Byte))))) // max binary value size
-        check(List(StringDataEntry("str", "")))                                         // empty string
-        check(List(StringDataEntry("str", "A" * MaxValueSize))) // max string size
+        check(List.empty)                                                                        // no data
+        check(List.tabulate(MaxEntryCount)(n => IntegerDataEntry(n.toString, n)))                // maximal data
+        check(List.tabulate(10)(n => StringDataEntry(n.toString, "a" * maxValueRepeat)))         // maximal data
+        check(List(IntegerDataEntry("a" * MaxKeySize, 0xa)))                                     // max key size
+        check(List(BinaryDataEntry("bin", ByteStr.empty)))                                       // empty binary
+        check(List(BinaryDataEntry("bin", ByteStr(Array.fill(MaxValueSize)(1: Byte)))))          // max binary value size
+        check(List(StringDataEntry("str", "")))                                                  // empty string
+        check(List(StringDataEntry("str", "A" * MaxValueSize)))                                  // max string size
     }
   }
 

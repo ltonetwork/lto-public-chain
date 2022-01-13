@@ -33,20 +33,20 @@ class DataTransactionDiffTest extends AnyPropSpec with ScalaCheckDrivenPropertyC
       value1 <- positiveLongGen
       item1 = IntegerDataEntry(key1, value1)
       fee1     <- smallFeeGen
-      version1 <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
+      version1 = 3: Byte //<- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
       dataTx1 = data(version1, master, List(item1), fee1, ts + 10000)
 
       key2   <- dataKeyGen
       value2 <- Arbitrary.arbitrary[Boolean]
       item2 = BooleanDataEntry(key2, value2)
       fee2     <- smallFeeGen
-      version2 <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
+      version2 = 3: Byte //<- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
       dataTx2 = data(version2, master, List(item2), fee2, ts + 20000)
 
       value3 <- positiveLongGen
       item3 = IntegerDataEntry(key1, value3)
       fee3     <- smallFeeGen
-      version3 <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
+      version3 = 3: Byte //<- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
       dataTx3 = data(version3, master, List(item3), fee3, ts + 30000)
     } yield (genesis, Seq(item1, item2, item3), Seq(dataTx1, dataTx2, dataTx3))
 
@@ -93,7 +93,7 @@ class DataTransactionDiffTest extends AnyPropSpec with ScalaCheckDrivenPropertyC
       maxSizePerEntry       <- Gen.choose(1, DataEntry.MaxValueSize)
       feeOverhead           <- Gen.choose[Long](1, ENOUGH_AMT)
       dataEntry             <- dataEntryGen(maxSizePerEntry)
-      version               <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
+      version               = 3: Byte //<- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
       dataTx = data(version, master, List(dataEntry), ENOUGH_AMT + feeOverhead, ts + 10000)
     } yield (genesis, dataTx)
 
