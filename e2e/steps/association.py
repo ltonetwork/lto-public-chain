@@ -94,7 +94,7 @@ def step_impl(context, sender, recipient, type):
 @then('{sender} is associated with {recipient}')
 def step_impl(context, sender, recipient):
     value = is_associated(context, sender, recipient)
-    assert value, '{} is not associated with {}'.format(context.users[sender], context.users[recipient])
+    assert value, '{} is not associated with {}'.format(context.users[sender].address, context.users[recipient].address)
 
 
 @then('{sender} is not associated with {recipient}')

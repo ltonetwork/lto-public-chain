@@ -26,3 +26,12 @@ def step_impl(context):
 @then('the transaction is successful')
 def step_impl(context):
     assert context.last_tx_success, "transaction failed"
+
+@given('wait')
+@given('wait {seconds} seconds')
+@when('wait')
+@when('wait {seconds} seconds')
+@then('wait')
+@then('wait {seconds} seconds')
+def wait(context, seconds=5):
+    sleep(seconds)
