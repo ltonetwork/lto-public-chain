@@ -65,8 +65,9 @@ case class AssociationsApiRoute(settings: RestAPISettings,
   }
 
   private def associationsJson(address: Address, associations: Blockchain.Associations): AssociationsInfo = {
-    def fold(list: List[(Int, AssociationTransaction)]) = {
+    def fold(list: List[(Int, AssociationTransaction)]): List[AssociationInfo] = {
       list
+        .sortBy(t => (t._2.timestamp, t._2.typeId))
         .foldLeft(Map.empty[(Int, Address, Option[ByteStr]), (Int, Address, ByteStr, Option[(Int, ByteStr)])]) {
           case (acc, (height, tx: AssociationTransaction)) =>
             val cp = if (address == tx.sender.toAddress) tx.recipient else tx.sender.toAddress
