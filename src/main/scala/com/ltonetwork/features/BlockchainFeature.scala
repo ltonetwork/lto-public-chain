@@ -12,6 +12,7 @@ object BlockchainFeatures {
   val SponsorshipTransaction: BlockchainFeature   = BlockchainFeature(11, "Sponsorship Transaction")
   val BurnFeeture: BlockchainFeature              = BlockchainFeature(12, "Partial Fee Burn")
   val Cobalt: BlockchainFeature                   = BlockchainFeature(13, "Cobalt")
+  val CobaltAlloy: BlockchainFeature              = BlockchainFeature(14, "Cobalt Alloy")
 
   private val dict = Seq(
     SmartAccounts,
@@ -19,6 +20,7 @@ object BlockchainFeatures {
     SponsorshipTransaction,
     BurnFeeture,
     Cobalt,
+    CobaltAlloy,
   ).map(f => f.id -> f).toMap
 
   private val preActivated: Set[Short] = Set(1, 2, 3, 5, 8).map(_.toShort) // consensus logic hardcoded

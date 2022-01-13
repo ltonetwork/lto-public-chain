@@ -1,6 +1,6 @@
 package com.ltonetwork.transaction.association
 
-import com.google.common.primitives.{Bytes, Ints, Longs, Shorts}
+import com.google.common.primitives.{Bytes, Ints, Longs}
 import com.ltonetwork.serialization._
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.association.RevokeAssociationTransaction.create

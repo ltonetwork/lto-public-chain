@@ -10,6 +10,8 @@ case class LangAddress(bytes: ByteVector)
 
 case class TransferItem(recipient: LangAddress, amount: Long)
 
+case class PublicKey(bytes: ByteVector)
+
 trait Tx
 object Tx {
   case class Genesis(header: Header, amount: Long, recipient: LangAddress)                     extends Tx
@@ -19,4 +21,5 @@ object Tx {
   case class SetScript(p: Proven, script: Option[ByteVector])                                                                             extends Tx
   case class MassTransfer(p: Proven, transferCount: Long, totalAmount: Long, transfers: IndexedSeq[TransferItem], attachment: ByteVector) extends Tx
   case class Anchor(p: Proven)                                                                                                            extends Tx
+  case class Register(p: Proven, keys: IndexedSeq[PublicKey])                                                                             extends Tx
 }

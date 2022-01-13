@@ -100,9 +100,6 @@ class FeesSettingsSpecification extends AnyFlatSpec with Matchers {
         |    BASE = 10000
         |    VAR  = 5000
         |  }
-        |  data {
-        |    BASE = 200000
-        |  }
         |  # set-script {
         |  #  BASE = 300000
         |  # }
@@ -113,6 +110,5 @@ class FeesSettingsSpecification extends AnyFlatSpec with Matchers {
     settings.fees(8).toSet should equal(Set(FeeSettings("BASE", 700000)))
     settings.fees(9).toSet should equal(Set(FeeSettings("BASE", 800000)))
     settings.fees(11).toSet should equal(Set(FeeSettings("BASE", 10000), FeeSettings("VAR", 5000)))
-    settings.fees(12).toSet should equal(Set(FeeSettings("BASE", 200000)))
   }
 }

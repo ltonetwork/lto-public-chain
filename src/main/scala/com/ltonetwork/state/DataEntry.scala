@@ -21,7 +21,7 @@ sealed abstract class DataEntry[T](val key: String, val value: T) {
 
 object DataEntry {
   val MaxKeySize: Byte = 100
-  val MaxValueSize     = Short.MaxValue
+  val MaxValueSize     = 1024
 
   object Type extends Enumeration {
     val Integer = Value(0)

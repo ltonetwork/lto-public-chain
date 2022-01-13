@@ -13,6 +13,7 @@ import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
+import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.sponsorship._
 import com.ltonetwork.transaction.transfer._
@@ -99,19 +100,27 @@ object CommonValidation {
       case (_: AssociationTransaction, 3)     => activationBarrier(BlockchainFeatures.Cobalt)
       case (_: SponsorshipTransactionBase, 1) => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
       case (_: SponsorshipTransactionBase, 3) => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: DataTransaction, 3)            => activationBarrier(BlockchainFeatures.CobaltAlloy)
+      case (_: RegisterTransaction, 3)        => activationBarrier(BlockchainFeatures.CobaltAlloy)
 
       case _ => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
     }
   }
 
-  def disallowUnsupportedKeyTypes[T <: Transaction](tx: T): Either[ValidationError, T] = {
+  def disallowUnsupportedKeyTypes[T <: Transaction](blockchain: Blockchain, height: Int, tx: T): Either[ValidationError, T] = {
+    def activationBarrier(keyType: KeyType, b: BlockchainFeature) =
+      Either.cond(
+        blockchain.isFeatureActivated(b, height),
+        tx,
+        UnsupportedKeyType("Transaction with id " + tx.id.toString() + " key type " + keyType.reference + " not supported.")
+      )
 
     def disallowKeyTypes(keyType: KeyType) = keyType match {
-      case (KeyTypes.ED25519)   => Right(tx)
-      case (KeyTypes.SECP256K1) => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype SECP256K1 not supported."))
-      case (KeyTypes.SECP256R1) => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype SECP256R1 not supported."))
+      case KeyTypes.ED25519   => Right(tx)
+      case KeyTypes.SECP256K1 => activationBarrier(keyType, BlockchainFeatures.CobaltAlloy)
+      case KeyTypes.SECP256R1 => activationBarrier(keyType, BlockchainFeatures.CobaltAlloy)
 
-      case _ => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " sender keytype not supported."))
+      case _ => Left(UnsupportedKeyType("Transaction with id " + tx.id.toString() + " key type not supported."))
     }
 
     for {
@@ -133,6 +142,11 @@ object CommonValidation {
       case _ => Right(tx)
     }
 
+  private def dataTransactionBytes(tx: DataTransaction): Integer =
+    // variable fee is calculated per 256KB
+    if (tx.data.nonEmpty) (tx.data.map(_.toBytes.length).sum / (1024*256)) + 1
+    else 0
+
   private def feeInUnitsVersion1(tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: GenesisTransaction       => Right(0)
     case _: TransferTransaction      => Right(1)
@@ -153,6 +167,7 @@ object CommonValidation {
     case _: CancelLeaseTransaction     => Right(1000)
     case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
     case _: AnchorTransaction          => Right(100)
+    case tx: DataTransaction           => Right(100 + dataTransactionBytes(tx) * 10)
     case _: AssociationTransaction     => Right(1000)
     case _: SponsorshipTransactionBase => Right(5000)
     case _                             => Left(UnsupportedTransactionType)
@@ -166,6 +181,7 @@ object CommonValidation {
     case _: CancelLeaseTransaction     => Right(1000)
     case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
     case _: AnchorTransaction          => Right(350)
+    case tx: DataTransaction           => Right(1000 + dataTransactionBytes(tx) * 100)
     case _: AssociationTransaction     => Right(1000)
     case _: SponsorshipTransactionBase => Right(5000)
     case _                             => Left(UnsupportedTransactionType)
@@ -182,6 +198,8 @@ object CommonValidation {
     case _: AssociationTransaction       => Right(10)
     case _: SponsorshipTransaction       => Right(100)
     case _: CancelSponsorshipTransaction => Right(10)
+    case tx: DataTransaction             => Right(10 + dataTransactionBytes(tx) * 1)
+    case tx: RegisterTransaction         => Right(10 + tx.accounts.size * 1)
     case _                               => Left(UnsupportedTransactionType)
   }
 

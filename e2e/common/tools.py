@@ -1,6 +1,6 @@
-from lto.accounts.account_factory_ed25519 import AccountFactoryED25519 as AccountFactory
+from lto.accounts import AccountFactoryED25519 as AccountFactory, AccountFactoryECDSA
 from lto.public_node import PublicNode
-from lto.transactions.transfer import Transfer
+from lto.transactions import Transfer
 import polling
 import requests
 import hashlib
@@ -13,17 +13,23 @@ ROOT_SEED = config.seed
 ROOT_ACCOUNT = AccountFactory(CHAIN_ID).create_from_seed(ROOT_SEED)
 
 
-
 def assert_equals(value1, value2):
     assert value1 == value2, f'{value1} is not {value2}'
 
 
-def generate_account():
-    return AccountFactory(CHAIN_ID).create()
+def generate_account(key_type='ed25519'):
+    if key_type == 'ed25519':
+        return AccountFactory(CHAIN_ID).create()
+    else:
+        return AccountFactoryECDSA(CHAIN_ID, key_type).create()
 
 
 def get_balance(address):
     return NODE.balance(address)
+
+
+def get_data(address):
+    return NODE.data_of(address)
 
 
 def funds_for_transaction(context, user, tx_fee):
@@ -31,6 +37,7 @@ def funds_for_transaction(context, user, tx_fee):
     transaction = Transfer(account.address, tx_fee)
     transaction.sign_with(ROOT_ACCOUNT)
     broadcast(context, transaction)
+
 
 def minimum_balance(context, user, amount):
     account = context.users[user]
@@ -61,6 +68,7 @@ def broadcast(context, transaction):
     except:
         context.last_tx_success = False
         raise
+
 
 def convert_balance(balance):
     return int(float(balance) * 100000000)

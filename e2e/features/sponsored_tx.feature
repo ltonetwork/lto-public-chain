@@ -6,12 +6,18 @@ Feature: Sponsored transaction
     And Charlie has a new account
     And Dick has a new account
 
-  Scenario: Sponsored transaction
-    Given Alice has 5 lto
+  Scenario Outline: Sponsored transaction
+    Given Karen has an <key_type> account with 5 lto
     And Bob has 3 lto
-    When Bob anchors "1234" sponsored by Alice
-    Then Alice has 4.65 lto
+    When Bob anchors "1234" sponsored by Karen
+    Then Karen has 4.65 lto
     And Bob has 3 lto
+
+    Examples:
+      | key_type  |
+      | ed25519   |
+      | secp256k1 |
+      | secp256r1 |
 
   Scenario: Sponsored transaction from sponsored account
     Given Charlie is sponsoring Alice

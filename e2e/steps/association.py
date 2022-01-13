@@ -3,8 +3,7 @@ from behave import *
 from e2e.common.tools import broadcast
 from e2e.common.tools import NODE
 from e2e.common.tools import funds_for_transaction
-from lto.transactions.association import Association
-from lto.transactions.revoke_association import RevokeAssociation
+from lto.transactions import Association, RevokeAssociation
 
 
 def association(context, sender, recipient, type, hash="", version=None):
@@ -46,7 +45,7 @@ def revoke_association(context, user1, user2, type, hash="", version=None):
 @given('{sender} has an association with {recipient} of type {type:d} and anchor {hash}')
 def step_impl(context, sender, recipient, type, hash=""):
     if not is_associated(context, sender, recipient):
-        funds_for_transaction(context, sender, lto.Association.DEFAULT_FEE)
+        funds_for_transaction(context, sender, Association.DEFAULT_FEE)
         association(context, sender, recipient, type, hash)
         assert is_associated(context, sender, recipient), 'Failed to issue association'
 
@@ -54,7 +53,7 @@ def step_impl(context, sender, recipient, type, hash=""):
 @given('{sender} does not have an association with {recipient} of type {type:d}')
 def step_impl(context, sender, recipient, type):
     if is_associated(context, sender, recipient):
-        funds_for_transaction(context, sender, lto.RevokeAssociation.DEFAULT_FEE)
+        funds_for_transaction(context, sender, RevokeAssociation.DEFAULT_FEE)
         revoke_association(sender, recipient, type, hash)
         assert not is_associated(context, sender, recipient, type), 'Failed to revoke association'
 
@@ -95,7 +94,7 @@ def step_impl(context, sender, recipient, type):
 @then('{sender} is associated with {recipient}')
 def step_impl(context, sender, recipient):
     value = is_associated(context, sender, recipient)
-    assert value, '{} is not associated with {}'.format(context.users[sender], context.users[recipient])
+    assert value, '{} is not associated with {}'.format(context.users[sender].address, context.users[recipient].address)
 
 
 @then('{sender} is not associated with {recipient}')

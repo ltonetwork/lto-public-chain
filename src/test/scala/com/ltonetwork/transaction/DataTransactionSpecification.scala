@@ -11,9 +11,11 @@ import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import play.api.libs.json.Json
-import com.ltonetwork.account.PublicKeyAccount
+import com.ltonetwork.account.{KeyType, KeyTypes, PublicKeyAccount}
 import com.ltonetwork.api.http.requests.DataRequest
 import com.ltonetwork.transaction.data.DataTransaction
+import org.scalacheck.Gen.Parameters
+import org.scalacheck.rng.Seed
 import scorex.crypto.encode.Base64
 
 class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen {
@@ -50,10 +52,14 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
     forAll(dataTransactionGen, badTypeIdGen) {
       case (tx, badTypeId) =>
         val bytes      = tx.bytes()
-        val entryCount = Shorts.fromByteArray(bytes.drop(35))
+        val senderKeyLength = KeyTypes.ED25519.length
+        val baseBytesLength =
+          if (tx.version == 1) 1 + 1 + senderKeyLength + 8 + 8 // txTypeId + version + senderKeyLength + timestamp + fee
+          else 1 + 1 + 1 + 8 + 1 + senderKeyLength + 8 // txTypeId + version + chainId + timestamp + senderKeyTypeId + senderKeyLength + fee
+        val entryCount = Shorts.fromByteArray(bytes.drop(baseBytesLength))
         if (entryCount > 0) {
-          val key1Length = Shorts.fromByteArray(bytes.drop(37))
-          val p          = 39 + key1Length
+          val key1Length = Shorts.fromByteArray(bytes.drop(baseBytesLength + 2))
+          val p          = baseBytesLength + 2 + key1Length
           bytes(p) = badTypeId.toByte
           val parsed = DataTransaction.parseBytes(bytes)
           parsed.isFailure shouldBe true
@@ -91,6 +97,7 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
   property("positive validation cases") {
     import DataTransaction.MaxEntryCount
     import com.ltonetwork.state._
+    val maxValueRepeat = DataEntry.MaxValueSize - 6
     forAll(dataTransactionGen, dataEntryGen(500)) {
       case (DataTransaction(version, chainId, timestamp, sender, fee, data, sponsor, proofs), entry) =>
         def check(data: List[DataEntry[_]]): Assertion = {
@@ -99,14 +106,14 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
           checkSerialization(txEi.explicitGet())
         }
 
-        check(List.empty)                                                               // no data
-        check(List.tabulate(MaxEntryCount)(n => IntegerDataEntry(n.toString, n)))       // maximal data
-        check(List.tabulate(30)(n => StringDataEntry(n.toString, "a" * 5109)))          // maximal data
-        check(List(IntegerDataEntry("a" * MaxKeySize, 0xa)))                            // max key size
-        check(List(BinaryDataEntry("bin", ByteStr.empty)))                              // empty binary
-        check(List(BinaryDataEntry("bin", ByteStr(Array.fill(MaxValueSize)(1: Byte))))) // max binary value size
-        check(List(StringDataEntry("str", "")))                                         // empty string
-        check(List(StringDataEntry("str", "A" * MaxValueSize))) // max string size
+        check(List.empty)                                                                        // no data
+        check(List.tabulate(MaxEntryCount)(n => IntegerDataEntry(n.toString, n)))                // maximal data
+        check(List.tabulate(10)(n => StringDataEntry(n.toString, "a" * maxValueRepeat)))         // maximal data
+        check(List(IntegerDataEntry("a" * MaxKeySize, 0xa)))                                     // max key size
+        check(List(BinaryDataEntry("bin", ByteStr.empty)))                                       // empty binary
+        check(List(BinaryDataEntry("bin", ByteStr(Array.fill(MaxValueSize)(1: Byte)))))          // max binary value size
+        check(List(StringDataEntry("str", "")))                                                  // empty string
+        check(List(StringDataEntry("str", "A" * MaxValueSize)))                                  // max string size
     }
   }
 
@@ -149,8 +156,8 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
   property(testName = "JSON format validation") {
     val js = Json.parse("""{
                        "type": 12,
-                       "version": 1,
-                       "id": "87SfuGJXH1cki2RGDH7WMTGnTXeunkc5mEjNKmmMdRzM",
+                       "version": 3,
+                       "id": "CsJPMx8MY3dLXKHu13zpL2vWfeU5mdDiyEF6APyKummd",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
@@ -184,7 +191,7 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
     val entry3 = BinaryDataEntry("blob", ByteStr(Base64.decode("YWxpY2U=")))
     val tx = DataTransaction
       .create(
-        1,
+        3,
         None,
         1526911531530L,
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),

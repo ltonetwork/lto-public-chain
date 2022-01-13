@@ -1,8 +1,7 @@
 import lto
 from behave import *
 from e2e.common.tools import NODE, broadcast, convert_balance, funds_for_transaction, minimum_balance
-from lto.transactions.lease import Lease
-from lto.transactions.cancel_lease import CancelLease
+from lto.transactions import Lease, CancelLease
 
 
 def is_leasing(context, account1, account2, amount=""):
@@ -55,7 +54,7 @@ def lease(context, account1, account2, amount="", version=None):
 @given('{user1} is not leasing to {user2}')
 def step_impl(context, user1, user2):
     if is_leasing(context, user1, user2):
-        funds_for_transaction(context, user1, lto.CancelLease.DEFAULT_FEE)
+        funds_for_transaction(context, user1, CancelLease.DEFAULT_FEE)
         cancel_lease(context, user1, user2)
 
 
@@ -72,7 +71,7 @@ def step_impl(context, user1, amount, user2):
     amount = convert_balance(amount)
     if not is_leasing(context, user1, user2, amount):
         minimum_balance(context, user1, amount)
-        funds_for_transaction(context, user1, lto.Lease.DEFAULT_FEE)
+        funds_for_transaction(context, user1, Lease.DEFAULT_FEE)
         lease(context, user1, user2, amount)
 
 

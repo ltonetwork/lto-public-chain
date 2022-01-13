@@ -17,6 +17,7 @@ import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAsso
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
+import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
@@ -24,6 +25,7 @@ import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, Spo
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.{MaxTransferCount, ParsedTransfer}
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.TimeImpl
+import org.scalacheck.rng.Seed
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{BeforeAndAfterAll, Suite}
 import org.scalatest.prop.TableDrivenPropertyChecks._
@@ -69,6 +71,9 @@ trait TransactionGenBase extends ScriptGen {
 
   def accountGen(keyType: KeyType): Gen[PrivateKeyAccount] = bytes32gen.map(seed => PrivateKeyAccount(seed, keyType))
   def accountGen(): Gen[PrivateKeyAccount]                 = accountGen(ED25519)
+
+  def accountGenRandom(): Gen[PrivateKeyAccount] =
+    accountGen(Gen.oneOf(KeyTypes.all).pureApply(Gen.Parameters.default, Seed.random(), 100))
 
   val addressGen: Gen[Address] = accountGen.map(PublicKeyAccount.toAddress(_))
 
@@ -347,6 +352,14 @@ trait TransactionGenBase extends ScriptGen {
   def dataEntryGen(maxSize: Int, keyGen: Gen[String] = dataKeyGen): Gen[DataEntry[_]] =
     Gen.oneOf(longEntryGen(keyGen), booleanEntryGen(keyGen), binaryEntryGen(maxSize, keyGen), stringEntryGen(maxSize, keyGen))
 
+  def dataGen(size: Int): Gen[List[DataEntry[_]]] = {
+    val maxEntrySize = ((DataTransaction.MaxBytes / (size max 1)) - DataEntry.MaxKeySize) min DataEntry.MaxValueSize
+    Gen.listOfN(size, dataEntryGen(maxEntrySize max 64)) suchThat (data => data.flatMap(_.toBytes).toArray.length <= DataTransaction.MaxBytes)
+  }
+
+  def dataForScriptGen(size: Int): Gen[List[DataEntry[_]]] =
+    Gen.listOfN(size, dataEntryGen(200, dataScriptsKeyGen))
+
   val dataTransactionGen: Gen[DataTransaction] = dataTransactionGen(DataTransaction.MaxEntryCount)
 
   def dataTransactionGen(maxEntryCount: Int, useForScript: Boolean = false): Gen[DataTransaction] =
@@ -354,9 +367,8 @@ trait TransactionGenBase extends ScriptGen {
       sender    <- accountGen
       timestamp <- timestampGen
       size      <- Gen.choose(0, maxEntryCount)
-      fee          = 15000000
-      maxEntrySize = if (useForScript) 200 else (DataTransaction.MaxBytes - 122) / (size max 1) min DataEntry.MaxValueSize
-      data <- if (useForScript) Gen.listOfN(size, dataEntryGen(maxEntrySize, dataScriptsKeyGen)) else Gen.listOfN(size, dataEntryGen(maxEntrySize))
+      fee       = 15000000
+      data      <- if (useForScript) dataGen(size) else dataForScriptGen(size)
       uniq = data.foldRight(List.empty[DataEntry[_]]) { (e, es) =>
         if (es.exists(_.key == e.key)) es else e :: es
       }
@@ -449,4 +461,17 @@ trait TransactionGenBase extends ScriptGen {
       fee       <- smallFeeGen
       sponsor   <- sponsorGen(version)
     } yield CancelSponsorshipTransaction.signed(version, timestamp, sender, fee, recipient).sponsorWith(sponsor).explicitGet()
+
+  def registerTransactionGen: Gen[RegisterTransaction]                = versionGen(RegisterTransaction).flatMap(registerTransactionGen)
+  def registerTransactionGen(version: Byte): Gen[RegisterTransaction] = registerTransactionGen(version, ED25519)
+  def registerTransactionGen(version: Byte, keyType: KeyType): Gen[RegisterTransaction] =
+    for {
+      sender    <- accountGen(keyType)
+      timestamp <- timestampGen
+      size      <- Gen.chooseNum(1, RegisterTransaction.MaxEntryCount)
+      data      <- Gen.containerOfN[Array, PublicKeyAccount](size, accountGenRandom())
+      sponsor   <- sponsorGen(version)
+      fee  = 15000000
+      accounts = data.toList
+    } yield RegisterTransaction.signed(version, timestamp, sender, fee, accounts).sponsorWith(sponsor).explicitGet()
 }

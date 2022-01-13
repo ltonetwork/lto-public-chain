@@ -3,23 +3,24 @@ package com.ltonetwork.transaction.data
 import com.google.common.primitives.{Bytes, Longs, Shorts}
 import com.ltonetwork.serialization._
 import com.ltonetwork.state.DataEntry
+import com.ltonetwork.transaction.TransactionParser.{parseBase, parseFooter}
 import com.ltonetwork.transaction.TransactionSerializer
 import com.ltonetwork.transaction.data.DataTransaction.create
 
 import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
-object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
-  override def bodyBytes(tx: TransactionT): Array[Byte] = {
+object DataSerializerV3 extends TransactionSerializer.For[DataTransaction] {
+  override def bodyBytes(tx: DataTransaction): Array[Byte] = {
     import tx._
 
     Bytes.concat(
-      Array(builder.typeId, version),
-      sender.publicKey,
-      Shorts.toByteArray(data.size.toShort),
-      data.flatMap(_.toBytes).toArray,
+      Array(builder.typeId, version, chainId),
       Longs.toByteArray(timestamp),
-      Longs.toByteArray(fee)
+      Deser.serializeAccount(sender),
+      Longs.toByteArray(fee),
+      Shorts.toByteArray(data.size.toShort),
+      data.flatMap(_.toBytes).toArray
     )
   }
 
@@ -32,20 +33,16 @@ object DataSerializerV1 extends TransactionSerializer.For[DataTransaction] {
     } else (List.empty, pos + Shorts.BYTES)
   }
 
-  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+  override def parseBytes(version: Byte, bytes: Array[Byte]): Try[DataTransaction] =
     Try {
       val buf = ByteBuffer.wrap(bytes)
 
-      val sender = buf.getPublicKey
-
-      val (entries, entriesEnd) = parseData(bytes, buf.position)
+      val (chainId, timestamp, sender, fee) = parseBase(buf)
+      val (entries, entriesEnd)             = parseData(bytes, buf.position)
       buf.position(entriesEnd)
+      val (sponsor, proofs)                 = parseFooter(buf)
 
-      val timestamp = buf.getLong
-      val fee       = buf.getLong
-      val proofs    = buf.getProofs
-
-      create(version, None, timestamp, sender, fee, entries, None, proofs)
+      create(version, Some(chainId), timestamp, sender, fee, entries, sponsor, proofs)
         .fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 }

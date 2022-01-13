@@ -46,7 +46,8 @@ case class AddressApiRoute(settings: RestAPISettings,
     pathPrefix("addresses") {
       validate ~ balanceWithConfirmations ~ balanceDetails ~ balanceHistory ~ balance ~
         balanceWithConfirmations ~ verify ~ verifyText ~ publicKey ~
-        effectiveBalance ~ effectiveBalanceWithConfirmations ~ scriptInfo
+        effectiveBalance ~ effectiveBalanceWithConfirmations ~ scriptInfo ~
+        getData ~ getDataItem
     } ~ root
 
   @GET
@@ -72,6 +73,45 @@ case class AddressApiRoute(settings: RestAPISettings,
         .flatMap(addressScriptInfoJson)
         .map(ToResponseMarshallable(_))
     )
+  }
+
+  @GET
+  @Path("/data/{address}")
+  @Operation(summary = "Get all data associated with an account")
+  @Parameters(
+    Array(
+      new Parameter(
+        name = "address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    ))
+  def getData: Route = (path("data" / Segment) & get) { address =>
+    complete(accountData(address))
+  }
+
+  @GET
+  @Path("/data/{address}/{key}")
+  @Operation(summary = "Read data associated with an account by key")
+  @Parameters(
+    Array(
+      new Parameter(
+        name = "address",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      ),
+      new Parameter(
+        name = "key",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    ))
+  def getDataItem: Route = (path("data" / Segment / Segment) & get) {
+    case (address, key) =>
+      complete(accountData(address, key))
   }
 
   @POST

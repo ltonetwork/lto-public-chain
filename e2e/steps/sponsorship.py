@@ -1,10 +1,8 @@
 from behave import *
-import lto
 from e2e.common.tools import funds_for_transaction
 from e2e.common.tools import NODE
 from e2e.common.tools import broadcast
-from lto.transactions.sponsorship import Sponsorship
-from lto.transactions.cancel_sponsorship import CancelSponsorship
+from lto.transactions import Sponsorship, CancelSponsorship
 
 
 def is_sponsoring(context, user1, user2):
@@ -38,14 +36,14 @@ def cancel_sponsorship(context, sponsored, sponsoring, version=None):
 @given('{user1} is not sponsoring {user2}')
 def step_impl(context, user1, user2):
     if is_sponsoring(context, user1, user2):
-        funds_for_transaction(context, user1, lto.CancelSponsorship.DEFAULT_FEE)
+        funds_for_transaction(context, user1, CancelSponsorship.DEFAULT_FEE)
         cancel_sponsorship(context, user2, user1)
 
 
 @given('{user1} is sponsoring {user2}')
 def step_impl(context, user1, user2):
     if not is_sponsoring(context, user1, user2):
-        funds_for_transaction(context, user1, lto.Sponsorship.DEFAULT_FEE)
+        funds_for_transaction(context, user1, Sponsorship.DEFAULT_FEE)
         sponsor(context, user2, user1)
 
 
