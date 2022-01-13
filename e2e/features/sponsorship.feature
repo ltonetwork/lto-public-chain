@@ -7,8 +7,7 @@ Feature: Sponsorship
     And Dick has a new account
 
   Scenario Outline: Successful sponsorship
-    Given Karen has a new <key_type> account
-    Given Karen has 10 lto
+    Given Karen has an <key_type> account with 10 lto
     When Karen sponsors (<version>) Bob
     Then Karen has 5 lto
     And Karen is sponsoring Bob
@@ -72,9 +71,8 @@ Feature: Sponsorship
     Then the transaction fails
 
 Scenario Outline: Successful cancel sponsorship
-    Given Karen has a new <key_type> account
+    Given Karen has an <key_type> account with 6 lto
     Given Karen is sponsoring Bob
-    And Karen has 6 lto
     When Karen cancels the sponsorship (<version>) for Bob
     Then Karen has 1 lto
     And Karen is not sponsoring Bob

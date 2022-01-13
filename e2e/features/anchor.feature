@@ -4,8 +4,7 @@ Feature: Anchor
     Given Alice has a new account
 
   Scenario Outline: Successful anchor transaction
-    Given Karen has a new <key_type> account
-    And Karen has 5 lto
+    Given Karen has an <key_type> account with 5 lto
     When Karen anchors (<version>) "1234"
     Then Karen has 4.65 lto
     # Endpoint /address/transactions is broken

@@ -6,8 +6,7 @@ Feature: Mass Transfer
     And Charlie has a new account
 
   Scenario Outline: Successful mass-transfer
-    Given Karen has a new <key_type> account
-    Given Karen has 10 lto
+    Given Karen has an <key_type> account with 10 lto
     When Karen does a mass-transfer (<version>) of 2 lto to Bob and 1 lto to Charlie
     Then Karen has 5.8 lto
     And Bob has 2 lto
@@ -21,6 +20,7 @@ Feature: Mass Transfer
       | v3      | secp256r1 |
 
   Scenario: Unsuccessful mass-transfer due to insufficient founds
+    Given Alice has 0 lto
     When Alice tries to do a mass-transfer of 10 lto to Bob and 15 lto to Charlie
     Then the transaction fails
 

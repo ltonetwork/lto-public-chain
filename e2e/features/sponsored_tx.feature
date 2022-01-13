@@ -7,8 +7,7 @@ Feature: Sponsored transaction
     And Dick has a new account
 
   Scenario Outline: Sponsored transaction
-    Given Karen has a new <key_type> account
-    Given Karen has 5 lto
+    Given Karen has an <key_type> account with 5 lto
     And Bob has 3 lto
     When Bob anchors "1234" sponsored by Karen
     Then Karen has 4.65 lto

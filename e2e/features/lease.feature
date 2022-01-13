@@ -5,8 +5,7 @@ Feature: Lease
     And Bob has a new account
 
   Scenario Outline: Successful lease
-    Given Karen has a new <key_type> account
-    Given Karen has 10 lto
+    Given Karen has an <key_type> account with 10 lto
     When Karen leases (<version>) 5 lto to Bob
     Then Karen has 9 lto
     And Karen is leasing 5 lto to Bob
@@ -23,9 +22,8 @@ Feature: Lease
     Then the transaction fails
 
   Scenario Outline: Successful cancel lease transaction
-    Given Karen has a new <key_type> account
-    Given Karen is leasing 10 lto to Bob
-    And Karen has 10 lto
+    Given Karen has an <key_type> account with 10 lto
+    And Karen is leasing 10 lto to Bob
     When Karen cancel the lease (<version>) to Bob
     Then Karen has 9 lto
     And Karen is not leasing to Bob
@@ -47,5 +45,3 @@ Feature: Lease
     When Alice tries to transfer 6 lto to Bob
     Then the transaction fails
     And Alice has 10 lto
-
-

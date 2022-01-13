@@ -1,13 +1,12 @@
 Feature: Association
 
   Background: Association setup
-    Given Alice has a new account
+    Given Alice has an account with 10 lto
     And Bob has a new account
 
   Scenario Outline: Successful issue association
-    Given Karen has a new <key_type> account
-    Given Karen does not have an association with Bob of type 1
-    And Karen has 10 lto
+    Given Karen has an <key_type> account with 10 lto
+    And Karen does not have an association with Bob of type 1
     When Karen issues an association (<version>) with Bob of type 1
     Then Karen is associated with Bob
     And Karen has 9 lto
@@ -22,13 +21,11 @@ Feature: Association
   Scenario: Unsuccessful issue association due to insufficient balance
     Given Alice has 0 lto
     When Alice tries to issue an association with Bob of type 1
-    Then The transaction fails
+    Then the transaction fails
 
   Scenario Outline: Successful revoke association
-    Given Karen has a new <key_type> account
-    Given Karen has an association with Bob of type 1
-    And Karen has 10 lto
-    And wait
+    Given Karen has an <key_type> account with 10 lto
+    And Karen has an association with Bob of type 1
     When Karen revokes the association (<version>) with Bob of type 1
     Then Karen is not associated with Bob
     And Karen has 9 lto
@@ -44,20 +41,23 @@ Feature: Association
     Given Alice has an association with Bob of type 1
     And Alice has 0 lto
     When Alice tries to revoke an association with Bob of type 1
-    Then The transaction fails
+    Then the transaction fails
 
   Scenario: Reissue a revoked association
     Given Alice has an association with Bob of type 5
-    And Alice has 10 lto
     When Alice revokes the association with Bob of type 5
-    And Alice tries to issue an association with Bob of type 5
-    Then Alice has 8 lto
-    And Alice is not associated with Bob
+    Then Alice is not associated with Bob
+    When Alice issues an association with Bob of type 5
+    Then Alice is not associated with Bob
     
   Scenario: Revoke association with anchor
     Given Alice has an association with Bob of type 76 and anchor qwerty
-    And Alice has 10 lto
     When Alice revokes the association with Bob of type 76 and anchor qwerty
-    Then Alice has 9 lto
-    And Alice is not associated with Bob
+    Then Alice is not associated with Bob
+
+  Scenario: Issue and revoke association to own account
+    When Alice issues an association with Alice of type 9
+    Then Alice is associated with Alice
+    When Alice revokes the association with Alice of type 9
+    Then Alice is not associated with Alice
 

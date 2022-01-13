@@ -4,8 +4,7 @@ Feature: Register
     Given Alice has a new account
 
   Scenario Outline: Successful register transaction
-    Given Karen has a new <key_type> account
-    And Karen has 5 lto
+    Given Karen has an <key_type> account with 5 lto
     When Karen registers (<version>) an account
     Then Karen has 4.65 lto
 

@@ -5,7 +5,7 @@ Feature: Transfer
     And Bob has a new account
 
   Scenario Outline: Successful transfer
-    Given Karen has a new <key_type> account
+    Given Karen has an <key_type> account
     Given Karen has 15 lto
     And Bob has 0 lto
     When Karen transfers (<version>) 5 lto to Bob
