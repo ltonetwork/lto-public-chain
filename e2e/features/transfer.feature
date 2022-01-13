@@ -14,7 +14,7 @@ Feature: Transfer
 
     Examples:
       | version | key_type  |
-      | v1      | ed25519   |
+      | v2      | ed25519   |
       | v3      | ed25519   |
       | v3      | secp256k1 |
       | v3      | secp256r1 |

@@ -72,7 +72,7 @@ Feature: Sponsorship
     Then the transaction fails
 
 Scenario Outline: Successful cancel sponsorship
-    Given Karen as a new <key_type> account
+    Given Karen has a new <key_type> account
     Given Karen is sponsoring Bob
     And Karen has 6 lto
     When Karen cancels the sponsorship (<version>) for Bob

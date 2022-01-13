@@ -13,7 +13,7 @@ Feature: Lease
 
     Examples:
       | version | key_type  |
-      | v1      | ed25519   |
+      | v2      | ed25519   |
       | v3      | ed25519   |
       | v3      | secp256k1 |
       | v3      | secp256r1 |
@@ -27,17 +27,17 @@ Feature: Lease
     Given Karen is leasing 10 lto to Bob
     And Karen has 10 lto
     When Karen cancel the lease (<version>) to Bob
-    Then Karen has 5 lto
+    Then Karen has 9 lto
     And Karen is not leasing to Bob
 
     Examples:
       | version | key_type  |
-      | v1      | ed25519   |
+      | v2      | ed25519   |
       | v3      | ed25519   |
       | v3      | secp256k1 |
       | v3      | secp256r1 |
 
-  Scenario: Unable to cancel an unexisting lease
+  Scenario: Unable to cancel an nonexistent lease
     When Alice tries to cancel the lease to Bob
     Then the transaction fails
 
