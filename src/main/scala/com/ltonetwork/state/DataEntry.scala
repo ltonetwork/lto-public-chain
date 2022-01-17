@@ -1,6 +1,6 @@
 package com.ltonetwork.state
 
-import com.google.common.primitives.{Longs, Shorts}
+import com.google.common.primitives.{Ints, Shorts}
 import com.ltonetwork.serialization.Deser
 import com.ltonetwork.state.DataEntry._
 import play.api.libs.json._
@@ -40,7 +40,7 @@ object DataEntry {
 
   def parseValue(key: String, bytes: Array[Byte], p: Int): (DataEntry[_], Int) = {
     bytes(p) match {
-      case t if t == Type.Integer.id => (IntegerDataEntry(key, Longs.fromByteArray(bytes.drop(p + 1))), p + 9)
+      case t if t == Type.Integer.id => (IntegerDataEntry(key, Ints.fromByteArray(bytes.drop(p + 1))), p + 5)
       case t if t == Type.Boolean.id => (BooleanDataEntry(key, bytes(p + 1) != 0), p + 2)
       case t if t == Type.Binary.id =>
         val (blob, p1) = Deser.parseArraySize(bytes, p + 1)
@@ -60,7 +60,7 @@ object DataEntry {
           jsv \ "type" match {
             case JsDefined(JsString("integer")) =>
               jsv \ "value" match {
-                case JsDefined(JsNumber(n)) => JsSuccess(IntegerDataEntry(key, n.toLong))
+                case JsDefined(JsNumber(n)) => JsSuccess(IntegerDataEntry(key, n.toInt))
                 case _                      => JsError("value is missing or not an integer")
               }
             case JsDefined(JsString("boolean")) =>
@@ -90,8 +90,8 @@ object DataEntry {
   }
 }
 
-case class IntegerDataEntry(override val key: String, override val value: Long) extends DataEntry[Long](key, value) {
-  override def valueBytes: Array[Byte] = Type.Integer.id.toByte +: Longs.toByteArray(value)
+case class IntegerDataEntry(override val key: String, override val value: Int) extends DataEntry[Int](key, value) {
+  override def valueBytes: Array[Byte] = Type.Integer.id.toByte +: Ints.toByteArray(value)
 
   override def toJson: JsObject = super.toJson + ("type" -> JsString("integer")) + ("value" -> JsNumber(value))
 }
