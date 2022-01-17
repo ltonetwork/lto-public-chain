@@ -30,7 +30,7 @@ class DataTransactionDiffTest extends AnyPropSpec with ScalaCheckDrivenPropertyC
       (genesis, master, ts) <- baseSetup
 
       key1   <- dataKeyGen
-      value1 <- positiveLongGen
+      value1 <- positiveIntGen
       item1 = IntegerDataEntry(key1, value1)
       fee1     <- smallFeeGen
       version1 = 3: Byte //<- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
@@ -43,7 +43,7 @@ class DataTransactionDiffTest extends AnyPropSpec with ScalaCheckDrivenPropertyC
       version2 = 3: Byte //<- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
       dataTx2 = data(version2, master, List(item2), fee2, ts + 20000)
 
-      value3 <- positiveLongGen
+      value3 <- positiveIntGen
       item3 = IntegerDataEntry(key1, value3)
       fee3     <- smallFeeGen
       version3 = 3: Byte //<- Gen.oneOf(DataTransaction.supportedVersions.toSeq)

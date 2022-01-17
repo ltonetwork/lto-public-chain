@@ -155,7 +155,7 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
     val js = Json.parse("""{
                        "type": 12,
                        "version": 3,
-                       "id": "CsJPMx8MY3dLXKHu13zpL2vWfeU5mdDiyEF6APyKummd",
+                       "id": "BU6FbJ236n5qsmfv9XAdCaLzPA9mUk2nispnpDkpVmrd",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",

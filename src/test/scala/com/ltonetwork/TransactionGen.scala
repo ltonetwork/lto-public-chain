@@ -323,10 +323,10 @@ trait TransactionGenBase extends ScriptGen {
     size <- Gen.choose[Byte](1, MaxKeySize)
   } yield Random.alphanumeric.take(size).mkString
 
-  def longEntryGen(keyGen: Gen[String] = dataKeyGen): Gen[IntegerDataEntry] =
+  def intEntryGen(keyGen: Gen[String] = dataKeyGen): Gen[IntegerDataEntry] =
     for {
       key   <- keyGen
-      value <- Gen.choose[Long](Long.MinValue, Long.MaxValue)
+      value <- Gen.choose[Int](Int.MinValue, Int.MaxValue)
     } yield IntegerDataEntry(key, value)
 
   def booleanEntryGen(keyGen: Gen[String] = dataKeyGen): Gen[BooleanDataEntry] =
@@ -350,7 +350,7 @@ trait TransactionGenBase extends ScriptGen {
     } yield StringDataEntry(key, value.mkString)
 
   def dataEntryGen(maxSize: Int, keyGen: Gen[String] = dataKeyGen): Gen[DataEntry[_]] =
-    Gen.oneOf(longEntryGen(keyGen), booleanEntryGen(keyGen), binaryEntryGen(maxSize, keyGen), stringEntryGen(maxSize, keyGen))
+    Gen.oneOf(intEntryGen(keyGen), booleanEntryGen(keyGen), binaryEntryGen(maxSize, keyGen), stringEntryGen(maxSize, keyGen))
 
   def dataGen(size: Int): Gen[List[DataEntry[_]]] = {
     val maxEntrySize = ((DataTransaction.MaxBytes / (size max 1)) - DataEntry.MaxKeySize) min DataEntry.MaxValueSize
