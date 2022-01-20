@@ -3,6 +3,7 @@ package com.ltonetwork.utx
 import cats._
 import com.ltonetwork.account.Address
 import com.ltonetwork.consensus.TransactionsOrdering
+import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.mining.MultiDimensionalMiningConstraint
 import com.ltonetwork.settings.{FunctionalitySettings, UtxSettings}

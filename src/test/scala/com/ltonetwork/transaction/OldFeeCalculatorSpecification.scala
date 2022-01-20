@@ -3,6 +3,7 @@ package com.ltonetwork.transaction
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.Address
 import com.ltonetwork.features.BlockchainFeatures
+import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.settings.FeesSettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
@@ -136,7 +137,7 @@ class OldFeeCalculatorSpecification extends AnyPropSpec with ScalaCheckDrivenPro
   private def createBlockchain(accountScript: Address => Option[Script]): Blockchain = {
     val r = stub[Blockchain]
     (r.accountScript _).when(*).onCall((addr: Address) => accountScript(addr)).anyNumberOfTimes()
-    (r.activatedFeatures _).when().returns(Map(BlockchainFeatures.Cobalt.id -> 0))
+    (r.activatedFeatures _).when().returns(Map(BlockchainFeatures.Cobalt.id -> 0)).anyNumberOfTimes()
     r
   }
 

@@ -523,6 +523,9 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
   override def scoreOf(blockId: ByteStr): Option[BigInt] = readOnly(db => db.get(Keys.heightOf(blockId)).map(h => db.get(Keys.score(h))))
 
+  override def feePrice: Long = 10000
+  override def feePrice(height: Int): Long = 10000
+
   override def blockHeaderAndSize(height: Int): Option[(BlockHeader, Int)] = readOnly(_.get(Keys.blockHeader(height)))
 
   override def blockHeaderAndSize(blockId: ByteStr): Option[(BlockHeader, Int)] =

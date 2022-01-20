@@ -1,4 +1,4 @@
-package com.ltonetwork.transaction
+package com.ltonetwork.fee
 
 import com.ltonetwork.settings.{Constants, FeesSettings, FunctionalitySettings}
 import com.ltonetwork.state._
@@ -7,6 +7,7 @@ import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.transfer.MassTransferTransaction
+import com.ltonetwork.transaction.{Transaction, ValidationError}
 
 class OldFeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
 

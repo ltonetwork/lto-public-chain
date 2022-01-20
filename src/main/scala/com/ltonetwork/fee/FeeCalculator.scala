@@ -1,4 +1,4 @@
-package com.ltonetwork.transaction
+package com.ltonetwork.fee
 
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.features.FeatureProvider._
@@ -14,6 +14,7 @@ import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
 import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransaction}
+import com.ltonetwork.transaction.{Transaction, ValidationError}
 import com.ltonetwork.utils._
 
 import scala.language.postfixOps
@@ -27,7 +28,21 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     if (tx.data.nonEmpty) (tx.data.map(_.toBytes.length).sum / unitSize) + 1
     else 0
 
-  private def feesV5(height: Int, tx: Transaction): Either[ValidationError, Long] = feesV4(tx)
+  private def feesV5(height: Int, tx: Transaction): Either[ValidationError, Long] = (tx match {
+    case _: GenesisTransaction           => Right(0)
+    case _: TransferTransaction          => Right(1000)
+    case _: LeaseTransaction             => Right(1000)
+    case _: SetScriptTransaction         => Right(5000)
+    case _: CancelLeaseTransaction       => Right(1000)
+    case tx: MassTransferTransaction     => Right(1000 + tx.transfers.size * 100)
+    case tx: AnchorTransaction           => Right(250 + tx.anchors.size * 100)
+    case _: AssociationTransaction       => Right(500)
+    case _: SponsorshipTransaction       => Right(5000)
+    case _: CancelSponsorshipTransaction => Right(1000)
+    case tx: DataTransaction             => Right(1000 + dataTransactionBytes(tx, 256) * 100)
+    case tx: RegisterTransaction         => Right(250 + tx.accounts.size * 100)
+    case _                               => Left(UnsupportedTransactionType)
+  }).map(_ * blockchain.feePrice(height))
 
   private def feesV4(tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: GenesisTransaction           => Right(0)

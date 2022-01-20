@@ -5,6 +5,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import com.ltonetwork.account.Address
 import com.ltonetwork.api.requests.TxRequest
+import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.http.BroadcastRoute
 import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.diffs.CommonValidation

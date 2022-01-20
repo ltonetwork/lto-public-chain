@@ -74,7 +74,7 @@ object Keys {
   def transactionHeight(txId: ByteStr): Key[Option[Int]] =
     Key.opt(hash(18, txId), readTransactionHeight, unsupported("Can't write transaction height only"))
 
-  def carryFee(height: Int) = Key(h(19, height), Longs.fromByteArray, Longs.toByteArray)
+  def carryFee(height: Int): Key[Long] = Key(h(19, height), Longs.fromByteArray, Longs.toByteArray)
 
   def changedAddresses(height: Int): Key[Seq[BigInt]] = Key(h(21, height), readBigIntSeq, writeBigIntSeq)
 
