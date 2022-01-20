@@ -4,7 +4,7 @@ import cats._
 import com.ltonetwork.account.{Address, KeyType, KeyTypes}
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.features.{BlockchainFeature, BlockchainFeatures}
-import com.ltonetwork.settings.FunctionalitySettings
+import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction._
@@ -31,7 +31,7 @@ object CommonValidation {
                                                           settings: FunctionalitySettings,
                                                           blockTime: Long,
                                                           tx: T): Either[ValidationError, T] = {
-    def checkTransfer(sender: Address, amount: Long, feeAmount: Long) = {
+    def checkTransfer(sender: Address, amount: Long, feeAmount: Long): Either[GenericError, T] = {
       val amountDiff = Portfolio(-amount)
 
       val feeDiff = Portfolio(-feeAmount)
@@ -142,77 +142,8 @@ object CommonValidation {
       case _ => Right(tx)
     }
 
-  private def dataTransactionBytes(tx: DataTransaction): Integer =
-    // variable fee is calculated per 256KB
-    if (tx.data.nonEmpty) (tx.data.map(_.toBytes.length).sum / (1024*256)) + 1
-    else 0
-
-  private def feeInUnitsVersion1(tx: Transaction): Either[ValidationError, Long] = tx match {
-    case _: GenesisTransaction       => Right(0)
-    case _: TransferTransaction      => Right(1)
-    case tx: MassTransferTransaction => Right(1 + (tx.transfers.size + 1) / 2)
-    case _: LeaseTransaction         => Right(1)
-    case _: CancelLeaseTransaction   => Right(1)
-    case tx: DataTransaction         => Right(1 + (tx.bodyBytes().length - 1) / 1024)
-    case tx: AnchorTransaction       => Right(1 + (tx.bodyBytes().length - 1) / 1024)
-    case _: SetScriptTransaction     => Right(1)
-    case _                           => Left(UnsupportedTransactionType)
-  }
-
-  private def feeInUnitsVersion2(tx: Transaction): Either[ValidationError, Long] = tx match {
-    case _: GenesisTransaction         => Right(0)
-    case _: TransferTransaction        => Right(1000)
-    case _: LeaseTransaction           => Right(1000)
-    case _: SetScriptTransaction       => Right(1000)
-    case _: CancelLeaseTransaction     => Right(1000)
-    case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
-    case _: AnchorTransaction          => Right(100)
-    case tx: DataTransaction           => Right(100 + dataTransactionBytes(tx) * 10)
-    case _: AssociationTransaction     => Right(1000)
-    case _: SponsorshipTransactionBase => Right(5000)
-    case _                             => Left(UnsupportedTransactionType)
-  }
-
-  private def feeInUnitsVersion3(tx: Transaction): Either[ValidationError, Long] = tx match {
-    case _: GenesisTransaction         => Right(0)
-    case _: TransferTransaction        => Right(1000)
-    case _: LeaseTransaction           => Right(1000)
-    case _: SetScriptTransaction       => Right(1000)
-    case _: CancelLeaseTransaction     => Right(1000)
-    case tx: MassTransferTransaction   => Right(1000 + tx.transfers.size * 100)
-    case _: AnchorTransaction          => Right(350)
-    case tx: DataTransaction           => Right(1000 + dataTransactionBytes(tx) * 100)
-    case _: AssociationTransaction     => Right(1000)
-    case _: SponsorshipTransactionBase => Right(5000)
-    case _                             => Left(UnsupportedTransactionType)
-  }
-
-  private def feeInUnitsVersion4(tx: Transaction): Either[ValidationError, Long] = tx match {
-    case _: GenesisTransaction           => Right(0)
-    case _: TransferTransaction          => Right(10)
-    case _: LeaseTransaction             => Right(10)
-    case _: SetScriptTransaction         => Right(100)
-    case _: CancelLeaseTransaction       => Right(10)
-    case tx: MassTransferTransaction     => Right(10 + tx.transfers.size * 1)
-    case tx: AnchorTransaction           => Right(10 + tx.anchors.size * 1)
-    case _: AssociationTransaction       => Right(10)
-    case _: SponsorshipTransaction       => Right(100)
-    case _: CancelSponsorshipTransaction => Right(10)
-    case tx: DataTransaction             => Right(10 + dataTransactionBytes(tx) * 1)
-    case tx: RegisterTransaction         => Right(10 + tx.accounts.size * 1)
-    case _                               => Left(UnsupportedTransactionType)
-  }
-
-  def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Long] = {
-    if (blockchain.isFeatureActivated(BlockchainFeatures.Cobalt, height))
-      feeInUnitsVersion4(tx)
-    else if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
-      feeInUnitsVersion3(tx)
-    else if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height))
-      feeInUnitsVersion2(tx)
-    else
-      feeInUnitsVersion1(tx)
-  }.map(_ * Sponsorship.FeeUnit)
+  def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Long] =
+    new FeeCalculator(FeesSettings.empty, blockchain).consensusMinFee(height, tx)
 
   def checkFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Unit] =
     getMinFee(blockchain, fs, height, tx)

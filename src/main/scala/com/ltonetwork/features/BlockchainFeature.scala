@@ -13,6 +13,7 @@ object BlockchainFeatures {
   val BurnFeeture: BlockchainFeature              = BlockchainFeature(12, "Partial Fee Burn")
   val Cobalt: BlockchainFeature                   = BlockchainFeature(13, "Cobalt")
   val CobaltAlloy: BlockchainFeature              = BlockchainFeature(14, "Cobalt Alloy")
+  val TokenomicsRedefined: BlockchainFeature      = BlockchainFeature(15, "Tokenomics Redefined")
 
   private val dict = Seq(
     SmartAccounts,

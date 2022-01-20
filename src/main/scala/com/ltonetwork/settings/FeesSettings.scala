@@ -27,4 +27,6 @@ object FeesSettings {
 
     FeesSettings(fees)
   }
+
+  def empty: FeesSettings = FeesSettings(Map.empty[Byte, Seq[FeeSettings]])
 }
