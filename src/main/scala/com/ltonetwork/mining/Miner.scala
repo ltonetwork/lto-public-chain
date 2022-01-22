@@ -3,11 +3,11 @@ package com.ltonetwork.mining
 import cats.data.EitherT
 import cats.implicits._
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.block.Block._
 import com.ltonetwork.block.{Block, MicroBlock}
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
 import com.ltonetwork.consensus.{GeneratingBalanceProvider, PoSSelector}
 import com.ltonetwork.features.BlockchainFeatures
+import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.metrics.{BlockStats, HistogramExt, Instrumented}
 import com.ltonetwork.network._
 import com.ltonetwork.settings.{FunctionalitySettings, LtoSettings}
@@ -20,6 +20,7 @@ import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
 import kamon.Kamon
 import kamon.metric.instrument
+import kamon.metric.instrument.Counter
 import monix.eval.Task
 import monix.execution.cancelables.{CompositeCancelable, SerialCancelable}
 import monix.execution.schedulers.SchedulerService
@@ -132,7 +133,7 @@ class MinerImpl(allChannels: ChannelGroup,
   private def forgeBlock(account: PrivateKeyAccount, balance: Long): Either[String, (MiningConstraints, Block, MiningConstraint)] = {
     // should take last block right at the time of mining since microblocks might have been added
     val height              = blockchainUpdater.height
-    val version             = NgBlockVersion
+    val version: Byte       = if (blockchainUpdater.isFeatureActivated(BlockchainFeatures.TokenomicsRedefined, height)) 4 else 3
     val lastBlock           = blockchainUpdater.lastBlock.get
     val referencedBlockInfo = blockchainUpdater.bestLastBlockInfo(System.currentTimeMillis() - minMicroBlockDurationMills).get
     val refBlockBT          = referencedBlockInfo.consensus.baseTarget
@@ -154,10 +155,10 @@ class MinerImpl(allChannels: ChannelGroup,
         consensusData <- consensusData(height, account, lastBlock, refBlockBT, refBlockTS, balance, currentTime)
         estimators                         = MiningConstraints(minerSettings, blockchainUpdater, height)
         mdConstraint                       = MultiDimensionalMiningConstraint(estimators.total, estimators.keyBlock)
-        (unconfirmed, updatedMdConstraint) = utx.packUnconfirmed(mdConstraint, false)
+        (unconfirmed, updatedMdConstraint) = utx.packUnconfirmed(mdConstraint, sortInBlock = false)
         _                                  = log.debug(s"Adding ${unconfirmed.size} unconfirmed transaction(s) to new block")
         block <- Block
-          .buildAndSign(version.toByte, currentTime, refBlockID, consensusData, unconfirmed, account, blockFeatures(version))
+          .buildAndSign(version.toByte, currentTime, refBlockID, consensusData, unconfirmed, account, blockFeatures(version), 0)
           .leftMap(_.err)
       } yield (estimators, block, updatedMdConstraint.constraints.head)
     )
@@ -208,13 +209,14 @@ class MinerImpl(allChannels: ChannelGroup,
         (for {
           signedBlock <- EitherT.fromEither[Task](
             Block.buildAndSign(
-              version = 3,
+              version = accumulatedBlock.version,
               timestamp = accumulatedBlock.timestamp,
               reference = accumulatedBlock.reference,
               consensusData = accumulatedBlock.consensusData,
               transactionData = accumulatedBlock.transactionData ++ unconfirmed,
               signer = account,
-              featureVotes = accumulatedBlock.featureVotes
+              featureVotes = accumulatedBlock.featureVotes,
+              accumulatedBlock.feeVote
             ))
           microBlock <- EitherT.fromEither[Task](
             MicroBlock.buildAndSign(account, unconfirmed, accumulatedBlock.signerData.signature, signedBlock.signerData.signature))
@@ -351,17 +353,17 @@ class MinerImpl(allChannels: ChannelGroup,
 }
 
 object Miner {
-  val blockMiningStarted = Kamon.metrics.counter("block-mining-started")
-  val microMiningStarted = Kamon.metrics.counter("micro-mining-started")
+  val blockMiningStarted: Counter = Kamon.metrics.counter("block-mining-started")
+  val microMiningStarted: Counter = Kamon.metrics.counter("micro-mining-started")
 
   val MaxTransactionsPerMicroblock: Int = 500
 
-  val Disabled = new Miner with MinerDebugInfo {
+  val Disabled: Miner with MinerDebugInfo = new Miner with MinerDebugInfo {
     override def scheduleMining(): Unit = ()
 
     override def collectNextBlockGenerationTimes: List[(Address, Long)] = List.empty
 
-    override val state = MinerDebugInfo.Disabled
+    override val state: MinerDebugInfo.State = MinerDebugInfo.Disabled
   }
 
   sealed trait MicroblockMiningResult

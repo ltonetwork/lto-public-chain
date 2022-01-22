@@ -138,7 +138,8 @@ class BlockchainUpdaterLiquidBlockTest
         generator = signer,
         signature = ByteStr.empty
       ),
-      featureVotes = Set.empty
+      featureVotes = Set.empty,
+      feeVote = 0
     )
 
     unsigned.copy(signerData = SignerData(signer, ByteStr(crypto.sign(signer, unsigned.bytes()))))

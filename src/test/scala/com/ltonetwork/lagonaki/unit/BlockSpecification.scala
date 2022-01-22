@@ -39,13 +39,16 @@ class BlockSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks
       paymentTransaction: TransferTransaction <- ltoTransferGeneratorP(time, sender, recipient)
     } yield
       Block
-        .buildAndSign(3,
-                      time,
-                      reference,
-                      NxtLikeConsensusBlockData(baseTarget, ByteStr(generationSignature)),
-                      Seq.fill(amt)(paymentTransaction),
-                      recipient,
-                      Set.empty)
+        .buildAndSign(
+          version = 3,
+          timestamp = time,
+          reference = reference,
+          consensusData = NxtLikeConsensusBlockData(baseTarget, ByteStr(generationSignature)),
+          transactionData = Seq.fill(amt)(paymentTransaction),
+          signer = recipient,
+          featureVotes = Set.empty,
+          feeVote = 0
+        )
         .explicitGet()
 
   property(" block with txs bytes/parse roundtrip version 1,2") {
@@ -53,7 +56,7 @@ class BlockSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks
       forAll(blockGen) {
         case (baseTarget, reference, generationSignature, recipient, transactionData) =>
           val block = Block
-            .buildAndSign(version, time, reference, NxtLikeConsensusBlockData(baseTarget, generationSignature), transactionData, recipient, Set.empty)
+            .buildAndSign(version, time, reference, NxtLikeConsensusBlockData(baseTarget, generationSignature), transactionData, recipient, Set.empty, 0)
             .explicitGet()
           val parsedBlock = Block.parseBytes(block.bytes()).get
           assert(block.signaturesValid().isRight)
@@ -69,43 +72,50 @@ class BlockSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks
     Seq[Byte](1, 2).foreach { version =>
       forAll(blockGen) {
         case (baseTarget, reference, generationSignature, recipient, transactionData) =>
-          Block.buildAndSign(version, time, reference, NxtLikeConsensusBlockData(baseTarget, generationSignature), transactionData, recipient, Set(1)) should produce(
+          Block.buildAndSign(version, time, reference, NxtLikeConsensusBlockData(baseTarget, generationSignature), transactionData, recipient, Set(1), 0) should produce(
             "could not contain feature votes")
       }
     }
   }
 
   property(s" feature flags limit is ${Block.MaxFeaturesInBlock}") {
-    val version           = 3.toByte
+    val version: Byte     = 3
     val supportedFeatures = (0 to Block.MaxFeaturesInBlock * 2).map(_.toShort).toSet
+    val feeVote: Byte     = 0
 
     forAll(blockGen) {
       case (baseTarget, reference, generationSignature, recipient, transactionData) =>
-        Block.buildAndSign(version,
-                           time,
-                           reference,
-                           NxtLikeConsensusBlockData(baseTarget, generationSignature),
-                           transactionData,
-                           recipient,
-                           supportedFeatures) should produce(s"Block could not contain more than ${Block.MaxFeaturesInBlock} feature votes")
+        Block.buildAndSign(
+          version,
+          time,
+          reference,
+          NxtLikeConsensusBlockData(baseTarget, generationSignature),
+          transactionData,
+          recipient,
+          supportedFeatures,
+          0
+        ) should produce(s"Block could not contain more than ${Block.MaxFeaturesInBlock} feature votes")
     }
   }
-  property(" block with txs bytes/parse roundtrip version 3") {
-    val version = 3.toByte
 
+  property(" block with txs bytes/parse roundtrip version 3 and 4") {
+    val versionGen: Gen[Byte] = Gen.choose(3, 4)
     val faetureSetGen: Gen[Set[Short]] = Gen.choose(0, Block.MaxFeaturesInBlock).flatMap(fc => Gen.listOfN(fc, arbitrary[Short])).map(_.toSet)
+    val feeVoteGen: Gen[Byte] = Gen.choose(-1, 1)
 
-    forAll(blockGen, faetureSetGen) {
-      case ((baseTarget, reference, generationSignature, recipient, transactionData), featureVotes) =>
+    forAll(versionGen, blockGen, faetureSetGen, feeVoteGen) {
+      case (version, (baseTarget, reference, generationSignature, recipient, transactionData), featureVotes, feeVote) =>
         val block = Block
-          .buildAndSign(version,
-                        time,
-                        reference,
-                        NxtLikeConsensusBlockData(baseTarget, generationSignature),
-                        transactionData,
-                        recipient,
-                        featureVotes)
-          .explicitGet()
+          .buildAndSign(
+            version,
+            time,
+            reference,
+            NxtLikeConsensusBlockData(baseTarget, generationSignature),
+            transactionData,
+            recipient,
+            featureVotes,
+            if (version >= 4) feeVote else 0
+          ).explicitGet()
         val parsedBlock = Block.parseBytes(block.bytes()).get
         assert(block.signaturesValid().isRight)
         assert(parsedBlock.signaturesValid().isRight)
@@ -113,6 +123,7 @@ class BlockSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks
         assert(parsedBlock.version.toInt == version)
         assert(parsedBlock.signerData.generator.publicKey.sameElements(recipient.publicKey))
         assert(parsedBlock.featureVotes == featureVotes)
+        if (version >= 4) assert(parsedBlock.feeVote == feeVote)
     }
   }
 
@@ -120,7 +131,7 @@ class BlockSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks
     forAll(randomTransactionsGen(60000), accountGen, byteArrayGen(Block.BlockIdLength), byteArrayGen(Block.GeneratorSignatureLength)) {
       case ((txs, acc, ref, gs)) =>
         val (block, t0) =
-          Instrumented.withTime(Block.buildAndSign(3, 1, ByteStr(ref), NxtLikeConsensusBlockData(1, ByteStr(gs)), txs, acc, Set.empty).explicitGet())
+          Instrumented.withTime(Block.buildAndSign(3, 1, ByteStr(ref), NxtLikeConsensusBlockData(1, ByteStr(gs)), txs, acc, Set.empty, 0).explicitGet())
         val (bytes, t1) = Instrumented.withTime(block.bytesWithoutSignature())
         val (hash, t2)  = Instrumented.withTime(crypto.fastHash(bytes))
         val (sig, t3)   = Instrumented.withTime(crypto.sign(acc, hash))

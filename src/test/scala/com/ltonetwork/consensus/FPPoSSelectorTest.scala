@@ -270,13 +270,14 @@ object FPPoSSelectorTest {
 
       val newBlock = Block
         .buildAndSign(
-          3: Byte,
-          forkChain.head.timestamp + delay,
-          forkChain.head.uniqueId,
-          NxtLikeConsensusBlockData(bt, ByteStr(gs)),
-          Seq.empty,
-          miner,
-          Set.empty
+          version = 3: Byte,
+          timestamp = forkChain.head.timestamp + delay,
+          reference = forkChain.head.uniqueId,
+          consensusData = NxtLikeConsensusBlockData(bt, ByteStr(gs)),
+          transactionData = Seq.empty,
+          signer = miner,
+          featureVotes = Set.empty,
+          feeVote = 0
         )
         .explicitGet()
 
@@ -317,7 +318,15 @@ object FPPoSSelectorTest {
     val updatedCData = cData.copy(updateBT(cData.baseTarget), updateGS(cData.generationSignature))
 
     Block
-      .buildAndSign(3: Byte, lastBlock.timestamp + delay, lastBlock.uniqueId, updatedCData, Seq.empty, miner, Set.empty)
+      .buildAndSign(
+        version = 3: Byte,
+        timestamp = lastBlock.timestamp + delay,
+        reference = lastBlock.uniqueId,
+        consensusData = updatedCData,
+        transactionData = Seq.empty,
+        signer = miner,
+        featureVotes = Set.empty,
+        feeVote = 0)
       .explicitGet()
   }
 
