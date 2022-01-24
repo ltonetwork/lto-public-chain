@@ -18,6 +18,7 @@ import com.ltonetwork.db.{DBExt, openDB}
 import com.ltonetwork.database.Keys
 import com.ltonetwork.features.api.ActivationApiRoute
 import com.ltonetwork.fee.FeeCalculator
+import com.ltonetwork.fee.api.FeesApiRoute
 import com.ltonetwork.history.{CheckpointServiceImpl, StorageFactory}
 import com.ltonetwork.http.{DebugApiRoute, NodeApiRoute}
 import com.ltonetwork.metrics.Metrics
@@ -215,6 +216,7 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
       val apiRoutes = Seq(
         NodeApiRoute(settings.restAPISettings, blockchainUpdater, () => apiShutdown()),
         BlocksApiRoute(settings.restAPISettings, blockchainUpdater, allChannels, c => processCheckpoint(None, c)),
+        FeesApiRoute(settings.restAPISettings, blockchainUpdater, settings.blockchainSettings.functionalitySettings),
         TransactionsApiRoute(settings.restAPISettings,
                              settings.blockchainSettings.functionalitySettings,
                              settings.feesSettings,
