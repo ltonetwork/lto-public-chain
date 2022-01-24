@@ -8,6 +8,7 @@ import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
 import com.ltonetwork.consensus.{GeneratingBalanceProvider, PoSSelector}
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.features.FeatureProvider._
+import com.ltonetwork.fee.FeeVoteStatus
 import com.ltonetwork.metrics.{BlockStats, HistogramExt, Instrumented}
 import com.ltonetwork.network._
 import com.ltonetwork.settings.{FunctionalitySettings, LtoSettings}
@@ -62,7 +63,8 @@ class MinerImpl(allChannels: ChannelGroup,
                 wallet: Wallet,
                 pos: PoSSelector,
                 val minerScheduler: SchedulerService,
-                val appenderScheduler: SchedulerService)
+                val appenderScheduler: SchedulerService,
+                options: MinerOptions)
     extends Miner
     with MinerDebugInfo
     with ScorexLogging
@@ -373,4 +375,8 @@ object Miner {
   case class Error(e: ValidationError)                            extends MicroblockMiningResult
   case class Success(b: Block, totalConstraint: MiningConstraint) extends MicroblockMiningResult
 
+}
+
+class MinerOptions {
+  var feeVote: FeeVoteStatus = FeeVoteStatus.Unchanged
 }

@@ -16,7 +16,7 @@ object FeeVoteStatus {
     case _ => ???
   }
 
-  def apply(vote: Int): FeeVoteStatus = vote match {
+  def apply(vote: Byte): FeeVoteStatus = vote match {
     case v if v < 0 => Decrease
     case 0 => Unchanged
     case v if v > 0 => Increase

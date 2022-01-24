@@ -22,7 +22,7 @@ import com.ltonetwork.fee.api.FeesApiRoute
 import com.ltonetwork.history.{CheckpointServiceImpl, StorageFactory}
 import com.ltonetwork.http.{DebugApiRoute, NodeApiRoute}
 import com.ltonetwork.metrics.Metrics
-import com.ltonetwork.mining.{Miner, MinerImpl}
+import com.ltonetwork.mining.{Miner, MinerImpl, MinerOptions}
 import com.ltonetwork.network.RxExtensionLoader.RxExtensionLoaderShutdownHook
 import com.ltonetwork.network._
 import com.ltonetwork.settings._
@@ -110,9 +110,10 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
 
     val pos = new PoSSelector(blockchainUpdater, settings.blockchainSettings)
 
+    val minerOptions = new MinerOptions
     val miner =
       if (settings.minerSettings.enable)
-        new MinerImpl(allChannels, blockchainUpdater, checkpointService, settings, time, utxStorage, wallet, pos, minerScheduler, appenderScheduler)
+        new MinerImpl(allChannels, blockchainUpdater, checkpointService, settings, time, utxStorage, wallet, pos, minerScheduler, appenderScheduler, minerOptions)
       else Miner.Disabled
 
     val processBlock =
@@ -216,7 +217,7 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
       val apiRoutes = Seq(
         NodeApiRoute(settings.restAPISettings, blockchainUpdater, () => apiShutdown()),
         BlocksApiRoute(settings.restAPISettings, blockchainUpdater, allChannels, c => processCheckpoint(None, c)),
-        FeesApiRoute(settings.restAPISettings, blockchainUpdater, settings.blockchainSettings.functionalitySettings),
+        FeesApiRoute(settings.restAPISettings, blockchainUpdater, settings.blockchainSettings.functionalitySettings, minerOptions),
         TransactionsApiRoute(settings.restAPISettings,
                              settings.blockchainSettings.functionalitySettings,
                              settings.feesSettings,
@@ -262,6 +263,7 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
       val apiTypes: Set[Class[_]] = Set(
         classOf[NodeApiRoute],
         classOf[BlocksApiRoute],
+        classOf[FeesApiRoute],
         classOf[TransactionsApiRoute],
         classOf[NxtConsensusApiRoute],
         classOf[WalletApiRoute],
