@@ -11,9 +11,7 @@ import io.swagger.v3.oas.annotations.media.{Content, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.{GET, POST, Path}
-import play.api.libs.json.{JsNumber, JsObject, JsResultException, JsString, Json}
-
-import java.util.NoSuchElementException
+import play.api.libs.json._
 
 @Path("/fees")
 @Tag(name = "fees")
@@ -35,7 +33,7 @@ case class FeesApiRoute(settings: RestAPISettings,
   )
   def status: Route = (path("status") & get) {
     val price = blockchain.feePrice
-    val next = FeeVoteStatus.Unchanged
+    val next = FeeVoteStatus.Remain
 
     complete(Json.obj(
       "price" -> price,
@@ -58,23 +56,22 @@ case class FeesApiRoute(settings: RestAPISettings,
     description = "Voting status",
     content = Array(
       new Content(
-        schema = new Schema(implementation = classOf[String])
+        schema = new Schema(implementation = classOf[String]),
+        mediaType = "application/json",
       )),
     required = true
   )
   def vote: Route = (path("vote") & post) {
     handleExceptions(jsonExceptionHandler) {
-      /*json[JsObject] { jsv =>
+      json[JsObject] { jsv =>
         minerOptions.feeVote = (jsv \ "status").get match {
           case JsString(d) => FeeVoteStatus(d)
           case JsNumber(v) => FeeVoteStatus(v.toByte)
-          case _           => throw new RuntimeException("Invalid type of status property")
+          case _ => throw new RuntimeException("Invalid type of status property")
         }
 
         Json.obj("status" -> minerOptions.feeVote.description)
-      }*/
-      minerOptions.feeVote = FeeVoteStatus.Increase
-      complete(Json.obj("status" -> minerOptions.feeVote.description))
+      }
     }
   }
 

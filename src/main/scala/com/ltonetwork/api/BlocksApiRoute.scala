@@ -384,6 +384,7 @@ case class BlocksApiRoute(settings: RestAPISettings,
     content = Array(
       new Content(
         schema = new Schema(implementation = classOf[com.ltonetwork.network.Checkpoint]),
+        mediaType = "application/json",
       )),
     required = true
   )

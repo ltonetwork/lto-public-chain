@@ -378,5 +378,5 @@ object Miner {
 }
 
 class MinerOptions {
-  var feeVote: FeeVoteStatus = FeeVoteStatus.Unchanged
+  var feeVote: FeeVoteStatus = FeeVoteStatus.Remain
 }
