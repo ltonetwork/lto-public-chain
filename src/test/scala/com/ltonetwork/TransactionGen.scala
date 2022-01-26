@@ -70,7 +70,7 @@ trait TransactionGenBase extends ScriptGen {
   val ntpTimestampGen: Gen[Long] = Gen.choose(1, 1000).map(time.correctedTime() - _)
 
   def accountGen(keyType: KeyType): Gen[PrivateKeyAccount] = bytes32gen.map(seed => PrivateKeyAccount(seed, keyType))
-  def accountGen(): Gen[PrivateKeyAccount]                 = accountGen(ED25519)
+  def accountGen: Gen[PrivateKeyAccount]                   = accountGen(ED25519)
 
   def accountGenRandom(): Gen[PrivateKeyAccount] =
     accountGen(Gen.oneOf(KeyTypes.all).pureApply(Gen.Parameters.default, Seed.random(), 100))

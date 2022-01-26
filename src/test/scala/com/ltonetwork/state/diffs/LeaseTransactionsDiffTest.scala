@@ -1,6 +1,7 @@
 package com.ltonetwork.state.diffs
 
 import cats._
+import com.ltonetwork.block.TestBlock
 import com.ltonetwork.state._
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
@@ -8,7 +9,6 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.settings.TestFunctionalitySettings
-import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.transfer._

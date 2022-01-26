@@ -1,8 +1,7 @@
 package com.ltonetwork.database
 
 import com.ltonetwork.account.{Address, PrivateKeyAccount}
-import com.ltonetwork.block.Block
-import com.ltonetwork.lagonaki.mocks.TestBlock
+import com.ltonetwork.block.{Block, TestBlock}
 import com.ltonetwork.lang.v1.compiler.Terms
 import com.ltonetwork.settings.{LtoSettings, TestFunctionalitySettings, loadConfig}
 import com.ltonetwork.state.diffs.ENOUGH_AMT

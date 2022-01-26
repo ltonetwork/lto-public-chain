@@ -1,17 +1,16 @@
-package com.ltonetwork.lagonaki.unit
+package com.ltonetwork.block
 
+import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
 import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.produce
+import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.{NoShrink, TransactionGen, crypto}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.scalatest.propspec.AnyPropSpec
 import org.scalatest.matchers.should.Matchers
-import com.ltonetwork.block.Block
-import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
-import com.ltonetwork.transaction.transfer._
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class BlockSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with TransactionGen with Matchers with NoShrink {
 

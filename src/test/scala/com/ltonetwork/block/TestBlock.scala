@@ -1,11 +1,11 @@
-package com.ltonetwork.lagonaki.mocks
+package com.ltonetwork.block
 
-import com.ltonetwork.state._
 import com.ltonetwork.account.PrivateKeyAccount
-import com.ltonetwork.block._
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
+import com.ltonetwork.state._
 import com.ltonetwork.transaction.Transaction
-import scorex.crypto.signatures.Curve25519._
+import scorex.crypto.signatures.Curve25519.{KeyLength, SignatureLength}
+
 import scala.util.{Random, Try}
 
 object TestBlock {

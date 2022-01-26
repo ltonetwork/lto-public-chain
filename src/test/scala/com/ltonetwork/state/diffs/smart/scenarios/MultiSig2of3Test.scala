@@ -13,7 +13,7 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.lagonaki.mocks.TestBlock
+import com.ltonetwork.block.TestBlock
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction

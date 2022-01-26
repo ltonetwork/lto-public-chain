@@ -2,7 +2,7 @@ package com.ltonetwork.state.diffs
 
 import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.block.Block
-import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
+import com.ltonetwork.block.TestBlock.{create => block}
 import com.ltonetwork.settings.Constants
 import com.ltonetwork.state.{Blockchain, ByteStr, EitherExt2}
 import com.ltonetwork.transaction.association.IssueAssociationTransaction

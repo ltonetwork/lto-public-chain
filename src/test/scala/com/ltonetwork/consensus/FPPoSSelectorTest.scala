@@ -2,10 +2,9 @@ package com.ltonetwork.consensus
 
 import com.typesafe.config.ConfigFactory
 import com.ltonetwork.account.PrivateKeyAccount
-import com.ltonetwork.block.Block
+import com.ltonetwork.block.{Block, TestBlock}
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
 import com.ltonetwork.database.LevelDBWriter
-import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.settings.{LtoSettings, _}
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.{ENOUGH_AMT, ProduceError}

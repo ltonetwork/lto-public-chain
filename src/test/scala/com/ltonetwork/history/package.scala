@@ -2,10 +2,9 @@ package com.ltonetwork
 
 import com.typesafe.config.ConfigFactory
 import com.ltonetwork.account.PrivateKeyAccount
-import com.ltonetwork.block.{Block, MicroBlock}
+import com.ltonetwork.block.{Block, MicroBlock, TestBlock}
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
-import com.ltonetwork.lagonaki.mocks.TestBlock
-import com.ltonetwork.settings.{BlockchainSettings, TestFunctionalitySettings, LtoSettings}
+import com.ltonetwork.settings.{BlockchainSettings, LtoSettings, TestFunctionalitySettings}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.Transaction
 import monix.eval.TaskCircuitBreaker.Timestamp

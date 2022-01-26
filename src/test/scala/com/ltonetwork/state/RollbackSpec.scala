@@ -1,10 +1,10 @@
 package com.ltonetwork.state
 
 import com.ltonetwork.account.{Address, PrivateKeyAccount}
+import com.ltonetwork.block.TestBlock
 import com.ltonetwork.crypto.signatureLength
 import com.ltonetwork.db.WithState
 import com.ltonetwork.features._
-import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.settings.{FunctionalitySettings, TestFunctionalitySettings}
 import com.ltonetwork.state.reader.LeaseDetails
 import com.ltonetwork.transaction.genesis.GenesisTransaction

@@ -9,16 +9,15 @@ import com.ltonetwork.settings.{FeeSettings, FeesSettings, TestFunctionalitySett
 import com.ltonetwork.state.Blockchain
 import com.ltonetwork.transaction.Proofs
 import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransaction}
-import com.ltonetwork.utils.Base58
+import com.ltonetwork.utils.{Base58, _}
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
-import com.ltonetwork.{BlockGen, NoShrink, TestTime, TestWallet, TransactionGen}
-import com.ltonetwork.utils._
+import com.ltonetwork.{BlockGen, NoShrink, TestTime, TransactionGen}
 import io.netty.channel.group.ChannelGroup
 import org.scalacheck.Gen._
 import org.scalamock.scalatest.MockFactory
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.JsValue.jsValueToJsLookup
 import play.api.libs.json._
 

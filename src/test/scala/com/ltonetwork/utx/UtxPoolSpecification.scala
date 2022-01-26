@@ -2,10 +2,9 @@ package com.ltonetwork.utx
 
 import com.typesafe.config.ConfigFactory
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.block.Block
+import com.ltonetwork.block.{Block, TestBlock}
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.history.StorageFactory
-import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.lang.v1.compiler.Terms.EXPR
 import com.ltonetwork.lang.v1.compiler.{CompilerContext, CompilerV1}
 import com.ltonetwork.mining._
@@ -59,7 +58,8 @@ class UtxPoolSpecification
         'T',
         FunctionalitySettings.TESTNET.copy(
           preActivatedFeatures = Map(
-            BlockchainFeatures.SmartAccounts.id -> 0
+            BlockchainFeatures.SmartAccounts.id -> 0,
+            BlockchainFeatures.TokenomicsRedefined.id -> 0,
           )),
         genesisSettings
       ),

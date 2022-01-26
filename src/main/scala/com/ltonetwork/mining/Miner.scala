@@ -86,7 +86,7 @@ class MinerImpl(allChannels: ChannelGroup,
 
   private val nextBlockGenerationTimes: MMap[Address, Long] = MMap.empty
 
-  @volatile private var debugState: MinerDebugInfo.State = MinerDebugInfo.Disabled
+  @volatile var debugState: MinerDebugInfo.State = MinerDebugInfo.Disabled
 
   def collectNextBlockGenerationTimes: List[(Address, Long)] = Await.result(Task.now(nextBlockGenerationTimes.toList).runAsyncLogErr, Duration.Inf)
 
@@ -160,7 +160,7 @@ class MinerImpl(allChannels: ChannelGroup,
         (unconfirmed, updatedMdConstraint) = utx.packUnconfirmed(mdConstraint, sortInBlock = false)
         _                                  = log.debug(s"Adding ${unconfirmed.size} unconfirmed transaction(s) to new block")
         block <- Block
-          .buildAndSign(version.toByte, currentTime, refBlockID, consensusData, unconfirmed, account, blockFeatures(version), 0)
+          .buildAndSign(version, currentTime, refBlockID, consensusData, unconfirmed, account, blockFeatures(version), options.feeVote.vote)
           .leftMap(_.err)
       } yield (estimators, block, updatedMdConstraint.constraints.head)
     )

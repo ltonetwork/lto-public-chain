@@ -8,9 +8,8 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.PrivateKeyAccount
-import com.ltonetwork.block.{Block, MicroBlock, SignerData}
+import com.ltonetwork.block.{Block, MicroBlock, SignerData, TestBlock}
 import com.ltonetwork.consensus.nxt.NxtLikeConsensusBlockData
-import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer._
