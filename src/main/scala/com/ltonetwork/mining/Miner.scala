@@ -143,6 +143,7 @@ class MinerImpl(allChannels: ChannelGroup,
     val refBlockID          = referencedBlockInfo.blockId
     lazy val currentTime    = timeService.correctedTime()
     lazy val blockDelay     = currentTime - lastBlock.timestamp
+    val feeVote: Byte       = if (version >= 4) options.feeVote.vote else 0
     measureSuccessful(
       blockBuildTimeStats,
       for {
@@ -160,7 +161,7 @@ class MinerImpl(allChannels: ChannelGroup,
         (unconfirmed, updatedMdConstraint) = utx.packUnconfirmed(mdConstraint, sortInBlock = false)
         _                                  = log.debug(s"Adding ${unconfirmed.size} unconfirmed transaction(s) to new block")
         block <- Block
-          .buildAndSign(version, currentTime, refBlockID, consensusData, unconfirmed, account, blockFeatures(version), options.feeVote.vote)
+          .buildAndSign(version, currentTime, refBlockID, consensusData, unconfirmed, account, blockFeatures(version), feeVote)
           .leftMap(_.err)
       } yield (estimators, block, updatedMdConstraint.constraints.head)
     )
