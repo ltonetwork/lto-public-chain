@@ -22,6 +22,7 @@ object BlockchainFeatures {
     BurnFeeture,
     Cobalt,
     CobaltAlloy,
+    TokenomicsRedefined
   ).map(f => f.id -> f).toMap
 
   private val preActivated: Set[Short] = Set(1, 2, 3, 5, 8).map(_.toShort) // consensus logic hardcoded

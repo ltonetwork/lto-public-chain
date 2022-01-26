@@ -291,6 +291,14 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
   override def feePrice: Long = 10000
   override def feePrice(height: Int): Long = 10000
 
+  override def feeVotes(height: Int): Int = {
+    val innerVotes = blockchain.feeVotes(height)
+    ngState match {
+      case Some(ng) if this.height <= height => innerVotes + ng.base.feeVote
+      case _ => innerVotes
+    }
+  }
+
   private def liquidBlockHeaderAndSize() = ngState.map { s =>
     (s.bestLiquidBlock, s.bestLiquidBlock.bytes().length)
   }

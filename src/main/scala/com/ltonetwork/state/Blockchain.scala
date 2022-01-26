@@ -40,6 +40,7 @@ trait Blockchain {
 
   def feePrice: Long
   def feePrice(height: Int): Long
+  def feeVotes(height: Int): Int
 
   def portfolio(a: Address): Portfolio
 

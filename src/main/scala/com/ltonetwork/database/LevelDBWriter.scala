@@ -569,6 +569,12 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       .mapValues(_.size)
   }
 
+  override def feeVotes(height: Int): Int = readOnly { db =>
+    fs.feeVoteWindow(height)
+      .map(h => db.get(Keys.blockHeader(h)).fold(0)(_._1.feeVote))
+      .sum
+  }
+
   override def ltoDistribution(height: Int): Map[Address, Long] = readOnly { db =>
     (for {
       seqNr     <- (1 to db.get(Keys.addressesForLtoSeqNr)).par

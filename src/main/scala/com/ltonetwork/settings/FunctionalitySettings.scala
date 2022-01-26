@@ -17,12 +17,12 @@ case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
   def activationWindowSize(height: Int): Int =
     featureCheckBlocksPeriod * (if (height <= doubleFeaturesPeriodsAfterHeight) 1 else 2)
 
-  def activationWindow(height: Int): Range =
+  private def blockWindow(height: Int, ws: Int): Range =
     if (height < 1) Range(0, 0)
-    else {
-      val ws = activationWindowSize(height)
-      Range.inclusive((height - 1) / ws * ws + 1, ((height - 1) / ws + 1) * ws)
-    }
+    else Range.inclusive((height - 1) / ws * ws + 1, ((height - 1) / ws + 1) * ws)
+
+  def activationWindow(height: Int): Range = blockWindow(height, activationWindowSize(height))
+  def feeVoteWindow(height: Int): Range = blockWindow(height, feeVoteBlocksPeriod)
 
   def blocksForFeatureActivation(height: Int): Int =
     blocksForFeatureActivation * (if (height <= doubleFeaturesPeriodsAfterHeight) 1 else 2)

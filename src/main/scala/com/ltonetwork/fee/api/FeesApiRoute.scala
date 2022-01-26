@@ -36,11 +36,13 @@ case class FeesApiRoute(settings: RestAPISettings,
   )
   def status: Route = (path("status") & get) {
     val price = blockchain.feePrice
+    val votes = blockchain.feeVotes(blockchain.height)
     val next = FeeVoteStatus.Remain
 
     complete(Json.obj(
       "price" -> price,
-      "votes" -> 0,
+      "votes" -> votes,
+      "period" -> functionalitySettings.feeVoteBlocksPeriod,
       "next" -> Json.obj(
         "status" -> next.description,
         "price" -> next.calc(price),
