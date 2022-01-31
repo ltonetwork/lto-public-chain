@@ -20,10 +20,12 @@ object BlockDiffer extends ScorexLogging with Instrumented {
   val feeBurnAmt: Long = 0.1.lto
   val feeBurnPct       = 0.5
 
+  def blockReward: Portfolio = Portfolio(balance = 10.lto)
+
   def maybeBurnFee(bc: Blockchain, tx: Transaction): Portfolio = {
     import com.ltonetwork.features.FeatureProvider._
     if (bc.isFeatureActivated(BlockchainFeatures.TokenomicsRedefined, bc.height))
-      Portfolio(balance = (tx.fee * (1 - feeBurnPct)).toLong, lease = LeaseBalance.empty)
+      Portfolio(balance = (tx.fee * (1 - feeBurnPct)).toLong)
     else if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, bc.height))
       Portfolio(balance = Math.max(0, tx.fee - feeBurnAmt))
     else
@@ -108,7 +110,8 @@ object BlockDiffer extends ScorexLogging with Instrumented {
       constraint.put(blockchain, tx).asInstanceOf[Constraint]
 
     val txDiffer = TransactionDiffer(settings, prevBlockTimestamp, timestamp, currentBlockHeight) _
-    val initDiff = Diff.empty.copy(portfolios = Map(blockGenerator -> currentBlockFeeDistr.orElse(prevBlockFeeDistr).orEmpty))
+    val baseDiff = Diff.empty.copy(portfolios = Map(blockGenerator -> blockReward))
+    val initDiff = baseDiff.combine(Diff.empty.copy(portfolios = Map(blockGenerator -> currentBlockFeeDistr.orElse(prevBlockFeeDistr).orEmpty)))
     val hasNg    = currentBlockFeeDistr.isEmpty
 
     def calcNextBlockFee(blockchain: Blockchain, portfolio: Portfolio): (Portfolio, Long) = {
@@ -117,7 +120,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
         val nextPf = portfolio.minus(curPf)
         (curPf, nextPf.balance)
       } else (portfolio, 0L)
-      ngPf.copy(_2 = 0L)
+      ngPf.copy(_2 = 0L) // ????
     }
 
     txs
