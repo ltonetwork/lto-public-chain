@@ -8,12 +8,14 @@ import com.ltonetwork.settings.{FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.Blockchain
 import com.ltonetwork.transaction.ValidationError.GenericError
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.media.{Content, Schema}
+import io.swagger.v3.oas.annotations.extensions.Extension
+import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.{GET, POST, Path}
 import play.api.libs.json._
 
+import java.lang.annotation.Annotation
 import java.util.NoSuchElementException
 
 @Path("/fees")
@@ -35,9 +37,10 @@ case class FeesApiRoute(settings: RestAPISettings,
     summary = "Get status of the fee price"
   )
   def status: Route = (path("status") & get) {
-    val price = blockchain.feePrice
+    val price = blockchain.feePrice(blockchain.height)
     val votes = blockchain.feeVotes(blockchain.height)
-    val next = FeeVoteStatus.Remain
+    val nextPrice = blockchain.feePrice(nextPeriod)
+    val next = FeeVoteStatus(nextPrice - price)
 
     complete(Json.obj(
       "price" -> price,
@@ -71,7 +74,7 @@ case class FeesApiRoute(settings: RestAPISettings,
       json[JsObject] { jsv =>
         val vote = (jsv \ "status").get match {
           case JsString(d) => FeeVoteStatus(d)
-          case JsNumber(v) => FeeVoteStatus(v.toByte)
+          case JsNumber(v) => Right(FeeVoteStatus(v.toLong))
           case _ => Left[GenericError, FeeVoteStatus](GenericError("Invalid type of status property"))
         }
 

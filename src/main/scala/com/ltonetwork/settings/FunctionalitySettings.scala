@@ -6,7 +6,8 @@ case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
                                  blocksForFeatureActivation: Int,
                                  preActivatedFeatures: Map[Short, Int],
                                  doubleFeaturesPeriodsAfterHeight: Int,
-                                 feeVoteBlocksPeriod: Int) {
+                                 feeVoteBlocksPeriod: Int,
+                                 blocksForFeeChange: Int) {
 
   require(featureCheckBlocksPeriod > 0, "featureCheckBlocksPeriod must be greater than 0")
   require(
@@ -41,7 +42,8 @@ object FunctionalitySettings {
     blocksForFeatureActivation = 4000,
     preActivatedFeatures = enabledFeatures,
     doubleFeaturesPeriodsAfterHeight = -1,
-    feeVoteBlocksPeriod = 1000
+    feeVoteBlocksPeriod = 1000,
+    blocksForFeeChange = 600,
   )
 
   val TESTNET: FunctionalitySettings = apply(
@@ -49,7 +51,8 @@ object FunctionalitySettings {
     blocksForFeatureActivation = 2000,
     preActivatedFeatures = enabledFeatures,
     doubleFeaturesPeriodsAfterHeight = -1,
-    feeVoteBlocksPeriod = 1000
+    feeVoteBlocksPeriod = 1000,
+    blocksForFeeChange = 600,
   )
 
   val configPath = "lto.blockchain.custom.functionality"

@@ -14,7 +14,8 @@ object TestFunctionalitySettings {
       BlockchainFeatures.CobaltAlloy.id            -> 0
     ),
     doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
-    feeVoteBlocksPeriod = 1000
+    feeVoteBlocksPeriod = 1000,
+    blocksForFeeChange = 600,
   )
   val Disabled = Enabled.copy(preActivatedFeatures = Map.empty)
 

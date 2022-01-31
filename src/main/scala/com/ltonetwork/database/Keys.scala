@@ -118,4 +118,5 @@ object Keys {
   def incomingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[Array[Byte]] =
     Key(hBytes(47, seqNr, addressBytes.arr), identity, identity)
 
+  def feePrice(height: Int): Key[Option[Long]] = Key.opt[Long](h(48, height), Longs.fromByteArray, Longs.toByteArray)
 }

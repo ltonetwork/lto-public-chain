@@ -18,9 +18,11 @@ object FeeVoteStatus {
     case _ => Left(GenericError(s"Invalid fee vote status '$description'"))
   }
 
-  def apply(vote: Byte): Either[GenericError, FeeVoteStatus] = vote match {
-    case v if v < 0 => Right(Decrease)
-    case 0 => Right(Remain)
-    case v if v > 0 => Right(Increase)
+  def apply(vote: Byte): FeeVoteStatus = apply(vote.toLong)
+
+  def apply(change: Long): FeeVoteStatus = change match {
+    case v if v < 0 => Decrease
+    case 0 => Remain
+    case v if v > 0 => Increase
   }
 }

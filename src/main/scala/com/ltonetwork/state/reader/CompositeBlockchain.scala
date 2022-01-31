@@ -167,8 +167,6 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
   override def featureVotes(height: Int): Map[Short, Int] = inner.featureVotes(height)
 
   /** Fee vote related */
-  override def feePrice: Long = inner.feePrice
-
   override def feePrice(height: Int): Long = inner.feePrice(height)
 
   override def feeVotes(height: Int): Int = inner.feeVotes(height)

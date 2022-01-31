@@ -10,6 +10,7 @@ import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAsso
 import com.ltonetwork.transaction.smart.script.Script
 
 import java.util
+import java.lang.{Integer => JInt, Long => JLong}
 import scala.collection.JavaConverters._
 
 trait Caches extends Blockchain {
@@ -79,6 +80,16 @@ trait Caches extends Blockchain {
   protected var activatedFeaturesCache: Map[Short, Int] = loadActivatedFeatures()
   protected def loadActivatedFeatures(): Map[Short, Int]
   override def activatedFeatures: Map[Short, Int] = activatedFeaturesCache
+
+  // Using JInt and JLong because Int and Long are not AnyRef which is required by CacheBuilder
+  protected val feePriceCache: LoadingCache[JInt, JLong] = cache(maxCacheSize, loadFeePrice)
+  protected def feePriceHeight(height: Int): Int
+  protected def loadFeePrice(height: Int): Long
+  protected def loadFeePrice(height: JInt): JLong = loadFeePrice(height.intValue())
+  override def feePrice(height: Int): Long = {
+    val h = feePriceHeight(height)
+    feePriceCache.get(h)
+  }
 
   protected def doAppend(carryFee: Long,
                          block: Block,

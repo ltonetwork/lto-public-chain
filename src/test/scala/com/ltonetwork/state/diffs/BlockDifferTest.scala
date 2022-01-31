@@ -66,7 +66,8 @@ class BlockDifferTest extends AnyFreeSpecLike with Matchers with BlockGen with W
       blocksForFeatureActivation = 1,
       preActivatedFeatures = Map.empty,
       doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
-      feeVoteBlocksPeriod = 10
+      feeVoteBlocksPeriod = 10,
+      blocksForFeeChange = 6,
     )
     assertDiffAndState(blocks.init, blocks.last, fs)(assertion)
   }

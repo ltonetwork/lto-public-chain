@@ -38,7 +38,6 @@ trait Blockchain {
   def activatedFeatures: Map[Short, Int]
   def featureVotes(height: Int): Map[Short, Int]
 
-  def feePrice: Long
   def feePrice(height: Int): Long
   def feeVotes(height: Int): Int
 

@@ -3,6 +3,7 @@ package com.ltonetwork.database
 import com.google.common.cache.CacheBuilder
 import com.ltonetwork.account.Address
 import com.ltonetwork.block.{Block, BlockHeader}
+import com.ltonetwork.fee.FeeVoteStatus
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.state.reader.LeaseDetails
@@ -180,6 +181,11 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     c2.drop(1).map(kf(_).keyBytes)
   }
 
+  override protected def feePriceHeight(height: Int): Int = height - (height % fs.feeVoteBlocksPeriod)
+
+  // Height must already be rounded to multiple of fs.feeVoteBlocksPeriod
+  override protected def loadFeePrice(height: Int): Long = readOnly(_.get(Keys.feePrice(height))).getOrElse(10000)
+
   override protected def doAppend(carry: Long,
                                   block: Block,
                                   newAddresses: Map[Address, BigInt],
@@ -319,6 +325,19 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       }
     }
 
+    if (height % fs.feeVoteBlocksPeriod == 0) {
+      val votes = feeVotes(height)
+      val status = FeeVoteStatus(votes / fs.blocksForFeeChange) // Division round towards 0
+      val nextPrice = status.calc(feePrice(height))
+      val nextHeight = height + fs.feeVoteBlocksPeriod
+
+      rw.put(Keys.feePrice(nextHeight), Some(nextPrice))
+      feePriceCache.put(nextHeight, nextPrice)
+
+      if (status != FeeVoteStatus.Remain)
+        log.info(s"${status.description.toLowerCase.capitalize} fee price at block $nextHeight to $nextPrice")
+    }
+
     rw.put(Keys.transactionIdsAtHeight(height), transactions.keys.toSeq)
     rw.put(Keys.carryFee(height), carry)
     expiredKeys.foreach(rw.delete)
@@ -327,13 +346,13 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
   override protected def doRollback(targetBlockId: ByteStr): Seq[Block] = {
     readOnly(_.get(Keys.heightOf(targetBlockId))).fold(Seq.empty[Block]) { targetHeight =>
-      log.debug(s"Rolling back to block $targetBlockId at $targetHeight")
+      log.info(s"Rolling back to block $targetBlockId at $targetHeight")
 
       val discardedBlocks: Seq[Block] = for (currentHeight <- height until targetHeight by -1) yield {
         val portfoliosToInvalidate = Seq.newBuilder[Address]
         val scriptsToDiscard       = Seq.newBuilder[Address]
 
-        // association transcations are discarded naturally.
+        // association transactions are discarded naturally.
         // association records are not discarded, but since
         // we query assocs as
         // tx <- transactionInfo(ByteStr(txId)).toList
@@ -522,9 +541,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
   }
 
   override def scoreOf(blockId: ByteStr): Option[BigInt] = readOnly(db => db.get(Keys.heightOf(blockId)).map(h => db.get(Keys.score(h))))
-
-  override def feePrice: Long = 10000
-  override def feePrice(height: Int): Long = 10000
 
   override def blockHeaderAndSize(height: Int): Option[(BlockHeader, Int)] = readOnly(_.get(Keys.blockHeader(height)))
 

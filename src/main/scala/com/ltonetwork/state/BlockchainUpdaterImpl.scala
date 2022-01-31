@@ -288,8 +288,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
     }
   }
 
-  override def feePrice: Long = 10000
-  override def feePrice(height: Int): Long = 10000
+  override def feePrice(height: Int): Long = blockchain.feePrice(height)
 
   override def feeVotes(height: Int): Int = {
     val innerVotes = blockchain.feeVotes(height)
