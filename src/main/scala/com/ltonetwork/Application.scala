@@ -10,9 +10,10 @@ import cats.instances.all._
 import com.typesafe.config._
 import com.ltonetwork.account.{Address, AddressScheme}
 import com.ltonetwork.actor.RootActorSystem
+import com.ltonetwork.api.{AddressApiRoute, AssociationsApiRoute, BlocksApiRoute, CompositeHttpService, LeaseApiRoute, PeersApiRoute, SponsorshipApiRoute, TransactionsApiRoute, UtilsApiRoute, WalletApiRoute}
 import com.ltonetwork.api.http._
 import com.ltonetwork.consensus.PoSSelector
-import com.ltonetwork.consensus.nxt.api.http.NxtConsensusApiRoute
+import com.ltonetwork.consensus.nxt.api.NxtConsensusApiRoute
 import com.ltonetwork.db.{DBExt, openDB}
 import com.ltonetwork.database.Keys
 import com.ltonetwork.features.api.ActivationApiRoute
