@@ -1,6 +1,6 @@
 package com.ltonetwork
 
-import com.ltonetwork.api.http.requests._
+import com.ltonetwork.api.requests._
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.Base58

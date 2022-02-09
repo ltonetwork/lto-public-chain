@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.requests.RegisterRequest
+import com.ltonetwork.api.requests.RegisterRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.utils.Base58

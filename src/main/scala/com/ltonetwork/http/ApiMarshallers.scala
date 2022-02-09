@@ -5,7 +5,7 @@ import akka.http.scaladsl.model.MediaTypes.{`application/json`, `text/plain`}
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, PredefinedFromEntityUnmarshallers, Unmarshaller}
 import akka.util.ByteString
-import com.ltonetwork.api.http.ApiError
+import com.ltonetwork.api.ApiError
 import com.ltonetwork.transaction.{Transaction, ValidationError}
 import play.api.libs.json._
 

@@ -1,11 +1,6 @@
 from behave import *
-from e2e.common.tools import ROOT_ACCOUNT
-from e2e.common.tools import convert_balance
-from e2e.common.tools import get_balance
-from e2e.common.tools import broadcast
-from e2e.common.tools import assert_equals
-
-from lto.transactions.transfer import Transfer
+from e2e.common.tools import ROOT_ACCOUNT, convert_balance, get_balance, broadcast, assert_equals
+from lto.transactions import Transfer
 
 
 def transfer_to(context, recipient="", amount=0, sender="", version=None):
@@ -31,12 +26,12 @@ def step_impl(context, user, balance):
     user_balance = get_balance(context.users[user].address)
 
     if user_balance < balance:
-        transfer = transfer_to(context, recipient=user, amount=balance - user_balance)
+        transfer_to(context, recipient=user, amount=balance - user_balance)
     elif user_balance > balance:
         if user_balance - balance <= Transfer.DEFAULT_FEE:
-            transfer = transfer_to(context, recipient=user, amount=Transfer.DEFAULT_FEE)
+            transfer_to(context, recipient=user, amount=Transfer.DEFAULT_FEE)
         user_balance = get_balance(context.users[user].address)
-        transfer = transfer_to(context, amount=user_balance - (balance + Transfer.DEFAULT_FEE), sender=user)
+        transfer_to(context, amount=user_balance - (balance + Transfer.DEFAULT_FEE), sender=user)
 
     assert_equals(get_balance(context.users[user].address), balance)
 

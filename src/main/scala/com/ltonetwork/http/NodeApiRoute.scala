@@ -2,7 +2,7 @@ package com.ltonetwork.http
 
 import akka.http.scaladsl.server.Route
 import com.ltonetwork.Shutdownable
-import com.ltonetwork.api.http.{ApiRoute, CommonApiFunctions}
+import com.ltonetwork.api.{ApiRoute, CommonApiFunctions}
 import com.ltonetwork.settings.{Constants, RestAPISettings}
 import com.ltonetwork.state.Blockchain
 import com.ltonetwork.utils.ScorexLogging

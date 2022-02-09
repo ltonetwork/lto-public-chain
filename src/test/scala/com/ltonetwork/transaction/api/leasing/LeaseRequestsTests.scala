@@ -1,6 +1,6 @@
-package com.ltonetwork.transaction.api.http.leasing
+package com.ltonetwork.transaction.api.leasing
 
-import com.ltonetwork.api.http.requests.{CancelLeaseRequest, LeaseRequest}
+import com.ltonetwork.api.requests.{CancelLeaseRequest, LeaseRequest}
 import com.ltonetwork.state.ByteStr
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers

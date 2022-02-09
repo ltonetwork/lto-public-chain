@@ -3,7 +3,7 @@ package com.ltonetwork.http
 import com.ltonetwork.{TestWallet, crypto}
 import com.ltonetwork.http.ApiMarshallers._
 import play.api.libs.json.JsObject
-import com.ltonetwork.api.http.{ApiKeyNotValid, WalletApiRoute}
+import com.ltonetwork.api.{ApiKeyNotValid, WalletApiRoute}
 import com.ltonetwork.utils.Base58
 import org.scalacheck.Gen
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks

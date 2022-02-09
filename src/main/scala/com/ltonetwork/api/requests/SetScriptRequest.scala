@@ -21,8 +21,9 @@ case class SetScriptRequest(version: Option[Byte] = None,
     extends TxRequest.For[SetScriptTransaction] {
 
   private def decodedScript: Either[ValidationError, Option[Script]] = script match {
-    case None    => Right(None)
-    case Some(s) => Script.fromBase64String(s).map(Some(_))
+    case None                  => Right(None)
+    case Some(s) if s.isEmpty  => Right(None)
+    case Some(s) if s.nonEmpty => Script.fromBase64String(s).map(Some(_))
   }
 
   protected def sign(tx: SetScriptTransaction, signer: PrivateKeyAccount): SetScriptTransaction = tx.signWith(signer)

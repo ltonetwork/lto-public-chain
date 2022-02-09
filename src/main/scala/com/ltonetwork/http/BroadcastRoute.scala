@@ -1,6 +1,6 @@
 package com.ltonetwork.http
 
-import com.ltonetwork.api.http.ApiError
+import com.ltonetwork.api.ApiError
 import com.ltonetwork.network._
 import com.ltonetwork.transaction.Transaction
 import com.ltonetwork.utx.UtxPool

@@ -10,7 +10,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import org.scalamock.scalatest.MockFactory
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
-import com.ltonetwork.api.http.{ApiKeyNotValid, PeersApiRoute}
+import com.ltonetwork.api.{ApiKeyNotValid, PeersApiRoute}
 
 class PeersRouteSpec extends RouteSpec("/peers") with RestAPISettingsHelper with ScalaCheckDrivenPropertyChecks with MockFactory {
 

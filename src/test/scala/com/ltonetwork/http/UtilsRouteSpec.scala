@@ -11,7 +11,7 @@ import com.ltonetwork.utils.{Base58, Time}
 import org.scalacheck.Gen
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.{JsObject, JsValue}
-import com.ltonetwork.api.http.UtilsApiRoute
+import com.ltonetwork.api.UtilsApiRoute
 import com.ltonetwork.transaction.smart.script.Script
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 

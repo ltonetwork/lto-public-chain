@@ -1,6 +1,6 @@
 from behave import *
 from e2e.common.tools import *
-from lto.transactions.register import Register
+from lto.transactions import Register
 
 
 def register(context, user=None, key_type="ed25519", public_key=None, version=None):

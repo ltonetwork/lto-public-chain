@@ -1,6 +1,6 @@
-package com.ltonetwork.transaction.api.http.assets
+package com.ltonetwork.transaction.api.assets
 
-import com.ltonetwork.api.http.requests.TransferRequest
+import com.ltonetwork.api.requests.TransferRequest
 import com.ltonetwork.state._
 import com.ltonetwork.utils.Base58
 import org.scalatest.funsuite.AnyFunSuite

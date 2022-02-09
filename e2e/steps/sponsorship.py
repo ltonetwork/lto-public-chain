@@ -1,7 +1,5 @@
 from behave import *
-from e2e.common.tools import funds_for_transaction
-from e2e.common.tools import NODE
-from e2e.common.tools import broadcast
+from e2e.common.tools import funds_for_transaction, NODE, broadcast
 from lto.transactions import Sponsorship, CancelSponsorship
 
 

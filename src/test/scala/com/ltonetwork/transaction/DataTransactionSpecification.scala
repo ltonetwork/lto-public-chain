@@ -12,7 +12,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import play.api.libs.json.Json
 import com.ltonetwork.account.{KeyType, KeyTypes, PublicKeyAccount}
-import com.ltonetwork.api.http.requests.DataRequest
+import com.ltonetwork.api.requests.DataRequest
 import com.ltonetwork.transaction.data.DataTransaction
 import org.scalacheck.Gen.Parameters
 import org.scalacheck.rng.Seed

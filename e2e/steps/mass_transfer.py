@@ -1,7 +1,6 @@
 from behave import *
-from e2e.common.tools import convert_balance
-from e2e.common.tools import broadcast
-from lto.transactions.mass_transfer import MassTransfer
+from e2e.common.tools import convert_balance, broadcast
+from lto.transactions import MassTransfer
 
 
 def process_input(context, transfers):

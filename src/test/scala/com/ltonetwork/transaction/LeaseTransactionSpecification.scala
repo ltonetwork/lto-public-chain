@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{Address, PublicKeyAccount}
-import com.ltonetwork.api.http.requests.LeaseRequest
+import com.ltonetwork.api.requests.LeaseRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.utils.Base58

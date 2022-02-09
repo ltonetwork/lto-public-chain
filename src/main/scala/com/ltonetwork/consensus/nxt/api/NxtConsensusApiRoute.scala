@@ -2,7 +2,7 @@ package com.ltonetwork.consensus.nxt.api
 
 import akka.http.scaladsl.server.Route
 import com.ltonetwork.account.Address
-import com.ltonetwork.api.http.{ApiRoute, CommonApiFunctions, InvalidAddress}
+import com.ltonetwork.api.{ApiRoute, CommonApiFunctions, InvalidAddress}
 import com.ltonetwork.consensus.GeneratingBalanceProvider
 import com.ltonetwork.settings.{FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.Blockchain

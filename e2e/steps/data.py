@@ -1,6 +1,6 @@
 from behave import *
 from e2e.common.tools import *
-from lto.transactions.data import Data
+from lto.transactions import Data
 
 
 def __cast_value(value):
