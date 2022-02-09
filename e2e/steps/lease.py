@@ -58,7 +58,7 @@ def step_impl(context, user1, user2):
         cancel_lease(context, user1, user2)
 
 
-@when('{user1} tries to cancel the lease to {user2}')
+@when('{user1} tries to cancels the lease to {user2}')
 def step_impl(context, user1, user2):
     try:
         cancel_lease(context, user1, user2)
@@ -82,8 +82,8 @@ def step_impl(context, user1, amount, user2, version=None):
     lease(context, user1, user2, amount, version)
 
 
-@when('{user1} cancel the lease to {user2}')
-@when('{user1} cancel the lease (v{version:d}) to {user2}')
+@when('{user1} cancels the lease to {user2}')
+@when('{user1} cancels the lease (v{version:d}) to {user2}')
 def step_impl(context, user1, user2, version=None):
     cancel_lease(context, user1, user2, version)
 

@@ -1,6 +1,6 @@
 from behave import *
 from e2e.common.tools import *
-from lto.transactions.anchor import Anchor
+from lto.transactions import Anchor
 import random
 
 

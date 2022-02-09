@@ -24,7 +24,7 @@ Feature: Lease
   Scenario Outline: Successful cancel lease transaction
     Given Karen has an <key_type> account with 10 lto
     And Karen is leasing 10 lto to Bob
-    When Karen cancel the lease (<version>) to Bob
+    When Karen cancels the lease (<version>) to Bob
     Then Karen has 9 lto
     And Karen is not leasing to Bob
 
@@ -36,7 +36,7 @@ Feature: Lease
       | v3      | secp256r1 |
 
   Scenario: Unable to cancel an nonexistent lease
-    When Alice tries to cancel the lease to Bob
+    When Alice tries to cancels the lease to Bob
     Then the transaction fails
 
   Scenario: Transfer fails because LTO intended for transfer is being leased
