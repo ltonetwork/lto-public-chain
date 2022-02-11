@@ -363,6 +363,9 @@ trait TransactionGenBase extends ScriptGen {
   val dataTransactionGen: Gen[DataTransaction] = dataTransactionGen(DataTransaction.MaxEntryCount)
 
   def dataTransactionGen(maxEntryCount: Int, useForScript: Boolean = false): Gen[DataTransaction] =
+    versionGen(DataTransaction).flatMap(dataTransactionGen(_, maxEntryCount, useForScript))
+
+  def dataTransactionGen(version: Byte, maxEntryCount: Int, useForScript: Boolean): Gen[DataTransaction] =
     for {
       sender    <- accountGen
       timestamp <- timestampGen
@@ -372,7 +375,6 @@ trait TransactionGenBase extends ScriptGen {
       uniq = data.foldRight(List.empty[DataEntry[_]]) { (e, es) =>
         if (es.exists(_.key == e.key)) es else e :: es
       }
-      version <- Gen.oneOf(DataTransaction.supportedVersions.toSeq)
     } yield DataTransaction.signed(version, timestamp, sender, fee, uniq).explicitGet()
 
   def dataTransactionGenP(sender: PrivateKeyAccount, data: List[DataEntry[_]]): Gen[DataTransaction] =

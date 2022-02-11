@@ -2,7 +2,7 @@ package com.ltonetwork.http
 
 import com.ltonetwork.TestWallet
 import com.ltonetwork.settings.LtoSettings
-import com.ltonetwork.api.http.ApiKeyNotValid
+import com.ltonetwork.api.ApiKeyNotValid
 
 class DebugApiRouteSpec extends RouteSpec("/debug") with RestAPISettingsHelper with TestWallet {
   private val sampleConfig = com.typesafe.config.ConfigFactory.load()

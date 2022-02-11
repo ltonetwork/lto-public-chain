@@ -4,7 +4,7 @@ import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import com.ltonetwork.account.Address
-import com.ltonetwork.api.http._
+import com.ltonetwork.api._
 import com.ltonetwork.block.Block
 import com.ltonetwork.block.Block.BlockId
 import com.ltonetwork.crypto

@@ -4,7 +4,7 @@ import akka.http.scaladsl.testkit.RouteTest
 import org.scalatest.matchers.{MatchResult, Matcher}
 import play.api.libs.json._
 import com.ltonetwork.http.ApiMarshallers._
-import com.ltonetwork.api.http.ApiError
+import com.ltonetwork.api.ApiError
 
 trait ApiErrorMatchers { this: RouteTest =>
   class ProduceError(error: ApiError) extends Matcher[RouteTestResult] {

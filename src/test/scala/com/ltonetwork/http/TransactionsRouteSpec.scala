@@ -2,7 +2,7 @@ package com.ltonetwork.http
 
 import akka.http.scaladsl.model.StatusCodes
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.api.http.{InvalidAddress, InvalidSignature, TooBigArrayAllocation, TransactionsApiRoute}
+import com.ltonetwork.api.{InvalidAddress, InvalidSignature, TooBigArrayAllocation, TransactionsApiRoute}
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.http.ApiMarshallers._
 import com.ltonetwork.settings.{FeeSettings, FeesSettings, TestFunctionalitySettings, WalletSettings}

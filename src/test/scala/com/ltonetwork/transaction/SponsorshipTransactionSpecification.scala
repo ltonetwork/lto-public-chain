@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.api.http.requests.{CancelSponsorshipRequest, SponsorshipRequest}
+import com.ltonetwork.api.requests.{CancelSponsorshipRequest, SponsorshipRequest}
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction, SponsorshipTransactionBase}
 import com.ltonetwork.utils.Base58

@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.PublicKeyAccount
-import com.ltonetwork.api.http.requests.SetScriptRequest
+import com.ltonetwork.api.requests.SetScriptRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.smart.script.ScriptCompilerV1Test.compiledScript

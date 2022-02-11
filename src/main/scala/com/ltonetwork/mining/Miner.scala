@@ -243,7 +243,7 @@ class MinerImpl(allChannels: ChannelGroup,
                                          constraints: MiningConstraints,
                                          restTotalConstraint: MiningConstraint): Task[Unit] = {
     debugState = MinerDebugInfo.MiningMicroblocks
-    log.info(s"Generate MicroBlock sequence, delay = $delay")
+    log.debug(s"Generate MicroBlock sequence, delay = $delay")
     generateOneMicroBlockTask(account, accumulatedBlock, constraints, restTotalConstraint)
       .asyncBoundary(minerScheduler)
       .delayExecution(delay)

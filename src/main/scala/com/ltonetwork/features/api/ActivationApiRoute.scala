@@ -1,7 +1,7 @@
 package com.ltonetwork.features.api
 
 import akka.http.scaladsl.server.Route
-import com.ltonetwork.api.http.{ApiRoute, CommonApiFunctions}
+import com.ltonetwork.api.{ApiRoute, CommonApiFunctions}
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.features.{BlockchainFeatureStatus, BlockchainFeatures}
 import com.ltonetwork.settings.{FeaturesSettings, FunctionalitySettings, RestAPISettings}

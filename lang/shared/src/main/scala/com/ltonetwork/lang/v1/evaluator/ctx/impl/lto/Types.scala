@@ -3,7 +3,6 @@ package com.ltonetwork.lang.v1.evaluator.ctx.impl.lto
 import com.ltonetwork.lang.v1.compiler.Types._
 import com.ltonetwork.lang.v1.evaluator.ctx.CaseType
 
-// TODO Add missing types for: Association and Sponsorship
 object Types {
 
   val addressType = CaseType("Address", List("bytes" -> BYTEVECTOR))
@@ -51,8 +50,8 @@ object Types {
     ) ++ header ++ proven
   )
 
-  val leaseCancelTransactionType = CaseType(
-    "LeaseCancelTransaction",
+  val cancelLeaseTransactionType = CaseType(
+    "LeaseCancelTransaction", // Old name, renaming it will break existing scripts
     List(
       "leaseId" -> BYTEVECTOR,
     ) ++ header ++ proven
@@ -82,18 +81,70 @@ object Types {
       "script" -> optionByteVector
     ) ++ header ++ proven
   )
-  val anchorTransactionType    = CaseType("AnchorTransaction", List() ++ header ++ proven)
-  val registerTransactionType  = CaseType("RegisterTransaction", List() ++ header ++ proven)
-  val obsoleteTransactionTypes = List(genesisTransactionType)
+
+  val anchorTransactionType = CaseType(
+    "AnchorTransaction",
+    List(
+      "anchorCount" -> LONG,
+      "anchors" -> listByteVector
+    ) ++ header ++ proven
+  )
+
+  val issueAssociationTransactionType = CaseType(
+    "IssueAssociationTransaction",
+    List(
+      "assocType" -> LONG,
+      "recipient" -> addressType.typeRef
+    ) ++ header ++ proven
+  )
+
+  val revokeAssociationTransactionType = CaseType(
+    "RevokeAssociationTransaction",
+    List(
+      "assocType" -> LONG,
+      "recipient" -> addressType.typeRef,
+    ) ++ header ++ proven
+  )
+
+  val sponsorshipTransactionType = CaseType(
+    "SponsorshipTransaction",
+    List(
+      "recipient" -> addressType.typeRef,
+    ) ++ header ++ proven
+  )
+
+  val cancelSponsorshipTransactionType = CaseType(
+    "CancelSponsorshipTransaction",
+    List(
+      "recipient" -> addressType.typeRef,
+    ) ++ header ++ proven
+  )
+
+  val registerTransactionType = CaseType(
+    "RegisterTransaction",
+    List(
+      "accounts" -> listByteVector
+    ) ++ header ++ proven
+  )
+
+
+  val obsoleteTransactionTypes = List(
+    genesisTransactionType
+  )
 
   val activeTransactionTypes = List(
     transferTransactionType,
     leaseTransactionType,
-    leaseCancelTransactionType,
+    cancelLeaseTransactionType,
     massTransferTransactionType,
     setScriptTransactionType,
     anchorTransactionType,
-    registerTransactionType
+    dataTransactionType,
+    issueAssociationTransactionType,
+    revokeAssociationTransactionType,
+    sponsorshipTransactionType,
+    cancelSponsorshipTransactionType,
+    registerTransactionType,
   )
 
   val transactionTypes = obsoleteTransactionTypes ++ activeTransactionTypes
@@ -101,5 +152,5 @@ object Types {
   val outgoingTransactionType = UNION.create(activeTransactionTypes.map(_.typeRef))
   val anyTransactionType      = UNION.create(transactionTypes.map(_.typeRef))
 
-  val ltoTypes = Seq(addressType, transfer) ++ transactionTypes
+  val ltoTypes = Seq(addressType, transfer, dataEntryType) ++ transactionTypes
 }

@@ -12,7 +12,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import play.api.libs.json.Json
 import com.ltonetwork.account.{KeyType, KeyTypes, PublicKeyAccount}
-import com.ltonetwork.api.http.requests.DataRequest
+import com.ltonetwork.api.requests.DataRequest
 import com.ltonetwork.transaction.data.DataTransaction
 import org.scalacheck.Gen.Parameters
 import org.scalacheck.rng.Seed
@@ -49,13 +49,11 @@ class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenProp
 
   property("unknown type handing") {
     val badTypeIdGen = Gen.choose[Int](DataEntry.Type.maxId + 1, Byte.MaxValue)
-    forAll(dataTransactionGen, badTypeIdGen) {
+    forAll(dataTransactionGen(3, DataTransaction.MaxEntryCount, useForScript = false), badTypeIdGen) {
       case (tx, badTypeId) =>
         val bytes      = tx.bytes()
         val senderKeyLength = KeyTypes.ED25519.length
-        val baseBytesLength =
-          if (tx.version == 1) 1 + 1 + senderKeyLength + 8 + 8 // txTypeId + version + senderKeyLength + timestamp + fee
-          else 1 + 1 + 1 + 8 + 1 + senderKeyLength + 8 // txTypeId + version + chainId + timestamp + senderKeyTypeId + senderKeyLength + fee
+        val baseBytesLength = 1 + 1 + 1 + 8 + 1 + senderKeyLength + 8 // txTypeId + version + chainId + timestamp + senderKeyTypeId + senderKeyLength + fee
         val entryCount = Shorts.fromByteArray(bytes.drop(baseBytesLength))
         if (entryCount > 0) {
           val key1Length = Shorts.fromByteArray(bytes.drop(baseBytesLength + 2))

@@ -2,7 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.api.http.requests.IssueAssociationRequest
+import com.ltonetwork.api.requests.IssueAssociationRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.utils.Base58

@@ -14,7 +14,7 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.libs.json._
 import com.ltonetwork.account.Address
-import com.ltonetwork.api.http.{AddressApiRoute, ApiKeyNotValid}
+import com.ltonetwork.api.{AddressApiRoute, ApiKeyNotValid}
 import com.ltonetwork.settings.TestFunctionalitySettings
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 

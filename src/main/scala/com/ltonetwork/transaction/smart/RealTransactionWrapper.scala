@@ -6,9 +6,12 @@ import scodec.bits.ByteVector
 import com.ltonetwork.account.Address
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.register.RegisterTransaction
+import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer._
 
 object RealTransactionWrapper {
@@ -42,7 +45,7 @@ object RealTransactionWrapper {
         )
 
       case b: LeaseTransaction       => Tx.Lease(proven(b), b.amount, b.recipient)
-      case b: CancelLeaseTransaction => Tx.LeaseCancel(proven(b), b.leaseId)
+      case b: CancelLeaseTransaction => Tx.CancelLease(proven(b), b.leaseId)
       case ms: MassTransferTransaction =>
         Tx.MassTransfer(
           proven(ms),
@@ -52,9 +55,26 @@ object RealTransactionWrapper {
           attachment = ByteVector(ms.attachment),
         )
       case ss: SetScriptTransaction => Tx.SetScript(proven(ss), ss.script.map(_.bytes()).map(toByteVector))
-      case a: AnchorTransaction     => Tx.Anchor(proven(a))
+      case a: AnchorTransaction =>
+        Tx.Anchor(proven(a), a.anchors.length, a.anchors.map(anchor => toByteVector(anchor)).toIndexedSeq)
+      case d: DataTransaction =>
+        Tx.Data(
+          proven(d),
+          d.data.map {
+            case IntegerDataEntry(key, value) => DataItem.Lng(key, value)
+            case StringDataEntry(key, value)  => DataItem.Str(key, value)
+            case BooleanDataEntry(key, value) => DataItem.Bool(key, value)
+            case BinaryDataEntry(key, value)  => DataItem.Bin(key, value)
+          }.toIndexedSeq
+        )
+      case a: IssueAssociationTransaction  => Tx.IssueAssociation(proven(a), a.assocType, a.recipient)
+      case a: RevokeAssociationTransaction => Tx.RevokeAssociation(proven(a), a.assocType, a.recipient)
+      case s: SponsorshipTransaction       => Tx.Sponsorship(proven(s), s.recipient)
+      case s: CancelSponsorshipTransaction => Tx.CancelSponsorship(proven(s), s.recipient)
       case r: RegisterTransaction =>
         Tx.Register(proven(r), r.accounts.map(k => com.ltonetwork.lang.v1.traits.PublicKey(ByteVector(k.publicKey))).toIndexedSeq)
+
+      case _ => ???
     }
   }
 }
