@@ -35,7 +35,7 @@ normalizedName := s"${name.value}${network.value.packageSuffix}"
 unmanagedSources / excludeFilter := "Version.scala"
 
 git.useGitDescribe := true
-git.uncommittedSignifier := Some("DIRTY")
+git.uncommittedSignifier := None
 logBuffered := false
 
 inThisBuild(
