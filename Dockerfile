@@ -6,6 +6,7 @@ WORKDIR /usr/src
 
 COPY . .
 
+RUN git status
 RUN test -f target/lto-public-all-*.jar || sbt build
 
 RUN test -f genesis.conf || cp genesis.example.conf genesis.conf
