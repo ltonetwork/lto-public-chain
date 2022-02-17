@@ -7,6 +7,7 @@ import com.ltonetwork.account.Address
 import com.ltonetwork.block.Block.CurrentBlockFeePart
 import com.ltonetwork.block.{Block, MicroBlock}
 import com.ltonetwork.features.BlockchainFeatures
+import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.mining.MiningConstraint
 import com.ltonetwork.settings.FunctionalitySettings
@@ -20,10 +21,11 @@ object BlockDiffer extends ScorexLogging with Instrumented {
   val feeBurnAmt: Long = 0.1.lto
   val feeBurnPct       = 0.5
 
-  def blockReward: Portfolio = Portfolio(balance = 10.lto)
+  def blockReward(settings: FunctionalitySettings, bc: Blockchain): Portfolio =
+    Portfolio(balance = bc.featureActivationHeight(BlockchainFeatures.TokenomicsRedefined)
+      .map(height => 10.lto + 1000 * Math.max(height - bc.height + 25000000, 0)).getOrElse(0)) // TODO make these numbers configurable
 
   def maybeBurnFee(bc: Blockchain, tx: Transaction): Portfolio = {
-    import com.ltonetwork.features.FeatureProvider._
     if (bc.isFeatureActivated(BlockchainFeatures.TokenomicsRedefined, bc.height))
       Portfolio(balance = (tx.fee * (1 - feeBurnPct)).toLong)
     else if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, bc.height))
@@ -110,7 +112,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
       constraint.put(blockchain, tx).asInstanceOf[Constraint]
 
     val txDiffer = TransactionDiffer(settings, prevBlockTimestamp, timestamp, currentBlockHeight) _
-    val baseDiff = Diff.empty.copy(portfolios = Map(blockGenerator -> blockReward))
+    val baseDiff = Diff.empty.copy(portfolios = Map(blockGenerator -> blockReward(settings, blockchain)))
     val initDiff = baseDiff.combine(Diff.empty.copy(portfolios = Map(blockGenerator -> currentBlockFeeDistr.orElse(prevBlockFeeDistr).orEmpty)))
     val hasNg    = currentBlockFeeDistr.isEmpty
 

@@ -17,7 +17,9 @@ object FeatureProvider {
       else if (provider.approvedFeatures.get(feature).exists(_ <= height)) BlockchainFeatureStatus.Approved
       else BlockchainFeatureStatus.Undefined
 
+    def featureActivationHeight(feature: BlockchainFeature): Option[Int] = provider.activatedFeatures.get(feature.id)
     def featureActivationHeight(feature: Short): Option[Int] = provider.activatedFeatures.get(feature)
+
     def featureApprovalHeight(feature: Short): Option[Int]   = provider.approvedFeatures.get(feature)
   }
 }

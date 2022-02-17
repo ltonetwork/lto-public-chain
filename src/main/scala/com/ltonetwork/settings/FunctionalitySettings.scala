@@ -32,7 +32,6 @@ case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
 }
 
 object FunctionalitySettings {
-
   val enabledFeatures: Map[Short, Int] = List(
     BlockchainFeatures.MinimalGeneratingBalance,
   ).map(_.id -> 0).toMap
