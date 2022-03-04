@@ -10,31 +10,32 @@ import play.api.libs.json.{Format, JsObject, Json}
 
 case class AnchorRequest(version: Option[Byte] = None,
                          timestamp: Option[Long] = None,
+                         fee: Long,
+                         sender: Option[String] = None,
                          senderKeyType: Option[String] = None,
                          senderPublicKey: Option[String] = None,
-                         fee: Long,
-                         anchors: List[String],
+                         sponsor: Option[String] = None,
                          sponsorKeyType: Option[String] = None,
                          sponsorPublicKey: Option[String] = None,
+                         anchors: List[String],
                          signature: Option[ByteStr] = None,
                          proofs: Option[Proofs] = None)
     extends TxRequest.For[AnchorTransaction] {
 
   protected def sign(tx: AnchorTransaction, signer: PrivateKeyAccount): AnchorTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, AnchorTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], proofs: Proofs, timestamp: Long): Either[ValidationError, AnchorTransaction] =
     for {
       validAnchors <- anchors.traverse(s => parseBase58(s, "invalid anchor", AnchorTransaction.MaxAnchorStringSize))
-      validProofs  <- toProofs(signature, proofs)
       tx <- AnchorTransaction.create(
         version.getOrElse(AnchorTransaction.latestVersion),
         None,
-        timestamp(time),
+        timestamp,
         sender,
         fee,
         validAnchors,
         sponsor,
-        validProofs
+        proofs
       )
     } yield tx
 }

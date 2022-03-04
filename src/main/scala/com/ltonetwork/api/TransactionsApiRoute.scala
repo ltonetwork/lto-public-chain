@@ -47,7 +47,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
 
   override lazy val route: Route =
     pathPrefix("transactions") {
-      unconfirmed ~ addressLimit ~ info ~ sign ~ calculateFee ~ broadcast
+      unconfirmed ~ addressLimit ~ info ~ sign ~ submit ~ calculateFee ~ broadcast
     }
 
   private val invalidLimit = StatusCodes.BadRequest -> Json.obj("message" -> "invalid.limit")
@@ -196,10 +196,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Transaction data including type and optional timestamp in milliseconds",
-    content = Array(
-      new Content(
-        schema = new Schema(implementation = classOf[String]),
-      )),
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[Object]),
+      mediaType = "application/json",
+    )),
     required = true
   )
   def calculateFee: Route = (pathPrefix("calculateFee") & post) {
@@ -230,121 +230,18 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Transaction data including type and optional timestamp in milliseconds",
-    content = Array(
-      new Content(
-        schema = new Schema(implementation = classOf[String])
-      )),
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[Object]),
+      mediaType = "application/json",
+    )),
     required = true
   )
   def sign: Route = (pathPrefix("sign") & post & withAuth) {
-    pathEndOrSingleSlash {
-      handleExceptions(jsonExceptionHandler) {
-        json[JsObject] { jsv =>
-          signTransaction((jsv \ "sender").as[String], jsv)
-        }
-      }
-    } ~ signWithSigner
-  }
-
-  @POST
-  @Path("/sign/{signerAddress}")
-  @Operation(
-    summary = "Sign a transaction by a private key of signer address"
-  )
-  @Parameters(
-    Array(
-      new Parameter(
-        name = "signerAddress",
-        description = "Wallet address",
-        required = true,
-        schema = new Schema(implementation = classOf[String]),
-        in = ParameterIn.PATH
-      )
-    )
-  )
-  @RequestBody(
-    description = "Transaction data including type and optional timestamp in milliseconds",
-    content = Array(
-      new Content(
-        schema = new Schema(implementation = classOf[String])
-      )),
-    required = true
-  )
-  def signWithSigner: Route = pathPrefix(Segment) { signerAddress =>
     handleExceptions(jsonExceptionHandler) {
-      json[JsObject] { jsv =>
-        signTransaction(signerAddress, jsv)
+      json[JsObject] {
+        signTransaction(_) { _.json() }
       }
     }
-  }
-
-  private def signTransaction(signerAddress: String, jsv: JsObject): ToResponseMarshallable = {
-    TxRequest
-      .fromJson(jsv)
-      .flatMap(_.signTx(wallet, signerAddress, time))
-      .fold(ApiError.fromValidationError, _.json())
-  }
-
-  @POST
-  @Path("/sponsor")
-  @Operation(
-    summary = "Sponsor a transaction"
-  )
-  @RequestBody(
-    description = "Transaction data including type and optional timestamp in milliseconds",
-    content = Array(
-      new Content(
-        schema = new Schema(implementation = classOf[String])
-      )),
-    required = true
-  )
-  def sponsor: Route = (pathPrefix("sign") & post & withAuth) {
-    pathEndOrSingleSlash {
-      handleExceptions(jsonExceptionHandler) {
-        json[JsObject] { jsv =>
-          sponsorTransaction((jsv \ "sponsor").as[String], jsv)
-        }
-      }
-    } ~ signWithSigner
-  }
-
-  @POST
-  @Path("/sponsor/{signerAddress}")
-  @Operation(
-    summary = "Sponsor a transaction by a private key of signer address"
-  )
-  @Parameters(
-    Array(
-      new Parameter(
-        name = "signerAddress",
-        description = "Wallet address",
-        required = true,
-        schema = new Schema(implementation = classOf[String]),
-        in = ParameterIn.PATH
-      )
-    )
-  )
-  @RequestBody(
-    description = "Transaction data including type and optional timestamp in milliseconds",
-    content = Array(
-      new Content(
-        schema = new Schema(implementation = classOf[String])
-      )),
-    required = true
-  )
-  def sponsorWithSigner: Route = pathPrefix(Segment) { signerAddress =>
-    handleExceptions(jsonExceptionHandler) {
-      json[JsObject] { jsv =>
-        sponsorTransaction(signerAddress, jsv)
-      }
-    }
-  }
-
-  private def sponsorTransaction(signerAddress: String, jsv: JsObject): ToResponseMarshallable = {
-    TxRequest
-      .fromJson(jsv)
-      .flatMap(_.sponsorTx(wallet, signerAddress, time))
-      .fold(ApiError.fromValidationError, _.json())
   }
 
   @POST
@@ -354,10 +251,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   )
   @RequestBody(
     description = "Transaction data including type and signature",
-    content = Array(
-      new Content(
-        schema = new Schema(implementation = classOf[String])
-      )),
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[Object]),
+      mediaType = "application/json",
+    )),
     required = true
   )
   def broadcast: Route = (pathPrefix("broadcast") & post) {
@@ -370,10 +267,82 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     }
   }
 
+  @POST
+  @Path("/submit")
+  @Operation(
+    summary = "Sign and broadcast a transaction"
+  )
+  @RequestBody(
+    description = "Transaction data including type and optional timestamp in milliseconds",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[Object]),
+      mediaType = "application/json",
+    )),
+    required = true
+  )
+  def submit: Route = (pathPrefix("submit") & post & withAuth) {
+    pathEndOrSingleSlash {
+      handleExceptions(jsonExceptionHandler) {
+        json[JsObject] {
+          signTransaction(_) { tx =>
+            doBroadcast(tx)
+          }
+        }
+      }
+    } ~ submitByType
+  }
+
+  @POST
+  @Path("/submit/{type}")
+  @Operation(
+    summary = "Sign and broadcast a transaction of a specific type"
+  )
+  @Parameters(
+    Array(
+      new Parameter(
+        name = "type",
+        description = "Transaction type",
+        required = true,
+        schema = new Schema(implementation = classOf[String]),
+        in = ParameterIn.PATH
+      )
+    )
+  )
+  @RequestBody(
+    description = "Transaction data",
+    content = Array(new Content(
+      schema = new Schema(implementation = classOf[Object]),
+      mediaType = "application/json",
+    )),
+    required = true
+  )
+  def submitByType: Route = pathPrefix(Segment) { typeName =>
+    handleExceptions(jsonExceptionHandler) {
+      json[JsObject] {
+        signTransaction(typeName, _) { tx =>
+          doBroadcast(tx)
+        }
+      }
+    }
+  }
+
   private def createTransaction(jsv: JsObject)(f: Transaction => ToResponseMarshallable): ToResponseMarshallable = {
-    TxRequest
-      .fromJson(jsv)
+    TxRequest.fromJson(jsv)
       .flatMap(_.toTx)
+      .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+      .fold(ApiError.fromValidationError, tx => f(tx))
+  }
+
+  private def signTransaction(jsv: JsObject)(f: Transaction => ToResponseMarshallable): ToResponseMarshallable = {
+    TxRequest.fromJson(jsv)
+      .flatMap(req => req.signTx(wallet, time))
+      .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
+      .fold(ApiError.fromValidationError, tx => f(tx))
+  }
+
+  private def signTransaction(typeName: String, jsv: JsObject)(f: Transaction => ToResponseMarshallable): ToResponseMarshallable = {
+    TxRequest.fromJson(typeName, jsv)
+      .flatMap(req => req.signTx(wallet, time))
       .flatMap(TransactionsApiRoute.ifPossible(blockchain, _))
       .fold(ApiError.fromValidationError, tx => f(tx))
   }

@@ -10,33 +10,34 @@ import play.api.libs.json.{Format, JsObject, Json}
 
 case class MassTransferRequest(version: Option[Byte] = None,
                                timestamp: Option[Long] = None,
+                               fee: Long,
+                               sender: Option[String] = None,
                                senderKeyType: Option[String] = None,
                                senderPublicKey: Option[String] = None,
-                               fee: Long,
-                               transfers: List[Transfer],
-                               attachment: Option[ByteStr] = None,
+                               sponsor: Option[String] = None,
                                sponsorKeyType: Option[String] = None,
                                sponsorPublicKey: Option[String] = None,
+                               transfers: List[Transfer],
+                               attachment: Option[ByteStr] = None,
                                signature: Option[ByteStr] = None,
                                proofs: Option[Proofs] = None)
     extends TxRequest.For[MassTransferTransaction] {
 
   protected def sign(tx: MassTransferTransaction, signer: PrivateKeyAccount): MassTransferTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, MassTransferTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], proofs: Proofs, timestamp: Long): Either[ValidationError, MassTransferTransaction] =
     for {
       validTransfers <- MassTransferTransaction.parseTransfersList(transfers)
-      validProofs    <- toProofs(signature, proofs)
       tx <- MassTransferTransaction.create(
         version.getOrElse(MassTransferTransaction.latestVersion),
         None,
-        timestamp(time),
+        timestamp,
         sender,
         fee,
         validTransfers,
         attachment.getOrElse(ByteStr.empty).arr,
         sponsor,
-        validProofs
+        proofs
       )
     } yield tx
 }

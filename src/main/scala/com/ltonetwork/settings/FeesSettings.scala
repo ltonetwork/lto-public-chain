@@ -1,6 +1,5 @@
 package com.ltonetwork.settings
 
-import com.ltonetwork.settings.Constants.TransactionNames
 import com.typesafe.config.Config
 import net.ceedubs.ficus.Ficus._
 
@@ -18,23 +17,14 @@ object FeesSettings {
       .entrySet()
       .asScala
       .flatMap { entry =>
-        if (txTypes.contains(entry.getKey)) {
+        if (transactionTypes.contains(entry.getKey)) {
           val rawFees = config.as[Map[String, Long]](s"$configPath.${entry.getKey}")
           val fees    = rawFees.map { case (asset, fee) => FeeSettings(asset, fee) }(collection.breakOut)
-          Some(txTypes(entry.getKey) -> fees)
+          Some(transactionTypes(entry.getKey) -> fees)
         } else
           throw new NoSuchElementException(entry.getKey)
       }(collection.breakOut)
 
     FeesSettings(fees)
-  }
-
-  private def txTypes: Map[String, Byte] = {
-    val types = TransactionNames.map {
-      case (typeId, name) => name.replace(" ", "-") -> typeId
-    }
-
-    // Support old application.conf settings
-    types + ("lease-cancel" -> types("cancel-lease"), "sponsorship-cancel" -> types("cancel-sponsorship"))
   }
 }

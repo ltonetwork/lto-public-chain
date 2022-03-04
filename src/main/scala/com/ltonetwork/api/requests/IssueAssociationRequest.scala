@@ -10,31 +10,30 @@ import play.api.libs.json._
 
 case class IssueAssociationRequest(version: Option[Byte] = None,
                                    timestamp: Option[Long] = None,
+                                   fee: Long,
+                                   sender: Option[String] = None,
                                    senderKeyType: Option[String] = None,
                                    senderPublicKey: Option[String] = None,
-                                   fee: Long,
+                                   sponsor: Option[String] = None,
+                                   sponsorKeyType: Option[String] = None,
+                                   sponsorPublicKey: Option[String] = None,
                                    recipient: String,
                                    associationType: Int,
                                    expires: Option[Long] = None,
                                    hash: Option[ByteStr] = None,
-                                   sponsorKeyType: Option[String] = None,
-                                   sponsorPublicKey: Option[String] = None,
                                    signature: Option[ByteStr] = None,
-                                   proofs: Option[Proofs] = None,
-) extends TxRequest.For[IssueAssociationTransaction] {
+                                   proofs: Option[Proofs] = None)
+    extends TxRequest.For[IssueAssociationTransaction] {
 
   protected def sign(tx: IssueAssociationTransaction, signer: PrivateKeyAccount): IssueAssociationTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount,
-               sponsor: Option[PublicKeyAccount],
-               time: Option[Time]): Either[ValidationError, IssueAssociationTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], proofs: Proofs, timestamp: Long): Either[ValidationError, IssueAssociationTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
-      validProofs    <- toProofs(signature, proofs)
       tx <- IssueAssociationTransaction.create(
         version.getOrElse(IssueAssociationTransaction.latestVersion),
         None,
-        timestamp(time),
+        timestamp,
         sender,
         fee,
         validRecipient,
@@ -42,7 +41,7 @@ case class IssueAssociationRequest(version: Option[Byte] = None,
         expires,
         hash.noneIfEmpty,
         sponsor,
-        validProofs
+        proofs
       )
     } yield tx
 }
@@ -51,15 +50,17 @@ object IssueAssociationRequest {
   implicit val jsonFormat: Format[IssueAssociationRequest] = Format(
     ((JsPath \ "version").readNullable[Byte] and
       (JsPath \ "timestamp").readNullable[Long] and
+      (JsPath \ "fee").read[Long] and
+      (JsPath \ "sender").readNullable[String] and
       (JsPath \ "senderKeyType").readNullable[String] and
       (JsPath \ "senderPublicKey").readNullable[String] and
-      (JsPath \ "fee").read[Long] and
+      (JsPath \ "sponsor").readNullable[String] and
+      (JsPath \ "sponsorKeyType").readNullable[String] and
+      (JsPath \ "sponsorPublicKey").readNullable[String] and
       (JsPath \ "recipient").read[String].orElse((JsPath \ "party").read[String]) and
       (JsPath \ "associationType").read[Int] and
       (JsPath \ "expires").readNullable[Long] and
       (JsPath \ "hash").readNullable[ByteStr] and
-      (JsPath \ "sponsorKeyType").readNullable[String] and
-      (JsPath \ "sponsorPublicKey").readNullable[String] and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(IssueAssociationRequest.apply _),
     Json.writes[IssueAssociationRequest].transform((json: JsObject) => Json.obj("type" -> IssueAssociationTransaction.typeId.toInt) ++ json)

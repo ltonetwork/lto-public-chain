@@ -77,10 +77,10 @@ class AddressRouteSpec
           Json.obj("message" -> JsString(""), "publickey" -> JsString(Base58.encode(account.publicKey)), "signature" -> JsString(""))
 
         Post(uri, validBody) ~> route should produce(ApiKeyNotValid)
-        Post(uri, emptySignature) ~> api_key(apiKey) ~> route ~> check {
+        Post(uri, emptySignature) ~> ApiKey(apiKey) ~> route ~> check {
           (responseAs[JsObject] \ "valid").as[Boolean] shouldBe false
         }
-        Post(uri, validBody) ~> api_key(apiKey) ~> route ~> check {
+        Post(uri, validBody) ~> ApiKey(apiKey) ~> route ~> check {
           (responseAs[JsObject] \ "valid").as[Boolean] shouldBe true
         }
     }

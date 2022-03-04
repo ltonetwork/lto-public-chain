@@ -10,12 +10,14 @@ import play.api.libs.json.{Format, JsObject, Json, OWrites}
 
 case class SetScriptRequest(version: Option[Byte] = None,
                             timestamp: Option[Long] = None,
+                            fee: Long,
+                            sender: Option[String] = None,
                             senderKeyType: Option[String] = None,
                             senderPublicKey: Option[String] = None,
-                            fee: Long,
-                            script: Option[String],
+                            sponsor: Option[String] = None,
                             sponsorKeyType: Option[String] = None,
                             sponsorPublicKey: Option[String] = None,
+                            script: Option[String],
                             signature: Option[ByteStr] = None,
                             proofs: Option[Proofs] = None)
     extends TxRequest.For[SetScriptTransaction] {
@@ -28,19 +30,18 @@ case class SetScriptRequest(version: Option[Byte] = None,
 
   protected def sign(tx: SetScriptTransaction, signer: PrivateKeyAccount): SetScriptTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, SetScriptTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], proofs: Proofs, timestamp: Long): Either[ValidationError, SetScriptTransaction] =
     for {
       validScript <- decodedScript
-      validProofs <- toProofs(signature, proofs)
       tx <- SetScriptTransaction.create(
         version.getOrElse(SetScriptTransaction.latestVersion),
         None,
-        timestamp(time),
+        timestamp,
         sender,
         fee,
         validScript,
         sponsor,
-        validProofs
+        proofs
       )
     } yield tx
 }

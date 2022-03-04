@@ -4,38 +4,38 @@ import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
-import com.ltonetwork.utils.Time
 import play.api.libs.json.{Format, JsObject, Json}
 
 case class LeaseRequest(version: Option[Byte] = None,
                         timestamp: Option[Long] = None,
+                        fee: Long,
+                        sender: Option[String] = None,
                         senderKeyType: Option[String] = None,
                         senderPublicKey: Option[String] = None,
-                        fee: Long,
-                        recipient: String,
-                        amount: Long,
+                        sponsor: Option[String] = None,
                         sponsorKeyType: Option[String] = None,
                         sponsorPublicKey: Option[String] = None,
+                        recipient: String,
+                        amount: Long,
                         signature: Option[ByteStr] = None,
                         proofs: Option[Proofs] = None)
     extends TxRequest.For[LeaseTransaction] {
 
   protected def sign(tx: LeaseTransaction, signer: PrivateKeyAccount): LeaseTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, LeaseTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], proofs: Proofs, timestamp: Long): Either[ValidationError, LeaseTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
-      validProofs    <- toProofs(signature, proofs)
       tx <- LeaseTransaction.create(
         version.getOrElse(LeaseTransaction.latestVersion),
         None,
-        timestamp(time),
+        timestamp,
         sender,
         fee,
         validRecipient,
         amount,
         sponsor,
-        validProofs
+        proofs
       )
     } yield tx
 }
