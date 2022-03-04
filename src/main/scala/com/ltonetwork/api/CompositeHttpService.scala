@@ -27,7 +27,7 @@ case class CompositeHttpService(system: ActorSystem, apiTypes: Set[Class[_]], ro
                                                                                                "X-Requested-With",
                                                                                                "Timestamp",
                                                                                                "Signature") ++
-    (if (settings.apiKeyDifferentHost) Seq("api_key", "X-API-Key") else Seq.empty[String])
+    (if (settings.apiKeyDifferentHost) Seq("X-API-Key") else Seq.empty[String])
 
   val compositeRoute: Route =
     withCors(routes.map(_.route).reduce(_ ~ _)) ~

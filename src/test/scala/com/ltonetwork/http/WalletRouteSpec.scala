@@ -25,7 +25,7 @@ class WalletRouteSpec extends RouteSpec("/wallet") with RestAPISettingsHelper wi
       case (account, message) =>
         val uri = routePath(s"/$path/${account.address}")
         Post(uri, message) ~> route should produce(ApiKeyNotValid)
-        Post(uri, message) ~> api_key(apiKey) ~> route ~> check {
+        Post(uri, message) ~> ApiKey(apiKey) ~> route ~> check {
           val resp      = responseAs[JsObject]
           val signature = Base58.decode((resp \ "signature").as[String]).get
 
@@ -61,13 +61,13 @@ class WalletRouteSpec extends RouteSpec("/wallet") with RestAPISettingsHelper wi
 
   routePath("/addresses") in {
     Post(routePath("/addresses")) ~> route should produce(ApiKeyNotValid)
-    Post(routePath("/addresses")) ~> api_key(apiKey) ~> route ~> check {
+    Post(routePath("/addresses")) ~> ApiKey(apiKey) ~> route ~> check {
       allAddresses should not contain (responseAs[JsObject] \ "address").as[String]
     }
   }
 
   routePath("/addresses/{address}") in {
-    Delete(routePath(s"/addresses/${allAddresses.head}")) ~> api_key(apiKey) ~> route ~> check {
+    Delete(routePath(s"/addresses/${allAddresses.head}")) ~> ApiKey(apiKey) ~> route ~> check {
       (responseAs[JsObject] \ "deleted").as[Boolean] shouldBe true
     }
   }
