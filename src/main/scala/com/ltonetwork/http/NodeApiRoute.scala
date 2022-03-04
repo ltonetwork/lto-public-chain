@@ -8,6 +8,7 @@ import com.ltonetwork.state.Blockchain
 import com.ltonetwork.utils.ScorexLogging
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.{GET, POST, Path}
 import play.api.libs.json.Json
@@ -42,6 +43,7 @@ case class NodeApiRoute(settings: RestAPISettings, blockchain: Blockchain, appli
   @Operation(
     summary = "Stop the node"
   )
+  @SecurityRequirement(name = "bearerAuth")
   def stop: Route = (post & path("stop") & withAuth) {
     log.info("Request to stop application")
     application.shutdown()

@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import jakarta.ws.rs.{DELETE, GET, POST, Path}
@@ -70,6 +71,7 @@ case class DebugApiRoute(ws: LtoSettings,
   @Operation(
     summary = "Get sizes and full hashes for last blocks",
   )
+  @SecurityRequirement(name = "bearerAuth")
   @Parameters(
     Array(
       new Parameter(
@@ -95,6 +97,7 @@ case class DebugApiRoute(ws: LtoSettings,
   @Operation(
     summary = "Prints a string at DEBUG level, strips to 100 chars"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @RequestBody(
     description = "Json with data",
     content = Array(
@@ -155,6 +158,7 @@ case class DebugApiRoute(ws: LtoSettings,
   @Operation(
     summary = "Get current state"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @ApiResponses(Array(new ApiResponse(responseCode = "200", description = "Json state")))
   def state: Route = (path("state") & get & withAuth) {
     complete(ng.ltoDistribution(ng.height).map { case (a, b) => a.stringRepr -> b })
@@ -202,6 +206,7 @@ case class DebugApiRoute(ws: LtoSettings,
   @Operation(
     summary = "Removes all blocks after given height"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @RequestBody(
     description = "Json with data",
     content = Array(
@@ -234,6 +239,7 @@ case class DebugApiRoute(ws: LtoSettings,
   @Operation(
     summary = "All info you need to debug"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @ApiResponses(
     Array(
       new ApiResponse(responseCode = "200", description = "Json state")
@@ -255,6 +261,7 @@ case class DebugApiRoute(ws: LtoSettings,
   @Operation(
     summary = "All miner info you need to debug"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @ApiResponses(
     Array(
       new ApiResponse(responseCode = "200", description = "Json state")
@@ -277,6 +284,7 @@ case class DebugApiRoute(ws: LtoSettings,
   @Operation(
     summary = "All history info you need to debug"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @ApiResponses(
     Array(
       new ApiResponse(responseCode = "200", description = "Json state")
@@ -293,6 +301,7 @@ case class DebugApiRoute(ws: LtoSettings,
   @Operation(
     summary = "Currently running node config"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @Parameters(
     Array(
       new Parameter(
@@ -317,6 +326,7 @@ case class DebugApiRoute(ws: LtoSettings,
   @Operation(
     summary = "Rollback the state to the block with a given signature"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @Parameters(
     Array(
       new Parameter(
@@ -344,6 +354,7 @@ case class DebugApiRoute(ws: LtoSettings,
   @Operation(
     summary = "Moving peer to blacklist"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @RequestBody(
     description = "IP address of node",
     content = Array(

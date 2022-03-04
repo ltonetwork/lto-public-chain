@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.media.{Content, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import jakarta.ws.rs.{GET, POST, Path}
 import play.api.libs.json._
 
@@ -228,6 +229,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   @Operation(
     summary = "Sign a transaction"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @RequestBody(
     description = "Transaction data including type and optional timestamp in milliseconds",
     content = Array(new Content(
@@ -272,6 +274,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   @Operation(
     summary = "Sign and broadcast a transaction"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @RequestBody(
     description = "Transaction data including type and optional timestamp in milliseconds",
     content = Array(new Content(
@@ -297,6 +300,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   @Operation(
     summary = "Sign and broadcast a transaction of a specific type"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @Parameters(
     Array(
       new Parameter(

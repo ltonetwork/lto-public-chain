@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.{GET, POST, Path}
 import play.api.libs.json._
@@ -90,6 +91,7 @@ case class PeersApiRoute(settings: RestAPISettings,
   @Operation(
     summary = "Connect to peer"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @RequestBody(
     description = "Json with data",
     content = Array(
@@ -149,6 +151,7 @@ case class PeersApiRoute(settings: RestAPISettings,
   @Operation(
     summary = "Remove all blacklisted peers"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @ApiResponses(
     Array(
       new ApiResponse(responseCode = "200", description = "200")

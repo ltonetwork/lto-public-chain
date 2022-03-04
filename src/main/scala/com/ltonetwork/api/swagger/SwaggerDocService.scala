@@ -36,5 +36,4 @@ class SwaggerDocService(val actorSystem: ActorSystem, val apiClasses: Set[Class[
     .info(info)
 
   swaggerConfig.setComponents(components.get)
-  swaggerConfig.addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
 }

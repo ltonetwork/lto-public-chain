@@ -456,7 +456,7 @@ case class AddressApiRoute(settings: RestAPISettings,
     ToResponseMarshallable(result)
   }
 
-  private def verifyPath(address: String, decode: Boolean) = withAuth {
+  private def verifyPath(address: String, decode: Boolean) = {
     json[SignedMessage] { m =>
       if (Address.fromString(address).isLeft) {
         InvalidAddress
