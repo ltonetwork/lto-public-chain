@@ -32,7 +32,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
     val initDiff = Diff.portfolio(
       blockGenerator.toAddress -> Monoid[Portfolio].combine(
         maybePrevBlock.map(b => BlockRewardCalculator.prevBlockFeeDistr(blockchain, b)).orEmpty, // NG reward for closing block
-        BlockRewardCalculator.blockReward(settings, blockchain),
+        BlockRewardCalculator.miningReward(settings, blockchain),
       )
     )
 

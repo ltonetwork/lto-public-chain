@@ -216,7 +216,11 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
 
       val apiRoutes = Seq(
         NodeApiRoute(settings.restAPISettings, blockchainUpdater, () => apiShutdown()),
-        BlocksApiRoute(settings.restAPISettings, blockchainUpdater, allChannels, c => processCheckpoint(None, c)),
+        BlocksApiRoute(settings.restAPISettings,
+                       settings.blockchainSettings.functionalitySettings,
+                       blockchainUpdater,
+                       allChannels,
+                       c => processCheckpoint(None, c)),
         FeesApiRoute(settings.restAPISettings, blockchainUpdater, settings.blockchainSettings.functionalitySettings, minerOptions),
         TransactionsApiRoute(settings.restAPISettings,
                              settings.blockchainSettings.functionalitySettings,

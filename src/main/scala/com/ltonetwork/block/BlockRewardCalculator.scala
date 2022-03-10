@@ -12,10 +12,11 @@ object BlockRewardCalculator {
   val feeBurnAmt: Long = 0.1.lto
   val feeBurnPct       = 0.5
 
-  def blockReward(settings: FunctionalitySettings, bc: Blockchain): Portfolio =
-    Portfolio(balance = bc.featureActivationHeight(BlockchainFeatures.TokenomicsRedefined)
-      .map(height => settings.miningReward + settings.miningRewardBonus * Math.max(height - bc.height + settings.miningRewardBonusPeriod, 0))
+  def miningReward(settings: FunctionalitySettings, bc: Blockchain, height: Int): Portfolio =
+    Portfolio(balance = bc.featureActivationHeight(BlockchainFeatures.TokenomicsRedefined).map(activationHeight => settings.miningReward
+        + settings.miningRewardBonus * Math.max(activationHeight - height + settings.miningRewardBonusPeriod, 0))
       .getOrElse(0))
+  def miningReward(settings: FunctionalitySettings, bc: Blockchain): Portfolio = miningReward(settings, bc, bc.height)
 
   def rewardedFee(bc: Blockchain, tx: Transaction): Portfolio = {
     if (bc.isFeatureActivated(BlockchainFeatures.TokenomicsRedefined, bc.height))
