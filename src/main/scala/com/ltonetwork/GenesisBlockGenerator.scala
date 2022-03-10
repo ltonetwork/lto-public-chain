@@ -52,7 +52,10 @@ object GenesisBlockGenerator extends App {
       preActivatedFeatures = features,
       doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
       feeVoteBlocksPeriod = Int.MaxValue,
-      blocksForFeeChange = Int.MaxValue
+      blocksForFeeChange = Int.MaxValue,
+      miningReward = 0,
+      miningRewardBonus = 0,
+      miningRewardBonusPeriod = 0,
     )
 
     def preActivated(feature: BlockchainFeature): Boolean = features.contains(feature.id)
@@ -159,6 +162,9 @@ object GenesisBlockGenerator extends App {
          |        double-features-periods-after-height = 100000000
          |        fee-vote-blocks-period = 10
          |        blocks-for-fee-change = 6
+         |        mining-reward = 1000000000
+         |        mining-reward-bonus = 1000000
+         |        mining-reward-bonus-period = 500
          |      }
          |      genesis {
          |        average-block-delay = ${settings.averageBlockDelay.toSeconds}s

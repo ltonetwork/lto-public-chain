@@ -1,6 +1,7 @@
 package com.ltonetwork.settings
 
 import com.ltonetwork.features.BlockchainFeatures
+import com.ltonetwork.utils._
 
 object TestFunctionalitySettings {
   val Enabled = FunctionalitySettings(
@@ -16,6 +17,9 @@ object TestFunctionalitySettings {
     doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
     feeVoteBlocksPeriod = 1000,
     blocksForFeeChange = 600,
+    miningReward = 10.lto,
+    miningRewardBonus = 0.1.lto,
+    miningRewardBonusPeriod = 50
   )
   val Disabled = Enabled.copy(preActivatedFeatures = Map.empty)
 

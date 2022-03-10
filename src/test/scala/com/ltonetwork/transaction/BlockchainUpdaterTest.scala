@@ -141,19 +141,19 @@ class BlockchainUpdaterTest extends AnyFreeSpec with Matchers with HistoryTest w
 
     b.featureStatus(1, 1) shouldBe BlockchainFeatureStatus.Undefined
 
-    b.featureActivationHeight(1) shouldBe None
+    b.featureActivationHeight(1: Short) shouldBe None
 
     (1 until ApprovalPeriod).foreach { _ =>
       b.processBlock(getNextTestBlockWithVotes(b, Set(1))).explicitGet()
     }
 
-    b.featureActivationHeight(1) shouldBe Some(ApprovalPeriod * 2)
+    b.featureActivationHeight(1: Short) shouldBe Some(ApprovalPeriod * 2)
 
     (1 to ApprovalPeriod).foreach { _ =>
       b.processBlock(getNextTestBlockWithVotes(b, Set(1))).explicitGet()
     }
 
-    b.featureActivationHeight(1) shouldBe Some(ApprovalPeriod * 2)
+    b.featureActivationHeight(1: Short) shouldBe Some(ApprovalPeriod * 2)
   }
 
   "feature activated only by 90% of blocks" in withDomain(LtoSettings) { domain =>

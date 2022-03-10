@@ -8,6 +8,7 @@ import com.ltonetwork.db.WithState
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state.{Blockchain, Diff, EitherExt2}
 import com.ltonetwork.transaction.genesis.GenesisTransaction
+import com.ltonetwork.utils._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.freespec.AnyFreeSpecLike
 import scorex.crypto.signatures.Curve25519._
@@ -68,6 +69,9 @@ class BlockDifferTest extends AnyFreeSpecLike with Matchers with BlockGen with W
       doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
       feeVoteBlocksPeriod = 10,
       blocksForFeeChange = 6,
+      miningReward = 10.lto,
+      miningRewardBonus = 0.1.lto,
+      miningRewardBonusPeriod = 50
     )
     assertDiffAndState(blocks.init, blocks.last, fs)(assertion)
   }

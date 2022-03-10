@@ -7,7 +7,10 @@ case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
                                  preActivatedFeatures: Map[Short, Int],
                                  doubleFeaturesPeriodsAfterHeight: Int,
                                  feeVoteBlocksPeriod: Int,
-                                 blocksForFeeChange: Int) {
+                                 blocksForFeeChange: Int,
+                                 miningReward: Long,
+                                 miningRewardBonus: Long,
+                                 miningRewardBonusPeriod: Int) {
 
   require(featureCheckBlocksPeriod > 0, "featureCheckBlocksPeriod must be greater than 0")
   require(
@@ -43,6 +46,9 @@ object FunctionalitySettings {
     doubleFeaturesPeriodsAfterHeight = -1,
     feeVoteBlocksPeriod = 1000,
     blocksForFeeChange = 600,
+    miningReward = 10L * 10^8,
+    miningRewardBonus = 1000L,
+    miningRewardBonusPeriod = 25000000
   )
 
   val TESTNET: FunctionalitySettings = apply(
@@ -52,6 +58,9 @@ object FunctionalitySettings {
     doubleFeaturesPeriodsAfterHeight = -1,
     feeVoteBlocksPeriod = 1000,
     blocksForFeeChange = 600,
+    miningReward = 10L * 10^8,
+    miningRewardBonus = 1000L,
+    miningRewardBonusPeriod = 25000000
   )
 
   val configPath = "lto.blockchain.custom.functionality"

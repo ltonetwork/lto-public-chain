@@ -202,8 +202,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
               restTotalConstraint = updatedTotalConstraint
               ngState = Some(new NgState(block, newBlockDiff, carry, featuresApprovedWithBlock(block)))
               lastBlockId.foreach(id => internalLastBlockInfo.onNext(LastBlockInfo(id, height, score, blockchainReady)))
-              if ((block.timestamp > time
-                    .getTimestamp() - settings.minerSettings.intervalAfterLastBlockThenGenerationIsAllowed.toMillis) || (height % 100 == 0)) {
+              if ((block.timestamp > time.getTimestamp() - settings.minerSettings.intervalAfterLastBlockThenGenerationIsAllowed.toMillis) || (height % 100 == 0)) {
                 log.info(s"New height: $height")
               }
               discarded
