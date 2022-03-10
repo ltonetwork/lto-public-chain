@@ -83,7 +83,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
   private def feesV1(tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: GenesisTransaction       => Right(0)
     case _: TransferTransaction      => Right(0.001 lto)
-    case tx: MassTransferTransaction => Right((0.001 lto) + (tx.transfers.size + 1) * (0.0005 lto))
+    case tx: MassTransferTransaction => Right((0.001 lto) + tx.transfers.size * (0.0005 lto))
     case _: LeaseTransaction         => Right(0.001 lto)
     case _: CancelLeaseTransaction   => Right(0.001 lto)
     case tx: DataTransaction         => Right((0.001 lto) + ((tx.bodyBytes().length - 1) / 1024) * (0.001 lto))
