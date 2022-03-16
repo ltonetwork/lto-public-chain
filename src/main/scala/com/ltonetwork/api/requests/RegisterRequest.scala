@@ -11,31 +11,32 @@ import play.api.libs.json.{Format, JsObject, Json}
 
 case class RegisterRequest(version: Option[Byte] = None,
                            timestamp: Option[Long] = None,
+                           fee: Long,
+                           sender: Option[String] = None,
                            senderKeyType: Option[String] = None,
                            senderPublicKey: Option[String] = None,
-                           fee: Long,
-                           accounts: List[RegisterRequest.Account],
+                           sponsor: Option[String] = None,
                            sponsorKeyType: Option[String] = None,
                            sponsorPublicKey: Option[String] = None,
+                           accounts: List[RegisterRequest.Account],
                            signature: Option[ByteStr] = None,
                            proofs: Option[Proofs] = None)
     extends TxRequest.For[RegisterTransaction] {
 
   protected def sign(tx: RegisterTransaction, signer: PrivateKeyAccount): RegisterTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, RegisterTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], proofs: Proofs, timestamp: Long): Either[ValidationError, RegisterTransaction] =
     for {
       validAccounts <- accounts.traverse(_.toAccount)
-      validProofs   <- toProofs(signature, proofs)
       tx <- RegisterTransaction.create(
         version.getOrElse(RegisterTransaction.latestVersion),
         None,
-        timestamp(time),
+        timestamp,
         sender,
         fee,
         validAccounts,
         sponsor,
-        validProofs
+        proofs
       )
     } yield tx
 }

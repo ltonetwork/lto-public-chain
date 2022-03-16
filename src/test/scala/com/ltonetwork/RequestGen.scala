@@ -36,22 +36,32 @@ trait RequestGen extends TransactionGen { _: Suite =>
     recipient      <- addressValGen
     amount         <- positiveLongGen
     attachment     <- genBoundedString(1, 20).map(b => Some(ByteStr(b)))
-  } yield TransferRequest(Some(1), None, Some(account.keyType.reference), Some(Base58.encode(account.publicKey)), fee, recipient, amount, attachment)
+  } yield TransferRequest(
+    version = Some(1),
+    fee = fee,
+    senderKeyType = Some(account.keyType.reference),
+    senderPublicKey = Some(Base58.encode(account.publicKey)),
+    recipient = recipient,
+    amount = amount,
+    attachment = attachment
+  )
 
   val broadcastTransferReq: G[TransferRequest] = for {
     _signature <- signatureGen
     _timestamp <- ntpTimestampGen
     _tr        <- transferReq
   } yield
-    TransferRequest(Some(1),
-                    Some(_timestamp),
-                    _tr.senderKeyType,
-                    _tr.senderPublicKey,
-                    _tr.fee,
-                    _tr.recipient,
-                    _tr.amount,
-                    _tr.attachment,
-                    signature = Some(_signature))
+    TransferRequest(
+      version = Some(1),
+      timestamp = Some(_timestamp),
+      senderKeyType = _tr.senderKeyType,
+      senderPublicKey = _tr.senderPublicKey,
+      fee = _tr.fee,
+      recipient = _tr.recipient,
+      amount = _tr.amount,
+      attachment = _tr.attachment,
+      signature = Some(_signature)
+    )
 
   val leaseReq: G[LeaseRequest] = for {
     _signature <- signatureGen
@@ -59,13 +69,13 @@ trait RequestGen extends TransactionGen { _: Suite =>
     _lease     <- leaseGen
   } yield
     LeaseRequest(
-      Some(1),
-      Some(_timestamp),
-      Some(_lease.sender.keyType.reference),
-      Some(Base58.encode(_lease.sender.publicKey)),
-      _lease.fee,
-      _lease.recipient.toString,
-      _lease.amount,
+      version = Some(1),
+      timestamp = Some(_timestamp),
+      senderKeyType = Some(_lease.sender.keyType.reference),
+      senderPublicKey = Some(Base58.encode(_lease.sender.publicKey)),
+      fee = _lease.fee,
+      recipient = _lease.recipient.toString,
+      amount = _lease.amount,
       signature = Some(_signature)
     )
 
@@ -74,12 +84,12 @@ trait RequestGen extends TransactionGen { _: Suite =>
     _cancel    <- cancelLeaseGen
   } yield
     CancelLeaseRequest(
-      Some(1),
-      Some(_cancel.timestamp),
-      Some(_cancel.sender.keyType.reference),
-      Some(Base58.encode(_cancel.sender.publicKey)),
-      _cancel.fee,
-      _cancel.leaseId,
+      version = Some(1),
+      timestamp = Some(_cancel.timestamp),
+      senderKeyType = Some(_cancel.sender.keyType.reference),
+      senderPublicKey = Some(Base58.encode(_cancel.sender.publicKey)),
+      fee = _cancel.fee,
+      leaseId = _cancel.leaseId,
       signature = Some(_signature)
     )
 }

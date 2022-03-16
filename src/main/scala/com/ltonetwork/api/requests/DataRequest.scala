@@ -9,30 +9,31 @@ import play.api.libs.json.{Format, JsObject, Json}
 
 case class DataRequest(version: Option[Byte] = None,
                        timestamp: Option[Long] = None,
+                       fee: Long,
+                       sender: Option[String] = None,
                        senderKeyType: Option[String] = None,
                        senderPublicKey: Option[String] = None,
-                       fee: Long,
-                       data: List[DataEntry[_]],
+                       sponsor: Option[String] = None,
                        sponsorKeyType: Option[String] = None,
                        sponsorPublicKey: Option[String] = None,
+                       data: List[DataEntry[_]],
                        signature: Option[ByteStr] = None,
                        proofs: Option[Proofs] = None)
     extends TxRequest.For[DataTransaction] {
 
   protected def sign(tx: DataTransaction, signer: PrivateKeyAccount): DataTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, DataTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], proofs: Proofs, timestamp: Long): Either[ValidationError, DataTransaction] =
     for {
-      validProofs <- toProofs(signature, proofs)
       tx <- DataTransaction.create(
         version.getOrElse(DataTransaction.latestVersion),
         None,
-        timestamp(time),
+        timestamp,
         sender,
         fee,
         data,
         sponsor,
-        validProofs
+        proofs
       )
     } yield tx
 }

@@ -181,7 +181,7 @@ class TransactionsRouteSpec
 
         val route = TransactionsApiRoute(restAPISettings, featuresSettings, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
 
-        Post(routePath("/sign"), transferTx) ~> api_key(apiKey) ~> route ~> check {
+        Post(routePath("/sign"), transferTx) ~> ApiKey(apiKey) ~> route ~> check {
           status shouldEqual StatusCodes.OK
           (responseAs[JsObject] \ "timestamp").as[Long] should not be 0
           (responseAs[JsObject] \ "proofs").as[Proofs].proofs should not be empty

@@ -9,31 +9,32 @@ import play.api.libs.json.{Format, JsObject, Json}
 
 case class SponsorshipRequest(version: Option[Byte] = None,
                               timestamp: Option[Long] = None,
+                              fee: Long,
+                              sender: Option[String] = None,
                               senderKeyType: Option[String] = None,
                               senderPublicKey: Option[String] = None,
-                              fee: Long,
-                              recipient: String,
+                              sponsor: Option[String] = None,
                               sponsorKeyType: Option[String] = None,
                               sponsorPublicKey: Option[String] = None,
+                              recipient: String,
                               signature: Option[ByteStr] = None,
                               proofs: Option[Proofs] = None)
     extends TxRequest.For[SponsorshipTransaction] {
 
   protected def sign(tx: SponsorshipTransaction, signer: PrivateKeyAccount): SponsorshipTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, SponsorshipTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], proofs: Proofs, timestamp: Long): Either[ValidationError, SponsorshipTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
-      validProofs    <- toProofs(signature, proofs)
       tx <- SponsorshipTransaction.create(
         version.getOrElse(SponsorshipTransaction.latestVersion),
         None,
-        timestamp(time),
+        timestamp,
         sender,
         fee,
         validRecipient,
         sponsor,
-        validProofs
+        proofs
       )
     } yield tx
 }

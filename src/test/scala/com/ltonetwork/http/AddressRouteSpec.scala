@@ -14,7 +14,7 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.libs.json._
 import com.ltonetwork.account.Address
-import com.ltonetwork.api.{AddressApiRoute, ApiKeyNotValid}
+import com.ltonetwork.api.AddressApiRoute
 import com.ltonetwork.settings.TestFunctionalitySettings
 import com.ltonetwork.transaction.smart.script.v1.ScriptV1
 
@@ -76,11 +76,10 @@ class AddressRouteSpec
         val emptySignature =
           Json.obj("message" -> JsString(""), "publickey" -> JsString(Base58.encode(account.publicKey)), "signature" -> JsString(""))
 
-        Post(uri, validBody) ~> route should produce(ApiKeyNotValid)
-        Post(uri, emptySignature) ~> api_key(apiKey) ~> route ~> check {
+        Post(uri, emptySignature) ~> route ~> check {
           (responseAs[JsObject] \ "valid").as[Boolean] shouldBe false
         }
-        Post(uri, validBody) ~> api_key(apiKey) ~> route ~> check {
+        Post(uri, validBody) ~> route ~> check {
           (responseAs[JsObject] \ "valid").as[Boolean] shouldBe true
         }
     }

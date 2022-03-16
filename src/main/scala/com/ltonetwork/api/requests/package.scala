@@ -1,10 +1,11 @@
 package com.ltonetwork.api
 
 import cats.Applicative
+import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.crypto.{digestLength, signatureLength}
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError._
-import com.ltonetwork.transaction.{Proofs, TransactionBuilder, ValidationError}
+import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilder, ValidationError}
 import com.ltonetwork.utils.base58Length
 import play.api.libs.json._
 import supertagged.TaggedType
@@ -87,30 +88,11 @@ package object requests {
 
   private[requests] def defaultTimestamp = 0L
 
-//  implicit val fetchKeyTypeRead: Format[KeyType] = {
-//    val readStringFromInt: Reads[String] = implicitly[Reads[Int]]
-//      .map(x => x.toString)
-//
-//    Format[KeyType](
-//      Reads { js =>
-//        val kt = (JsPath \ "senderKeyType").read[String].orElse(readStringFromInt).reads(js)
-//        kt.fold(
-//          _ => JsError("senderKeyType incorrect"), {
-//            case "ed25519"   => JsSuccess(ED25519)
-//            case "1"   => JsSuccess(ED25519)
-//            case "secp256k1"  => JsSuccess(SECP256K1)
-//            case "2"   => JsSuccess(SECP256K1)
-//            case "secp256r1" => JsSuccess(SECP256R1)
-//            case "3"   => JsSuccess(SECP256R1)
-//          }
-//        )
-//      },
-//      Writes {
-//        case ED25519  => JsObject(Seq("senderKeyType" -> JsString("ed25519")))
-//        case SECP256K1 => JsObject(Seq("senderKeyType" -> JsString("secp256k1")))
-//        case SECP256R1 => JsObject(Seq("senderKeyType" -> JsString("secp256r1")))
-//      }
-//    )
-//  }
-
+  implicit class TransactionSignOps[T <: Transaction](val tx: T) extends AnyVal {
+    def signMaybe(signer: Option[PublicKeyAccount])(implicit sign: (T, PrivateKeyAccount) => T): T = signer match {
+      case Some(account: PrivateKeyAccount) => sign(tx, account)
+      case _ => tx
+    }
+    def signMaybe(signer: PublicKeyAccount)(implicit sign: (T, PrivateKeyAccount) => T): T = signMaybe(Some(signer))
+  }
 }

@@ -1,7 +1,10 @@
 package com.ltonetwork.api.requests
 
+import cats.data.Validated
 import com.ltonetwork.account.KeyTypes.keyType
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
+import com.ltonetwork.settings._
+import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError.{GenericError, InvalidPublicKey}
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
@@ -11,23 +14,28 @@ import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
 import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransaction}
-import com.ltonetwork.transaction.{Transaction, TransactionBuilders, ValidationError}
+import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilders, ValidationError}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
+import io.swagger.v3.oas.annotations.Hidden
 import play.api.libs.json.JsObject
 
 trait TxRequest {
   type TransactionT <: Transaction
 
   val timestamp: Option[Long]
+  val sender: Option[String]
   val senderKeyType: Option[String]
   val senderPublicKey: Option[String]
+  val sponsor: Option[String]
   val sponsorKeyType: Option[String]
   val sponsorPublicKey: Option[String]
+  val signature: Option[ByteStr]
+  val proofs: Option[Proofs]
 
   protected def timestamp(time: Option[Time]): Long = timestamp.getOrElse(time.fold(defaultTimestamp)(_.getTimestamp()))
 
-  protected def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT
+  implicit protected def sign(tx: TransactionT, signer: PrivateKeyAccount): TransactionT
 
   private def publicKeyAccount(keyTypeOpt: Option[String], publicKey: String): Either[ValidationError, PublicKeyAccount] =
     for {
@@ -35,43 +43,53 @@ trait TxRequest {
       acc <- PublicKeyAccount.fromBase58String(kt, publicKey)
     } yield acc
 
-  protected def resolveSender: Either[ValidationError, PublicKeyAccount] =
-    senderPublicKey match {
-      case Some(key) => publicKeyAccount(senderKeyType, key)
-      case None      => Left(InvalidPublicKey("invalid.senderPublicKey"))
-    }
+  protected def resolveSender: Either[ValidationError, PublicKeyAccount] = {
+    for {
+      account <- senderPublicKey match {
+        case Some(key) => publicKeyAccount(senderKeyType, key)
+        case None => Left(InvalidPublicKey("missing senderPublicKey"))
+      }
+      _ <- Validated.cond(sender.forall(account.address == _), (), InvalidPublicKey("senderPublicKey doesn't match sender address")).toEither
+    } yield account
+  }
 
-  protected def resolveSender(default: PublicKeyAccount): Either[ValidationError, PublicKeyAccount] =
-    senderPublicKey.map(key => PublicKeyAccount.fromBase58String(key)).getOrElse(Right(default))
+  protected def resolveSender(wallet: Wallet): Either[ValidationError, PublicKeyAccount] =
+    sender.map(wallet.findPrivateKey).getOrElse(resolveSender)
 
-  protected def resolveSponsor: Either[ValidationError, Option[PublicKeyAccount]] =
-    sponsorPublicKey
-      .map(publicKeyAccount(sponsorKeyType, _))
-      .fold[Either[ValidationError, Option[PublicKeyAccount]]](Right(None))(_.map(k => Some(k)))
+  protected def resolveSponsor: Either[ValidationError, Option[PublicKeyAccount]] = {
+    for {
+      account <- sponsorPublicKey
+        .map(publicKeyAccount(sponsorKeyType, _))
+        .fold[Either[ValidationError, Option[PublicKeyAccount]]](Right(None))(_.map(k => Some(k)))
+      _ <- Validated.cond(
+          account.isEmpty || sponsor.isEmpty || account.get.address == sponsor.get,
+          (),
+          InvalidPublicKey("sponsorPublicKey doesn't match sponsor address")
+        ).toEither
+    } yield account
+  }
 
-  protected def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, TransactionT]
+  protected def resolveSponsor(wallet: Wallet): Either[ValidationError, Option[PublicKeyAccount]] =
+    sponsor.map(address => wallet.findPrivateKey(address).map(Some(_))).getOrElse(resolveSponsor)
+
+  protected def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], proofs: Proofs, timestamp: Long): Either[ValidationError, TransactionT]
 
   def toTx: Either[ValidationError, TransactionT] =
     for {
-      sender  <- resolveSender
-      sponsor <- resolveSponsor
-      tx      <- toTxFrom(sender, sponsor, None)
+      senderAcc   <- resolveSender
+      sponsorAcc  <- resolveSponsor
+      validProofs <- toProofs(signature, proofs)
+      tx          <- toTxFrom(senderAcc, sponsorAcc, validProofs, timestamp.getOrElse(defaultTimestamp))
     } yield tx
 
-  def signTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransactionT] =
-    for {
-      signer  <- wallet.findPrivateKey(signerAddress)
-      sender  <- resolveSender(signer)
-      sponsor <- resolveSponsor
-      tx      <- toTxFrom(sender, sponsor, Some(time))
-    } yield sign(tx, signer)
+  def signTx(wallet: Wallet, time: Time): Either[ValidationError, TransactionT] =
 
-  def sponsorTx(wallet: Wallet, signerAddress: String, time: Time): Either[ValidationError, TransactionT] =
     for {
-      signer <- wallet.findPrivateKey(signerAddress)
-      sender <- resolveSender
-      tx     <- toTxFrom(sender, Some(signer), Some(time))
-    } yield sign(tx, signer)
+      senderAcc   <- resolveSender(wallet)
+      sponsorAcc  <- resolveSponsor(wallet)
+      validProofs <- toProofs(signature, proofs)
+      tx          <- toTxFrom(senderAcc, sponsorAcc, validProofs, timestamp.getOrElse(time.getTimestamp()))
+    } yield tx.signMaybe(senderAcc).signMaybe(sponsorAcc)
 }
 
 object TxRequest {
@@ -79,9 +97,17 @@ object TxRequest {
     override type TransactionT = T
   }
 
-  def fromJson(jsv: JsObject): Either[ValidationError, TxRequest] = {
-    val typeId = (jsv \ "type").as[Byte]
+  def fromJson(jsv: JsObject): Either[ValidationError, TxRequest] =
+    fromJson((jsv \ "type").as[Byte], jsv)
 
+  def fromJson(typeName: String, jsv: JsObject): Either[ValidationError, TxRequest] = {
+    for {
+      typeId    <- transactionTypes.get(typeName).toRight(GenericError(s"Bad transaction type ($typeName)"))
+      txRequest <- fromJson(typeId, jsv)
+    } yield txRequest
+  }
+
+  def fromJson(typeId: Byte, jsv: JsObject): Either[ValidationError, TxRequest] = {
     TransactionBuilders.by(typeId) match {
       case None => Left(GenericError(s"Bad transaction type ($typeId)"))
       case Some(x) =>

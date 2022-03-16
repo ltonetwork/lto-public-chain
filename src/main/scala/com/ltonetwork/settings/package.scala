@@ -1,5 +1,6 @@
 package com.ltonetwork
 
+import com.ltonetwork.settings.Constants.TransactionNames
 import com.ltonetwork.state.ByteStr
 import com.typesafe.config.{Config, ConfigException, ConfigFactory, ConfigValueType}
 import net.ceedubs.ficus.readers.namemappers.HyphenNameMapper
@@ -44,5 +45,14 @@ package object settings {
       .withFallback(ConfigFactory.defaultApplication())
       .withFallback(ConfigFactory.defaultReference())
       .resolve()
+  }
+
+  def transactionTypes: Map[String, Byte] = {
+    val types = TransactionNames.map {
+      case (typeId, name) => name.replace(" ", "-") -> typeId
+    }
+
+    // Support old application.conf settings
+    types + ("lease-cancel" -> types("cancel-lease"), "sponsorship-cancel" -> types("cancel-sponsorship"))
   }
 }

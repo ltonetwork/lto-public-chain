@@ -1,9 +1,10 @@
 package com.ltonetwork.api
 
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
+import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.http.scaladsl.server._
 import com.ltonetwork.crypto
-import com.ltonetwork.http.{ApiMarshallers, PlayJsonException, api_key, deprecated_api_key}
+import com.ltonetwork.http.{ApiKey, ApiMarshallers, PlayJsonException}
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.utils.Base58
 import play.api.libs.json.Reads
@@ -28,10 +29,10 @@ trait ApiRoute extends Directives with CommonApiFunctions with ApiMarshallers {
   }
 
   def withAuth: Directive0 = apiKeyHash.fold[Directive0](complete(ApiKeyNotValid)) { hashFromSettings =>
-    optionalHeaderValueByType(api_key).flatMap {
-      case Some(k) if crypto.secureHash(k.value.getBytes()).sameElements(hashFromSettings) => pass
+    optionalHeaderValueByType(Authorization).map(_.map(_.credentials)).flatMap {
+      case Some(c: OAuth2BearerToken) if crypto.secureHash(c.token.getBytes()).sameElements(hashFromSettings) => pass
       case _ =>
-        optionalHeaderValueByType(deprecated_api_key).flatMap {
+        optionalHeaderValueByType(ApiKey).flatMap {
           case Some(k) if crypto.secureHash(k.value.getBytes()).sameElements(hashFromSettings) => pass
           case _                                                                               => complete(ApiKeyNotValid)
         }

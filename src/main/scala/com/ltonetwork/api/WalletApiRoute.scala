@@ -1,22 +1,24 @@
 package com.ltonetwork.api
 
 import akka.http.scaladsl.server.Route
-import com.ltonetwork.account.Address
+import com.ltonetwork.account.{Address, PublicKeyAccount}
 import AddressApiRoute.Signed
 import com.ltonetwork.crypto
 import com.ltonetwork.settings.RestAPISettings
 import com.ltonetwork.utils.Base58
 import com.ltonetwork.wallet.Wallet
 import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.media.{Content, Schema}
+import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses.{ApiResponse, ApiResponses}
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
 import jakarta.ws.rs.{DELETE, GET, POST, Path}
 import play.api.libs.json.{JsArray, JsBoolean, JsString, Json}
 
 import java.nio.charset.StandardCharsets
+import scala.util.{Success, Try}
 
 @Path("/wallet")
 @Tag(name = "wallet")
@@ -45,6 +47,7 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
   @Operation(
     summary = "Create a new account in the wallet (if it exists)"
   )
+  @SecurityRequirement(name = "bearerAuth")
   def createAddress: Route = (path("addresses") & post & withAuth) {
     wallet.generateNewAccount() match {
       case Right(Some(pka)) => complete(Json.obj("address" -> pka.address))
@@ -58,6 +61,7 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
   @Operation(
     summary = "Remove the account with address from the wallet"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @Parameters(
     Array(
       new Parameter(
@@ -124,6 +128,7 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
   @Operation(
     summary = "Sign a message with a private key associated with address"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @Parameters(
     Array(
       new Parameter(
@@ -162,6 +167,7 @@ case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends Api
   @Operation(
     summary = "Sign a message with a private key associated with address"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @Parameters(
     Array(
       new Parameter(

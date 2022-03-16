@@ -9,35 +9,36 @@ import play.api.libs.json._
 
 case class TransferRequest(version: Option[Byte] = None,
                            timestamp: Option[Long] = None,
+                           fee: Long,
+                           sender: Option[String] = None,
                            senderKeyType: Option[String] = None,
                            senderPublicKey: Option[String] = None,
-                           fee: Long,
+                           sponsor: Option[String] = None,
+                           sponsorKeyType: Option[String] = None,
+                           sponsorPublicKey: Option[String] = None,
                            recipient: String,
                            amount: Long,
                            attachment: Option[ByteStr] = None,
-                           sponsorKeyType: Option[String] = None,
-                           sponsorPublicKey: Option[String] = None,
                            signature: Option[ByteStr] = None,
                            proofs: Option[Proofs] = None)
     extends TxRequest.For[TransferTransaction] {
 
   protected def sign(tx: TransferTransaction, signer: PrivateKeyAccount): TransferTransaction = tx.signWith(signer)
 
-  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], time: Option[Time]): Either[ValidationError, TransferTransaction] =
+  def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], proofs: Proofs, timestamp: Long): Either[ValidationError, TransferTransaction] =
     for {
       validRecipient <- Address.fromString(recipient)
-      validProofs    <- toProofs(signature, proofs)
       tx <- TransferTransaction.create(
         version.getOrElse(TransferTransaction.latestVersion),
         None,
-        timestamp(time),
+        timestamp,
         sender,
         fee,
         validRecipient,
         amount,
         attachment.getOrElse(ByteStr.empty).arr,
         sponsor,
-        validProofs
+        proofs
       )
     } yield tx
 }
