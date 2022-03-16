@@ -119,4 +119,5 @@ object Keys {
     Key(hBytes(47, seqNr, addressBytes.arr), identity, identity)
 
   def feePrice(height: Int): Key[Option[Long]] = Key.opt[Long](h(48, height), Longs.fromByteArray, Longs.toByteArray)
+  def burned(height: Int): Key[Long] = Key[Long](h(48, height), Option(_).fold(0L)(Longs.fromByteArray), Longs.toByteArray)
 }

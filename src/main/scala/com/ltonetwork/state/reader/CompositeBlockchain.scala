@@ -14,6 +14,8 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
 
   private def diff = maybeDiff.getOrElse(Diff.empty)
 
+  override def burned: Long = inner.burned + diff.burned
+
   override def portfolio(a: Address): Portfolio = inner.portfolio(a).combine(diff.portfolios.getOrElse(a, Portfolio.empty))
 
   override def balance(address: Address): Long =

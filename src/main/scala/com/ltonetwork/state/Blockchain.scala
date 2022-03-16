@@ -41,6 +41,7 @@ trait Blockchain {
   def feePrice(height: Int): Long
   def feeVotes(height: Int): Int
 
+  def burned: Long
   def portfolio(a: Address): Portfolio
 
   def transactionInfo(id: ByteStr): Option[(Int, Transaction)]

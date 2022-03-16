@@ -5,8 +5,6 @@ import cats.implicits._
 import com.ltonetwork.account.Address
 import com.ltonetwork.block.Block.CurrentBlockFeePart
 import com.ltonetwork.block.{Block, BlockRewardCalculator, MicroBlock}
-import com.ltonetwork.features.BlockchainFeatures
-import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.mining.MiningConstraint
 import com.ltonetwork.settings.FunctionalitySettings
@@ -103,7 +101,11 @@ object BlockDiffer extends ScorexLogging with Instrumented {
             txDiffer(updatedBlockchain, tx).map { newDiff =>
               val updatedDiff  = currDiff.combine(newDiff)
               val curBlockFees = BlockRewardCalculator.rewardedFee(blockchain, tx).multiply(CurrentBlockFeePart)
-              val diff         = updatedDiff.combine(Diff.empty.copy(portfolios = Map(blockGenerator -> curBlockFees)))
+              val burnedFees   = BlockRewardCalculator.burnedFee(blockchain, tx)
+              val diff         = updatedDiff.combine(Diff.empty.copy(
+                portfolios = Map(blockGenerator -> curBlockFees),
+                burned = burnedFees,
+              ))
               (diff, 0L, updatedConstraint)
             }
       }

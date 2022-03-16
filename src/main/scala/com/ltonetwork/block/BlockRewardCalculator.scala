@@ -18,17 +18,17 @@ object BlockRewardCalculator {
       .getOrElse(0))
   def miningReward(settings: FunctionalitySettings, bc: Blockchain): Portfolio = miningReward(settings, bc, bc.height)
 
-  def rewardedFee(bc: Blockchain, tx: Transaction): Portfolio = {
-    if (bc.isFeatureActivated(BlockchainFeatures.TokenomicsRedefined, bc.height))
-      Portfolio(balance = (tx.fee * (1 - feeBurnPct)).toLong)
-    else if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, bc.height))
-      Portfolio(balance = Math.max(0, tx.fee - feeBurnAmt))
-    else
-      Portfolio(balance = tx.fee)
-  }
+  def rewardedFee(bc: Blockchain, tx: Transaction): Portfolio =
+    Portfolio(balance = tx.fee - burnedFee(bc, tx))
 
-  def burnedFee(bc: Blockchain, tx: Transaction): Portfolio =
-    Portfolio(balance = tx.fee - rewardedFee(bc, tx).balance)
+  def burnedFee(bc: Blockchain, tx: Transaction): Long = {
+    if (bc.isFeatureActivated(BlockchainFeatures.TokenomicsRedefined, bc.height))
+      (tx.fee * feeBurnPct).toLong
+    else if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, bc.height))
+      Math.min(tx.fee, feeBurnAmt)
+    else
+      0L
+  }
 
   def prevBlockFeeDistr(bc: Blockchain, block: Block): Portfolio =
     Monoid[Portfolio].combineAll(block.transactionData.map { tx =>

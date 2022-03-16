@@ -50,6 +50,12 @@ trait Caches extends Blockchain {
     removedTransactions.result()
   }
 
+
+  @volatile
+  private var burnedCache = loadBurned()
+  protected def loadBurned(): Long
+  override def burned: Long = burnedCache
+
   private val portfolioCache: LoadingCache[Address, Portfolio] = cache(maxCacheSize, loadPortfolio)
   protected def loadPortfolio(address: Address): Portfolio
   protected def discardPortfolio(address: Address): Unit = portfolioCache.invalidate(address)
@@ -102,12 +108,14 @@ trait Caches extends Blockchain {
                          scripts: Map[BigInt, Option[Script]],
                          data: Map[BigInt, AccountDataInfo],
                          assocs: List[(Int, AssociationTransaction)],
-                         sponsorship: Map[BigInt, List[Address]]): Unit
+                         sponsorship: Map[BigInt, List[Address]],
+                         totalBurned: Long): Unit
 
   override def append(diff: Diff, carryFee: Long, block: Block): Unit = {
     heightCache += 1
     scoreCache += block.blockScore()
     lastBlockCache = Some(block)
+    burnedCache += diff.burned
 
     val newAddresses = Set.newBuilder[Address]
     newAddresses ++= (diff.portfolios.keys ++ diff.sponsoredBy.keys).toSet.filter(addressIdCache.get(_).isEmpty)
@@ -166,7 +174,8 @@ trait Caches extends Blockchain {
       diff.scripts.map { case (address, s)              => addressId(address) -> s },
       diff.accountData.map { case (address, data)       => addressId(address) -> data },
       newAssociations,
-      diff.sponsoredBy.map { case (sponsoree, v) => (addressId(sponsoree) -> v) }
+      diff.sponsoredBy.map { case (sponsoree, v) => (addressId(sponsoree) -> v) },
+      burnedCache
     )
 
     for ((address, id)        <- newAddressIds) addressIdCache.put(address, Some(id))

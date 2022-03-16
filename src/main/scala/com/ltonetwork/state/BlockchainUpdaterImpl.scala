@@ -390,6 +390,9 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
       blockchain.blockHeaderAndSize(height)
   }
 
+  override def burned: Long =
+    ngState.fold(0L)(_.bestLiquidDiff.burned) + blockchain.burned
+
   override def portfolio(a: Address): Portfolio = {
     val p = ngState.fold(Portfolio.empty)(_.bestLiquidDiff.portfolios.getOrElse(a, Portfolio.empty))
     blockchain.portfolio(a).combine(p)

@@ -12,7 +12,8 @@ case class Diff(transactions: Map[ByteStr, (Int, Transaction, Set[Address])],
                 sponsoredBy: Map[Address, List[Address]], // multiple sponsors, first priority
                 leaseState: Map[ByteStr, Boolean],
                 scripts: Map[Address, Option[Script]],
-                accountData: Map[Address, AccountDataInfo]) {
+                accountData: Map[Address, AccountDataInfo],
+                burned: Long) {
 
   lazy val accountTransactionIds: Map[Address, List[(Int, ByteStr)]] = {
     val map: List[(Address, Set[(Int, Byte, Long, ByteStr)])] = transactions.toList
@@ -35,7 +36,8 @@ object Diff {
             sponsoredBy: Map[Address, List[Address]] = Map.empty,
             leaseState: Map[ByteStr, Boolean] = Map.empty,
             scripts: Map[Address, Option[Script]] = Map.empty,
-            accountData: Map[Address, AccountDataInfo] = Map.empty): Diff =
+            accountData: Map[Address, AccountDataInfo] = Map.empty,
+            burned: Long = 0): Diff =
     Diff(
       transactions = Map((tx.id(), (height, tx, portfolios.keys.toSet))),
       feeSponsors = Map.empty,
@@ -44,17 +46,18 @@ object Diff {
       leaseState = leaseState,
       scripts = scripts,
       accountData = accountData,
+      burned = burned,
     )
 
   def fee(tx: Transaction, feeSponsor: Option[Address], portfolios: Map[Address, Portfolio]): Diff = {
     val feeSponsors = feeSponsor.map(address => Map((tx.id(), address))).getOrElse(Map.empty)
-    new Diff(Map.empty, feeSponsors, portfolios, Map.empty, Map.empty, Map.empty, Map.empty)
+    new Diff(Map.empty, feeSponsors, portfolios, Map.empty, Map.empty, Map.empty, Map.empty, 0L)
   }
 
   def portfolio(elems: (Address, Portfolio)*): Diff =
-    new Diff(Map.empty, Map.empty, elems.toMap, Map.empty, Map.empty, Map.empty, Map.empty)
+    new Diff(Map.empty, Map.empty, elems.toMap, Map.empty, Map.empty, Map.empty, Map.empty, 0L)
 
-  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
+  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, 0L)
 
   implicit val diffMonoid: Monoid[Diff] = new Monoid[Diff] {
     override def empty: Diff = Diff.empty
@@ -67,7 +70,8 @@ object Diff {
         sponsoredBy = older.sponsoredBy ++ newer.sponsoredBy, // whole list overriding
         leaseState = older.leaseState ++ newer.leaseState,
         scripts = older.scripts ++ newer.scripts,
-        accountData = older.accountData.combine(newer.accountData)
+        accountData = older.accountData.combine(newer.accountData),
+        burned = older.burned + newer.burned,
       )
   }
 }

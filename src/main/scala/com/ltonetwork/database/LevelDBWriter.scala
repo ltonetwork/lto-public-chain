@@ -116,6 +116,8 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
   override protected def loadLastBlock(): Option[Block] = readOnly(db => db.get(Keys.blockAt(db.get(Keys.height))))
 
+  override protected def loadBurned(): Long = readOnly(db => db.get(Keys.burned(db.get(Keys.height))))
+
   override protected def loadScript(address: Address): Option[Script] = readOnly { db =>
     addressId(address).fold(Option.empty[Script]) { addressId =>
       db.fromHistory(Keys.addressScriptHistory(addressId), Keys.addressScript(addressId)).flatten
@@ -197,7 +199,8 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   scripts: Map[BigInt, Option[Script]],
                                   data: Map[BigInt, AccountDataInfo],
                                   assocs: List[(Int, AssociationTransaction)],
-                                  sponsorship: Map[BigInt, List[Address]]): Unit = readWrite { rw =>
+                                  sponsorship: Map[BigInt, List[Address]],
+                                  totalBurned: Long): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
     rw.put(Keys.height, height)
@@ -212,6 +215,9 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     }
 
     val threshold = height - maxRollbackDepth
+
+    rw.put(Keys.burned(height), totalBurned)
+    expiredKeys += Keys.burned(threshold).keyBytes
 
     val newAddressesForLto = ArrayBuffer.empty[BigInt]
     val updatedBalanceAddresses = for ((addressId, balance) <- ltoBalances) yield {
@@ -340,8 +346,8 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
     rw.put(Keys.transactionIdsAtHeight(height), transactions.keys.toSeq)
     rw.put(Keys.carryFee(height), carry)
-    expiredKeys.foreach(rw.delete)
 
+    expiredKeys.foreach(rw.delete)
   }
 
   override protected def doRollback(targetBlockId: ByteStr): Seq[Block] = {
@@ -351,12 +357,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       val discardedBlocks: Seq[Block] = for (currentHeight <- height until targetHeight by -1) yield {
         val portfoliosToInvalidate = Seq.newBuilder[Address]
         val scriptsToDiscard       = Seq.newBuilder[Address]
-
-        // association transactions are discarded naturally.
-        // association records are not discarded, but since
-        // we query assocs as
-        // tx <- transactionInfo(ByteStr(txId)).toList
-        // the output will be consistent
 
         val discardedBlock = readWrite { rw =>
           log.trace(s"Rolling back to ${currentHeight - 1}")
@@ -422,8 +422,13 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                     }
                   }
 
-                case tx: IssueAssociationTransaction  => // TODO
-                case tx: RevokeAssociationTransaction => // TODO
+                // association transactions are discarded naturally.
+                // association records are not discarded, but since
+                // we query assocs as
+                // tx <- transactionInfo(ByteStr(txId)).toList
+                // the output will be consistent
+                case tx: IssueAssociationTransaction  => // nothing
+                case tx: RevokeAssociationTransaction => // nothing
 
                 case _ => // do nothinhg specific
               }
