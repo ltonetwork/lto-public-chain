@@ -29,7 +29,7 @@ case class BurnTransaction private(version: Byte,
 
 object BurnTransaction extends TransactionBuilder.For[BurnTransaction] {
 
-  override val typeId: Byte                 = 20
+  override val typeId: Byte                 = 21
   override val supportedVersions: Set[Byte] = Set(3)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =

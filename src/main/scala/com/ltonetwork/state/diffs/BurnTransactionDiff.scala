@@ -6,6 +6,6 @@ import com.ltonetwork.transaction.burn.BurnTransaction
 
 object BurnTransactionDiff {
   def apply(blockchain: Blockchain, height: Int)(tx: BurnTransaction): Either[ValidationError, Diff] = {
-    Right(Diff(height, tx, portfolios = Map(tx.sender -> Portfolio(-tx.amount)), burned = tx.amount))
+    Right(Diff(height, tx, portfolios = Map(tx.sender.toAddress -> Portfolio(-tx.amount)), burned = tx.amount))
   }
 }

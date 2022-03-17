@@ -7,6 +7,7 @@ import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.{InsufficientFee, UnsupportedTransactionType}
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.AssociationTransaction
+import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
@@ -41,6 +42,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     case _: CancelSponsorshipTransaction => Right(1000)
     case tx: DataTransaction             => Right(1000 + dataTransactionBytes(tx, 256) * 100)
     case tx: RegisterTransaction         => Right(250 + tx.accounts.size * 100)
+    case _: BurnTransaction              => Right(1000)
     case _                               => Left(UnsupportedTransactionType)
   }).map(_ * blockchain.feePrice(height))
 
