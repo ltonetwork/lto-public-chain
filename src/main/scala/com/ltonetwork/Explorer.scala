@@ -71,8 +71,12 @@ object Explorer extends ScorexLogging {
     SLF4JBridgeHandler.install()
 
     val configFilename = Try(args(0)).toOption.getOrElse("lto-testnet.conf")
+    val config = loadConfig(ConfigFactory.parseFile(new File(configFilename)))
 
-    val settings = LtoSettings.fromConfig(loadConfig(ConfigFactory.parseFile(new File(configFilename))))
+    // DO NOT LOG BEFORE THIS LINE, THIS PROPERTY IS USED IN logback.xml
+    System.setProperty("lto.directory", config.getString("lto.directory"))
+
+    val settings = LtoSettings.fromConfig(config)
     AddressScheme.current = new AddressScheme {
       override val chainId: Byte = settings.blockchainSettings.addressSchemeCharacter.toByte
     }
