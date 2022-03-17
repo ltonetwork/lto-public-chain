@@ -59,7 +59,7 @@ class UtxPoolSpecification
         FunctionalitySettings.TESTNET.copy(
           preActivatedFeatures = Map(
             BlockchainFeatures.SmartAccounts.id -> 0,
-            BlockchainFeatures.TokenomicsRedefined.id -> 0,
+            BlockchainFeatures.Juicy.id -> 0,
           )),
         genesisSettings
       ),

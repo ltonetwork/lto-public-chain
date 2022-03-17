@@ -33,7 +33,7 @@ class MinerSpecification extends AnyPropSpec with MockFactory with TransactionGe
       preActivatedFeatures = Map(
         BlockchainFeatures.MinimalGeneratingBalance.id -> 0,
         BlockchainFeatures.SmartAccounts.id -> 0,
-        BlockchainFeatures.TokenomicsRedefined.id -> 0,
+        BlockchainFeatures.Juicy.id -> 0,
       )
     )
     val settings = origSettings.copy(

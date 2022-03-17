@@ -96,13 +96,13 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
   def enoughFee[T <: Transaction](tx: T): Either[ValidationError, T] = enoughFee(blockchain.height, tx)
 
   def minFee(height: Int, tx: Transaction): Either[ValidationError, Long] =
-    if (blockchain.isFeatureActivated(BlockchainFeatures.TokenomicsRedefined, height))
+    if (blockchain.isFeatureActivated(BlockchainFeatures.Juicy, height))
       feesV5(height, tx)
     else
       oldFees.minFee(tx)
 
   def consensusMinFee(height: Int, tx: Transaction): Either[ValidationError, Long] =
-    if (blockchain.isFeatureActivated(BlockchainFeatures.TokenomicsRedefined, height))
+    if (blockchain.isFeatureActivated(BlockchainFeatures.Juicy, height))
       feesV5(height, tx)
     else if (blockchain.isFeatureActivated(BlockchainFeatures.Cobalt, height))
       feesV4(tx)

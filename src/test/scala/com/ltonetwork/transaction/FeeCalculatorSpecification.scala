@@ -96,7 +96,7 @@ class FeeCalculatorSpecification extends AnyPropSpec with ScalaCheckDrivenProper
     val r = stub[Blockchain]
     (r.accountScript _).when(*).onCall((addr: Address) => accountScript(addr)).anyNumberOfTimes()
     (r.activatedFeatures _).when().returns(Map(
-      BlockchainFeatures.TokenomicsRedefined.id -> 0,
+      BlockchainFeatures.Juicy.id -> 0,
       BlockchainFeatures.Cobalt.id -> 0,
     )).anyNumberOfTimes()
     (r.feePrice(_: Int)).when(*).returns(100000).anyNumberOfTimes()
