@@ -1,21 +1,19 @@
 package com.ltonetwork.fee.api
 
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
-import com.ltonetwork.api.http.{ApiRoute, InvalidFeeVoteStatus, WrongJson}
+import com.ltonetwork.api.{ApiRoute, InvalidFeeVoteStatus, WrongJson}
 import com.ltonetwork.fee.FeeVoteStatus
 import com.ltonetwork.mining.MinerOptions
 import com.ltonetwork.settings.{FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.Blockchain
 import com.ltonetwork.transaction.ValidationError.GenericError
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.extensions.Extension
-import io.swagger.v3.oas.annotations.media.{Content, ExampleObject, Schema}
+import io.swagger.v3.oas.annotations.media.{Content, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.{GET, POST, Path}
 import play.api.libs.json._
 
-import java.lang.annotation.Annotation
 import java.util.NoSuchElementException
 
 @Path("/fees")
