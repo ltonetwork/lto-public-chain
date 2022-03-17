@@ -19,8 +19,7 @@ object BurnSerializerV3 extends TransactionSerializer.For[BurnTransaction] {
       Longs.toByteArray(timestamp),
       Deser.serializeAccount(sender),
       Longs.toByteArray(fee),
-      Shorts.toByteArray(accounts.length.toShort),
-      Deser.serializeArraysWithoutLength(accounts.map(k => Deser.serializeAccount(k))),
+      Longs.toByteArray(amount),
     )
   }
 
@@ -29,10 +28,10 @@ object BurnSerializerV3 extends TransactionSerializer.For[BurnTransaction] {
       val buf = ByteBuffer.wrap(bytes)
 
       val (chainId, timestamp, sender, fee) = parseBase(buf)
-      val keys                              = buf.getAll(b => b.getAccount)
+      val amount                            = buf.getLong
       val (sponsor, proofs)                 = parseFooter(buf)
 
-      create(version, Some(chainId), timestamp, sender, fee, keys.toList, sponsor, proofs)
+      create(version, Some(chainId), timestamp, sender, fee, amount, sponsor, proofs)
         .fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 }

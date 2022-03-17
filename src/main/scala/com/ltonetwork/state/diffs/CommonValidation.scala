@@ -11,6 +11,7 @@ import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.AssociationTransaction
+import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
@@ -103,6 +104,7 @@ object CommonValidation {
       case (_: SponsorshipTransactionBase, 3) => activationBarrier(BlockchainFeatures.Cobalt)
       case (_: DataTransaction, 3)            => activationBarrier(BlockchainFeatures.CobaltAlloy)
       case (_: RegisterTransaction, 3)        => activationBarrier(BlockchainFeatures.CobaltAlloy)
+      case (_: BurnTransaction, 3)            => activationBarrier(BlockchainFeatures.Juicy)
 
       case _ => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
     }
