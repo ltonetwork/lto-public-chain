@@ -10,14 +10,13 @@ import cats.instances.all._
 import com.typesafe.config._
 import com.ltonetwork.account.{Address, AddressScheme}
 import com.ltonetwork.actor.RootActorSystem
-import com.ltonetwork.api.{AddressApiRoute, AssociationsApiRoute, BlocksApiRoute, CompositeHttpService, LeaseApiRoute, PeersApiRoute, SponsorshipApiRoute, TransactionsApiRoute, UtilsApiRoute, WalletApiRoute}
 import com.ltonetwork.api._
 import com.ltonetwork.consensus.PoSSelector
 import com.ltonetwork.consensus.nxt.api.NxtConsensusApiRoute
 import com.ltonetwork.db.{DBExt, openDB}
 import com.ltonetwork.database.Keys
 import com.ltonetwork.features.api.ActivationApiRoute
-import com.ltonetwork.fee.FeeCalculator
+import com.ltonetwork.fee.{FeeCalculator, FeeVoteFileWatch}
 import com.ltonetwork.fee.api.FeesApiRoute
 import com.ltonetwork.history.{CheckpointServiceImpl, StorageFactory}
 import com.ltonetwork.http.{DebugApiRoute, NodeApiRoute}
@@ -27,7 +26,6 @@ import com.ltonetwork.network.RxExtensionLoader.RxExtensionLoaderShutdownHook
 import com.ltonetwork.network._
 import com.ltonetwork.settings._
 import com.ltonetwork.state.appender.{BlockAppender, CheckpointAppender, ExtensionAppender, MicroblockAppender}
-import com.ltonetwork.transaction._
 import com.ltonetwork.utils.{NTP, ScorexLogging, SystemInformationReporter, Time, forceStopApplication}
 import com.ltonetwork.utx.{UtxPool, UtxPoolImpl}
 import com.ltonetwork.wallet.Wallet
@@ -36,7 +34,7 @@ import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
 import kamon.Kamon
 import monix.eval.{Coeval, Task}
-import monix.execution.Scheduler._
+import monix.execution.Scheduler.{singleThread, fixedPool, global}
 import monix.execution.schedulers.SchedulerService
 import monix.reactive.Observable
 import monix.reactive.subjects.ConcurrentSubject
@@ -45,7 +43,6 @@ import org.slf4j.bridge.SLF4JBridgeHandler
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.reflect.runtime.universe._
 import scala.util.Try
 
 class Application(val actorSystem: ActorSystem, val settings: LtoSettings, configRoot: ConfigObject) extends ScorexLogging {
@@ -115,6 +112,11 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
       if (settings.minerSettings.enable)
         new MinerImpl(allChannels, blockchainUpdater, checkpointService, settings, time, utxStorage, wallet, pos, minerScheduler, appenderScheduler, minerOptions)
       else Miner.Disabled
+
+    if (settings.minerSettings.enable)
+      settings.minerSettings.feeVoteFile.map { file =>
+        FeeVoteFileWatch(file, settings.minerSettings.feeVoteWatchInterval, minerOptions)
+      }
 
     val processBlock =
       BlockAppender(checkpointService, blockchainUpdater, time, utxStorage, pos, settings, allChannels, peerDatabase, miner, appenderScheduler) _

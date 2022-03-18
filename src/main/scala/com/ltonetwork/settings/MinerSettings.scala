@@ -3,6 +3,7 @@ package com.ltonetwork.settings
 import com.ltonetwork.mining.Miner
 import com.typesafe.config.Config
 
+import java.io.File
 import scala.concurrent.duration.FiniteDuration
 
 case class MinerSettings(enable: Boolean,
@@ -12,7 +13,9 @@ case class MinerSettings(enable: Boolean,
                          minimalBlockGenerationOffset: FiniteDuration,
                          maxTransactionsInKeyBlock: Int,
                          maxTransactionsInMicroBlock: Int,
-                         minMicroBlockAge: FiniteDuration) {
+                         minMicroBlockAge: FiniteDuration,
+                         feeVoteFile: Option[File],
+                         feeVoteWatchInterval: FiniteDuration) {
   require(maxTransactionsInMicroBlock <= Miner.MaxTransactionsPerMicroblock)
 }
 
@@ -33,6 +36,8 @@ object MinerSettings {
     val minMicroBlockAge            = config.as[FiniteDuration]("min-micro-block-age")
     val maxTransactionsInKeyBlock   = config.as[Int]("max-transactions-in-key-block")
     val maxTransactionsInMicroBlock = config.as[Int]("max-transactions-in-micro-block")
+    val feeVoteFile                 = config.as[Option[File]]("fee-vote-file")
+    val feeVoteWatchInterval        = config.as[Option[FiniteDuration]]("fee-vote-watch-interval").getOrElse(60.seconds)
 
     MinerSettings(
       enable,
@@ -42,7 +47,9 @@ object MinerSettings {
       offset,
       maxTransactionsInKeyBlock,
       maxTransactionsInMicroBlock,
-      minMicroBlockAge
+      minMicroBlockAge,
+      feeVoteFile,
+      feeVoteWatchInterval
     )
   }
 }

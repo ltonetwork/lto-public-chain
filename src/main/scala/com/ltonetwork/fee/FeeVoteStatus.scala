@@ -4,6 +4,7 @@ import com.ltonetwork.transaction.ValidationError.GenericError
 
 case class FeeVoteStatus(vote: Byte, description: String, multiplier: Double) {
   def calc(fee: Long): Long = Math.round(fee * multiplier)
+  override def toString: String = description
 }
 
 object FeeVoteStatus {
