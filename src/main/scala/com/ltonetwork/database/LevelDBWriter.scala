@@ -340,7 +340,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(Keys.feePrice(nextHeight), Some(nextPrice))
       feePriceCache.put(nextHeight, nextPrice)
 
-      if (status != FeeVoteStatus.Remain)
+      if (status != FeeVoteStatus.Maintain)
         log.info(s"${status.description.toLowerCase.capitalize} fee price at block $nextHeight to $nextPrice")
     }
 

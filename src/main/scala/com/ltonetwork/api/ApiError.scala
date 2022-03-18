@@ -287,7 +287,7 @@ case object AccountBasedWallet extends ApiError {
 
 case object InvalidFeeVoteStatus extends ApiError {
   override val id: Int          = 117
-  override val message: String  = "Invalid fee vote status, should be 'decrease', 'remain' or 'increase'"
+  override val message: String  = "Invalid fee vote status, should be 'decrease', 'maintain' or 'increase'"
   override val code: StatusCode = StatusCodes.BadRequest
 }
 

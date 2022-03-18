@@ -86,7 +86,7 @@ class MinerSpecification extends AnyPropSpec with MockFactory with TransactionGe
     assert(block.version == 4)
     assert(block.signerData.generator.toAddress == account.toAddress)
     assert(block.transactionData.isEmpty)
-    assert(block.feeVote == FeeVoteStatus.Remain.vote)
+    assert(block.feeVote == FeeVoteStatus.Maintain.vote)
   }
 
   property("mine a block with fee voting") {

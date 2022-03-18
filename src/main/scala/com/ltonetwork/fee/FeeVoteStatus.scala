@@ -8,12 +8,12 @@ case class FeeVoteStatus(vote: Byte, description: String, multiplier: Double) {
 
 object FeeVoteStatus {
   object Decrease extends FeeVoteStatus(-1, "DECREASE", 1 / 1.1)
-  object Remain extends FeeVoteStatus(0, "REMAIN", 1)
+  object Maintain extends FeeVoteStatus(0, "MAINTAIN", 1)
   object Increase extends FeeVoteStatus(1, "INCREASE", 1.1)
 
   def apply(description: String): Either[GenericError, FeeVoteStatus] = description.toUpperCase match {
     case Decrease.description => Right(Decrease)
-    case Remain.description => Right(Remain)
+    case Maintain.description => Right(Maintain)
     case Increase.description => Right(Increase)
     case _ => Left(GenericError(s"Invalid fee vote status '$description'"))
   }
@@ -22,7 +22,7 @@ object FeeVoteStatus {
 
   def apply(change: Long): FeeVoteStatus = change match {
     case v if v < 0 => Decrease
-    case 0 => Remain
+    case 0 => Maintain
     case v if v > 0 => Increase
   }
 }
