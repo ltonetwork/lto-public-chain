@@ -1,15 +1,11 @@
 import os
 import os.path
-import urllib.request
 import sys
-import requests
 from pyhocon import ConfigFactory, HOCONConverter
 import pywaves as pw
 import base58
 import string
 import random
-import math
-from tqdm import tqdm
 from shutil import copyfile
 from pyblake2 import blake2b
 from hashlib import sha256
@@ -88,7 +84,7 @@ if __name__ == "__main__":
 
     api_key = os.environ.get('LTO_API_KEY', generate_password())
     if os.environ.get('LTO_API_KEY') is None:
-        print('Node API key:', api_key)    
+        print('Node API key:', api_key)
     api_key_hash = secureHash(api_key)
 
     env_dict = parse_env_variables()
@@ -108,7 +104,7 @@ if __name__ == "__main__":
     nested_set(env_dict, ['lto', 'wallet', 'password'], lto_data[1])
     nested_set(env_dict, ['lto', 'rest-api', 'api-key-hash'], api_key_hash)
 
-    ENABLE_REST_API = os.environ.get('ENABLE_REST_API', os.environ.get('LTO_ENABLE_REST_API', 'no'))
+    ENABLE_REST_API = os.environ.get('LTO_ENABLE_REST_API', 'no' if NETWORK == 'MAINNET' else 'yes')
     if ENABLE_REST_API.lower() in ['yes', 'true', 't', '1', 'on']:
         nested_set(env_dict, ['lto', 'rest-api', 'enable'], 'yes')
         nested_set(env_dict, ['lto', 'rest-api', 'bind-address'], '0.0.0.0')
