@@ -27,6 +27,8 @@ case class FeeVoteFileWatch(file: File, interval: FiniteDuration, minerOptions: 
     minerOptions.feeVote = vote
   }
 
+  file.delete() // Ignore existing vote file. It's persistent and can be old.
+
   global.scheduleAtFixedRate(0.seconds, interval) {
     Try(watch()).failed.map(e => log.error("Failed to process fee vote", e))
   }

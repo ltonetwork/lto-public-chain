@@ -27,11 +27,8 @@ RUN apt-get -q install -y python3 python3-pip curl \
   && pip3 install -q --upgrade pip
 RUN pip3 install requests pyhocon pywaves==0.8.19 tqdm
 
-# Setup cron job for fee vote
+# Install cron
 RUN apt-get -q install -y cron
-RUN echo '0 * * * * python /lto-node/fee-vote.py /lto/fee-vote' > /etc/cron.d/fee-vote \
-  && chmod 0644 /etc/cron.d/fee-vote \
-  && crontab /etc/cron.d/fee-vote
 
 COPY starter.py /lto-node/
 COPY fee-vote.py /lto-node/
