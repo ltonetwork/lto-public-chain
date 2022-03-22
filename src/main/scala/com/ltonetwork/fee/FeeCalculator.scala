@@ -26,7 +26,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
   private def oldFees = new OldFeeCalculator(settings, blockchain)
 
   private def dataTransactionBytes(tx: DataTransaction, unitSize: Int): Integer =
-    if (tx.data.nonEmpty) (tx.data.map(_.toBytes.length).sum / unitSize) + 1
+    if (tx.data.nonEmpty) Math.ceil(tx.data.map(_.toBytes.length).sum / unitSize).toInt
     else 0
 
   private def feesV5(height: Int, tx: Transaction): Either[ValidationError, Long] = (tx match {

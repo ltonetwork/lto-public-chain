@@ -66,8 +66,8 @@ def main(node: str, file: str):
         vote = 'remain'
         print("More than 10%% difference between CoinGecko (%f) and CMC price (%f), vote: remain" % (price, cmc_price))
     else:
-        target = int(os.environ.get('LTO_FEE_TARGET', 2000)) / price
-        max_target = int(os.environ.get('LTO_FEE_MAX_PRICE', 10000))
+        target = int(os.environ.get('LTO_FEE_TARGET', 20000)) / price
+        max_target = int(os.environ.get('LTO_FEE_MAX_PRICE', 100000))
         current = fetch_price(node)
         vote = determine_vote(min(target, max_target), current)
         print("target: %d, current: %d, vote: %s" % (target, current, vote))

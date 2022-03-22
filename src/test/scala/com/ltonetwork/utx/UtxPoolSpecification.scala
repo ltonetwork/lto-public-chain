@@ -240,7 +240,7 @@ class UtxPoolSpecification
     for {
       ts <- timestampGen
     } yield {
-      val setScript = SetScriptTransaction.signed(1, ts + 1, master, 100000000, Some(script)).explicitGet()
+      val setScript = SetScriptTransaction.signed(1, ts + 1, master, 500000000, Some(script)).explicitGet()
       Seq(TestBlock.create(ts + 1, lastBlockId, Seq(setScript)))
     }
 
