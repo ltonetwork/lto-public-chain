@@ -3,7 +3,7 @@ package com.ltonetwork.database
 import com.google.common.cache.CacheBuilder
 import com.ltonetwork.account.Address
 import com.ltonetwork.block.{Block, BlockHeader}
-import com.ltonetwork.fee.FeeVoteStatus
+import com.ltonetwork.fee.{FeeVoteStatus, defaultFeePrice}
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.state.reader.LeaseDetails
@@ -186,7 +186,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
   override protected def feePriceHeight(height: Int): Int = height - (height % fs.feeVoteBlocksPeriod)
 
   // Height must already be rounded to multiple of fs.feeVoteBlocksPeriod
-  override protected def loadFeePrice(height: Int): Long = readOnly(_.get(Keys.feePrice(height))).getOrElse(10000)
+  override protected def loadFeePrice(height: Int): Long = readOnly(_.get(Keys.feePrice(height))).getOrElse(defaultFeePrice)
 
   override protected def doAppend(carry: Long,
                                   block: Block,
