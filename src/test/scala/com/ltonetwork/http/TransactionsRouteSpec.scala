@@ -4,6 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.api.{InvalidAddress, InvalidSignature, TooBigArrayAllocation, TransactionsApiRoute}
 import com.ltonetwork.features.BlockchainFeatures
+import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.http.ApiMarshallers._
 import com.ltonetwork.settings.{FeeSettings, FeesSettings, FunctionalitySettings, TestFunctionalitySettings, WalletSettings}
 import com.ltonetwork.state.Blockchain
@@ -43,8 +44,9 @@ class TransactionsRouteSpec
       TransferTransaction.typeId     -> Seq(FeeSettings("BASE", 1.lto)),
       MassTransferTransaction.typeId -> Seq(FeeSettings("BASE", 1.lto), FeeSettings("VAR", 0.1.lto))
     ))
+  private val feeCalculator = FeeCalculator(feesSettings, blockchain)
   private val route =
-    TransactionsApiRoute(restAPISettings, TestFunctionalitySettings.Stub, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+    TransactionsApiRoute(restAPISettings, TestFunctionalitySettings.Stub, feeCalculator, wallet, blockchain, utx, allChannels, new TestTime).route
 
   routePath("/calculateFee") - {
     def mockBlockchain(featuresSettings: FunctionalitySettings, sender: PublicKeyAccount): Blockchain = {
@@ -73,7 +75,7 @@ class TransactionsRouteSpec
           preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0)
         )
         val blockchain = mockBlockchain(featuresSettings, sender)
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feeCalculator, wallet, blockchain, utx, allChannels, new TestTime).route
 
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
@@ -104,7 +106,7 @@ class TransactionsRouteSpec
         )
         val blockchain = mockBlockchain(featuresSettings, sender)
 
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feeCalculator, wallet, blockchain, utx, allChannels, new TestTime).route
 
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
@@ -184,7 +186,7 @@ class TransactionsRouteSpec
         val featuresSettings = TestFunctionalitySettings.Enabled.copy(
           preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0))
 
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feeCalculator, wallet, blockchain, utx, allChannels, new TestTime).route
 
         Post(routePath("/sign"), transferTx) ~> ApiKey(apiKey) ~> route ~> check {
           status shouldEqual StatusCodes.OK

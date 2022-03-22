@@ -7,7 +7,7 @@ import com.ltonetwork.account.Address
 import com.ltonetwork.api.requests.TxRequest
 import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.http.BroadcastRoute
-import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
+import com.ltonetwork.settings.{FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.diffs.CommonValidation
 import com.ltonetwork.state.{Blockchain, ByteStr}
 import com.ltonetwork.transaction.ValidationError.GenericError
@@ -35,7 +35,7 @@ import scala.util.control.Exception
 @Tag(name = "transactions")
 case class TransactionsApiRoute(settings: RestAPISettings,
                                 functionalitySettings: FunctionalitySettings,
-                                feesSettings: FeesSettings,
+                                feeCalculator: FeeCalculator,
                                 wallet: Wallet,
                                 blockchain: Blockchain,
                                 utx: UtxPool,
@@ -216,7 +216,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           createTransaction(enrichedJsv) { tx =>
             for {
               commonMinFee <- CommonValidation.getMinFee(blockchain, functionalitySettings, blockchain.height, tx)
-              utxMinFee    <- new FeeCalculator(feesSettings, blockchain).minFee(tx)
+              utxMinFee    <- feeCalculator.minFee(tx)
               minFee = Math.max(commonMinFee, utxMinFee)
             } yield Json.obj("feeAmount" -> minFee)
           }

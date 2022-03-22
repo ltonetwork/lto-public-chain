@@ -2,7 +2,8 @@ package com.ltonetwork.state.diffs
 
 import cats.kernel.Monoid
 import com.ltonetwork.account.Address
-import com.ltonetwork.settings.FunctionalitySettings
+import com.ltonetwork.fee.FeeCalculator
+import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.UnsupportedTransactionType
 import com.ltonetwork.transaction._
@@ -52,19 +53,21 @@ object TransactionDiffer {
             case btx: BurnTransaction               => BurnTransactionDiff(blockchain, currentBlockHeight)(btx)
             case _                                  => Left(UnsupportedTransactionType)
           }).map { d: Diff =>
+            val fee = FeeCalculator(blockchain).fee(currentBlockHeight, tx)
+
             // Sponsored transaction
             val feeAccount: Address = tx.sponsor.getOrElse(tx.sender).toAddress
 
             // Sponsored account
             val feePayer: Address = blockchain
               .sponsorOf(feeAccount)
-              .find(a => blockchain.portfolio(a).spendableBalance >= tx.fee)
+              .find(a => blockchain.portfolio(a).spendableBalance >= fee)
               .getOrElse(feeAccount)
 
             // Effective fee sponsor. None if the fee is paid by the sender.
             val feeSponsor = if (feePayer == tx.sender.toAddress) None else Some(feePayer)
 
-            Monoid.combine(d, Diff.fee(tx, feeSponsor, Map(feePayer -> Portfolio(-tx.fee))))
+            Monoid.combine(d, Diff.fee(tx, feeSponsor, Map(feePayer -> Portfolio(-fee))))
           }
       }
       positiveDiff <- BalanceDiffValidation(blockchain, currentBlockHeight, settings)(diff)

@@ -3,6 +3,7 @@ import cats.Monoid
 import com.ltonetwork.block.Block.CurrentBlockFeePart
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.features.FeatureProvider._
+import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state.{Blockchain, Portfolio}
 import com.ltonetwork.transaction.Transaction
@@ -18,26 +19,33 @@ object BlockRewardCalculator {
       .getOrElse(0))
   def miningReward(settings: FunctionalitySettings, bc: Blockchain): Portfolio = miningReward(settings, bc, bc.height)
 
-  def rewardedFee(bc: Blockchain, tx: Transaction): Portfolio =
-    Portfolio(balance = tx.fee - burnedFee(bc, tx))
+  def rewardedFee(bc: Blockchain, height: Int, tx: Transaction): Portfolio = {
+    Portfolio(balance = {
+      if (bc.isFeatureActivated(BlockchainFeatures.Juicy, height))
+        (FeeCalculator(bc).fee(height, tx) * (1 - feeBurnPct)).toLong
+      else if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
+        Math.max(tx.fee - feeBurnAmt, 0)
+      else
+        tx.fee
+    })
+  }
 
-  def burnedFee(bc: Blockchain, tx: Transaction): Long = {
-    if (bc.isFeatureActivated(BlockchainFeatures.Juicy, bc.height))
-      (tx.fee * feeBurnPct).toLong
-    else if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, bc.height))
+  def burnedFee(bc: Blockchain, height: Int, tx: Transaction): Long =
+    if (bc.isFeatureActivated(BlockchainFeatures.Juicy, height))
+      (FeeCalculator(bc).fee(height, tx) * feeBurnPct).toLong
+    else if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
       Math.min(tx.fee, feeBurnAmt)
     else
       0L
-  }
 
-  def prevBlockFeeDistr(bc: Blockchain, block: Block): Portfolio =
+  def openerBlockFee(bc: Blockchain, height: Int, block: Block): Portfolio =
     Monoid[Portfolio].combineAll(block.transactionData.map { tx =>
-      val fees = BlockRewardCalculator.rewardedFee(bc, tx)
+      val fees = BlockRewardCalculator.rewardedFee(bc, height, tx)
       fees.minus(fees.multiply(CurrentBlockFeePart))
     })
 
-  def curBlockFeeDist(bc: Blockchain, block: Block): Portfolio =
+  def closerBlockFee(bc: Blockchain, height: Int, block: Block): Portfolio =
     Monoid[Portfolio].combineAll(block.transactionData.map { tx =>
-      BlockRewardCalculator.rewardedFee(bc, tx).multiply(CurrentBlockFeePart)
+      BlockRewardCalculator.rewardedFee(bc, height, tx).multiply(CurrentBlockFeePart)
     })
 }

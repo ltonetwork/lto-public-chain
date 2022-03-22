@@ -42,8 +42,8 @@ case class BlocksApiRoute(settings: RestAPISettings,
 
   private def blockJson(height: Int, block: Block) = {
     val miningReward = BlockRewardCalculator.miningReward(functionalitySettings, blockchain, height).balance
-    val prevBlockFee = blockchain.blockAt(height - 1).map(BlockRewardCalculator.prevBlockFeeDistr(blockchain, _).balance).getOrElse(0L)
-    val curBlockFee = BlockRewardCalculator.curBlockFeeDist(blockchain, block).balance
+    val prevBlockFee = blockchain.blockAt(height - 1).map(BlockRewardCalculator.openerBlockFee(blockchain, height, _).balance).getOrElse(0L)
+    val curBlockFee = BlockRewardCalculator.closerBlockFee(blockchain, height, block).balance
     block.json() ++ Json.obj(
       "miningReward" -> miningReward,
       "generatorReward" -> (miningReward + prevBlockFee + curBlockFee),

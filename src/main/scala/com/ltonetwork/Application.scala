@@ -226,7 +226,7 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
         FeesApiRoute(settings.restAPISettings, blockchainUpdater, settings.blockchainSettings.functionalitySettings, minerOptions),
         TransactionsApiRoute(settings.restAPISettings,
                              settings.blockchainSettings.functionalitySettings,
-                             settings.feesSettings,
+                             feeCalculator,
                              wallet,
                              blockchainUpdater,
                              utxStorage,

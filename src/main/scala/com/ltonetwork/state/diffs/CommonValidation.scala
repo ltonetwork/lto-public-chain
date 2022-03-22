@@ -146,7 +146,7 @@ object CommonValidation {
     }
 
   def getMinFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Long] =
-    new FeeCalculator(FeesSettings.empty, blockchain).consensusMinFee(height, tx)
+    FeeCalculator(blockchain).consensusMinFee(height, tx)
 
   def checkFee(blockchain: Blockchain, fs: FunctionalitySettings, height: Int, tx: Transaction): Either[ValidationError, Unit] =
     getMinFee(blockchain, fs, height, tx)

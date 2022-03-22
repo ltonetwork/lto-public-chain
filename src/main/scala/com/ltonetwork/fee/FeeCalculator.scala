@@ -94,8 +94,15 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     case _                           => Left(UnsupportedTransactionType)
   }
 
+  def fee(tx: Transaction): Long = fee(blockchain.height, tx)
   def minFee(tx: Transaction): Either[ValidationError, Long] = minFee(blockchain.height, tx)
   def enoughFee[T <: Transaction](tx: T): Either[ValidationError, T] = enoughFee(blockchain.height, tx)
+
+  def fee(height: Int, tx: Transaction): Long =
+    if (blockchain.isFeatureActivated(BlockchainFeatures.Juicy, height))
+      feesV5(height, tx).getOrElse(tx.fee)
+    else
+      tx.fee
 
   def minFee(height: Int, tx: Transaction): Either[ValidationError, Long] =
     if (blockchain.isFeatureActivated(BlockchainFeatures.Juicy, height))
@@ -128,4 +135,10 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
 
     InsufficientFee(s"Fee for ${txName} transaction ($txFeeValue) does not exceed minimal value of $minTxFee")
   }
+}
+
+object FeeCalculator {
+  def apply(feesSettings: FeesSettings, blockchain: Blockchain): FeeCalculator =
+    new FeeCalculator(feesSettings, blockchain)
+  def apply(blockchain: Blockchain): FeeCalculator = new FeeCalculator(FeesSettings.empty, blockchain)
 }
