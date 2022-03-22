@@ -111,7 +111,7 @@ trait TransactionGenBase extends ScriptGen {
   def setScriptTransactionGen(version: Byte, keyType: KeyType): Gen[SetScriptTransaction] =
     for {
       sender: PrivateKeyAccount <- accountGen(keyType)
-      fee                       <- smallFeeGen
+      fee                       <- smallFeeGen.map(_ * 5)
       timestamp                 <- timestampGen
       proofs                    <- proofsGen
       script                    <- Gen.option(scriptGen)
