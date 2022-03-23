@@ -9,6 +9,7 @@ import com.ltonetwork.state.{EitherExt2, LeaseBalance, Portfolio}
 import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.{NoShrink, TransactionGen, WithDB}
+import com.ltonetwork.utils.DoubleExt
 import org.scalacheck.Gen
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
@@ -42,14 +43,15 @@ class BurnTransactionDiffTest
       amount                <- Gen.choose[Long](1, ENOUGH_AMT / 10)
       burnTx = burn(version, master, amount, fee, ts + 10000)
     } yield (genesis, burnTx)
+    val effectiveFee = 1.lto
 
     forAll(setup) {
       case (genesis, burnTx) =>
         assertDiffAndState(Seq(TestBlock.create(Seq(genesis))), TestBlock.create(Seq(burnTx)), fs) {
           case (totalDiff, newState) =>
             val senderPortfolio = newState.portfolio(burnTx.sender)
-            senderPortfolio shouldBe Portfolio(ENOUGH_AMT - (burnTx.amount + burnTx.fee), LeaseBalance.empty)
-            newState.burned shouldBe burnTx.amount + (burnTx.fee / 2)
+            senderPortfolio shouldBe Portfolio(ENOUGH_AMT - (burnTx.amount + effectiveFee), LeaseBalance.empty)
+            newState.burned shouldBe burnTx.amount + (effectiveFee / 2)
         }
     }
   }
