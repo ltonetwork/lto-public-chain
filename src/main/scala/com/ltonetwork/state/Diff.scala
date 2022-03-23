@@ -54,9 +54,6 @@ object Diff {
     new Diff(Map.empty, feeSponsors, portfolios, Map.empty, Map.empty, Map.empty, Map.empty, 0L)
   }
 
-  def portfolio(elems: (Address, Portfolio)*): Diff =
-    new Diff(Map.empty, Map.empty, elems.toMap, Map.empty, Map.empty, Map.empty, Map.empty, 0L)
-
   val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, 0L)
 
   implicit val diffMonoid: Monoid[Diff] = new Monoid[Diff] {

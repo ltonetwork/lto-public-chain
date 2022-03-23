@@ -383,15 +383,19 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
     }
   }
 
-  override def blockHeaderAndSize(height: Int): Option[(BlockHeader, Int)] = {
+  override def blockHeaderAndSize(height: Int): Option[(BlockHeader, Int)] =
     if (height == blockchain.height + 1)
       ngState.map(x => (x.bestLiquidBlock, x.bestLiquidBlock.bytes().length))
     else
       blockchain.blockHeaderAndSize(height)
-  }
 
   override def burned: Long =
     ngState.fold(0L)(_.bestLiquidDiff.burned) + blockchain.burned
+  override def burned(height: Int): Long =
+    if (height == blockchain.height + 1)
+      burned
+    else
+      blockchain.burned(height)
 
   override def portfolio(a: Address): Portfolio = {
     val p = ngState.fold(Portfolio.empty)(_.bestLiquidDiff.portfolios.getOrElse(a, Portfolio.empty))

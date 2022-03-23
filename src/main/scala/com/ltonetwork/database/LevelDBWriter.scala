@@ -136,6 +136,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
   }
 
   override def carryFee: Long = readOnly(_.get(Keys.carryFee(height)))
+  override def burned(height: Int): Long = readOnly(_.get(Keys.burned(height)))
 
   override def accountData(address: Address): AccountDataInfo = readOnly { db =>
     AccountDataInfo((for {
@@ -208,6 +209,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     rw.put(Keys.heightOf(block.uniqueId), Some(height))
     rw.put(Keys.lastAddressId, Some(loadMaxAddressId() + newAddresses.size))
     rw.put(Keys.score(height), rw.get(Keys.score(height - 1)) + block.blockScore())
+    rw.put(Keys.burned(height), totalBurned)
 
     for ((address, id) <- newAddresses) {
       rw.put(Keys.addressId(address), Some(id))
@@ -215,9 +217,6 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     }
 
     val threshold = height - maxRollbackDepth
-
-    rw.put(Keys.burned(height), totalBurned)
-    expiredKeys += Keys.burned(threshold).keyBytes
 
     val newAddressesForLto = ArrayBuffer.empty[BigInt]
     val updatedBalanceAddresses = for ((addressId, balance) <- ltoBalances) yield {

@@ -15,6 +15,8 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
   private def diff = maybeDiff.getOrElse(Diff.empty)
 
   override def burned: Long = inner.burned + diff.burned
+  override def burned(height: Int): Long =
+    if (height == inner.height + 1) burned else inner.burned(height)
 
   override def portfolio(a: Address): Portfolio = inner.portfolio(a).combine(diff.portfolios.getOrElse(a, Portfolio.empty))
 
@@ -53,18 +55,16 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
 
     val actualTxCount = transactionsFromDiff.length
 
-    if (actualTxCount == count) transactionsFromDiff
-    else {
+    if (actualTxCount == count)
+      transactionsFromDiff
+    else
       transactionsFromDiff ++ inner.addressTransactions(address, types, count - actualTxCount, 0)
-    }
   }
 
   override def allActiveLeases: Set[LeaseTransaction] = {
     val (active, canceled) = diff.leaseState.partition(_._2)
     val fromDiff = active.keys
-      .map { id =>
-        diff.transactions(id)._2
-      }
+      .map { id => diff.transactions(id)._2 }
       .collect { case lt: LeaseTransaction => lt }
       .toSet
     val fromInner = inner.allActiveLeases.filterNot(ltx => canceled.keySet.contains(ltx.id()))
@@ -82,7 +82,7 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
 
   override def containsTransaction(id: ByteStr): Boolean = diff.transactions.contains(id) || inner.containsTransaction(id)
 
-  override def forgetTransactions(pred: (AssetId, Long) => Boolean) = inner.forgetTransactions(pred)
+  override def forgetTransactions(pred: (AssetId, Long) => Boolean): Map[AssetId, Long] = inner.forgetTransactions(pred)
   override def learnTransactions(values: Map[AssetId, Long]): Unit  = inner.learnTransactions(values)
 
   override def balanceSnapshots(address: Address, from: Int, to: BlockId): Seq[BalanceSnapshot] = {
