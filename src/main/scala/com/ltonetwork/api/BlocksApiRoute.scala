@@ -3,6 +3,7 @@ package com.ltonetwork.api
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.{Route, StandardRoute}
 import com.ltonetwork.block.{Block, BlockHeader, BlockRewardCalculator}
+import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.network._
 import com.ltonetwork.settings.{FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.{Blockchain, ByteStr}
@@ -44,8 +45,14 @@ case class BlocksApiRoute(settings: RestAPISettings,
     val miningReward = BlockRewardCalculator.miningReward(functionalitySettings, blockchain, height).balance
     val prevBlockFee = blockchain.blockAt(height - 1).map(BlockRewardCalculator.openerBlockFee(blockchain, height, _).balance).getOrElse(0L)
     val curBlockFee = BlockRewardCalculator.closerBlockFee(blockchain, height, block).balance
-    block.json() ++ Json.obj(
+    val feeCalculator = FeeCalculator(blockchain)
+
+    BlockHeader.json(block, block.bytes().length) ++ Json.obj(
+      "transactions" -> JsArray(
+        block.transactionData.map(tx => tx.json() ++ Json.obj("effectiveFee" -> feeCalculator.fee(height, tx)))
+      ),
       "fees" -> BlockRewardCalculator.blockFee(blockchain, height, block).balance,
+      "burnedFees" -> BlockRewardCalculator.blockBurnedFee(blockchain, height, block),
       "miningReward" -> miningReward,
       "generatorReward" -> (miningReward + prevBlockFee + curBlockFee),
       "height" -> JsNumber(height)

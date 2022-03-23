@@ -43,6 +43,9 @@ object BlockRewardCalculator {
       Portfolio(balance = FeeCalculator(bc).fee(height, tx))
     })
 
+  def blockBurnedFee(bc: Blockchain, height: Int, block: Block): Long =
+      block.transactionData.map(burnedFee(bc, height, _)).sum
+
   def openerBlockFee(bc: Blockchain, height: Int, block: Block): Portfolio =
     Monoid[Portfolio].combineAll(block.transactionData.map { tx =>
       val fees = rewardedFee(bc, height, tx)
