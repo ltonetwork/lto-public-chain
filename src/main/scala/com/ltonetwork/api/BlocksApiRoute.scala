@@ -45,6 +45,7 @@ case class BlocksApiRoute(settings: RestAPISettings,
     val prevBlockFee = blockchain.blockAt(height - 1).map(BlockRewardCalculator.openerBlockFee(blockchain, height, _).balance).getOrElse(0L)
     val curBlockFee = BlockRewardCalculator.closerBlockFee(blockchain, height, block).balance
     block.json() ++ Json.obj(
+      "fees" -> BlockRewardCalculator.blockFee(blockchain, height, block).balance,
       "miningReward" -> miningReward,
       "generatorReward" -> (miningReward + prevBlockFee + curBlockFee),
       "height" -> JsNumber(height)

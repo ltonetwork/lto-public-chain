@@ -55,18 +55,12 @@ case class Block private (override val timestamp: Long,
   }
 
   val json: Coeval[JsObject] = Coeval.evalOnce(
-    BlockHeader.json(this, bytes().length) ++
-      Json.obj("fee" -> transactionData.map(_.fee).sum) ++
-      transactionField.json())
+    BlockHeader.json(this, bytes().length) ++ transactionField.json()
+  )
 
   val bytesWithoutSignature: Coeval[Array[Byte]] = Coeval.evalOnce(bytes().dropRight(SignatureLength))
 
   val blockScore: Coeval[BigInt] = Coeval.evalOnce((BigInt("18446744073709551616") / consensusData.baseTarget).ensuring(_ > 0))
-
-  val feesPortfolio: Coeval[Portfolio] = Coeval {
-    val totalFee = transactionData.map(_.fee).sum
-    Portfolio(totalFee, LeaseBalance.empty)
-  }
 
   protected val signatureValid: Coeval[Boolean] =
     Coeval.evalOnce(crypto.verify(signerData.signature.arr, bytesWithoutSignature(), signerData.generator.publicKey))

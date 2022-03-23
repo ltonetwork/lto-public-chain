@@ -38,14 +38,19 @@ object BlockRewardCalculator {
     else
       0L
 
+  def blockFee(bc: Blockchain, height: Int, block: Block): Portfolio =
+    Monoid[Portfolio].combineAll(block.transactionData.map { tx =>
+      Portfolio(balance = FeeCalculator(bc).fee(height, tx))
+    })
+
   def openerBlockFee(bc: Blockchain, height: Int, block: Block): Portfolio =
     Monoid[Portfolio].combineAll(block.transactionData.map { tx =>
-      val fees = BlockRewardCalculator.rewardedFee(bc, height, tx)
+      val fees = rewardedFee(bc, height, tx)
       fees.minus(fees.multiply(CurrentBlockFeePart))
     })
 
   def closerBlockFee(bc: Blockchain, height: Int, block: Block): Portfolio =
     Monoid[Portfolio].combineAll(block.transactionData.map { tx =>
-      BlockRewardCalculator.rewardedFee(bc, height, tx).multiply(CurrentBlockFeePart)
+      rewardedFee(bc, height, tx).multiply(CurrentBlockFeePart)
     })
 }
