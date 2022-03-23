@@ -17,6 +17,7 @@ import com.ltonetwork.{BlockGen, NoShrink, TestTime, TransactionGen, fee}
 import io.netty.channel.group.ChannelGroup
 import org.scalacheck.Gen._
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.JsValue.jsValueToJsLookup
@@ -35,6 +36,9 @@ class TransactionsRouteSpec
   import TransactionsApiRoute.MaxTransactionsPerRequest
 
   private val wallet      = Wallet(WalletSettings(None, "qwerty", None, None, None))
+  private val featuresSettings = TestFunctionalitySettings.Enabled.copy(
+    preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0)
+  )
   private val blockchain  = mock[Blockchain]
   private val utx         = mock[UtxPool]
   private val allChannels = mock[ChannelGroup]
@@ -46,20 +50,17 @@ class TransactionsRouteSpec
     ))
   private val feeCalculator = FeeCalculator(feesSettings, blockchain)
   private val route =
-    TransactionsApiRoute(restAPISettings, TestFunctionalitySettings.Stub, feeCalculator, wallet, blockchain, utx, allChannels, new TestTime).route
+    TransactionsApiRoute(restAPISettings, featuresSettings, feeCalculator, wallet, blockchain, utx, allChannels, new TestTime).route
+
+  def blockchainExpects(): Unit = {
+    (blockchain.height _).expects().returning(1).anyNumberOfTimes()
+    (blockchain.hasScript _).expects(*).returning(false).anyNumberOfTimes()
+    (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures).anyNumberOfTimes()
+    (blockchain.feePrice _).expects(1).returning(fee.defaultFeePrice).anyNumberOfTimes()
+  }
+
 
   routePath("/calculateFee") - {
-    def mockBlockchain(featuresSettings: FunctionalitySettings, sender: PublicKeyAccount): Blockchain = {
-      val height = 1
-      val blockchain = mock[Blockchain]
-      (blockchain.height _).expects().returning(height).anyNumberOfTimes()
-      (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
-      (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures).anyNumberOfTimes()
-      (blockchain.feePrice _).expects(height).returning(fee.defaultFeePrice).anyNumberOfTimes()
-
-      blockchain
-    }
-
     "transfer with LTO fee" - {
       "TransferTransaction" in {
         val sender: PublicKeyAccount = accountGen.sample.get
@@ -71,11 +72,7 @@ class TransactionsRouteSpec
           "recipient"       -> accountGen.sample.get.toAddress
         )
 
-        val featuresSettings = TestFunctionalitySettings.Enabled.copy(
-          preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0)
-        )
-        val blockchain = mockBlockchain(featuresSettings, sender)
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feeCalculator, wallet, blockchain, utx, allChannels, new TestTime).route
+        blockchainExpects()
 
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
@@ -101,12 +98,7 @@ class TransactionsRouteSpec
           )
         )
 
-        val featuresSettings = TestFunctionalitySettings.Enabled.copy(
-          preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0)
-        )
-        val blockchain = mockBlockchain(featuresSettings, sender)
-
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feeCalculator, wallet, blockchain, utx, allChannels, new TestTime).route
+        blockchainExpects()
 
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
@@ -161,10 +153,15 @@ class TransactionsRouteSpec
 
       forAll(txAvailability) {
         case (tx, height) =>
+          blockchainExpects()
           (blockchain.transactionInfo _).expects(tx.id()).returning(Some((height, tx))).once()
+
           Get(routePath(s"/info/${tx.id().base58}")) ~> route ~> check {
             status shouldEqual StatusCodes.OK
-            responseAs[JsValue] shouldEqual tx.json() + ("height" -> JsNumber(height))
+            responseAs[JsValue] shouldEqual tx.json() ++ Json.obj(
+              "height" -> JsNumber(height),
+              "effectiveFee" -> tx.fee
+            )
           }
       }
     }
@@ -183,10 +180,7 @@ class TransactionsRouteSpec
           "recipient" -> accountGen.sample.get.toAddress
         )
 
-        val featuresSettings = TestFunctionalitySettings.Enabled.copy(
-          preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0))
-
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feeCalculator, wallet, blockchain, utx, allChannels, new TestTime).route
+        blockchainExpects()
 
         Post(routePath("/sign"), transferTx) ~> ApiKey(apiKey) ~> route ~> check {
           status shouldEqual StatusCodes.OK
