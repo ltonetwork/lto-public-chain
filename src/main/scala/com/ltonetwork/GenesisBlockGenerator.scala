@@ -56,6 +56,7 @@ object GenesisBlockGenerator extends App {
       miningReward = 0,
       miningRewardBonus = 0,
       miningRewardBonusPeriod = 0,
+      leaseUnbondingPeriod = 0,
     )
 
     def preActivated(feature: BlockchainFeature): Boolean = features.contains(feature.id)

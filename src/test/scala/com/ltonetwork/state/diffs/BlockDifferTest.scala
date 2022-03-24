@@ -71,7 +71,8 @@ class BlockDifferTest extends AnyFreeSpecLike with Matchers with BlockGen with W
       blocksForFeeChange = 6,
       miningReward = 10.lto,
       miningRewardBonus = 0.1.lto,
-      miningRewardBonusPeriod = 50
+      miningRewardBonusPeriod = 50,
+      leaseUnbondingPeriod = 20,
     )
     assertDiffAndState(blocks.init, blocks.last, fs)(assertion)
   }

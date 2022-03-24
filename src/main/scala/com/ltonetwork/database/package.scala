@@ -151,7 +151,7 @@ package object database {
     LeaseBalance(ndi.readLong(), ndi.readLong(), Try(ndi.readLong()).getOrElse(0))
   }
 
-  def writeLeaseUnbond(balances: Map[BigInt, Long]): Array[Byte] = {
+  def writeLeaseUnbonding(balances: Map[BigInt, Long]): Array[Byte] = {
     val size = balances.foldLeft(0) { case (p, (addressId, _)) => p + addressId.toByteArray.length + 1 + Longs.BYTES }
     val buffer = ByteBuffer.allocate(size)
     for ((addressId, amount) <- balances)
@@ -159,7 +159,7 @@ package object database {
     buffer.array()
   }
 
-  def readLeaseUnbond(data: Array[Byte]): Map[BigInt, Long] = Option(data).fold(Map.empty[BigInt, Long]) { d =>
+  def readLeaseUnbonding(data: Array[Byte]): Map[BigInt, Long] = Option(data).fold(Map.empty[BigInt, Long]) { d =>
     val buffer = ByteBuffer.wrap(data)
     val balances = Map.newBuilder[BigInt, Long]
     while (buffer.hasRemaining) {

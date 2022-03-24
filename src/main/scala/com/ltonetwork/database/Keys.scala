@@ -62,7 +62,7 @@ object Keys {
   def leaseStatusHistory(leaseId: ByteStr): Key[Seq[Int]] = historyKey(14, leaseId.arr)
   def leaseStatus(leaseId: ByteStr)(height: Int): Key[Boolean] =
     Key(hBytes(15, height, leaseId.arr), _(0) == 1, active => Array[Byte](if (active) 1 else 0))
-  def leaseUnbound(height: Int): Key[Map[BigInt, Long]] = Key(h(21, height), readLeaseUnbond, writeLeaseUnbond)
+  def leaseUnbonding(height: Int): Key[Map[BigInt, Long]] = Key(h(21, height), readLeaseUnbonding, writeLeaseUnbonding)
 
   def sponsorshipHistory(addressId: BigInt): Key[Seq[Int]] = historyKey(48, addressId.toByteArray)
   def sponsorshipStatus(addressId: BigInt)(height: Int): Key[List[Address]] =

@@ -19,7 +19,8 @@ object TestFunctionalitySettings {
     blocksForFeeChange = 600,
     miningReward = 10.lto,
     miningRewardBonus = 0.1.lto,
-    miningRewardBonusPeriod = 50
+    miningRewardBonusPeriod = 50,
+    leaseUnbondingPeriod = 20,
   )
   val Disabled = Enabled.copy(preActivatedFeatures = Map.empty)
 
