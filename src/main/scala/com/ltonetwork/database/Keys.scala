@@ -118,6 +118,6 @@ object Keys {
   def incomingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[Array[Byte]] =
     Key(hBytes(47, seqNr, addressBytes.arr), identity, identity)
 
-  def feePrice(height: Int): Key[Option[Long]] = Key.opt[Long](h(48, height), Longs.fromByteArray, Longs.toByteArray)
-  def burned(height: Int): Key[Long] = Key[Long](h(49, height), Option(_).fold(0L)(Longs.fromByteArray), Longs.toByteArray)
+  def feePrice(height: Int): Key[Option[Long]] = Key.opt[Long](h(50, height), Longs.fromByteArray, Longs.toByteArray)
+  def burned(height: Int): Key[Long] = Key[Long](h(51, height), Option(_).fold(0L)(Longs.fromByteArray), Longs.toByteArray)
 }
