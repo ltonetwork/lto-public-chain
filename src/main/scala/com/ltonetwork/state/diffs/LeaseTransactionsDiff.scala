@@ -45,7 +45,7 @@ object LeaseTransactionsDiff {
       canceller = Address.fromPublicKey(tx.sender.publicKey)
       portfolioDiff <- if (tx.sender == lease.sender) {
         Right(
-          Monoid.combine(Map(canceller -> Portfolio(0, LeaseBalance(0, -lease.amount, 0))),
+          Monoid.combine(Map(canceller -> Portfolio(0, LeaseBalance(0, -lease.amount, lease.amount))),
                          Map(recipient -> Portfolio(0, LeaseBalance(-lease.amount, 0, 0)))))
       } else Left(GenericError(s"LeaseTransaction was leased by other sender"))
 

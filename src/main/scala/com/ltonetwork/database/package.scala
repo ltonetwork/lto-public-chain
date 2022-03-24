@@ -126,6 +126,7 @@ package object database {
     val ndo = newDataOutput()
     ndo.writeLong(lb.in)
     ndo.writeLong(lb.out)
+    ndo.writeLong(lb.bound)
     ndo.toByteArray
   }
 
