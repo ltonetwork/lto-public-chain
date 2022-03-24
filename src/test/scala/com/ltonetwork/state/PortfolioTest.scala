@@ -14,7 +14,7 @@ class PortfolioTest extends AnyFunSuite with Matchers {
       lease = LeaseBalance(
         in = 11,
         out = 12,
-        bound = 13
+        unbonding = 13
       )
     )
 
@@ -22,7 +22,7 @@ class PortfolioTest extends AnyFunSuite with Matchers {
     p.balance shouldBe orig.balance
     p.lease.in shouldBe 0
     p.lease.out shouldBe orig.lease.out
-    p.lease.bound shouldBe orig.lease.bound
+    p.lease.unbonding shouldBe orig.lease.unbonding
   }
 
   test("pessimistic - positive balance is turned into zero") {

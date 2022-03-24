@@ -401,7 +401,7 @@ case class AddressApiRoute(settings: RestAPISettings,
       regular = portfolio.balance,
       available = portfolio.spendableBalance,
       leasing = portfolio.lease.out,
-      bound = portfolio.lease.bound,
+      unbonding = portfolio.lease.unbonding,
       effective = portfolio.effectiveBalance,
       generating = GeneratingBalanceProvider.balance(blockchain, functionalitySettings, account)
     )
@@ -516,7 +516,7 @@ object AddressApiRoute {
 
   implicit val balanceFormat: Format[Balance] = Json.format
 
-  case class BalanceDetails(address: String, regular: Long, available: Long, leasing: Long, bound: Long, effective: Long, generating: Long)
+  case class BalanceDetails(address: String, regular: Long, available: Long, leasing: Long, unbonding: Long, effective: Long, generating: Long)
 
   implicit val balanceDetailsFormat: Format[BalanceDetails] = Json.format
 

@@ -2,7 +2,7 @@ package com.ltonetwork.state
 
 import cats.kernel.Monoid
 
-case class LeaseBalance(in: Long, out: Long, bound: Long)
+case class LeaseBalance(in: Long, out: Long, unbonding: Long)
 
 object LeaseBalance {
   val empty: LeaseBalance = LeaseBalance(0, 0, 0)
@@ -11,6 +11,6 @@ object LeaseBalance {
     override def empty: LeaseBalance = LeaseBalance.empty
 
     override def combine(x: LeaseBalance, y: LeaseBalance): LeaseBalance =
-      LeaseBalance(safeSum(x.in, y.in), safeSum(x.out, y.out), safeSum(x.bound, y.bound))
+      LeaseBalance(safeSum(x.in, y.in), safeSum(x.out, y.out), safeSum(x.unbonding, y.unbonding))
   }
 }
