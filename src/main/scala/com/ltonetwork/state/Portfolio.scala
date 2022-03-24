@@ -5,7 +5,7 @@ import com.ltonetwork.block.Block.Fraction
 
 case class Portfolio(balance: Long, lease: LeaseBalance) {
   lazy val effectiveBalance: Long = safeSum(balance, lease.in) - lease.out
-  lazy val spendableBalance: Long = balance - lease.out
+  lazy val spendableBalance: Long = balance - lease.out - lease.bound
   lazy val isEmpty: Boolean       = this == Portfolio.empty
 }
 
@@ -28,7 +28,8 @@ object Portfolio {
       balance = Math.min(self.balance, 0),
       lease = LeaseBalance(
         in = 0,
-        out = Math.max(self.lease.out, 0)
+        out = Math.max(self.lease.out, 0),
+        bound = Math.max(self.lease.bound, 0)
       )
     )
 

@@ -9,6 +9,7 @@ import com.ltonetwork.transaction.smart.script.{Script, ScriptReader}
 import com.ltonetwork.transaction.{Transaction, TransactionBuilders}
 
 import java.nio.ByteBuffer
+import scala.util.Try
 
 package object database {
   implicit class ByteArrayDataOutputExt(val output: ByteArrayDataOutput) extends AnyVal {
@@ -130,7 +131,7 @@ package object database {
 
   def readLeaseBalance(data: Array[Byte]): LeaseBalance = Option(data).fold(LeaseBalance.empty) { d =>
     val ndi = newDataInput(d)
-    LeaseBalance(ndi.readLong(), ndi.readLong())
+    LeaseBalance(ndi.readLong(), ndi.readLong(), Try(ndi.readLong()).getOrElse(0))
   }
 
   def readVolumeAndFee(data: Array[Byte]): VolumeAndFee = Option(data).fold(VolumeAndFee.empty) { d =>

@@ -62,7 +62,7 @@ class StateReaderEffectiveBalancePropertyTest
             val expectedBalance = xfer1.amount + xfer2.amount - 2 * Fee
             portfolio.balance shouldBe expectedBalance
             GeneratingBalanceProvider.balance(state, fs, leaser, state.lastBlockId.get) shouldBe 0
-            portfolio.lease shouldBe LeaseBalance(0, expectedBalance)
+            portfolio.lease shouldBe LeaseBalance(0, expectedBalance, 0)
             portfolio.effectiveBalance shouldBe 0
         }
     }

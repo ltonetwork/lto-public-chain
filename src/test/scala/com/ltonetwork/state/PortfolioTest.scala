@@ -13,7 +13,8 @@ class PortfolioTest extends AnyFunSuite with Matchers {
       balance = -10,
       lease = LeaseBalance(
         in = 11,
-        out = 12
+        out = 12,
+        bound = 13
       )
     )
 
@@ -21,12 +22,13 @@ class PortfolioTest extends AnyFunSuite with Matchers {
     p.balance shouldBe orig.balance
     p.lease.in shouldBe 0
     p.lease.out shouldBe orig.lease.out
+    p.lease.bound shouldBe orig.lease.bound
   }
 
   test("pessimistic - positive balance is turned into zero") {
     val orig = Portfolio(
       balance = 10,
-      lease = LeaseBalance(0, 0)
+      lease = LeaseBalance(0, 0, 0)
     )
 
     val p = orig.pessimistic

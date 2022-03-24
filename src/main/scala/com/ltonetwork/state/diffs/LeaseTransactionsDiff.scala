@@ -24,8 +24,8 @@ object LeaseTransactionsDiff {
         Left(GenericError(s"Cannot lease more than own: Balance:${ap.balance}, already leased: ${ap.lease.out}"))
       } else {
         val portfolioDiff: Map[Address, Portfolio] = Map(
-          sender    -> Portfolio(0, LeaseBalance(0, tx.amount)),
-          recipient -> Portfolio(0, LeaseBalance(tx.amount, 0))
+          sender    -> Portfolio(0, LeaseBalance(0, tx.amount, 0)),
+          recipient -> Portfolio(0, LeaseBalance(tx.amount, 0, 0))
         )
         Right(Diff(height = height, tx = tx, portfolios = portfolioDiff, leaseState = Map(tx.id() -> true)))
       }
@@ -45,8 +45,8 @@ object LeaseTransactionsDiff {
       canceller = Address.fromPublicKey(tx.sender.publicKey)
       portfolioDiff <- if (tx.sender == lease.sender) {
         Right(
-          Monoid.combine(Map(canceller -> Portfolio(0, LeaseBalance(0, -lease.amount))),
-                         Map(recipient -> Portfolio(0, LeaseBalance(-lease.amount, 0)))))
+          Monoid.combine(Map(canceller -> Portfolio(0, LeaseBalance(0, -lease.amount, 0))),
+                         Map(recipient -> Portfolio(0, LeaseBalance(-lease.amount, 0, 0)))))
       } else Left(GenericError(s"LeaseTransaction was leased by other sender"))
 
     } yield Diff(height = height, tx = tx, portfolios = portfolioDiff, leaseState = Map(tx.leaseId -> false))
