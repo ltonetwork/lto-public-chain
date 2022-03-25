@@ -97,13 +97,14 @@ trait Caches extends Blockchain {
     feePriceCache.get(h)
   }
 
-  protected def leaseUnbonding(height: Int): Map[BigInt, Long]
+  protected def completedUnbonding(height: Int): Map[Address, LeaseBalance]
 
   protected def doAppend(carryFee: Long,
                          block: Block,
                          addresses: Map[Address, BigInt],
                          ltoBalances: Map[BigInt, Long],
                          leaseBalances: Map[BigInt, LeaseBalance],
+                         leaseUnbonding: Map[BigInt, Long],
                          leaseStates: Map[ByteStr, Boolean],
                          transactions: Map[ByteStr, (Transaction, Set[BigInt])],
                          addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
@@ -133,22 +134,28 @@ trait Caches extends Blockchain {
 
     lastAddressId += newAddressIds.size
 
-    val ltoBalances   = Map.newBuilder[BigInt, Long]
-    val leaseBalances = Map.newBuilder[BigInt, LeaseBalance]
-    val newPortfolios = Map.newBuilder[Address, Portfolio]
+    val unbondingPortfolios = completedUnbonding(heightCache)
+      .map { case (address, lease) => address -> Portfolio.empty.copy(lease = lease) }
 
-    val leaseUnbondingBalances = leaseUnbonding(height)
-      .map { case (addressId: BigInt, balance: Long) => addressId -> LeaseBalance(0, 0, -1 * balance) }
+    val ltoBalances    = Map.newBuilder[BigInt, Long]
+    val leaseBalances  = Map.newBuilder[BigInt, LeaseBalance]
+    val leaseUnbonding = Map.newBuilder[BigInt, Long]
+    val newPortfolios  = Map.newBuilder[Address, Portfolio]
 
-    for ((address, portfolioDiff) <- diff.portfolios) {
+    for ((address, portfolioDiff) <- diff.portfolios.combine(unbondingPortfolios)) {
       val newPortfolio = portfolioCache.get(address).combine(portfolioDiff)
+
       def id = addressId(address)
       if (portfolioDiff.balance != 0) {
         ltoBalances += id -> newPortfolio.balance
       }
 
       if (portfolioDiff.lease != LeaseBalance.empty) {
-        leaseBalances += id -> newPortfolio.lease.combine(leaseUnbondingBalances.getOrElse(id, LeaseBalance.empty))
+        leaseBalances += id -> portfolioDiff.lease
+      }
+
+      if (portfolioDiff.lease.unbonding > 0) {
+        leaseUnbonding += id -> portfolioDiff.lease.unbonding
       }
 
       newPortfolios += address -> newPortfolio
@@ -173,7 +180,8 @@ trait Caches extends Blockchain {
       block,
       newAddressIds,
       ltoBalances.result(),
-      leaseUnbondingBalances ++ leaseBalances.result(), // Overrides unbonding balance if address also in lease balance
+      leaseBalances.result(),
+      leaseUnbonding.result(),
       diff.leaseState,
       newTransactions.result(),
       diff.accountTransactionIds.map({ case (addr, txs) => addressId(addr)    -> txs }),

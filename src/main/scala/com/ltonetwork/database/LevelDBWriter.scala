@@ -138,7 +138,11 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
   override def carryFee: Long = readOnly(_.get(Keys.carryFee(height)))
   override def burned(height: Int): Long = readOnly(_.get(Keys.burned(height)))
 
-  override protected def leaseUnbonding(height: Int): Map[BigInt, Long] = readOnly(_.get(Keys.leaseUnbonding(height)))
+  protected def completedUnbonding(height: Int): Map[Address, LeaseBalance] =
+    readOnly(_.get(Keys.leaseUnbonding(height))).map {
+      case (addressId: BigInt, balance: Long) =>
+        readOnly(_.get(Keys.idToAddress(addressId))) -> LeaseBalance(0, 0, -1 * balance)
+    }
 
   override def accountData(address: Address): AccountDataInfo = readOnly { db =>
     AccountDataInfo((for {
@@ -196,6 +200,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   newAddresses: Map[Address, BigInt],
                                   ltoBalances: Map[BigInt, Long],
                                   leaseBalances: Map[BigInt, LeaseBalance],
+                                  leaseUnbonding: Map[BigInt, Long],
                                   leaseStates: Map[ByteStr, Boolean],
                                   transactions: Map[ByteStr, (Transaction, Set[BigInt])],
                                   addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
@@ -240,17 +245,16 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(Keys.addressesForLto(newSeqNr), newAddressesForLto)
     }
 
+    if (leaseUnbonding.nonEmpty)
+      rw.put(Keys.leaseUnbonding(height + fs.leaseUnbondingPeriod), leaseUnbonding)
+
     for ((addressId, leaseBalance) <- leaseBalances) {
       rw.put(Keys.leaseBalance(addressId)(height), leaseBalance)
       expiredKeys ++= updateHistory(rw, Keys.leaseBalanceHistory(addressId), threshold, Keys.leaseBalance(addressId))
     }
 
-    val addedUnbonding = leaseBalances
-      .map { case (addressId, leaseBalance) => addressId -> leaseBalance.unbonding }
-      .filter { case (_, unbonding) => unbonding > 0 }
-
-    if (addedUnbonding.nonEmpty)
-      rw.put(Keys.leaseUnbonding(height + fs.leaseUnbondingPeriod), addedUnbonding)
+    if (height - threshold > 0)
+      expiredKeys += Keys.leaseUnbonding(height - threshold).keyBytes
 
     rw.put(Keys.changedAddresses(height), changedAddresses.toSeq)
 

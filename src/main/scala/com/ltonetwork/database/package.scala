@@ -148,7 +148,7 @@ package object database {
 
   def readLeaseBalance(data: Array[Byte]): LeaseBalance = Option(data).fold(LeaseBalance.empty) { d =>
     val ndi = newDataInput(d)
-    LeaseBalance(ndi.readLong(), ndi.readLong(), Try(ndi.readLong()).getOrElse(0))
+    LeaseBalance(ndi.readLong(), ndi.readLong(), if (data.length == Longs.BYTES * 3) ndi.readLong() else 0L)
   }
 
   def writeLeaseUnbonding(balances: Map[BigInt, Long]): Array[Byte] = {

@@ -166,7 +166,7 @@ object GenesisBlockGenerator extends App {
          |        mining-reward = 1000000000
          |        mining-reward-bonus = 1000000
          |        mining-reward-bonus-period = 500
-         |        lease-unbonding-period = 20
+         |        lease-unbonding-period = 10
          |      }
          |      genesis {
          |        average-block-delay = ${settings.averageBlockDelay.toSeconds}s

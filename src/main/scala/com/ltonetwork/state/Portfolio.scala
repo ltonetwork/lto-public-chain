@@ -39,5 +39,4 @@ object Portfolio {
     def minus(other: Portfolio): Portfolio =
       Portfolio(self.balance - other.balance, LeaseBalance.empty)
   }
-
 }
