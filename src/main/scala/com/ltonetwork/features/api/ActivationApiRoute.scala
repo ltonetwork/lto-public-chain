@@ -44,31 +44,30 @@ case class ActivationApiRoute(settings: RestAPISettings,
     val height = blockchain.height
 
     complete(
-      Json.toJson(ActivationStatus(
+      ActivationStatus(
         height,
         functionalitySettings.activationWindowSize(height),
         functionalitySettings.blocksForFeatureActivation(height),
         functionalitySettings.activationWindow(height).last,
-        (blockchain.featureVotes(height).keySet ++
-          blockchain.approvedFeatures.keySet ++
-          BlockchainFeatures.implemented).toSeq.sorted.flatMap(id => {
-          val status = blockchain.featureStatus(id, height)
-          BlockchainFeatures.feature(id).map {
-            case existing =>
-              FeatureActivationStatus(
-                id,
-                existing.description,
-                status,
-                (BlockchainFeatures.implemented.contains(id), featuresSettings.supported.contains(id)) match {
-                  case (false, _) => NodeFeatureStatus.NotImplemented
-                  case (_, true)  => NodeFeatureStatus.Voted
-                  case _          => NodeFeatureStatus.Implemented
-                },
-                blockchain.featureActivationHeight(id),
-                if (status == BlockchainFeatureStatus.Undefined) blockchain.featureVotes(height).get(id).orElse(Some(0)) else None
-              )
+        (blockchain.featureVotes(height).keySet ++ blockchain.approvedFeatures.keySet ++ BlockchainFeatures.implemented)
+          .toSeq.sorted.map(id => {
+            val status = blockchain.featureStatus(id, height)
+            val feature = BlockchainFeatures.featureOrUnknown(id)
+            FeatureActivationStatus(
+              id,
+              feature.description,
+              status,
+              (BlockchainFeatures.implemented.contains(id), featuresSettings.supported.contains(id)) match {
+                case (false, _) => NodeFeatureStatus.NotImplemented
+                case (_, true)  => NodeFeatureStatus.Voted
+                case _          => NodeFeatureStatus.Implemented
+              },
+              blockchain.featureActivationHeight(id),
+              if (status == BlockchainFeatureStatus.Undefined) blockchain.featureVotes(height).get(id).orElse(Some(0)) else None
+            )
           }
-        })
-      )))
+        )
+      )
+    )
   }
 }
