@@ -47,13 +47,6 @@ package object state {
     }
   }
 
-  implicit class PortfolioMapExt[T](self: Map[T, Portfolio]) {
-    def combine(other: Map[T, Portfolio]): Map[T, Portfolio] =
-      (self.keySet ++ other.keySet).map(
-        key => key -> self.getOrElse(key, Portfolio.empty).combine(other.getOrElse(key, Portfolio.empty))
-      ).toMap
-  }
-
   implicit class BlockchainExt(blockchain: Blockchain) extends ScorexLogging {
     def assocExists(tx: AssociationTransaction): Boolean = {
       val txs = blockchain.associations(tx.sender).outgoing.map(_._2).filter(as => tx.assoc == as.assoc)

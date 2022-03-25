@@ -1,6 +1,6 @@
 package com.ltonetwork.database
 
-import cats.syntax.monoid._
+import cats.implicits._
 import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
 import com.ltonetwork.account.Address
 import com.ltonetwork.block.Block

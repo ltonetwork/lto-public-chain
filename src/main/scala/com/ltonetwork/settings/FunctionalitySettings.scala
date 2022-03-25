@@ -11,7 +11,9 @@ case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
                                  miningReward: Long,
                                  miningRewardBonus: Long,
                                  miningRewardBonusPeriod: Int,
-                                 leaseUnbondingPeriod: Int) {
+                                 leaseUnbondingPeriod: Int,
+                                 burnAddresses: Set[String]
+                                ) {
 
   require(featureCheckBlocksPeriod > 0, "featureCheckBlocksPeriod must be greater than 0")
   require(
@@ -51,6 +53,7 @@ object FunctionalitySettings {
     miningRewardBonus = 1000L,
     miningRewardBonusPeriod = 25000000,
     leaseUnbondingPeriod = 3000,
+    burnAddresses = Set("3JrGV6TeEV3ovVjsh9SPqQL48EDLET47B9U")
   )
 
   val TESTNET: FunctionalitySettings = apply(
@@ -64,6 +67,7 @@ object FunctionalitySettings {
     miningRewardBonus = 1000L,
     miningRewardBonusPeriod = 25000000,
     leaseUnbondingPeriod = 1000,
+    burnAddresses = Set("3N3pCgpW1cB1Ns56yjPFmXfBSUjNZ1cYroE")
   )
 
   val configPath = "lto.blockchain.custom.functionality"
