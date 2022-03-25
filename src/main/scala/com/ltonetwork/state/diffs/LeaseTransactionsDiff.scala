@@ -3,6 +3,8 @@ package com.ltonetwork.state.diffs
 import cats._
 import cats.implicits._
 import com.ltonetwork.account.Address
+import com.ltonetwork.features.BlockchainFeatures
+import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError
@@ -44,9 +46,11 @@ object LeaseTransactionsDiff {
       _ <- Either.cond(lease.isActive, (), GenericError(s"Cannot cancel already cancelled lease"))
       canceller = Address.fromPublicKey(tx.sender.publicKey)
       portfolioDiff <- if (tx.sender == lease.sender) {
+        val unbonding = if (blockchain.isFeatureActivated(BlockchainFeatures.Juicy, height)) lease.amount else 0
         Right(
-          Monoid.combine(Map(canceller -> Portfolio(0, LeaseBalance(0, -lease.amount, lease.amount))),
-                         Map(recipient -> Portfolio(0, LeaseBalance(-lease.amount, 0, 0)))))
+          Monoid.combine(Map(canceller -> Portfolio(0, LeaseBalance(0, -lease.amount, unbonding))),
+                         Map(recipient -> Portfolio(0, LeaseBalance(-lease.amount, 0, 0))))
+        )
       } else Left(GenericError(s"LeaseTransaction was leased by other sender"))
 
     } yield Diff(height = height, tx = tx, portfolios = portfolioDiff, leaseState = Map(tx.leaseId -> false))
