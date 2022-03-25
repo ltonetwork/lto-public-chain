@@ -4,16 +4,18 @@ import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.utils._
 
 object TestFunctionalitySettings {
+  private val preActivatedFeatures = Map(
+    BlockchainFeatures.SmartAccounts.id          -> 0,
+    BlockchainFeatures.AssociationTransaction.id -> 0,
+    BlockchainFeatures.SponsorshipTransaction.id -> 0,
+    BlockchainFeatures.Cobalt.id                 -> 0,
+    BlockchainFeatures.CobaltAlloy.id            -> 0
+  )
+
   val Enabled = FunctionalitySettings(
     featureCheckBlocksPeriod = 10000,
     blocksForFeatureActivation = 9000,
-    preActivatedFeatures = Map(
-      BlockchainFeatures.SmartAccounts.id          -> 0,
-      BlockchainFeatures.AssociationTransaction.id -> 0,
-      BlockchainFeatures.SponsorshipTransaction.id -> 0,
-      BlockchainFeatures.Cobalt.id                 -> 0,
-      BlockchainFeatures.CobaltAlloy.id            -> 0
-    ),
+    preActivatedFeatures = preActivatedFeatures,
     doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
     feeVoteBlocksPeriod = 1000,
     blocksForFeeChange = 600,
@@ -23,6 +25,13 @@ object TestFunctionalitySettings {
     leaseUnbondingPeriod = 20,
   )
   val Disabled = Enabled.copy(preActivatedFeatures = Map.empty)
+
+  val Juicy = Enabled.copy(
+    preActivatedFeatures = preActivatedFeatures ++ Map(
+      BlockchainFeatures.Juicy.id -> 0,
+      BlockchainFeatures.BurnFeeture.id -> 0
+    )
+  )
 
   val Stub: FunctionalitySettings = Enabled.copy(
     featureCheckBlocksPeriod = 100,

@@ -23,8 +23,7 @@ class BurnTransactionDiffTest
     with NoShrink
     with WithDB {
 
-  private val features = TestFunctionalitySettings.Enabled.preActivatedFeatures + (BlockchainFeatures.Juicy.id -> 0)
-  private val fs = TestFunctionalitySettings.Enabled.copy(preActivatedFeatures = features)
+  private val fs = TestFunctionalitySettings.Juicy
 
   val baseSetup: Gen[(GenesisTransaction, PrivateKeyAccount, Long)] = for {
     master <- accountGen
