@@ -74,7 +74,7 @@ Scenario Outline: Successful cancel sponsorship
     Given Karen has an <key_type> account with 6 lto
     Given Karen is sponsoring Bob
     When Karen cancels the sponsorship (<version>) for Bob
-    Then Karen has 1 lto
+    Then Karen has 5 lto
     And Karen is not sponsoring Bob
 
     Examples:

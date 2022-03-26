@@ -38,7 +38,7 @@ class OldFeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
         case tx: DataTransaction =>
           // variable fee is calculated per 256KB
           val dataSize =
-            if (tx.data.nonEmpty) (tx.data.map(_.toBytes.length).sum / (1024*256)) + 1
+            if (tx.data.nonEmpty) ((tx.data.map(_.toBytes.length).sum - 1) / (1024*256)) + 1
             else 0
           mapVar
             .get(DataTransaction.typeId)
