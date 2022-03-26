@@ -25,8 +25,8 @@ object BlockchainFeatures {
     Juicy,
   ).map(f => f.id -> f).toMap
 
-  private val preActivated: Set[Short] = Set(1, 2, 3, 5, 8).map(_.toShort) // consensus logic hardcoded
-  val implemented: Set[Short]          = preActivated ++ dict.keySet
+  val preActivated: Set[Short] = Set(1, 2, 3, 5, 8).map(_.toShort) // consensus logic hardcoded
+  val implemented: Set[Short]  = preActivated ++ dict.keySet
 
   def feature(id: Short): Option[BlockchainFeature] = dict.get(id)
   def featureOrUnknown(id: Short): BlockchainFeature = feature(id).getOrElse(BlockchainFeature(id, UnknownFeature))

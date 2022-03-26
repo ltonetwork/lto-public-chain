@@ -49,7 +49,7 @@ case class ActivationApiRoute(settings: RestAPISettings,
         functionalitySettings.activationWindowSize(height),
         functionalitySettings.blocksForFeatureActivation(height),
         functionalitySettings.activationWindow(height).last,
-        (blockchain.featureVotes(height).keySet ++ blockchain.approvedFeatures.keySet ++ BlockchainFeatures.implemented)
+        (blockchain.featureVotes(height).keySet ++ blockchain.approvedFeatures.keySet ++ BlockchainFeatures.implemented -- BlockchainFeatures.preActivated)
           .toSeq.sorted.map(id => {
             val status = blockchain.featureStatus(id, height)
             val feature = BlockchainFeatures.featureOrUnknown(id)
