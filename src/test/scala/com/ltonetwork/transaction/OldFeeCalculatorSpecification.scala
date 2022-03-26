@@ -130,7 +130,7 @@ class OldFeeCalculatorSpecification extends AnyPropSpec with ScalaCheckDrivenPro
   property("Data transaction") {
     val feeCalc = new FeeCalculator(mySettings, noScriptBlockchain)
     forAll(dataTransactionGen(4), Gen.choose[Long](80000, 200000)) { (tx, fee: Long) =>
-      feeCalc.enoughFee(tx.copy(fee = fee)) shouldBeRightIf (fee >= 100000 + Math.ceil(tx.bytes().length / (256 * 1024.0)) * 10000)
+      feeCalc.enoughFee(tx.copy(fee = fee)) shouldBeRightIf (fee >= 100000 + Math.ceil(tx.data.map(_.toBytes.length).sum / (256 * 1024.0)) * 10000)
     }
   }
 
