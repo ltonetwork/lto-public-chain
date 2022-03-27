@@ -34,6 +34,15 @@ class BlockchainSettingsSpecification extends AnyFlatSpec with Matchers {
         |          20 = 200
         |        }
         |        double-features-periods-after-height = 21
+        |        fee-vote-blocks-period = 22
+        |        blocks-for-fee-change = 23
+        |        mining-reward = 24
+        |        mining-reward-bonus = 25
+        |        mining-reward-bonus-period = 26
+        |        lease-unbonding-period = 27
+        |        burn-addresses = [
+        |          "3QavfsNywsiEDVTvXSx1orUfv3uVNK2A8Xb"
+        |        ]
         |      }
         |      genesis {
         |        timestamp = 1460678400000
@@ -57,6 +66,13 @@ class BlockchainSettingsSpecification extends AnyFlatSpec with Matchers {
     settings.functionalitySettings.blocksForFeatureActivation should be(9000)
     settings.functionalitySettings.preActivatedFeatures should be(Map(19 -> 100, 20 -> 200))
     settings.functionalitySettings.doubleFeaturesPeriodsAfterHeight should be(21)
+    settings.functionalitySettings.feeVoteBlocksPeriod should be(22)
+    settings.functionalitySettings.blocksForFeeChange should be(23)
+    settings.functionalitySettings.miningReward should be(24)
+    settings.functionalitySettings.miningRewardBonus should be(25)
+    settings.functionalitySettings.miningRewardBonusPeriod should be(26)
+    settings.functionalitySettings.leaseUnbondingPeriod should be(27)
+    settings.functionalitySettings.burnAddresses should be(Set("3QavfsNywsiEDVTvXSx1orUfv3uVNK2A8Xb"))
     settings.genesisSettings.blockTimestamp should be(1460678400000L)
     settings.genesisSettings.timestamp should be(1460678400000L)
     settings.genesisSettings.signature should be(ByteStr.decodeBase58("BASE58BLKSGNATURE").toOption)

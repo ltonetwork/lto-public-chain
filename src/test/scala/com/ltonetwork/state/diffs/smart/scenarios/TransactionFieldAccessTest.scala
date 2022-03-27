@@ -1,5 +1,6 @@
 package com.ltonetwork.state.diffs.smart.scenarios
 
+import com.ltonetwork.block.TestBlock
 import com.ltonetwork.lang.v1.compiler.CompilerV1
 import com.ltonetwork.lang.v1.parser.Parser
 import com.ltonetwork.state.diffs.smart._
@@ -11,7 +12,6 @@ import org.scalacheck.Gen
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
-import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction

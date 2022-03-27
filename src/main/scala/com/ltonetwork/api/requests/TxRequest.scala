@@ -8,6 +8,7 @@ import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError.{GenericError, InvalidPublicKey}
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.register.RegisterTransaction
@@ -17,7 +18,6 @@ import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTra
 import com.ltonetwork.transaction.{Proofs, Transaction, TransactionBuilders, ValidationError}
 import com.ltonetwork.utils.Time
 import com.ltonetwork.wallet.Wallet
-import io.swagger.v3.oas.annotations.Hidden
 import play.api.libs.json.JsObject
 
 trait TxRequest {
@@ -124,6 +124,7 @@ object TxRequest {
           case DataTransaction              => Right(jsv.as[DataRequest])
           case SetScriptTransaction         => Right(jsv.as[SetScriptRequest])
           case RegisterTransaction          => Right(jsv.as[RegisterRequest])
+          case BurnTransaction              => Right(jsv.as[BurnRequest])
           case _                            => Left(GenericError(s"Unsupported transaction type ($typeId)"))
         }
     }

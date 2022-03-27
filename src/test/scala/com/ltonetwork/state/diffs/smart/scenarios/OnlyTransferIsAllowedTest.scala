@@ -1,5 +1,6 @@
 package com.ltonetwork.state.diffs.smart.scenarios
 
+import com.ltonetwork.block.TestBlock
 import com.ltonetwork.lang.v1.compiler.CompilerV1
 import com.ltonetwork.lang.v1.parser.Parser
 import com.ltonetwork.state._
@@ -10,7 +11,6 @@ import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
-import com.ltonetwork.lagonaki.mocks.TestBlock
 
 class OnlyTransferIsAllowedTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink {
 

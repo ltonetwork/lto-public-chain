@@ -10,22 +10,22 @@ import cats.instances.all._
 import com.typesafe.config._
 import com.ltonetwork.account.{Address, AddressScheme}
 import com.ltonetwork.actor.RootActorSystem
-import com.ltonetwork.api.{AddressApiRoute, AssociationsApiRoute, BlocksApiRoute, CompositeHttpService, LeaseApiRoute, PeersApiRoute, SponsorshipApiRoute, TransactionsApiRoute, UtilsApiRoute, WalletApiRoute}
 import com.ltonetwork.api._
 import com.ltonetwork.consensus.PoSSelector
 import com.ltonetwork.consensus.nxt.api.NxtConsensusApiRoute
 import com.ltonetwork.db.{DBExt, openDB}
 import com.ltonetwork.database.Keys
 import com.ltonetwork.features.api.ActivationApiRoute
+import com.ltonetwork.fee.{FeeCalculator, FeeVoteFileWatch}
+import com.ltonetwork.fee.api.FeesApiRoute
 import com.ltonetwork.history.{CheckpointServiceImpl, StorageFactory}
 import com.ltonetwork.http.{DebugApiRoute, NodeApiRoute}
 import com.ltonetwork.metrics.Metrics
-import com.ltonetwork.mining.{Miner, MinerImpl}
+import com.ltonetwork.mining.{Miner, MinerImpl, MinerOptions}
 import com.ltonetwork.network.RxExtensionLoader.RxExtensionLoaderShutdownHook
 import com.ltonetwork.network._
 import com.ltonetwork.settings._
 import com.ltonetwork.state.appender.{BlockAppender, CheckpointAppender, ExtensionAppender, MicroblockAppender}
-import com.ltonetwork.transaction._
 import com.ltonetwork.utils.{NTP, ScorexLogging, SystemInformationReporter, Time, forceStopApplication}
 import com.ltonetwork.utx.{UtxPool, UtxPoolImpl}
 import com.ltonetwork.wallet.Wallet
@@ -34,7 +34,7 @@ import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
 import kamon.Kamon
 import monix.eval.{Coeval, Task}
-import monix.execution.Scheduler._
+import monix.execution.Scheduler.{singleThread, fixedPool, global}
 import monix.execution.schedulers.SchedulerService
 import monix.reactive.Observable
 import monix.reactive.subjects.ConcurrentSubject
@@ -43,7 +43,6 @@ import org.slf4j.bridge.SLF4JBridgeHandler
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.reflect.runtime.universe._
 import scala.util.Try
 
 class Application(val actorSystem: ActorSystem, val settings: LtoSettings, configRoot: ConfigObject) extends ScorexLogging {
@@ -108,10 +107,16 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
 
     val pos = new PoSSelector(blockchainUpdater, settings.blockchainSettings)
 
+    val minerOptions = new MinerOptions
     val miner =
       if (settings.minerSettings.enable)
-        new MinerImpl(allChannels, blockchainUpdater, checkpointService, settings, time, utxStorage, wallet, pos, minerScheduler, appenderScheduler)
+        new MinerImpl(allChannels, blockchainUpdater, checkpointService, settings, time, utxStorage, wallet, pos, minerScheduler, appenderScheduler, minerOptions)
       else Miner.Disabled
+
+    if (settings.minerSettings.enable)
+      settings.minerSettings.feeVoteFile.map { file =>
+        FeeVoteFileWatch(file, settings.minerSettings.feeVoteWatchInterval, minerOptions)
+      }
 
     val processBlock =
       BlockAppender(checkpointService, blockchainUpdater, time, utxStorage, pos, settings, allChannels, peerDatabase, miner, appenderScheduler) _
@@ -213,16 +218,22 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
 
       val apiRoutes = Seq(
         NodeApiRoute(settings.restAPISettings, blockchainUpdater, () => apiShutdown()),
-        BlocksApiRoute(settings.restAPISettings, blockchainUpdater, allChannels, c => processCheckpoint(None, c)),
+        BlocksApiRoute(settings.restAPISettings,
+                       settings.blockchainSettings.functionalitySettings,
+                       blockchainUpdater,
+                       allChannels,
+                       c => processCheckpoint(None, c)),
+        FeesApiRoute(settings.restAPISettings, blockchainUpdater, settings.blockchainSettings.functionalitySettings, minerOptions),
         TransactionsApiRoute(settings.restAPISettings,
                              settings.blockchainSettings.functionalitySettings,
-                             settings.feesSettings,
+                             feeCalculator,
                              wallet,
                              blockchainUpdater,
                              utxStorage,
                              allChannels,
                              time),
         NxtConsensusApiRoute(settings.restAPISettings, blockchainUpdater, settings.blockchainSettings.functionalitySettings),
+        SupplyApiRoute(settings.restAPISettings, blockchainUpdater, settings.blockchainSettings.genesisSettings),
         WalletApiRoute(settings.restAPISettings, wallet),
         LeaseApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, allChannels, time),
         SponsorshipApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, allChannels, time),
@@ -259,8 +270,10 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
       val apiTypes: Set[Class[_]] = Set(
         classOf[NodeApiRoute],
         classOf[BlocksApiRoute],
+        classOf[FeesApiRoute],
         classOf[TransactionsApiRoute],
         classOf[NxtConsensusApiRoute],
+        classOf[SupplyApiRoute],
         classOf[WalletApiRoute],
         classOf[LeaseApiRoute],
         classOf[SponsorshipApiRoute],

@@ -2,6 +2,7 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
@@ -31,7 +32,8 @@ object TransactionBuilders {
     RevokeAssociationTransaction,
     SponsorshipTransaction,
     CancelSponsorshipTransaction,
-    RegisterTransaction
+    RegisterTransaction,
+    BurnTransaction,
   ).map { x =>
     x.typeId -> x
   }(collection.breakOut)

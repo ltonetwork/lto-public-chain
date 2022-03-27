@@ -11,7 +11,7 @@ import com.ltonetwork.transaction.smart.script.Script
 
 trait Blockchain {
 
-  def carryFee: Long
+  def carryFee: Long // Not used
   def height: Int
   def score: BigInt
   def scoreOf(blockId: ByteStr): Option[BigInt]
@@ -38,6 +38,11 @@ trait Blockchain {
   def activatedFeatures: Map[Short, Int]
   def featureVotes(height: Int): Map[Short, Int]
 
+  def feePrice(height: Int): Long
+  def feeVotes(height: Int): Int
+
+  def burned: Long
+  def burned(height: Int): Long
   def portfolio(a: Address): Portfolio
 
   def transactionInfo(id: ByteStr): Option[(Int, Transaction)]

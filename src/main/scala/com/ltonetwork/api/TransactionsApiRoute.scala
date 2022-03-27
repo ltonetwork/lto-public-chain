@@ -5,8 +5,9 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import com.ltonetwork.account.Address
 import com.ltonetwork.api.requests.TxRequest
+import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.http.BroadcastRoute
-import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings, RestAPISettings}
+import com.ltonetwork.settings.{FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.diffs.CommonValidation
 import com.ltonetwork.state.{Blockchain, ByteStr}
 import com.ltonetwork.transaction.ValidationError.GenericError
@@ -34,7 +35,7 @@ import scala.util.control.Exception
 @Tag(name = "transactions")
 case class TransactionsApiRoute(settings: RestAPISettings,
                                 functionalitySettings: FunctionalitySettings,
-                                feesSettings: FeesSettings,
+                                feeCalculator: FeeCalculator,
                                 wallet: Wallet,
                                 blockchain: Blockchain,
                                 utx: UtxPool,
@@ -92,7 +93,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
                     complete(
                       Json.arr(JsArray(blockchain
                         .addressTransactions(a, Set.empty, limit, 0)
-                        .map({ case (h, tx) => txToCompactJson(a, tx) + ("height" -> JsNumber(h)) }))))
+                        .map({ case (h, tx) => txToCompactJson(a, h, tx) }))))
                   case Some(limit) if limit > MaxTransactionsPerRequest =>
                     complete(TooBigArrayAllocation)
                   case _ =>
@@ -128,8 +129,8 @@ case class TransactionsApiRoute(settings: RestAPISettings,
         ByteStr.decodeBase58(encoded) match {
           case Success(id) =>
             blockchain.transactionInfo(id) match {
-              case Some((h, tx)) => complete(txToExtendedJson(tx) + ("height" -> JsNumber(h)))
-              case None          => complete(StatusCodes.NotFound             -> Json.obj("status" -> "error", "details" -> "Transaction is not in blockchain"))
+              case Some((h, tx)) => complete(txToExtendedJson(h, tx))
+              case None          => complete(StatusCodes.NotFound -> Json.obj("status" -> "error", "details" -> "Transaction is not in blockchain"))
             }
           case _ => complete(InvalidSignature)
         }
@@ -215,7 +216,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
           createTransaction(enrichedJsv) { tx =>
             for {
               commonMinFee <- CommonValidation.getMinFee(blockchain, functionalitySettings, blockchain.height, tx)
-              utxMinFee    <- new FeeCalculator(feesSettings, blockchain).minFee(tx)
+              utxMinFee    <- feeCalculator.minFee(tx)
               minFee = Math.max(commonMinFee, utxMinFee)
             } yield Json.obj("feeAmount" -> minFee)
           }
@@ -363,7 +364,12 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     }
   }
 
-  /**
+  private def txToExtendedJson(height: Int, tx: Transaction): JsObject = txToExtendedJson(tx) ++ Json.obj(
+    "height" -> JsNumber(height),
+    "effectiveFee" -> feeCalculator.fee(height, tx)
+  )
+
+    /**
     * Produces compact representation for large transactions by stripping unnecessary data.
     * Currently implemented for MassTransfer transaction only.
     */
@@ -375,6 +381,12 @@ case class TransactionsApiRoute(settings: RestAPISettings,
       case _ => txToExtendedJson(tx)
     }
   }
+
+  private def txToCompactJson(address: Address, height: Int, tx: Transaction): JsObject =
+    txToCompactJson(address, tx) ++ Json.obj(
+      "height" -> JsNumber(height),
+      "effectiveFee" -> feeCalculator.fee(height, tx)
+    )
 
   private val jsonExceptionHandler = ExceptionHandler {
     case JsResultException(err)    => complete(WrongJson(errors = err))

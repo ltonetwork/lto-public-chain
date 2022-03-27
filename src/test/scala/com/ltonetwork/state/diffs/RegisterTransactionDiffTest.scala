@@ -1,7 +1,7 @@
 package com.ltonetwork.state.diffs
 
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
+import com.ltonetwork.block.TestBlock.{create => block}
 import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.register.RegisterTransaction
@@ -20,7 +20,7 @@ class RegisterTransactionDiffTest
     with WithDB {
 
   val baseSetup: Gen[(GenesisTransaction, PrivateKeyAccount, Long)] = for {
-    master <- accountGen()
+    master <- accountGen
     ts     <- positiveLongGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
   } yield (genesis, master, ts)
@@ -31,7 +31,7 @@ class RegisterTransactionDiffTest
   property("cannot overspend funds") {
     val setup = for {
       (genesis, master, ts) <- baseSetup
-      value                 <- accountGen()
+      value                 <- accountGen
       feeOverhead           <- Gen.choose[Long](1, ENOUGH_AMT)
       version               <- Gen.oneOf(RegisterTransaction.supportedVersions.toSeq)
       registerTx = register(version, master, List(value), ENOUGH_AMT + feeOverhead, ts + 10000)

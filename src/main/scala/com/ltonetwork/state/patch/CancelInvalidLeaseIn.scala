@@ -22,7 +22,7 @@ object CancelInvalidLeaseIn extends ScorexLogging {
     val diff = blockchain.collectLposPortfolios {
       case (addr, p) if p.lease.in != leaseInBalances.getOrElse(addr, 0L) =>
         log.info(s"$addr: actual = ${leaseInBalances.getOrElse(addr, 0L)}, stored: ${p.lease.in}")
-        Portfolio(0, LeaseBalance(leaseInBalances.getOrElse(addr, 0L) - p.lease.in, 0))
+        Portfolio(0, LeaseBalance(leaseInBalances.getOrElse(addr, 0L) - p.lease.in, 0, 0))
     }
 
     log.info("Finished collecting lease in overflows")

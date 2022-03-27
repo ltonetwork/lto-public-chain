@@ -13,7 +13,7 @@ trait TransactionsBlockField extends BlockField[Seq[Transaction]]
 object TransactionsBlockField {
   def apply(version: Int, value: Seq[Transaction]): TransactionsBlockField = version match {
     case 1 | 2 => Version1or2(value)
-    case 3     => Version3(value)
+    case _     => Version3up(value)
   }
 
   def serTxs(value: Seq[Transaction], serTxCount: Array[Byte]): Array[Byte] = {
@@ -36,7 +36,7 @@ object TransactionsBlockField {
     override def b: Array[Byte] = TransactionsBlockField.serTxs(value, Array(value.size.toByte))
   }
 
-  case class Version3(override val value: Seq[Transaction]) extends TransactionsBlockField {
+  case class Version3up(override val value: Seq[Transaction]) extends TransactionsBlockField {
     override val name = "transactions"
 
     override def j: JsObject = Json.obj(name -> JsArray(value.map(_.json())))

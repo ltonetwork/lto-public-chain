@@ -397,11 +397,13 @@ case class AddressApiRoute(settings: RestAPISettings,
   private def balancesDetailsJson(account: Address): BalanceDetails = {
     val portfolio = blockchain.portfolio(account)
     BalanceDetails(
-      account.address,
-      portfolio.balance,
-      GeneratingBalanceProvider.balance(blockchain, functionalitySettings, account),
-      portfolio.balance - portfolio.lease.out,
-      portfolio.effectiveBalance
+      address = account.address,
+      regular = portfolio.balance,
+      available = portfolio.spendableBalance,
+      leasing = portfolio.lease.out,
+      unbonding = portfolio.lease.unbonding,
+      effective = portfolio.effectiveBalance,
+      generating = GeneratingBalanceProvider.balance(blockchain, functionalitySettings, account)
     )
   }
 
@@ -514,7 +516,7 @@ object AddressApiRoute {
 
   implicit val balanceFormat: Format[Balance] = Json.format
 
-  case class BalanceDetails(address: String, regular: Long, generating: Long, available: Long, effective: Long)
+  case class BalanceDetails(address: String, regular: Long, available: Long, leasing: Long, unbonding: Long, effective: Long, generating: Long)
 
   implicit val balanceDetailsFormat: Format[BalanceDetails] = Json.format
 

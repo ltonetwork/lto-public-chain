@@ -2,9 +2,10 @@ package com.ltonetwork.api
 
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.{Route, StandardRoute}
-import com.ltonetwork.block.BlockHeader
+import com.ltonetwork.block.{Block, BlockHeader, BlockRewardCalculator}
+import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.network._
-import com.ltonetwork.settings.RestAPISettings
+import com.ltonetwork.settings.{FunctionalitySettings, RestAPISettings}
 import com.ltonetwork.state.{Blockchain, ByteStr}
 import com.ltonetwork.transaction._
 import io.netty.channel.group.ChannelGroup
@@ -25,6 +26,7 @@ import scala.util.Try
 @Path("/blocks")
 @Tag(name = "blocks")
 case class BlocksApiRoute(settings: RestAPISettings,
+                          functionalitySettings: FunctionalitySettings,
                           blockchain: Blockchain,
                           allChannels: ChannelGroup,
                           checkpointProc: Checkpoint => Task[Either[ValidationError, Option[BigInt]]])
@@ -38,6 +40,24 @@ case class BlocksApiRoute(settings: RestAPISettings,
     pathPrefix("blocks") {
       signature ~ first ~ last ~ lastHeaderOnly ~ at ~ atHeaderOnly ~ seq ~ seqHeaderOnly ~ height ~ heightEncoded ~ child ~ address ~ delay ~ checkpoint
     }
+
+  private def blockJson(height: Int, block: Block) = {
+    val miningReward = BlockRewardCalculator.miningReward(functionalitySettings, blockchain, height).balance
+    val prevBlockFee = blockchain.blockAt(height - 1).map(BlockRewardCalculator.openerBlockFee(blockchain, height, _).balance).getOrElse(0L)
+    val curBlockFee = BlockRewardCalculator.closerBlockFee(blockchain, height, block).balance
+    val feeCalculator = FeeCalculator(blockchain)
+
+    BlockHeader.json(block, block.bytes().length) ++ Json.obj(
+      "transactions" -> JsArray(
+        block.transactionData.map(tx => tx.json() ++ Json.obj("effectiveFee" -> feeCalculator.fee(height, tx)))
+      ),
+      "fees" -> BlockRewardCalculator.blockFee(blockchain, height, block).balance,
+      "burnedFees" -> BlockRewardCalculator.blockBurnedFee(blockchain, height, block),
+      "miningReward" -> miningReward,
+      "generatorReward" -> (miningReward + prevBlockFee + curBlockFee),
+      "height" -> JsNumber(height)
+    )
+  }
 
   @GET
   @Path("/address/{address}/{from}/{to}")
@@ -145,10 +165,9 @@ case class BlocksApiRoute(settings: RestAPISettings,
         (block.timestamp - blockchain.parent(block, count).get.timestamp) / count
       }
 
-      complete(
-        averageDelay
-          .map(d => Json.obj("delay" -> d))
-          .getOrElse[JsObject](Json.obj("status" -> "error", "details" -> "Internal error")))
+      averageDelay
+        .map(d => complete(Json.obj("delay" -> d)))
+        .getOrElse(complete(Unknown))
     }
   }
 
@@ -208,7 +227,12 @@ case class BlocksApiRoute(settings: RestAPISettings,
       )
     )
   )
-  def at: Route = (path("at" / IntNumber) & get)(at(_, includeTransactions = true))
+  def at: Route = (path("at" / IntNumber) & get) { height =>
+    blockchain.blockAt(height).toRight(BlockDoesNotExist) match {
+      case Right(b) => complete(blockJson(height, b))
+      case Left(e)  => complete(e)
+    }
+  }
 
   @GET
   @Path("/headers/at/{height}")
@@ -226,16 +250,10 @@ case class BlocksApiRoute(settings: RestAPISettings,
       )
     )
   )
-  def atHeaderOnly: Route = (path("headers" / "at" / IntNumber) & get)(at(_, includeTransactions = false))
-
-  private def at(height: Int, includeTransactions: Boolean): StandardRoute = {
-    (if (includeTransactions) {
-       blockchain.blockAt(height).map(_.json())
-     } else {
-       blockchain.blockHeaderAndSize(height).map { case (bh, s) => BlockHeader.json(bh, s) }
-     }) match {
-      case Some(json) => complete(json + ("height" -> JsNumber(height)))
-      case None       => complete(Json.obj("status" -> "error", "details" -> "No block for this height"))
+  def atHeaderOnly: Route = (path("headers" / "at" / IntNumber) & get) { height =>
+    blockchain.blockHeaderAndSize(height).toRight(BlockDoesNotExist) match {
+      case Right((bh, s)) => complete(BlockHeader.json(bh, s) + ("height" -> JsNumber(height)))
+      case Left(e) => complete(e)
     }
   }
 
@@ -263,7 +281,14 @@ case class BlocksApiRoute(settings: RestAPISettings,
     )
   )
   def seq: Route = (path("seq" / IntNumber / IntNumber) & get) { (start, end) =>
-    seq(start, end, includeTransactions = true)
+    if (end >= 0 && start >= 0 && end - start >= 0 && end - start < MaxBlocksPerRequest) {
+      val blocks = JsArray((start to end).flatMap { height =>
+        blockchain.blockAt(height).map(blockJson(height, _))
+      })
+      complete(blocks)
+    } else {
+      complete(TooBigArrayAllocation)
+    }
   }
 
   @GET
@@ -290,20 +315,16 @@ case class BlocksApiRoute(settings: RestAPISettings,
     )
   )
   def seqHeaderOnly: Route = (path("headers" / "seq" / IntNumber / IntNumber) & get) { (start, end) =>
-    seq(start, end, includeTransactions = false)
-  }
-
-  private def seq(start: Int, end: Int, includeTransactions: Boolean): StandardRoute = {
     if (end >= 0 && start >= 0 && end - start >= 0 && end - start < MaxBlocksPerRequest) {
       val blocks = JsArray((start to end).flatMap { height =>
-        (if (includeTransactions) {
-           blockchain.blockAt(height).map(_.json())
-         } else {
-           blockchain.blockHeaderAndSize(height).map { case (bh, s) => BlockHeader.json(bh, s) }
-         }).map(_ + ("height" -> Json.toJson(height)))
+        blockchain.blockHeaderAndSize(height).map {
+          case (bh, s) => BlockHeader.json(bh, s) + ("height" -> Json.toJson(height))
+        }
       })
       complete(blocks)
-    } else complete(TooBigArrayAllocation)
+    } else {
+      complete(TooBigArrayAllocation)
+    }
   }
 
   @GET
@@ -311,27 +332,23 @@ case class BlocksApiRoute(settings: RestAPISettings,
   @Operation(
     summary = "Get last block data"
   )
-  def last: Route = (path("last") & get)(last(includeTransactions = true))
+  def last: Route = (path("last") & get) {
+    complete(Future {
+      val height = blockchain.height
+      blockJson(height, blockchain.blockAt(height).get)
+    })
+  }
 
   @GET
   @Path("/headers/last")
   @Operation(
     summary = "Get last block data without transactions payload"
   )
-  def lastHeaderOnly: Route = (path("headers" / "last") & get)(last(includeTransactions = false))
-
-  def last(includeTransactions: Boolean): StandardRoute = {
+  def lastHeaderOnly: Route = (path("headers" / "last") & get) {
     complete(Future {
-      {
-        val height = blockchain.height
-
-        (if (includeTransactions) {
-           blockchain.blockAt(height).get.json()
-         } else {
-           val bhs = blockchain.blockHeaderAndSize(height).get
-           BlockHeader.json(bhs._1, bhs._2)
-         }) + ("height" -> Json.toJson(height))
-      }
+      val height = blockchain.height
+      val bhs = blockchain.blockHeaderAndSize(height).get
+      BlockHeader.json(bhs._1, bhs._2) + ("height" -> Json.toJson(height))
     })
   }
 
@@ -341,7 +358,7 @@ case class BlocksApiRoute(settings: RestAPISettings,
     summary = "Get genesis block data"
   )
   def first: Route = (path("first") & get) {
-    complete(blockchain.genesis.json() + ("height" -> Json.toJson(1)))
+    complete(blockJson(1, blockchain.genesis))
   }
 
   @GET
@@ -384,6 +401,7 @@ case class BlocksApiRoute(settings: RestAPISettings,
     content = Array(
       new Content(
         schema = new Schema(implementation = classOf[com.ltonetwork.network.Checkpoint]),
+        mediaType = "application/json",
       )),
     required = true
   )

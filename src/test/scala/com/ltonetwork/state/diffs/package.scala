@@ -4,8 +4,7 @@ import com.ltonetwork.db.WithState
 import com.ltonetwork.mining.MiningConstraint
 import com.ltonetwork.settings.FunctionalitySettings
 import org.scalatest.matchers.should.Matchers
-import com.ltonetwork.block.Block
-import com.ltonetwork.lagonaki.mocks.TestBlock
+import com.ltonetwork.block.{Block, TestBlock}
 import com.ltonetwork.transaction.{Transaction, ValidationError}
 import com.ltonetwork.settings.{TestFunctionalitySettings => TFS}
 import com.ltonetwork.state.reader.CompositeBlockchain

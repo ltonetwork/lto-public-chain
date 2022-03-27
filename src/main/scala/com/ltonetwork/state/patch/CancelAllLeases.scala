@@ -4,7 +4,7 @@ import com.ltonetwork.state.{Blockchain, Diff, LeaseBalance, Portfolio}
 import com.ltonetwork.utils.ScorexLogging
 
 object CancelAllLeases extends ScorexLogging {
-  private def invertLeaseInfo(p: Portfolio) = Portfolio(0, LeaseBalance(-p.lease.in, -p.lease.out))
+  private def invertLeaseInfo(p: Portfolio) = Portfolio(0, LeaseBalance(-p.lease.in, -p.lease.out, 0))
 
   def apply(s: Blockchain): Diff = {
     log.info("Collecting all active leases")

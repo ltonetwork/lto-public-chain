@@ -4,21 +4,22 @@ import akka.http.scaladsl.model.StatusCodes
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.api.{InvalidAddress, InvalidSignature, TooBigArrayAllocation, TransactionsApiRoute}
 import com.ltonetwork.features.BlockchainFeatures
+import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.http.ApiMarshallers._
-import com.ltonetwork.settings.{FeeSettings, FeesSettings, TestFunctionalitySettings, WalletSettings}
+import com.ltonetwork.settings.{FeeSettings, FeesSettings, FunctionalitySettings, TestFunctionalitySettings, WalletSettings}
 import com.ltonetwork.state.Blockchain
 import com.ltonetwork.transaction.Proofs
 import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransaction}
-import com.ltonetwork.utils.Base58
+import com.ltonetwork.utils.{Base58, _}
 import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
-import com.ltonetwork.{BlockGen, NoShrink, TestTime, TestWallet, TransactionGen}
-import com.ltonetwork.utils._
+import com.ltonetwork.{BlockGen, NoShrink, TestTime, TransactionGen, fee}
 import io.netty.channel.group.ChannelGroup
 import org.scalacheck.Gen._
 import org.scalamock.scalatest.MockFactory
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.JsValue.jsValueToJsLookup
 import play.api.libs.json._
 
@@ -35,6 +36,9 @@ class TransactionsRouteSpec
   import TransactionsApiRoute.MaxTransactionsPerRequest
 
   private val wallet      = Wallet(WalletSettings(None, "qwerty", None, None, None))
+  private val featuresSettings = TestFunctionalitySettings.Enabled.copy(
+    preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0)
+  )
   private val blockchain  = mock[Blockchain]
   private val utx         = mock[UtxPool]
   private val allChannels = mock[ChannelGroup]
@@ -44,8 +48,17 @@ class TransactionsRouteSpec
       TransferTransaction.typeId     -> Seq(FeeSettings("BASE", 1.lto)),
       MassTransferTransaction.typeId -> Seq(FeeSettings("BASE", 1.lto), FeeSettings("VAR", 0.1.lto))
     ))
+  private val feeCalculator = FeeCalculator(feesSettings, blockchain)
   private val route =
-    TransactionsApiRoute(restAPISettings, TestFunctionalitySettings.Stub, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+    TransactionsApiRoute(restAPISettings, featuresSettings, feeCalculator, wallet, blockchain, utx, allChannels, new TestTime).route
+
+  def blockchainExpects(): Unit = {
+    (blockchain.height _).expects().returning(1).anyNumberOfTimes()
+    (blockchain.hasScript _).expects(*).returning(false).anyNumberOfTimes()
+    (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures).anyNumberOfTimes()
+    (blockchain.feePrice _).expects(1).returning(fee.defaultFeePrice).anyNumberOfTimes()
+  }
+
 
   routePath("/calculateFee") - {
     "transfer with LTO fee" - {
@@ -59,14 +72,7 @@ class TransactionsRouteSpec
           "recipient"       -> accountGen.sample.get.toAddress
         )
 
-        val featuresSettings = TestFunctionalitySettings.Enabled.copy(
-          preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0))
-        val blockchain = mock[Blockchain]
-        (blockchain.height _).expects().returning(1).anyNumberOfTimes()
-        (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
-        (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures)
-
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+        blockchainExpects()
 
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
@@ -92,14 +98,7 @@ class TransactionsRouteSpec
           )
         )
 
-        val featuresSettings = TestFunctionalitySettings.Enabled.copy(
-          preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0))
-        val blockchain = mock[Blockchain]
-        (blockchain.height _).expects().returning(1).anyNumberOfTimes()
-        (blockchain.hasScript _).expects(sender.toAddress).returning(false).anyNumberOfTimes()
-        (blockchain.activatedFeatures _).expects().returning(featuresSettings.preActivatedFeatures)
-
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+        blockchainExpects()
 
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
@@ -154,10 +153,15 @@ class TransactionsRouteSpec
 
       forAll(txAvailability) {
         case (tx, height) =>
+          blockchainExpects()
           (blockchain.transactionInfo _).expects(tx.id()).returning(Some((height, tx))).once()
+
           Get(routePath(s"/info/${tx.id().base58}")) ~> route ~> check {
             status shouldEqual StatusCodes.OK
-            responseAs[JsValue] shouldEqual tx.json() + ("height" -> JsNumber(height))
+            responseAs[JsValue] shouldEqual tx.json() ++ Json.obj(
+              "height" -> JsNumber(height),
+              "effectiveFee" -> tx.fee
+            )
           }
       }
     }
@@ -176,10 +180,7 @@ class TransactionsRouteSpec
           "recipient" -> accountGen.sample.get.toAddress
         )
 
-        val featuresSettings = TestFunctionalitySettings.Enabled.copy(
-          preActivatedFeatures = TestFunctionalitySettings.Enabled.preActivatedFeatures ++ Map(BlockchainFeatures.BurnFeeture.id -> 0))
-
-        val route = TransactionsApiRoute(restAPISettings, featuresSettings, feesSettings, wallet, blockchain, utx, allChannels, new TestTime).route
+        blockchainExpects()
 
         Post(routePath("/sign"), transferTx) ~> ApiKey(apiKey) ~> route ~> check {
           status shouldEqual StatusCodes.OK

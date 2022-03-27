@@ -1,28 +1,27 @@
-package com.ltonetwork.lagonaki.unit
+package com.ltonetwork.wallet
+
+import com.ltonetwork.settings.WalletSettings
+import com.ltonetwork.state.ByteStr
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 
 import java.io.File
 import java.nio.file.Files
 
-import com.ltonetwork.settings.WalletSettings
-import com.ltonetwork.state.ByteStr
-import com.ltonetwork.wallet.Wallet
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.should.Matchers
-
 class WalletSpecification extends AnyFunSuite with Matchers {
 
   private val walletSize = 10
-  def newW()             = Wallet(WalletSettings(None, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption, None, None))
-  def neww2()            = Wallet(WalletSettings(None, "cookies", None, None, ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
+  def newWallet1() = Wallet(WalletSettings(None, "cookies", ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption, None, None))
+  def newWallet2() = Wallet(WalletSettings(None, "cookies", None, None, ByteStr.decodeBase58("FQgbSAm6swGbtqA3NE8PttijPhT4N3Ufh4bHFAkyVnQz").toOption))
 
   test("wallet from accountSeed") {
-    val w2       = neww2()
+    val w2       = newWallet2()
     val accounts = w2.privateKeyAccounts
     accounts.size shouldBe 1
   }
 
   test("wallet - accs creation") {
-    val w = newW()
+    val w = newWallet1()
     w.generateNewAccounts(walletSize)
 
     w.privateKeyAccounts.size shouldBe walletSize + 1
@@ -41,12 +40,12 @@ class WalletSpecification extends AnyFunSuite with Matchers {
     )
   }
   test("wallet - one acc creation") {
-    val w = newW()
+    val w = newWallet1()
     val r = w.generateNewAccount()
     r.right.get.nonEmpty shouldBe true
   }
   test("wallet - acc deletion") {
-    val w = newW()
+    val w = newWallet1()
     w.generateNewAccount()
     w.generateNewAccount()
     w.privateKeyAccounts.size shouldBe 3

@@ -6,8 +6,7 @@ import monix.execution.{Ack, Scheduler}
 import monix.reactive.Observer
 import org.scalatest.{BeforeAndAfterAll, Suite}
 import com.ltonetwork.account.PrivateKeyAccount
-import com.ltonetwork.block.{Block, MicroBlock, SignerData}
-import com.ltonetwork.lagonaki.mocks.TestBlock
+import com.ltonetwork.block.{Block, MicroBlock, SignerData, TestBlock}
 import com.ltonetwork.transaction.transfer._
 import scorex.crypto.signatures.Curve25519._
 import scala.concurrent.duration._

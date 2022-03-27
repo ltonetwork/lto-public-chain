@@ -29,13 +29,14 @@ trait BlockGen extends TransactionGen { _: Suite =>
     } yield
       Block
         .buildAndSign(
-          version,
-          if (txs.isEmpty) timestamp else txs.map(_.timestamp).max,
-          reference,
-          NxtLikeConsensusBlockData(baseTarget, ByteStr(generationSignature)),
-          txs,
-          signer,
-          Set.empty
+          version = version,
+          timestamp = if (txs.isEmpty) timestamp else txs.map(_.timestamp).max,
+          reference = reference,
+          consensusData = NxtLikeConsensusBlockData(baseTarget, ByteStr(generationSignature)),
+          transactionData = txs,
+          signer = signer,
+          featureVotes = Set.empty,
+          feeVote = 0
         )
         .explicitGet()
 

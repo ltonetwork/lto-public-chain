@@ -20,6 +20,8 @@ class MinerSettingsSpecification extends AnyFlatSpec with Matchers {
         |    max-transactions-in-key-block: 300
         |    max-transactions-in-micro-block: 400
         |    min-micro-block-age: 3s
+        |    fee-vote-file: /lto/fee-vote
+        |    fee-vote-watch-interval: 20s
         |  }
         |}
       """.stripMargin).resolve()
@@ -33,5 +35,7 @@ class MinerSettingsSpecification extends AnyFlatSpec with Matchers {
     settings.maxTransactionsInKeyBlock should be(300)
     settings.maxTransactionsInMicroBlock should be(400)
     settings.minMicroBlockAge should be(3.seconds)
+    settings.feeVoteFile.map(_.toString).getOrElse("UNKNOWN") should be("/lto/fee-vote")
+    settings.feeVoteWatchInterval should be(20.seconds)
   }
 }

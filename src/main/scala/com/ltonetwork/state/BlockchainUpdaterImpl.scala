@@ -202,8 +202,7 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
               restTotalConstraint = updatedTotalConstraint
               ngState = Some(new NgState(block, newBlockDiff, carry, featuresApprovedWithBlock(block)))
               lastBlockId.foreach(id => internalLastBlockInfo.onNext(LastBlockInfo(id, height, score, blockchainReady)))
-              if ((block.timestamp > time
-                    .getTimestamp() - settings.minerSettings.intervalAfterLastBlockThenGenerationIsAllowed.toMillis) || (height % 100 == 0)) {
+              if ((block.timestamp > time.getTimestamp() - settings.minerSettings.intervalAfterLastBlockThenGenerationIsAllowed.toMillis) || (height % 100 == 0)) {
                 log.info(s"New height: $height")
               }
               discarded
@@ -284,6 +283,16 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
         }.toMap
 
         innerVotes ++ ngVotes
+      case _ => innerVotes
+    }
+  }
+
+  override def feePrice(height: Int): Long = blockchain.feePrice(height)
+
+  override def feeVotes(height: Int): Int = {
+    val innerVotes = blockchain.feeVotes(height)
+    ngState match {
+      case Some(ng) if this.height <= height => innerVotes + ng.base.feeVote
       case _ => innerVotes
     }
   }
@@ -374,12 +383,19 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
     }
   }
 
-  override def blockHeaderAndSize(height: Int): Option[(BlockHeader, Int)] = {
+  override def blockHeaderAndSize(height: Int): Option[(BlockHeader, Int)] =
     if (height == blockchain.height + 1)
       ngState.map(x => (x.bestLiquidBlock, x.bestLiquidBlock.bytes().length))
     else
       blockchain.blockHeaderAndSize(height)
-  }
+
+  override def burned: Long =
+    ngState.fold(0L)(_.bestLiquidDiff.burned) + blockchain.burned
+  override def burned(height: Int): Long =
+    if (height == blockchain.height + 1)
+      burned
+    else
+      blockchain.burned(height)
 
   override def portfolio(a: Address): Portfolio = {
     val p = ngState.fold(Portfolio.empty)(_.bestLiquidDiff.portfolios.getOrElse(a, Portfolio.empty))

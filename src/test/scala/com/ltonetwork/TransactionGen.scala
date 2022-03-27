@@ -1,7 +1,7 @@
 package com.ltonetwork
 
 import cats.syntax.semigroup._
-import com.ltonetwork.account.KeyTypes.{ED25519, SECP256K1}
+import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account.PublicKeyAccount._
 import com.ltonetwork.account._
 import com.ltonetwork.lang.Global
@@ -14,6 +14,7 @@ import com.ltonetwork.state.diffs.ENOUGH_AMT
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
+import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
@@ -27,9 +28,9 @@ import com.ltonetwork.transaction.transfer._
 import com.ltonetwork.utils.TimeImpl
 import org.scalacheck.rng.Seed
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.{BeforeAndAfterAll, Suite}
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.prop.TableFor1
+import org.scalatest.{BeforeAndAfterAll, Suite}
 
 import scala.util.Random
 
@@ -70,7 +71,7 @@ trait TransactionGenBase extends ScriptGen {
   val ntpTimestampGen: Gen[Long] = Gen.choose(1, 1000).map(time.correctedTime() - _)
 
   def accountGen(keyType: KeyType): Gen[PrivateKeyAccount] = bytes32gen.map(seed => PrivateKeyAccount(seed, keyType))
-  def accountGen(): Gen[PrivateKeyAccount]                 = accountGen(ED25519)
+  def accountGen: Gen[PrivateKeyAccount]                   = accountGen(ED25519)
 
   def accountGenRandom(): Gen[PrivateKeyAccount] =
     accountGen(Gen.oneOf(KeyTypes.all).pureApply(Gen.Parameters.default, Seed.random(), 100))
@@ -110,7 +111,7 @@ trait TransactionGenBase extends ScriptGen {
   def setScriptTransactionGen(version: Byte, keyType: KeyType): Gen[SetScriptTransaction] =
     for {
       sender: PrivateKeyAccount <- accountGen(keyType)
-      fee                       <- smallFeeGen
+      fee                       <- smallFeeGen.map(_ * 5)
       timestamp                 <- timestampGen
       proofs                    <- proofsGen
       script                    <- Gen.option(scriptGen)
@@ -476,4 +477,12 @@ trait TransactionGenBase extends ScriptGen {
       fee  = 15000000
       accounts = data.toList
     } yield RegisterTransaction.signed(version, timestamp, sender, fee, accounts).sponsorWith(sponsor).explicitGet()
+
+  def burnTransactionGen: Gen[BurnTransaction]                = versionGen(BurnTransaction).flatMap(burnTransactionGen)
+  def burnTransactionGen(version: Byte): Gen[BurnTransaction] = burnTransactionGen(version, ED25519)
+  def burnTransactionGen(version: Byte, keyType: KeyType): Gen[BurnTransaction] =
+    for {
+      (sender, _, amount, timestamp, fee, _) <- transferParamGen(keyType)
+      sponsor                                <- sponsorGen(version)
+    } yield BurnTransaction.signed(version, timestamp, sender, fee, amount).sponsorWith(sponsor).explicitGet()
 }

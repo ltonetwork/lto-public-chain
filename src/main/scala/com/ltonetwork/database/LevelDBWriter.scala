@@ -3,6 +3,7 @@ package com.ltonetwork.database
 import com.google.common.cache.CacheBuilder
 import com.ltonetwork.account.Address
 import com.ltonetwork.block.{Block, BlockHeader}
+import com.ltonetwork.fee.{FeeVoteStatus, defaultFeePrice}
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.state.reader.LeaseDetails
@@ -115,6 +116,8 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
 
   override protected def loadLastBlock(): Option[Block] = readOnly(db => db.get(Keys.blockAt(db.get(Keys.height))))
 
+  override protected def loadBurned(): Long = readOnly(db => db.get(Keys.burned(db.get(Keys.height))))
+
   override protected def loadScript(address: Address): Option[Script] = readOnly { db =>
     addressId(address).fold(Option.empty[Script]) { addressId =>
       db.fromHistory(Keys.addressScriptHistory(addressId), Keys.addressScript(addressId)).flatten
@@ -133,6 +136,13 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
   }
 
   override def carryFee: Long = readOnly(_.get(Keys.carryFee(height)))
+  override def burned(height: Int): Long = readOnly(_.get(Keys.burned(height)))
+
+  protected def completedUnbonding(height: Int): Map[Address, LeaseBalance] =
+    readOnly(_.get(Keys.leaseUnbonding(height))).map {
+      case (addressId: BigInt, balance: Long) =>
+        readOnly(_.get(Keys.idToAddress(addressId))) -> LeaseBalance(0, 0, -1 * balance)
+    }
 
   override def accountData(address: Address): AccountDataInfo = readOnly { db =>
     AccountDataInfo((for {
@@ -180,18 +190,25 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     c2.drop(1).map(kf(_).keyBytes)
   }
 
+  override protected def feePriceHeight(height: Int): Int = height - (height % fs.feeVoteBlocksPeriod)
+
+  // Height must already be rounded to multiple of fs.feeVoteBlocksPeriod
+  override protected def loadFeePrice(height: Int): Long = readOnly(_.get(Keys.feePrice(height))).getOrElse(defaultFeePrice)
+
   override protected def doAppend(carry: Long,
                                   block: Block,
                                   newAddresses: Map[Address, BigInt],
                                   ltoBalances: Map[BigInt, Long],
                                   leaseBalances: Map[BigInt, LeaseBalance],
+                                  leaseUnbonding: Map[BigInt, Long],
                                   leaseStates: Map[ByteStr, Boolean],
                                   transactions: Map[ByteStr, (Transaction, Set[BigInt])],
                                   addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
                                   scripts: Map[BigInt, Option[Script]],
                                   data: Map[BigInt, AccountDataInfo],
                                   assocs: List[(Int, AssociationTransaction)],
-                                  sponsorship: Map[BigInt, List[Address]]): Unit = readWrite { rw =>
+                                  sponsorship: Map[BigInt, List[Address]],
+                                  totalBurned: Long): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
     rw.put(Keys.height, height)
@@ -199,6 +216,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     rw.put(Keys.heightOf(block.uniqueId), Some(height))
     rw.put(Keys.lastAddressId, Some(loadMaxAddressId() + newAddresses.size))
     rw.put(Keys.score(height), rw.get(Keys.score(height - 1)) + block.blockScore())
+    rw.put(Keys.burned(height), totalBurned)
 
     for ((address, id) <- newAddresses) {
       rw.put(Keys.addressId(address), Some(id))
@@ -227,10 +245,16 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       rw.put(Keys.addressesForLto(newSeqNr), newAddressesForLto)
     }
 
+    if (leaseUnbonding.nonEmpty)
+      rw.put(Keys.leaseUnbonding(height + fs.leaseUnbondingPeriod), leaseUnbonding)
+
     for ((addressId, leaseBalance) <- leaseBalances) {
       rw.put(Keys.leaseBalance(addressId)(height), leaseBalance)
       expiredKeys ++= updateHistory(rw, Keys.leaseBalanceHistory(addressId), threshold, Keys.leaseBalance(addressId))
     }
+
+    if (height - threshold > 0)
+      expiredKeys += Keys.leaseUnbonding(height - threshold).keyBytes
 
     rw.put(Keys.changedAddresses(height), changedAddresses.toSeq)
 
@@ -319,25 +343,32 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       }
     }
 
+    if (height % fs.feeVoteBlocksPeriod == 0) {
+      val votes = feeVotes(height)
+      val status = FeeVoteStatus(votes / fs.blocksForFeeChange) // Division round towards 0
+      val nextPrice = status.calc(feePrice(height))
+      val nextHeight = height + fs.feeVoteBlocksPeriod
+
+      rw.put(Keys.feePrice(nextHeight), Some(nextPrice))
+      feePriceCache.put(nextHeight, nextPrice)
+
+      if (status != FeeVoteStatus.Maintain)
+        log.info(s"${status.description.toLowerCase.capitalize} fee price at block $nextHeight to $nextPrice")
+    }
+
     rw.put(Keys.transactionIdsAtHeight(height), transactions.keys.toSeq)
     rw.put(Keys.carryFee(height), carry)
-    expiredKeys.foreach(rw.delete)
 
+    expiredKeys.foreach(rw.delete)
   }
 
   override protected def doRollback(targetBlockId: ByteStr): Seq[Block] = {
     readOnly(_.get(Keys.heightOf(targetBlockId))).fold(Seq.empty[Block]) { targetHeight =>
-      log.debug(s"Rolling back to block $targetBlockId at $targetHeight")
+      log.info(s"Rolling back to block $targetBlockId at $targetHeight")
 
       val discardedBlocks: Seq[Block] = for (currentHeight <- height until targetHeight by -1) yield {
         val portfoliosToInvalidate = Seq.newBuilder[Address]
         val scriptsToDiscard       = Seq.newBuilder[Address]
-
-        // association transcations are discarded naturally.
-        // association records are not discarded, but since
-        // we query assocs as
-        // tx <- transactionInfo(ByteStr(txId)).toList
-        // the output will be consistent
 
         val discardedBlock = readWrite { rw =>
           log.trace(s"Rolling back to ${currentHeight - 1}")
@@ -403,8 +434,13 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                     }
                   }
 
-                case tx: IssueAssociationTransaction  => // TODO
-                case tx: RevokeAssociationTransaction => // TODO
+                // association transactions are discarded naturally.
+                // association records are not discarded, but since
+                // we query assocs as
+                // tx <- transactionInfo(ByteStr(txId)).toList
+                // the output will be consistent
+                case tx: IssueAssociationTransaction  => // nothing
+                case tx: RevokeAssociationTransaction => // nothing
 
                 case _ => // do nothinhg specific
               }
@@ -564,6 +600,12 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       .flatMap(h => db.get(Keys.blockHeader(h)).fold(Seq.empty[Short])(_._1.featureVotes.toSeq))
       .groupBy(identity)
       .mapValues(_.size)
+  }
+
+  override def feeVotes(height: Int): Int = readOnly { db =>
+    fs.feeVoteWindow(height)
+      .map(h => db.get(Keys.blockHeader(h)).fold(0)(_._1.feeVote))
+      .sum
   }
 
   override def ltoDistribution(height: Int): Map[Address, Long] = readOnly { db =>

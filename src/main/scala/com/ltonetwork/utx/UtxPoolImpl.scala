@@ -3,6 +3,7 @@ package com.ltonetwork.utx
 import cats._
 import com.ltonetwork.account.Address
 import com.ltonetwork.consensus.TransactionsOrdering
+import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.mining.MultiDimensionalMiningConstraint
 import com.ltonetwork.settings.{FunctionalitySettings, UtxSettings}
@@ -148,6 +149,7 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
     (txs, finalConstraint)
   }
 
+  // Why does `blockchain` need to be passed?
   override private[utx] def createBatchOps: UtxBatchOps = new BatchOpsImpl(blockchain)
 
   private class BatchOpsImpl(b: Blockchain) extends UtxBatchOps {
@@ -161,7 +163,7 @@ class UtxPoolImpl(time: Time, blockchain: Blockchain, feeCalculator: FeeCalculat
         for {
           _    <- Either.cond(transactions.size < utxSettings.maxSize, (), GenericError("Transaction pool size limit is reached"))
           _    <- checkNotBlacklisted(tx)
-          _    <- feeCalculator.enoughFee(tx, blockchain, fs)
+          _    <- feeCalculator.enoughFee(tx)
           diff <- TransactionDiffer(fs, blockchain.lastBlockTimestamp, time.correctedTime(), blockchain.height)(b, tx)
         } yield {
           utxPoolSizeStats.increment()

@@ -3,12 +3,12 @@ package com.ltonetwork.state.diffs
 import java.util.concurrent.ThreadLocalRandom
 import com.ltonetwork.BlockGen
 import com.ltonetwork.account.PrivateKeyAccount
-import com.ltonetwork.block.Block
+import com.ltonetwork.block.{Block, TestBlock}
 import com.ltonetwork.db.WithState
-import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state.{Blockchain, Diff, EitherExt2}
 import com.ltonetwork.transaction.genesis.GenesisTransaction
+import com.ltonetwork.utils._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.freespec.AnyFreeSpecLike
 import scorex.crypto.signatures.Curve25519._
@@ -67,6 +67,13 @@ class BlockDifferTest extends AnyFreeSpecLike with Matchers with BlockGen with W
       blocksForFeatureActivation = 1,
       preActivatedFeatures = Map.empty,
       doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
+      feeVoteBlocksPeriod = 10,
+      blocksForFeeChange = 6,
+      miningReward = 10.lto,
+      miningRewardBonus = 0.1.lto,
+      miningRewardBonusPeriod = 50,
+      leaseUnbondingPeriod = 20,
+      burnAddresses = Set.empty[String]
     )
     assertDiffAndState(blocks.init, blocks.last, fs)(assertion)
   }

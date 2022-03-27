@@ -2,11 +2,9 @@ package com.ltonetwork.state.diffs
 
 import cats.Monoid
 import cats.implicits._
-import cats.syntax.either.catsSyntaxEitherId
 import com.ltonetwork.account.Address
 import com.ltonetwork.block.Block.CurrentBlockFeePart
-import com.ltonetwork.block.{Block, MicroBlock}
-import com.ltonetwork.features.BlockchainFeatures
+import com.ltonetwork.block.{Block, BlockRewardCalculator, MicroBlock}
 import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.mining.MiningConstraint
 import com.ltonetwork.settings.FunctionalitySettings
@@ -18,17 +16,7 @@ import com.ltonetwork.utils._
 object BlockDiffer extends ScorexLogging with Instrumented {
 
   val feeBurnAmt: Long = 0.1.lto
-  val feeBurnPct       = 0.2
-
-  def maybeBurnFee(bc: Blockchain, tx: Transaction): Portfolio = {
-    import com.ltonetwork.features.FeatureProvider._
-    if (bc.isFeatureActivated(BlockchainFeatures.Cobalt, bc.height))
-      Portfolio(balance = (tx.fee * (1 - feeBurnPct)).toLong, lease = LeaseBalance.empty)
-    if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, bc.height))
-      Portfolio(balance = Math.max(0, tx.fee - feeBurnAmt))
-    else
-      Portfolio(balance = tx.fee)
-  }
+  val feeBurnPct       = 0.5
 
   def fromBlock[Constraint <: MiningConstraint](settings: FunctionalitySettings,
                                                 blockchain: Blockchain,
@@ -37,29 +25,29 @@ object BlockDiffer extends ScorexLogging with Instrumented {
                                                 constraint: Constraint,
                                                 verify: Boolean = true): Either[ValidationError, (Diff, Long, Constraint)] = {
     val stateHeight = blockchain.height
+    val blockGenerator = block.signerData.generator
 
-    lazy val prevBlockFeeDistr: Option[Portfolio] = maybePrevBlock.map(b =>
-      Monoid[Portfolio].combineAll(b.transactionData.map { tx =>
-        val fees = maybeBurnFee(blockchain, tx)
-        fees.minus(fees.multiply(CurrentBlockFeePart))
-      }))
-
-    lazy val currentBlockFeeDistr: Option[Portfolio] = None
+    val miningReward = BlockRewardCalculator.miningReward(settings, blockchain)
+    val initDiff = Diff.empty.copy(
+      portfolios = Map(blockGenerator.toAddress -> Monoid[Portfolio].combine(
+        maybePrevBlock.map(b => BlockRewardCalculator.openerBlockFee(blockchain, stateHeight, b)).orEmpty, // NG reward for closing block
+        miningReward,
+      )),
+      burned = -1 * miningReward.balance
+    )
 
     for {
-      _ <- block.signaturesValid()
+      _ <- if (verify) block.signaturesValid() else Right(())
       r <- apply(
         settings,
         blockchain,
         constraint,
+        initDiff,
         maybePrevBlock.map(_.timestamp),
-        block.signerData.generator,
-        prevBlockFeeDistr,
-        currentBlockFeeDistr,
+        blockGenerator,
         block.timestamp,
         block.transactionData,
-        stateHeight + 1 //,
-        // verify
+        stateHeight + 1
       )
     } yield r
   }
@@ -70,8 +58,6 @@ object BlockDiffer extends ScorexLogging with Instrumented {
                                                      micro: MicroBlock,
                                                      timestamp: Long,
                                                      constraint: Constraint
-                                                     //,
-                                                     // verify: Boolean = true
   ): Either[ValidationError, (Diff, Long, Constraint)] = {
     for {
       // microblocks are processed within block which is next after 40-only-block which goes on top of activated height
@@ -80,62 +66,49 @@ object BlockDiffer extends ScorexLogging with Instrumented {
         settings,
         blockchain,
         constraint,
+        Diff.empty,
         prevBlockTimestamp,
         micro.sender,
-        None,
-        None,
         timestamp,
         micro.transactionData,
-        blockchain.height // ,
-        // verify
+        blockchain.height
       )
     } yield r
   }
 
+  private def updateConstraint[Constraint <: MiningConstraint](constraint: Constraint, blockchain: Blockchain, tx: Transaction): Constraint =
+    constraint.put(blockchain, tx).asInstanceOf[Constraint]
+
   private def apply[Constraint <: MiningConstraint](settings: FunctionalitySettings,
                                                     blockchain: Blockchain,
                                                     initConstraint: Constraint,
+                                                    initDiff: Diff,
                                                     prevBlockTimestamp: Option[Long],
                                                     blockGenerator: Address,
-                                                    prevBlockFeeDistr: Option[Portfolio],
-                                                    currentBlockFeeDistr: Option[Portfolio],
                                                     timestamp: Long,
                                                     txs: Seq[Transaction],
-                                                    currentBlockHeight: Int // ,
-                                                    // verify: Boolean
+                                                    currentBlockHeight: Int
   ): Either[ValidationError, (Diff, Long, Constraint)] = {
-    def updateConstraint(constraint: Constraint, blockchain: Blockchain, tx: Transaction): Constraint =
-      constraint.put(blockchain, tx).asInstanceOf[Constraint]
-
     val txDiffer = TransactionDiffer(settings, prevBlockTimestamp, timestamp, currentBlockHeight) _
-    val initDiff = Diff.empty.copy(portfolios = Map(blockGenerator -> currentBlockFeeDistr.orElse(prevBlockFeeDistr).orEmpty))
-    val hasNg    = currentBlockFeeDistr.isEmpty
-
-    def calcNextBlockFee(blockchain: Blockchain, portfolio: Portfolio): (Portfolio, Long) = {
-      val ngPf = if (hasNg) {
-        val curPf  = portfolio.multiply(Block.CurrentBlockFeePart)
-        val nextPf = portfolio.minus(curPf)
-        (curPf, nextPf.balance)
-      } else (portfolio, 0L)
-      ngPf.copy(_2 = 0L)
-    }
 
     txs
       .foldLeft((initDiff, 0L, initConstraint).asRight[ValidationError]) {
         case (r @ Left(_), _) => r
-        case (Right((currDiff, carryFee, currConstraint)), tx) =>
+        case (Right((currDiff, _, currConstraint)), tx) =>
           val updatedBlockchain = composite(blockchain, currDiff, 0)
           val updatedConstraint = updateConstraint(currConstraint, updatedBlockchain, tx)
           if (updatedConstraint.isOverfilled)
             Left(ValidationError.GenericError(s"Limit of txs was reached: $initConstraint -> $updatedConstraint"))
           else
             txDiffer(updatedBlockchain, tx).map { newDiff =>
-              val updatedDiff = currDiff.combine(newDiff)
-              if (hasNg) {
-                val (curBlockFees, nextBlockFee) = calcNextBlockFee(updatedBlockchain, maybeBurnFee(blockchain, tx))
-                val diff                         = updatedDiff.combine(Diff.empty.copy(portfolios = Map(blockGenerator -> curBlockFees)))
-                (diff, carryFee + nextBlockFee, updatedConstraint)
-              } else (updatedDiff, 0L, updatedConstraint)
+              val updatedDiff  = currDiff.combine(newDiff)
+              val curBlockFees = BlockRewardCalculator.rewardedFee(blockchain, currentBlockHeight, tx).multiply(CurrentBlockFeePart)
+              val burnedFees   = BlockRewardCalculator.burnedFee(blockchain, currentBlockHeight, tx)
+              val diff         = updatedDiff.combine(Diff.empty.copy(
+                portfolios = Map(blockGenerator -> curBlockFees),
+                burned = burnedFees,
+              ))
+              (diff, 0L, updatedConstraint)
             }
       }
   }

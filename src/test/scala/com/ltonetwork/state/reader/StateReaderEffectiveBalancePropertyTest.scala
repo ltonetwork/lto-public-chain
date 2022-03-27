@@ -1,5 +1,6 @@
 package com.ltonetwork.state.reader
 
+import com.ltonetwork.block.TestBlock
 import com.ltonetwork.consensus.GeneratingBalanceProvider
 import com.ltonetwork.features.BlockchainFeatures.SmartAccounts
 import com.ltonetwork.state.{EitherExt2, LeaseBalance}
@@ -9,7 +10,6 @@ import org.scalacheck.Gen
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
-import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.settings.TestFunctionalitySettings.Enabled
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.LeaseTransaction
@@ -62,7 +62,7 @@ class StateReaderEffectiveBalancePropertyTest
             val expectedBalance = xfer1.amount + xfer2.amount - 2 * Fee
             portfolio.balance shouldBe expectedBalance
             GeneratingBalanceProvider.balance(state, fs, leaser, state.lastBlockId.get) shouldBe 0
-            portfolio.lease shouldBe LeaseBalance(0, expectedBalance)
+            portfolio.lease shouldBe LeaseBalance(0, expectedBalance, 0)
             portfolio.effectiveBalance shouldBe 0
         }
     }

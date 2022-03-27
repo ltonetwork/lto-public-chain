@@ -1,14 +1,15 @@
-package com.ltonetwork.transaction
+package com.ltonetwork.fee
 
 import com.ltonetwork.settings.{Constants, FeesSettings, FunctionalitySettings}
 import com.ltonetwork.state._
-import com.ltonetwork.transaction.ValidationError.{GenericError, InsufficientFee}
+import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.transfer.MassTransferTransaction
+import com.ltonetwork.transaction.{Transaction, ValidationError}
 
-class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
+class OldFeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
 
   private val map: Map[Byte, Long] = {
     settings.fees.flatMap { fs =>
@@ -37,7 +38,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
         case tx: DataTransaction =>
           // variable fee is calculated per 256KB
           val dataSize =
-            if (tx.data.nonEmpty) (tx.data.map(_.toBytes.length).sum / (1024*256)) + 1
+            if (tx.data.nonEmpty) ((tx.data.map(_.toBytes.length).sum - 1) / (1024*256)) + 1
             else 0
           mapVar
             .get(DataTransaction.typeId)
@@ -67,21 +68,5 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
   private def noMinFee(typeId: Byte): GenericError = {
     val txName = Constants.TransactionNames.getOrElse(typeId, "unknown")
     GenericError(s"Minimum fee is not defined for $txName transaction")
-  }
-
-  def enoughFee[T <: Transaction](tx: T, blockchain: Blockchain, fs: FunctionalitySettings): Either[ValidationError, T] = enoughFee(tx)
-
-  def enoughFee[T <: Transaction](tx: T): Either[ValidationError, T] = {
-    for {
-      minTxFee <- minFee(tx)
-      _ <- Either.cond(tx.fee >= minTxFee, (), insufficientFee(tx, minTxFee))
-    } yield tx
-  }
-
-  private def insufficientFee[T <: Transaction](tx: T, minTxFee: Long): InsufficientFee = {
-    val txName     = Constants.TransactionNames.getOrElse(tx.typeId, "unknown")
-    val txFeeValue = tx.fee
-
-    InsufficientFee(s"Fee for ${txName} transaction ($txFeeValue) does not exceed minimal value of $minTxFee")
   }
 }

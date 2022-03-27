@@ -1,9 +1,8 @@
 package com.ltonetwork.state.diffs
 
 import com.ltonetwork.account.PrivateKeyAccount
-import com.ltonetwork.block.Block
-import com.ltonetwork.lagonaki.mocks.TestBlock
-import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
+import com.ltonetwork.block.{Block, TestBlock}
+import TestBlock.{create => block}
 import com.ltonetwork.lang.v1.compiler.Terms.{FALSE, TRUE}
 import com.ltonetwork.state.EitherExt2
 import com.ltonetwork.state.diffs.smart.smartEnabledFS

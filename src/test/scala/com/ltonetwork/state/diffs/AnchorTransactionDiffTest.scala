@@ -1,7 +1,7 @@
 package com.ltonetwork.state.diffs
 
 import com.ltonetwork.account.PrivateKeyAccount
-import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
+import com.ltonetwork.block.TestBlock.{create => block}
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.data.DataTransaction

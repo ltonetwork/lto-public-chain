@@ -19,14 +19,19 @@ ENV LTO_LOG_LEVEL="INFO"
 ENV LTO_HEAP_SIZE="2g"
 ENV LTO_CONFIG_FILE="/lto/configs/lto-config.conf"
 
+RUN apt-get -qq update -y
+
 # Install python
-RUN apt-get -qq update -y && apt-get -q install -y python3 python3-pip curl \
+RUN apt-get -q install -y python3 python3-pip curl \
   && ln -s /usr/bin/python3 python \
   && pip3 install -q --upgrade pip
-
 RUN pip3 install requests pyhocon pywaves==0.8.19 tqdm
 
+# Install cron
+RUN apt-get -q install -y cron
+
 COPY starter.py /lto-node/
+COPY fee-vote.py /lto-node/
 COPY entrypoint.sh /lto-node/
 COPY --from=build /usr/src/target/lto-public-all-*.jar /lto-node/lto-public-all.jar
 COPY lto-*.conf /lto-node/

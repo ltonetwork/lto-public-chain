@@ -1,22 +1,17 @@
 import os
 import os.path
-import urllib.request
 import sys
-import requests
 from pyhocon import ConfigFactory, HOCONConverter
 import pywaves as pw
 import base58
 import string
 import random
-import math
-from tqdm import tqdm
 from shutil import copyfile
 from pyblake2 import blake2b
 from hashlib import sha256
 
-network_names = ['MAINNET', 'TESTNET', 'CUSTOM']
 
-NETWORK = os.environ.get('LTO_NETWORK')
+TRUEISH = ['yes', 'true', 't', '1', 'on']
 
 
 def generate_password(size=12, chars=string.ascii_letters + string.digits):
@@ -68,13 +63,33 @@ def get_wallet_data():
         print('Wallet password:', password)
     return seed_base58, password
 
+
 def secureHash(message):
     h = blake2b(digest_size=32)
     h.update(message.encode())
     return base58.b58encode(sha256(h.digest()).digest())
 
+
+def create_fee_vote_cron():
+    if ENABLE_REST_API.lower() in TRUEISH:
+        node = 'http://localhost:6869'
+    elif NETWORK == 'MAINNET':
+        node = 'https://nodes.lto.network'
+    elif NETWORK == 'TESTNET':
+        node = 'https://testnet.lto.network'
+    else:
+        return
+
+    with open('/etc/cron.d/fee-vote', 'w') as f:
+        f.write('0 * * * * python /lto-node/fee-vote.py %s %s' % (node, '/lto/fee-vote'))
+
+    os.chmod('/etc/cron.d/fee-vote', 0o644)
+    os.system('crontab /etc/cron.d/fee-vote')
+
+
 if __name__ == "__main__":
-    if NETWORK is None or NETWORK not in network_names:
+    NETWORK = os.environ.get('LTO_NETWORK')
+    if NETWORK is None or NETWORK not in ['MAINNET', 'TESTNET', 'CUSTOM']:
         NETWORK = 'MAINNET'
 
     create_configs_dir()
@@ -88,7 +103,7 @@ if __name__ == "__main__":
 
     api_key = os.environ.get('LTO_API_KEY', generate_password())
     if os.environ.get('LTO_API_KEY') is None:
-        print('Node API key:', api_key)    
+        print('Node API key:', api_key)
     api_key_hash = secureHash(api_key)
 
     env_dict = parse_env_variables()
@@ -108,13 +123,13 @@ if __name__ == "__main__":
     nested_set(env_dict, ['lto', 'wallet', 'password'], lto_data[1])
     nested_set(env_dict, ['lto', 'rest-api', 'api-key-hash'], api_key_hash)
 
-    ENABLE_REST_API = os.environ.get('ENABLE_REST_API', os.environ.get('LTO_ENABLE_REST_API', 'no'))
-    if ENABLE_REST_API.lower() in ['yes', 'true', 't', '1', 'on']:
+    ENABLE_REST_API = os.environ.get('LTO_ENABLE_REST_API', 'no' if NETWORK == 'MAINNET' else 'yes')
+    if ENABLE_REST_API.lower() in TRUEISH:
         nested_set(env_dict, ['lto', 'rest-api', 'enable'], 'yes')
         nested_set(env_dict, ['lto', 'rest-api', 'bind-address'], '0.0.0.0')
 
     ENABLE_MINING = os.environ.get('LTO_ENABLE_MINING', 'yes')
-    nested_set(env_dict, ['lto', 'miner', 'enable'], 'yes' if ENABLE_REST_API.lower() in ['yes', 'true', 't', '1', 'on'] else 'no')
+    nested_set(env_dict, ['lto', 'miner', 'enable'], 'yes' if ENABLE_MINING.lower() in TRUEISH else 'no')
 
     LTO_NODE_NAME = os.getenv('LTO_NODE_NAME')
     if LTO_NODE_NAME is not None:
@@ -132,3 +147,5 @@ if __name__ == "__main__":
     local_conf = HOCONConverter.convert(config, 'hocon')
     with open(confFilePath, 'w') as file:
         file.write(local_conf)
+
+    create_fee_vote_cron()

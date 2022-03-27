@@ -3,12 +3,13 @@ package com.ltonetwork
 import com.google.common.base.Charsets.UTF_8
 import com.google.common.io.ByteStreams.{newDataInput, newDataOutput}
 import com.google.common.io.{ByteArrayDataInput, ByteArrayDataOutput}
-import com.google.common.primitives.{Ints, Shorts}
+import com.google.common.primitives.{Ints, Longs, Shorts}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.smart.script.{Script, ScriptReader}
 import com.ltonetwork.transaction.{Transaction, TransactionBuilders}
 
 import java.nio.ByteBuffer
+import scala.util.Try
 
 package object database {
   implicit class ByteArrayDataOutputExt(val output: ByteArrayDataOutput) extends AnyVal {
@@ -44,6 +45,22 @@ package object database {
         input.readFully(b)
         Some(ScriptReader.fromBytes(b).explicitGet())
       } else None
+    }
+  }
+
+  implicit class ByteBufferExt(val buffer: ByteBuffer) extends AnyVal {
+    def putBigInt(v: BigInt): ByteBuffer = {
+      val b = v.toByteArray
+      require(b.length <= Byte.MaxValue)
+      buffer.put(b.length.toByte)
+      buffer.put(b)
+    }
+
+    def getBigInt(): BigInt = {
+      val len = buffer.get()
+      val b   = new Array[Byte](len)
+      buffer.get(b)
+      BigInt(b)
     }
   }
 
@@ -125,12 +142,30 @@ package object database {
     val ndo = newDataOutput()
     ndo.writeLong(lb.in)
     ndo.writeLong(lb.out)
+    ndo.writeLong(lb.unbonding)
     ndo.toByteArray
   }
 
   def readLeaseBalance(data: Array[Byte]): LeaseBalance = Option(data).fold(LeaseBalance.empty) { d =>
     val ndi = newDataInput(d)
-    LeaseBalance(ndi.readLong(), ndi.readLong())
+    LeaseBalance(ndi.readLong(), ndi.readLong(), if (data.length == Longs.BYTES * 3) ndi.readLong() else 0L)
+  }
+
+  def writeLeaseUnbonding(balances: Map[BigInt, Long]): Array[Byte] = {
+    val size = balances.foldLeft(0) { case (p, (addressId, _)) => p + addressId.toByteArray.length + 1 + Longs.BYTES }
+    val buffer = ByteBuffer.allocate(size)
+    for ((addressId, amount) <- balances)
+      buffer.putBigInt(addressId).putLong(amount)
+    buffer.array()
+  }
+
+  def readLeaseUnbonding(data: Array[Byte]): Map[BigInt, Long] = Option(data).fold(Map.empty[BigInt, Long]) { d =>
+    val buffer = ByteBuffer.wrap(data)
+    val balances = Map.newBuilder[BigInt, Long]
+    while (buffer.hasRemaining) {
+      balances += buffer.getBigInt() -> buffer.getLong()
+    }
+    balances.result()
   }
 
   def readVolumeAndFee(data: Array[Byte]): VolumeAndFee = Option(data).fold(VolumeAndFee.empty) { d =>

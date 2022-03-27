@@ -47,10 +47,17 @@ object GenesisBlockGenerator extends App {
       preActivatedFeatures.map(_.toShort -> 0).toMap
 
     val functionalitySettings: FunctionalitySettings = FunctionalitySettings(
-      Int.MaxValue,
-      Int.MaxValue,
+      featureCheckBlocksPeriod = Int.MaxValue,
+      blocksForFeatureActivation = Int.MaxValue,
       preActivatedFeatures = features,
       doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
+      feeVoteBlocksPeriod = Int.MaxValue,
+      blocksForFeeChange = Int.MaxValue,
+      miningReward = 0,
+      miningRewardBonus = 0,
+      miningRewardBonusPeriod = 0,
+      leaseUnbondingPeriod = 0,
+      burnAddresses = Set.empty[String],
     )
 
     def preActivated(feature: BlockchainFeature): Boolean = features.contains(feature.id)
@@ -155,6 +162,13 @@ object GenesisBlockGenerator extends App {
          |        feature-check-blocks-period = 1000
          |        blocks-for-feature-activation = 100
          |        double-features-periods-after-height = 100000000
+         |        fee-vote-blocks-period = 10
+         |        blocks-for-fee-change = 6
+         |        mining-reward = 1000000000
+         |        mining-reward-bonus = 1000000
+         |        mining-reward-bonus-period = 500
+         |        lease-unbonding-period = 10
+         |        burn-addresses = []
          |      }
          |      genesis {
          |        average-block-delay = ${settings.averageBlockDelay.toSeconds}s
@@ -199,7 +213,8 @@ object GenesisBlockGenerator extends App {
         consensusData = NxtLikeConsensusBlockData(baseTarget, ByteStr(Array.fill(crypto.digestLength)(0: Byte))),
         transactionData = genesisTxs,
         signer = genesisSigner,
-        featureVotes = Set.empty
+        featureVotes = Set.empty,
+        feeVote = 0
       )
       .explicitGet()
 

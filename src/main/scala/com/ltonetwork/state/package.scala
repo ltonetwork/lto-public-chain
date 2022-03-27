@@ -1,5 +1,6 @@
 package com.ltonetwork
 
+import cats.implicits.catsSyntaxSemigroup
 import com.ltonetwork.account.Address
 import com.ltonetwork.block.Block
 import com.ltonetwork.block.Block.BlockId

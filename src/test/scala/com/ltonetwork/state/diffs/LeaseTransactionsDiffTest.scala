@@ -1,6 +1,7 @@
 package com.ltonetwork.state.diffs
 
 import cats._
+import com.ltonetwork.block.TestBlock
 import com.ltonetwork.state._
 import com.ltonetwork.{NoShrink, TransactionGen}
 import org.scalacheck.Gen
@@ -8,15 +9,13 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.settings.TestFunctionalitySettings
-import com.ltonetwork.lagonaki.mocks.TestBlock
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.transfer._
 
 class LeaseTransactionsDiffTest extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen with NoShrink {
 
-  private val settings =
-    TestFunctionalitySettings.Enabled
+  private val settings = TestFunctionalitySettings.Juicy
 
   def total(l: LeaseBalance): Long = l.in - l.out
 
@@ -32,20 +31,26 @@ class LeaseTransactionsDiffTest extends AnyPropSpec with ScalaCheckDrivenPropert
 
     forAll(sunnyDayLeaseLeaseCancel) {
       case ((genesis, lease, leaseCancel)) =>
-        assertDiffAndState(Seq(TestBlock.create(Seq(genesis))), TestBlock.create(Seq(lease))) {
+        assertDiffAndState(Seq(TestBlock.create(Seq(genesis))), TestBlock.create(Seq(lease)), settings) {
           case (totalDiff, newState) =>
             val totalPortfolioDiff = Monoid.combineAll(totalDiff.portfolios.values)
-//            totalPortfolioDiff.balance shouldBe 0
             total(totalPortfolioDiff.lease) shouldBe 0
-//            totalPortfolioDiff.effectiveBalance shouldBe 0
+
+            val leaseOut = totalDiff.portfolios.getOrElse(lease.sender, Portfolio.empty).lease
+            leaseOut should be(LeaseBalance(0, lease.amount, 0))
+            val leaseIn = totalDiff.portfolios.getOrElse(lease.recipient, Portfolio.empty).lease
+            leaseIn should be(LeaseBalance(lease.amount, 0, 0))
         }
 
-        assertDiffAndState(Seq(TestBlock.create(Seq(genesis, lease))), TestBlock.create(Seq(leaseCancel))) {
+        assertDiffAndState(Seq(TestBlock.create(Seq(genesis, lease))), TestBlock.create(Seq(leaseCancel)), settings) {
           case (totalDiff, newState) =>
             val totalPortfolioDiff = Monoid.combineAll(totalDiff.portfolios.values)
-//            totalPortfolioDiff.balance shouldBe 0
             total(totalPortfolioDiff.lease) shouldBe 0
-//            totalPortfolioDiff.effectiveBalance shouldBe 0
+
+            val leaseOut = totalDiff.portfolios.getOrElse(lease.sender, Portfolio.empty).lease
+            leaseOut should be(LeaseBalance(0, -1 * lease.amount, lease.amount))
+            val leaseIn = totalDiff.portfolios.getOrElse(lease.recipient, Portfolio.empty).lease
+            leaseIn should be(LeaseBalance(-1 * lease.amount, 0, 0))
         }
     }
   }

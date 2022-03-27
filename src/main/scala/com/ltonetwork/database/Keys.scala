@@ -62,6 +62,7 @@ object Keys {
   def leaseStatusHistory(leaseId: ByteStr): Key[Seq[Int]] = historyKey(14, leaseId.arr)
   def leaseStatus(leaseId: ByteStr)(height: Int): Key[Boolean] =
     Key(hBytes(15, height, leaseId.arr), _(0) == 1, active => Array[Byte](if (active) 1 else 0))
+  def leaseUnbonding(height: Int): Key[Map[BigInt, Long]] = Key(h(52, height), readLeaseUnbonding, writeLeaseUnbonding)
 
   def sponsorshipHistory(addressId: BigInt): Key[Seq[Int]] = historyKey(48, addressId.toByteArray)
   def sponsorshipStatus(addressId: BigInt)(height: Int): Key[List[Address]] =
@@ -74,7 +75,7 @@ object Keys {
   def transactionHeight(txId: ByteStr): Key[Option[Int]] =
     Key.opt(hash(18, txId), readTransactionHeight, unsupported("Can't write transaction height only"))
 
-  def carryFee(height: Int) = Key(h(19, height), Longs.fromByteArray, Longs.toByteArray)
+  def carryFee(height: Int): Key[Long] = Key(h(19, height), Longs.fromByteArray, Longs.toByteArray)
 
   def changedAddresses(height: Int): Key[Seq[BigInt]] = Key(h(21, height), readBigIntSeq, writeBigIntSeq)
 
@@ -118,4 +119,6 @@ object Keys {
   def incomingAssociationTransactionId(addressBytes: ByteStr, seqNr: Int): Key[Array[Byte]] =
     Key(hBytes(47, seqNr, addressBytes.arr), identity, identity)
 
+  def feePrice(height: Int): Key[Option[Long]] = Key.opt[Long](h(50, height), Longs.fromByteArray, Longs.toByteArray)
+  def burned(height: Int): Key[Long] = Key[Long](h(51, height), Option(_).fold(0L)(Longs.fromByteArray), Longs.toByteArray)
 }

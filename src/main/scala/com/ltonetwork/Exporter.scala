@@ -25,7 +25,12 @@ object Exporter extends ScorexLogging {
     val exportHeight         = Try(args(2)).toOption.flatMap(s => Try(s.toInt).toOption)
     val format               = Try(args(3)).toOption.filter(s => s.toUpperCase == "JSON").getOrElse("BINARY").toUpperCase
 
-    val settings = LtoSettings.fromConfig(loadConfig(ConfigFactory.parseFile(new File(configFilename))))
+    val config = loadConfig(ConfigFactory.parseFile(new File(configFilename)))
+
+    // DO NOT LOG BEFORE THIS LINE, THIS PROPERTY IS USED IN logback.xml
+    System.setProperty("lto.directory", config.getString("lto.directory"))
+
+    val settings = LtoSettings.fromConfig(config)
     AddressScheme.current = new AddressScheme {
       override val chainId: Byte = settings.blockchainSettings.addressSchemeCharacter.toByte
     }

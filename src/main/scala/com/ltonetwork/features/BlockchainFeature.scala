@@ -13,6 +13,7 @@ object BlockchainFeatures {
   val BurnFeeture: BlockchainFeature              = BlockchainFeature(12, "Partial Fee Burn")
   val Cobalt: BlockchainFeature                   = BlockchainFeature(13, "Cobalt")
   val CobaltAlloy: BlockchainFeature              = BlockchainFeature(14, "Cobalt Alloy")
+  val Juicy: BlockchainFeature                    = BlockchainFeature(15, "Juicy (Tokenomics)")
 
   private val dict = Seq(
     SmartAccounts,
@@ -21,10 +22,12 @@ object BlockchainFeatures {
     BurnFeeture,
     Cobalt,
     CobaltAlloy,
+    Juicy,
   ).map(f => f.id -> f).toMap
 
-  private val preActivated: Set[Short] = Set(1, 2, 3, 5, 8).map(_.toShort) // consensus logic hardcoded
-  val implemented: Set[Short]          = preActivated ++ dict.keySet
+  val preActivated: Set[Short] = Set(1, 2, 3, 5, 8).map(_.toShort) // consensus logic hardcoded
+  val implemented: Set[Short]  = preActivated ++ dict.keySet
 
   def feature(id: Short): Option[BlockchainFeature] = dict.get(id)
+  def featureOrUnknown(id: Short): BlockchainFeature = feature(id).getOrElse(BlockchainFeature(id, UnknownFeature))
 }

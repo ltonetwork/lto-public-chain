@@ -8,7 +8,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import com.ltonetwork.account.{Address, PrivateKeyAccount}
 import com.ltonetwork.settings.TestFunctionalitySettings
-import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
+import com.ltonetwork.block.TestBlock.{create => block}
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.ParsedTransfer
 

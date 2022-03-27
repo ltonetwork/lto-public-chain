@@ -1,7 +1,6 @@
 package com.ltonetwork.state
 
-import com.ltonetwork.block.Block
-import com.ltonetwork.lagonaki.mocks.TestBlock
+import com.ltonetwork.block.{Block, TestBlock}
 import scorex.crypto.signatures.Curve25519._
 
 trait HistoryTest {

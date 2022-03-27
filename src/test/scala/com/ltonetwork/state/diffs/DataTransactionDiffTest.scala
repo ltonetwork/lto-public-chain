@@ -1,7 +1,7 @@
 package com.ltonetwork.state.diffs
 
 import com.ltonetwork.account.PrivateKeyAccount
-import com.ltonetwork.lagonaki.mocks.TestBlock.{create => block}
+import com.ltonetwork.block.TestBlock.{create => block}
 import com.ltonetwork.settings.{FunctionalitySettings, TestFunctionalitySettings}
 import com.ltonetwork.state.{BooleanDataEntry, DataEntry, EitherExt2, IntegerDataEntry}
 import com.ltonetwork.transaction.data.DataTransaction
@@ -17,7 +17,7 @@ class DataTransactionDiffTest extends AnyPropSpec with ScalaCheckDrivenPropertyC
   val fs: FunctionalitySettings = TestFunctionalitySettings.Enabled
 
   val baseSetup: Gen[(GenesisTransaction, PrivateKeyAccount, Long)] = for {
-    master <- accountGen()
+    master <- accountGen
     ts     <- positiveLongGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
   } yield (genesis, master, ts)
