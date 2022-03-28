@@ -14,14 +14,10 @@ trait Migration extends ScorexLogging {
   val writableDB: DB
   val fs: FunctionalitySettings
 
-  val currentHeight: Int = readOnly(_.get(Keys.migration(id)))
   val maxHeight: Int = readOnly(_.get(Keys.height))
 
-  def isDone: Boolean = currentHeight >= SKIPPED
-  def isApplied: Boolean = currentHeight == APPLIED
-  def isSkipped: Boolean = currentHeight == SKIPPED
-
-  protected def setHeight(height: Int): Unit = readWrite(_.put(Keys.migration(id), height))
+  protected def setHeight(height: Int): Unit = readWrite(rw => setHeight(rw)(height))
+  protected def setHeight(rw: RW)(height: Int): Unit = rw.put(Keys.migration(id), height)
 
   protected def readOnly[A](f: ReadOnlyDB => A): A = {
     val s = writableDB.getSnapshot
@@ -35,34 +31,34 @@ trait Migration extends ScorexLogging {
     finally rw.close()
   }
 
-  protected def before(): Unit = {}
-  protected def after(): Unit = {}
+  protected def before(height: Int): Unit = {}
+  protected def after(height: Int): Unit = {}
 
   protected def applyTo(height: Int, block: Block): Unit
 
-  protected def apply(): Unit = {
-    if (currentHeight == 0) before()
+  protected def apply(height: Int = 1): Unit = {
+    log.info(s"${description} from block ${height} to ${maxHeight}")
+    before(height)
 
-    log.info(s"${description} from block ${currentHeight + 1} to ${maxHeight}")
-
-    for (height <- Range.inclusive(currentHeight + 1, maxHeight)) {
+    for (height <- Range.inclusive(height, maxHeight)) {
       val block = readOnly(_.get(Keys.blockAt(height))).get
       if (height % 10000 == 0)
         log.info(s"Block ${height}")
 
       applyTo(height, block)
-      setHeight(height)
     }
 
-    after()
+    after(height)
   }
 
   def run(): Unit = {
+    val height: Int = readOnly(_.get(Keys.migration(id)))
+
     if (maxHeight == 0) {
-      setHeight(Migration.SKIPPED)
-    } else if (!isDone) {
-      apply()
-      setHeight(Migration.APPLIED)
+      setHeight(SKIPPED)
+    } else if (height < maxHeight) {
+      apply(height + 1)
+      setHeight(APPLIED)
     }
   }
 }

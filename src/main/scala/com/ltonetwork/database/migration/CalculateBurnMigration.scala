@@ -36,22 +36,24 @@ case class CalculateBurnMigration(writableDB: DB, fs: FunctionalitySettings) ext
     else
       0L
 
-  override protected def before(): Unit = {
+  override protected def before(height: Int): Unit = {
     if (readOnly(_.get(Keys.activatedFeatures)).contains(BlockchainFeatures.Juicy.id)) {
       log.error("Unable to apply calculate burn migration: Juicy is already active. Please sync from genesis.")
       forceStopApplication(MigrationError)
     }
 
-    if (currentHeight > 0)
-      burned = burnedAt(currentHeight)
+    if (height > 0)
+      burned = burnedAt(height)
   }
 
   override protected def applyTo(height: Int, block: Block): Unit = readWrite { rw =>
     burned += burnAddressTransfers(block) + transactionBurn(height, block)
     rw.put(Keys.burned(height), burned)
+
+    setHeight(rw)(height)
   }
 
-  override protected def after(): Unit = readWrite { rw =>
+  override protected def after(height: Int): Unit = readWrite { rw =>
     fs.burnAddresses
       .map(a => addressId(Address.fromString(a).explicitGet()))
       .foreach(addressId => {
