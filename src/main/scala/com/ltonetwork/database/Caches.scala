@@ -151,7 +151,7 @@ trait Caches extends Blockchain {
       }
 
       if (portfolioDiff.lease != LeaseBalance.empty) {
-        leaseBalances += id -> portfolioDiff.lease
+        leaseBalances += id -> newPortfolio.lease
       }
 
       if (portfolioDiff.lease.unbonding > 0) {
