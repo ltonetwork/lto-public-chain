@@ -31,12 +31,10 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
   override val typeId: Byte                 = 15
   override val supportedVersions: Set[Byte] = Set(1, 3)
 
-  val EntryLength: List[Int] = List(16, 20, 32, 48, 64)
-  val NewMaxEntryLength: Int = 64
-  val MaxBytes: Int          = 150 * 1024
-  val MaxEntryCount: Int     = 100
+  val MaxEntryLength: Int = 80
+  val MaxEntryCount: Int  = 100
 
-  val MaxAnchorStringSize: Int = base58Length(EntryLength.last)
+  val MaxAnchorStringSize: Int = base58Length(MaxEntryLength)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
@@ -48,9 +46,11 @@ object AnchorTransaction extends TransactionBuilder.For[AnchorTransaction] {
         Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
         Validated.condNel(anchors.lengthCompare(MaxEntryCount) <= 0, (), ValidationError.TooBigArray),
-        Validated.condNel(anchors.forall(a => EntryLength.contains(a.arr.length)),
-                          (),
-                          ValidationError.GenericError(s"Anchor can only be of length $EntryLength Bytes")),
+        Validated.condNel(
+          tx.anchors.forall(a => a.arr.length <= MaxEntryLength),
+          (),
+          ValidationError.GenericError(s"Anchor should be max $MaxEntryLength bytes")
+        ),
         Validated.condNel(anchors.distinct.lengthCompare(anchors.size) == 0, (), ValidationError.GenericError("Duplicate anchor in one tx found")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
