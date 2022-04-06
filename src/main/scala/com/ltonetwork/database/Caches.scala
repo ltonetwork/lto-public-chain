@@ -205,6 +205,8 @@ trait Caches extends Blockchain {
     heightCache = loadHeight()
     scoreCache = loadScore()
     lastBlockCache = loadLastBlock()
+    burnedCache = loadBurned()
+    feePriceCache.invalidateAll()
 
     activatedFeaturesCache = loadActivatedFeatures()
     approvedFeaturesCache = loadApprovedFeatures()
