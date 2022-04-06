@@ -5,11 +5,11 @@ import com.ltonetwork.account.{Address, KeyType, KeyTypes}
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.features.{BlockchainFeature, BlockchainFeatures}
 import com.ltonetwork.fee.FeeCalculator
-import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings}
+import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.anchor.{AnchorTransaction, MappedAnchorTransaction}
 import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.data.DataTransaction
@@ -105,6 +105,7 @@ object CommonValidation {
       case (_: DataTransaction, 3)            => activationBarrier(BlockchainFeatures.CobaltAlloy)
       case (_: RegisterTransaction, 3)        => activationBarrier(BlockchainFeatures.CobaltAlloy)
       case (_: BurnTransaction, 3)            => activationBarrier(BlockchainFeatures.Juicy)
+      case (_: MappedAnchorTransaction, 3)     => activationBarrier(BlockchainFeatures.Titanium)
 
       case _ => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
     }

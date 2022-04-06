@@ -3,11 +3,11 @@ package com.ltonetwork.state.diffs
 import cats.kernel.Monoid
 import com.ltonetwork.account.Address
 import com.ltonetwork.fee.FeeCalculator
-import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings}
+import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.UnsupportedTransactionType
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.anchor.{AnchorTransaction, MappedAnchorTransaction}
 import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.data.DataTransaction
@@ -44,13 +44,14 @@ object TransactionDiffer {
             case ltx: CancelLeaseTransaction =>
               LeaseTransactionsDiff.leaseCancel(blockchain, settings, currentBlockTimestamp, currentBlockHeight)(ltx)
             case dtx: DataTransaction               => DataTransactionDiff(blockchain, currentBlockHeight)(dtx)
-            case sstx: SetScriptTransaction         => SetScriptTransactionDiff(currentBlockHeight)(sstx)
+            case sstx: SetScriptTransaction         => SetScriptTransactionDiff(blockchain, currentBlockHeight)(sstx)
             case at: AnchorTransaction              => AnchorTransactionDiff(blockchain, currentBlockHeight)(at)
-            case as: AssociationTransaction         => AssociationTransactionDiff(currentBlockHeight)(as)
+            case as: AssociationTransaction         => AssociationTransactionDiff(blockchain, currentBlockHeight)(as)
             case stx: SponsorshipTransaction        => SponsorshipTransactionDiff.sponsor(blockchain, currentBlockHeight)(stx)
             case sctx: CancelSponsorshipTransaction => SponsorshipTransactionDiff.cancel(blockchain, currentBlockHeight)(sctx)
             case rtx: RegisterTransaction           => RegisterTransactionDiff(blockchain, currentBlockHeight)(rtx)
             case btx: BurnTransaction               => BurnTransactionDiff(blockchain, currentBlockHeight)(btx)
+            case natx: MappedAnchorTransaction       => MappedAnchorTransactionDiff(blockchain, currentBlockHeight)(natx)
             case _                                  => Left(UnsupportedTransactionType)
           }).map { d: Diff =>
             val fee = FeeCalculator(blockchain).fee(currentBlockHeight, tx)

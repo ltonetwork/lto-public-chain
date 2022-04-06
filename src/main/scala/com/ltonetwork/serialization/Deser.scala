@@ -56,4 +56,7 @@ object Deser {
   def serializeArraysWithoutLength(bs: Seq[Array[Byte]]): Array[Byte] = Bytes.concat(bs: _*)
 
   def serializeAccount(account: PublicKeyAccount): Array[Byte] = Bytes.concat(Array(account.keyType.id), account.publicKey)
+
+  def serializeMap[T1, T2](m: Map[T1, T2])(ser: (T1, T2) => Array[Byte]): Array[Byte] =
+    Shorts.toByteArray(m.toSeq.length.toShort) ++ Bytes.concat(m.toSeq.map { case (k, v) => ser(k, v) }: _*)
 }

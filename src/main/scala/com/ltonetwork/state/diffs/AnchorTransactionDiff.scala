@@ -1,6 +1,5 @@
 package com.ltonetwork.state.diffs
 
-import cats.data.Validated
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.state.{Blockchain, Diff}
 import com.ltonetwork.transaction.ValidationError

@@ -6,7 +6,7 @@ import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.settings._
 import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.ValidationError.{GenericError, InvalidPublicKey}
-import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.anchor.{AnchorTransaction, MappedAnchorTransaction}
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.data.DataTransaction
@@ -125,6 +125,7 @@ object TxRequest {
           case SetScriptTransaction         => Right(jsv.as[SetScriptRequest])
           case RegisterTransaction          => Right(jsv.as[RegisterRequest])
           case BurnTransaction              => Right(jsv.as[BurnRequest])
+          case MappedAnchorTransaction       => Right(jsv.as[MappedAnchorRequest])
           case _                            => Left(GenericError(s"Unsupported transaction type ($typeId)"))
         }
     }

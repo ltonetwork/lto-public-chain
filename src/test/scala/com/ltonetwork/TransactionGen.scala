@@ -404,7 +404,7 @@ trait TransactionGenBase extends ScriptGen {
       sender    <- accountGen(keyType)
       timestamp <- timestampGen
       size      <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
-      len       <- Gen.oneOf(AnchorTransaction.EntryLength)
+      len       <- Gen.choose(0, AnchorTransaction.MaxEntryLength)
       data      <- Gen.listOfN(size, genBoundedBytes(len, len))
       sponsor   <- sponsorGen(version)
       fee     = 15000000
