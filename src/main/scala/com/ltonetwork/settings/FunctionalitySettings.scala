@@ -51,7 +51,7 @@ object FunctionalitySettings {
     blocksForFeeChange = 600,
     miningReward = 10L * 10^8,
     miningRewardBonus = 1000L,
-    miningRewardBonusPeriod = 25000000,
+    miningRewardBonusPeriod = 2500000,
     leaseUnbondingPeriod = 3000,
     burnAddresses = Set("3JrGV6TeEV3ovVjsh9SPqQL48EDLET47B9U")
   )
@@ -65,7 +65,7 @@ object FunctionalitySettings {
     blocksForFeeChange = 600,
     miningReward = 10L * 10^8,
     miningRewardBonus = 1000L,
-    miningRewardBonusPeriod = 25000000,
+    miningRewardBonusPeriod = 2500000,
     leaseUnbondingPeriod = 1000,
     burnAddresses = Set("3N3pCgpW1cB1Ns56yjPFmXfBSUjNZ1cYroE")
   )
