@@ -20,6 +20,7 @@ object FeatureProvider {
     def featureActivationHeight(feature: BlockchainFeature): Option[Int] = provider.activatedFeatures.get(feature.id)
     def featureActivationHeight(feature: Short): Option[Int] = provider.activatedFeatures.get(feature)
 
-    def featureApprovalHeight(feature: Short): Option[Int]   = provider.approvedFeatures.get(feature)
+    def featureApprovalHeight(feature: BlockchainFeature): Option[Int] = provider.approvedFeatures.get(feature.id)
+    def featureApprovalHeight(feature: Short): Option[Int] = provider.approvedFeatures.get(feature)
   }
 }
