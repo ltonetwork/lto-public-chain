@@ -40,7 +40,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     case _: AssociationTransaction       => Right(500)
     case _: SponsorshipTransaction       => Right(5000)
     case _: CancelSponsorshipTransaction => Right(1000)
-    case tx: DataTransaction             => Right(1000 + dataTransactionBytes(tx, 256) * 100)
+    case tx: DataTransaction             => Right(500 + dataTransactionBytes(tx, 256) * 100)
     case tx: RegisterTransaction         => Right(250 + tx.accounts.size * 100)
     case _: BurnTransaction              => Right(1000)
     case _                               => Left(UnsupportedTransactionType)
