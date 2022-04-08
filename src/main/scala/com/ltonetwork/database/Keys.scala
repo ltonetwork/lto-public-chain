@@ -121,4 +121,6 @@ object Keys {
 
   def feePrice(height: Int): Key[Option[Long]] = Key.opt[Long](h(50, height), Longs.fromByteArray, Longs.toByteArray)
   def burned(height: Int): Key[Long] = Key[Long](h(51, height), Option(_).fold(0L)(Longs.fromByteArray), Longs.toByteArray)
+
+  def migration(id: Int): Key[Int] = Key[Int](h(53, id), Option(_).fold(0)(Ints.fromByteArray), Ints.toByteArray)
 }

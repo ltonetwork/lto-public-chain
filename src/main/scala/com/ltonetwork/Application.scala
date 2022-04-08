@@ -15,6 +15,7 @@ import com.ltonetwork.consensus.PoSSelector
 import com.ltonetwork.consensus.nxt.api.NxtConsensusApiRoute
 import com.ltonetwork.db.{DBExt, openDB}
 import com.ltonetwork.database.Keys
+import com.ltonetwork.database.migration.runMigrations
 import com.ltonetwork.features.api.ActivationApiRoute
 import com.ltonetwork.fee.{FeeCalculator, FeeVoteFileWatch}
 import com.ltonetwork.fee.api.FeesApiRoute
@@ -34,7 +35,7 @@ import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
 import kamon.Kamon
 import monix.eval.{Coeval, Task}
-import monix.execution.Scheduler.{singleThread, fixedPool, global}
+import monix.execution.Scheduler.{fixedPool, global, singleThread}
 import monix.execution.schedulers.SchedulerService
 import monix.reactive.Observable
 import monix.reactive.subjects.ConcurrentSubject
@@ -87,6 +88,7 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
 
   def run(): Unit = {
     checkGenesis(settings, blockchainUpdater)
+    runMigrations(db, settings.blockchainSettings)
 
     if (wallet.privateKeyAccounts.isEmpty)
       wallet.generateNewAccounts(1)
