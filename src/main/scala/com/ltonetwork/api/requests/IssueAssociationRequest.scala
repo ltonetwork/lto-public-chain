@@ -1,7 +1,7 @@
 package com.ltonetwork.api.requests
 
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
-import com.ltonetwork.state.ByteStr
+import com.ltonetwork.state.{ByteStr, DataEntry}
 import com.ltonetwork.transaction.association.IssueAssociationTransaction
 import com.ltonetwork.transaction.{Proofs, ValidationError}
 import com.ltonetwork.utils.Time
@@ -21,6 +21,7 @@ case class IssueAssociationRequest(version: Option[Byte] = None,
                                    associationType: Int,
                                    expires: Option[Long] = None,
                                    hash: Option[ByteStr] = None,
+                                   data: Option[List[DataEntry[_]]] = None,
                                    signature: Option[ByteStr] = None,
                                    proofs: Option[Proofs] = None)
     extends TxRequest.For[IssueAssociationTransaction] {
@@ -40,6 +41,7 @@ case class IssueAssociationRequest(version: Option[Byte] = None,
         associationType,
         expires,
         hash.noneIfEmpty,
+        data.getOrElse(List.empty[DataEntry[_]]),
         sponsor,
         proofs
       )
@@ -61,6 +63,7 @@ object IssueAssociationRequest {
       (JsPath \ "associationType").read[Int] and
       (JsPath \ "expires").readNullable[Long] and
       (JsPath \ "hash").readNullable[ByteStr] and
+      (JsPath \ "data").readNullable[List[DataEntry[_]]] and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(IssueAssociationRequest.apply _),
     Json.writes[IssueAssociationRequest].transform((json: JsObject) => Json.obj("type" -> IssueAssociationTransaction.typeId.toInt) ++ json)

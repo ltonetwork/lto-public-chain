@@ -34,7 +34,7 @@ class IssueAssociationTransactionDiffTest
       feeOverhead           <- Gen.choose[Long](0, ENOUGH_AMT)
       version               <- Gen.oneOf(IssueAssociationTransaction.supportedVersions.toSeq)
       tx = IssueAssociationTransaction
-        .signed(version, ts + 10000, master, Constants.UnitsInLTO + feeOverhead, party, 42, None, None)
+        .signed(version, ts + 10000, master, Constants.UnitsInLTO + feeOverhead, party, 42, None, None, List.empty)
         .explicitGet()
     } yield (genesis, tx)
 
@@ -67,14 +67,15 @@ class IssueAssociationTransactionDiffTest
           party,
           100,
           None,
-          Some(ByteStr.decodeBase58("Fjn9ZkwYx1YuXDskEGDhLA8PdQGgewHRK9PGxYmzy61g").get)
+          Some(ByteStr.decodeBase58("Fjn9ZkwYx1YuXDskEGDhLA8PdQGgewHRK9PGxYmzy61g").get),
+          List.empty,
         )
         .explicitGet()
       tx2 = IssueAssociationTransaction
-        .signed(version, ts + 2, master, Constants.UnitsInLTO + feeOverhead, party, 11, None, None)
+        .signed(version, ts + 2, master, Constants.UnitsInLTO + feeOverhead, party, 11, None, None, List.empty)
         .explicitGet()
       tx3 = IssueAssociationTransaction
-        .signed(version, ts + 3, master2, Constants.UnitsInLTO + feeOverhead, party, 11, None, None)
+        .signed(version, ts + 3, master2, Constants.UnitsInLTO + feeOverhead, party, 11, None, None, List.empty)
         .explicitGet()
     } yield (genesis1, genesis2, tx1, tx2, tx3)
 

@@ -361,6 +361,13 @@ trait TransactionGenBase extends ScriptGen {
   def dataForScriptGen(size: Int): Gen[List[DataEntry[_]]] =
     Gen.listOfN(size, dataEntryGen(200, dataScriptsKeyGen))
 
+  def uniqueDataGen(size: Int, useForScript: Boolean = false): Gen[List[DataEntry[_]]] =
+    (if (useForScript) dataGen(size) else dataForScriptGen(size)).map(
+      _.foldRight(List.empty[DataEntry[_]]) { (e, es) =>
+        if (es.exists(_.key == e.key)) es else e :: es
+      }
+    )
+
   val dataTransactionGen: Gen[DataTransaction] = dataTransactionGen(DataTransaction.MaxEntryCount)
 
   def dataTransactionGen(maxEntryCount: Int, useForScript: Boolean = false): Gen[DataTransaction] =
@@ -372,11 +379,8 @@ trait TransactionGenBase extends ScriptGen {
       timestamp <- timestampGen
       size      <- Gen.choose(0, maxEntryCount)
       fee       = 15000000
-      data      <- if (useForScript) dataGen(size) else dataForScriptGen(size)
-      uniq = data.foldRight(List.empty[DataEntry[_]]) { (e, es) =>
-        if (es.exists(_.key == e.key)) es else e :: es
-      }
-    } yield DataTransaction.signed(version, timestamp, sender, fee, uniq).explicitGet()
+      data      <- uniqueDataGen(size, useForScript)
+    } yield DataTransaction.signed(version, timestamp, sender, fee, data).explicitGet()
 
   def dataTransactionGenP(sender: PrivateKeyAccount, data: List[DataEntry[_]]): Gen[DataTransaction] =
     (for {
@@ -424,8 +428,10 @@ trait TransactionGenBase extends ScriptGen {
       minHashLength = if (version < 3) 0 else 1
       hashOpt <- Gen.option(genBoundedBytes(minHashLength, IssueAssociationTransaction.MaxHashLength).map(ByteStr(_)))
       sponsor <- sponsorGen(version)
+      size    <- Gen.choose(0, 5)
+      data    <- if (version < 4) Gen.const(List.empty) else uniqueDataGen(size)
     } yield
-      IssueAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, expires, hashOpt).sponsorWith(sponsor).explicitGet()
+      IssueAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, expires, hashOpt, data).sponsorWith(sponsor).explicitGet()
 
   def revokeAssocTransactionGen: Gen[RevokeAssociationTransaction]                = versionGen(RevokeAssociationTransaction).flatMap(revokeAssocTransactionGen)
   def revokeAssocTransactionGen(version: Byte): Gen[RevokeAssociationTransaction] = revokeAssocTransactionGen(version, ED25519)

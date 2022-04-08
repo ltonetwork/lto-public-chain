@@ -1,15 +1,16 @@
 package com.ltonetwork.transaction.association
 
-import com.google.common.primitives.{Bytes, Ints, Longs, Shorts}
+import com.google.common.primitives.{Bytes, Ints, Longs}
 import com.ltonetwork.serialization._
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.association.IssueAssociationTransaction.create
+import com.ltonetwork.transaction.data.DataSerializerV3.parseData
 import com.ltonetwork.transaction.{TransactionParser, TransactionSerializer}
 
 import java.nio.ByteBuffer
 import scala.util.{Failure, Success, Try}
 
-object IssueAssociationSerializerV3 extends TransactionSerializer.For[IssueAssociationTransaction] {
+object IssueAssociationSerializerV4 extends TransactionSerializer.For[IssueAssociationTransaction] {
   import TransactionParser._
 
   override def bodyBytes(tx: IssueAssociationTransaction): Array[Byte] = {
@@ -36,9 +37,10 @@ object IssueAssociationSerializerV3 extends TransactionSerializer.For[IssueAssoc
       val assocType                         = buf.getInt
       val expires                           = Some(buf.getLong).noneIf(0)
       val hash                              = Some(buf.getByteArrayWithLength).map(ByteStr(_)).noneIfEmpty
+      val data                              = parseData(buf)
       val (sponsor, proofs)                 = parseFooter(buf)
 
-      create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, expires, hash, List.empty, sponsor, proofs)
+      create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, expires, hash, data, sponsor, proofs)
         .fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 }

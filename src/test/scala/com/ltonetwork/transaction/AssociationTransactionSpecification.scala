@@ -119,6 +119,7 @@ class AssociationTransactionSpecification
         fee = 100000,
         timestamp = 1526911531530L,
         expires = None,
+        data = List.empty,
         sponsor = None,
         proofs = Proofs(Seq(arr))
       )
@@ -167,6 +168,7 @@ class AssociationTransactionSpecification
         fee = 100000,
         timestamp = 1526911531530L,
         expires = Some(1558447531530L),
+        data = List.empty,
         sponsor = Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
         proofs = Proofs(proofs)
       )
