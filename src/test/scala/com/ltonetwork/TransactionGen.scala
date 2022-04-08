@@ -406,10 +406,9 @@ trait TransactionGenBase extends ScriptGen {
       timestamp <- timestampGen
       size      <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
       len       <- Gen.choose(0, AnchorTransaction.MaxEntryLength)
-      data      <- Gen.listOfN(size, genBoundedBytes(len))
+      anchors   <- Gen.containerOfN[Set, ByteStr](size, genBoundedBytes(len).map(ByteStr(_))).map(_.toList)
       sponsor   <- sponsorGen(version)
       fee     = 15000000
-      anchors = data.map(ByteStr(_))
     } yield AnchorTransaction.signed(version, timestamp, sender, fee, anchors).sponsorWith(sponsor).explicitGet()
 
   def mappedAnchorTransactionGen: Gen[MappedAnchorTransaction]                = versionGen(MappedAnchorTransaction).flatMap(mappedAnchorTransactionGen)
