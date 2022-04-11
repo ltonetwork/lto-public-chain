@@ -8,6 +8,7 @@ lto.directory_IS_UNDEFINED/
 
 # scala build folders and files
 target
+out
 *.tgz
 *.jar
 !dependencies/**/*.jar
@@ -41,3 +42,4 @@ native
 # python
 *__pycache__*
 .venv
+
