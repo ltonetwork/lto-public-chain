@@ -4,6 +4,7 @@ import java.util.Arrays
 import scala.util.Try
 
 object Base58 {
+
   import java.nio.charset.StandardCharsets.US_ASCII
 
   private val Alphabet: Array[Byte] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".getBytes(US_ASCII)
@@ -16,11 +17,11 @@ object Base58 {
   private def toBase58(c: Char): Byte = if (c < DecodeTable.length) DecodeTable(c) else -1
 
   def encode(bytes: Array[Byte]): String = {
-    val input     = Arrays.copyOf(bytes, bytes.length)
+    val input = Arrays.copyOf(bytes, bytes.length)
     val zeroCount = input.takeWhile(_ == 0).length
 
-    var in                  = zeroCount
-    var out                 = input.length * 2
+    var in = zeroCount
+    var out = input.length * 2
     val output: Array[Byte] = new Array[Byte](out)
     while (in < input.length) {
       val mod = convert(input, in, 256, 58)
@@ -45,8 +46,8 @@ object Base58 {
 
     val zeroCount = input.takeWhile(_ == 0).length
 
-    var in     = zeroCount
-    var out    = input.length
+    var in = zeroCount
+    var out = input.length
     val output = new Array[Byte](out)
     while (in < input.length) {
       val mod = convert(input, in, 58, 256)
@@ -61,10 +62,10 @@ object Base58 {
 
   private def convert(number: Array[Byte], offset: Int, from: Int, to: Int): Byte = {
     var rem = 0
-    var i   = offset
+    var i = offset
     while (i < number.length) {
       val digit = number(i) & 0xff
-      val tmp   = rem * from + digit
+      val tmp = rem * from + digit
       number(i) = (tmp / to).toByte
       rem = tmp % to
       i += 1

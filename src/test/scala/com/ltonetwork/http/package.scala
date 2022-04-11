@@ -32,19 +32,6 @@ package object http {
       HavePropertyMatchResult(actualFieldValue == v._2, v._1, v._2, actualFieldValue)
     }
 
-  implicit val byteStrFormat: Format[ByteStr] = Format(
-    Reads {
-      case JsString(str) =>
-        ByteStr.decodeBase58(str) match {
-          case Success(x) => JsSuccess(x)
-          case Failure(e) => JsError(e.getMessage)
-        }
-
-      case _ => JsError("Can't read PublicKeyAccount")
-    },
-    Writes(x => JsString(x.base58))
-  )
-
   implicit val publicKeyAccountFormat: Format[PublicKeyAccount] = byteStrFormat.inmap[PublicKeyAccount](
     x => PublicKeyAccount(x.arr),
     x => ByteStr(x.publicKey)

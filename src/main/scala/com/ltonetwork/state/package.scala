@@ -1,14 +1,15 @@
 package com.ltonetwork
 
-import cats.implicits.catsSyntaxSemigroup
 import com.ltonetwork.account.Address
 import com.ltonetwork.block.Block
 import com.ltonetwork.block.Block.BlockId
+import com.ltonetwork.state.ByteStr.decodeBase58
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction}
 import com.ltonetwork.transaction.lease.LeaseTransaction
 import com.ltonetwork.utils.ScorexLogging
+import play.api.libs.json._
 
 import scala.reflect.ClassTag
 import scala.util.Try
@@ -94,6 +95,13 @@ package object state {
       blockchain
         .heightOf(id)
         .getOrElse(throw new IllegalStateException(s"Can't find a block: $id"))
+ }
 
+  implicit val byteStrFormat: Format[ByteStr] = new Format[ByteStr] {
+    override def writes(o: ByteStr): JsValue = JsString(o.base58)
+    override def reads(json: JsValue): JsResult[ByteStr] = json match {
+      case JsString(v) => decodeBase58(v).fold(e => JsError(s"Error parsing base58: ${e.getMessage}"), b => JsSuccess(b))
+      case _           => JsError("Expected JsString")
+    }
   }
 }

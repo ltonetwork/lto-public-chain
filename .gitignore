@@ -1,5 +1,6 @@
 # IDE/Editor files
 .idea
+*.iml
 .ensime
 .ensime_cache/
 waves.directory_IS_UNDEFINED/
