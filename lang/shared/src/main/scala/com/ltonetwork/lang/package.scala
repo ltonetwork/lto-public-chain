@@ -1,6 +1,7 @@
 package com.ltonetwork
 
 import cats.data.EitherT
+import com.ltonetwork.lang.v1.BaseGlobal
 import monix.eval.Coeval
 
 import scala.util.{Left, Right}

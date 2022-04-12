@@ -3,12 +3,12 @@ package com.ltonetwork.lang.v1.parser
 import com.ltonetwork.lang.v1.parser.BinaryOperation._
 import com.ltonetwork.lang.v1.parser.Expressions._
 import com.ltonetwork.lang.v1.parser.UnaryOperation._
+import com.ltonetwork.lang.v1.Global
 import fastparse.{WhitespaceApi, core}
 import scodec.bits.ByteVector
 
 object Parser {
 
-  private val Global                 = com.ltonetwork.lang.hacks.Global // Hack for IDEA
   private val Whitespaces: Set[Char] = " \t\r\n".toSet
 
   private val White = WhitespaceApi.Wrapper {
