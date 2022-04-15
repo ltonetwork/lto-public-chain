@@ -50,4 +50,8 @@ if [ "$1" = configure ]; then
     fi
 fi
 
+if [ -f "/usr/share/${{app_name}}/bin/lto-fee-vote" ]; then
+    chmod ug+x /usr/share/${{app_name}}/bin/lto-fee-vote
+fi
+
 exit 0
