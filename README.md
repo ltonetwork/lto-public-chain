@@ -10,12 +10,6 @@ sbt build
 
 It will produce `lto-public-all-*.jar` in the `target` folder.
 
-To package the build as debian package, run
-```
-sbt packageAll -Dnetwork=mainnet                            # Mainnet
-sbt packageAll -Dnetwork=testnet -DpackageName=lto-testnet  # Testnet
-```
-
 For further information please read the [LTO Network documentation](https://docs.ltonetwork.com).
 
 # Docker
@@ -61,7 +55,42 @@ docker run -p 6869:6869 -p 6863:6863 -e LTO_NETWORK=TESTNET -e LTO_HEAP_SIZE=2g 
 | `LTO_ENABLE_MINING`           | To enable PoS mining (default is `true`)                                                                                                                                                                                                                                                                                                            |
 | `LTO_FEATURES`                | Features you wish to vote. E.g. set to 4 to start voting for the Smart Accounts feature. You can also vote for multiple features at by comma seperating them (e.g. 4,5)                                                                                                                                                                             |
 
-**Note: All variables are optional.**  
+_Note: All variables are optional._  
+
+**The following variables can be used to control fee voting:**
+
+| Env variable            | Description                                                                                                                                                                     |
+|-------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `COINMARKETCAP_API_KEY` | [CoinMarketCap API key](https://pro.coinmarketcap.com/). When supplied, the script will query CoinMarketCap in addition to CoinGecko to prevent voting based on incorrect data. |
+| `LTO_FEE_TARGET`        | Value to determine how to vote. See [Fee Prices](https://blog.ltonetwork.com/tokenomics-update/#fee-prices).                                                                    |
+
+# Debian
+
+To package the build as debian package, run
+```
+sbt packageAll -Dnetwork=mainnet                            # Mainnet
+sbt packageAll -Dnetwork=testnet -DpackageName=lto-testnet  # Testnet
+```
+
+## Installation
+
+The `.deb` package can be downloaded from the [GitHub release page](https://github.com/ltonetwork/lto-public-chain/releases).
+
+    wget https://github.com/ltonetwork/lto-public-chain/releases/download/v1.6.2/lto_1.6.2_all.deb 
+    dpkg -i lto_1.6.2_all.deb
+
+## Fee vote
+
+The debian package installs a python script named `lto-fee-vote`. Please participate in
+[Fee voting](https://blog.ltonetwork.com/tokenomics-update/#fee-voting) by calling this script through a cronjob once an
+hour.
+
+    0 * * * *  root  /usr/bin/lto-fee-vote http://localhost:6869 /var/lib/lto/lto/fee-vote
+
+_For testnet use the path `/var/lib/lto-testnet/lto/fee-vote` instead._
+
+If you choose not to enable the REST API on your node, you can query `https://nodes.lto.network` instead of
+`http://localhost:6869`.
 
 # Tests
 
