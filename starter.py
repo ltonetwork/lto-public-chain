@@ -81,10 +81,9 @@ def create_fee_vote_cron():
         return
 
     with open('/etc/cron.d/fee-vote', 'w') as f:
-        f.write('0 * * * * python /lto-node/fee-vote.py %s %s\n' % (node, '/lto/fee-vote'))
-
+        f.write('* * * * *  root  /usr/bin/python3 /lto-node/fee-vote.py %s %s\n' % (node, '/lto/fee-vote'))
     os.chmod('/etc/cron.d/fee-vote', 0o644)
-    os.system('crontab /etc/cron.d/fee-vote')
+    os.system('service cron start')
 
 
 if __name__ == "__main__":

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Vote to increase, maintain, or decrease the fee, based on the current price of LTO in USD.
 # This script should be run a cron job once an hour.
 
@@ -76,6 +78,11 @@ def main(node: str, file: str):
 
 
 if __name__ == '__main__':
+    if (len(sys.argv) < 3):
+        print("USAGE: fee-vote NODE_URL PATH")
+        sys.exit(1)
+
+
     try:
         main(sys.argv[1], sys.argv[2])
         sys.exit(0)
