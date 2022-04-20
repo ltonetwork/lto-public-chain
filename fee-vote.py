@@ -50,7 +50,7 @@ def determine_vote(target: int, current: int):
     elif target > current * 1.1:
         return 'increase'
     else:
-        return 'remain'
+        return 'maintain'
 
 
 def write_vote(file: str, vote: str):
