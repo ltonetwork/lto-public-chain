@@ -24,11 +24,11 @@ case class CalculateBurnMigration(writableDB: DB, fs: FunctionalitySettings) ext
   def burnedAt(height: Int): Long = readOnly(_.get(Keys.burned(height)))
 
   protected def burnAddressTransfers(block: Block): Long =
-    block.transactionData.foldLeft(0L)((a, tx) => tx match {
-      case t: TransferTransaction => if (isBurnAddress(t.recipient)) a + t.amount else a
-      case mt: MassTransferTransaction => a + mt.transfers.filter(t => isBurnAddress(t.address)).map(_.amount).sum
-      case _ => 0
-    })
+    block.transactionData.foldLeft(0L)((burned, tx) => burned + (tx match {
+      case t: TransferTransaction => if (isBurnAddress(t.recipient)) t.amount else 0L
+      case mt: MassTransferTransaction => mt.transfers.filter(t => isBurnAddress(t.address)).map(_.amount).sum
+      case _ => 0L
+    }).toLong)
 
   protected def transactionBurn(height: Int, block: Block): Long =
     if (height >= burnFeetureHeight)
