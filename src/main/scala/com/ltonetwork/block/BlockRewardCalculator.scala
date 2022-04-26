@@ -30,7 +30,7 @@ object BlockRewardCalculator {
     Portfolio(balance = {
       if (bc.isFeatureActivated(BlockchainFeatures.Juicy, height))
         (FeeCalculator(bc).fee(height, tx) * (1 - feeBurnPct)).toLong
-      else if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
+      else if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, height - 1))
         Math.max(tx.fee - feeBurnAmt, 0)
       else
         tx.fee
@@ -40,7 +40,7 @@ object BlockRewardCalculator {
   def burnedFee(bc: Blockchain, height: Int, tx: Transaction): Long =
     if (bc.isFeatureActivated(BlockchainFeatures.Juicy, height))
       (FeeCalculator(bc).fee(height, tx) * feeBurnPct).toLong
-    else if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
+    else if (bc.isFeatureActivated(BlockchainFeatures.BurnFeeture, height - 1))
       Math.min(tx.fee, feeBurnAmt)
     else
       0L
@@ -55,12 +55,12 @@ object BlockRewardCalculator {
 
   def openerBlockFee(bc: Blockchain, height: Int, block: Block): Portfolio =
     Monoid[Portfolio].combineAll(block.transactionData.map { tx =>
-      val fees = rewardedFee(bc, height, tx)
-      fees.minus(fees.multiply(CurrentBlockFeePart))
+      rewardedFee(bc, height, tx).multiply(CurrentBlockFeePart)
     })
 
   def closerBlockFee(bc: Blockchain, height: Int, block: Block): Portfolio =
     Monoid[Portfolio].combineAll(block.transactionData.map { tx =>
-      rewardedFee(bc, height, tx).multiply(CurrentBlockFeePart)
+      val fees = rewardedFee(bc, height, tx)
+      fees.minus(fees.multiply(CurrentBlockFeePart))
     })
 }

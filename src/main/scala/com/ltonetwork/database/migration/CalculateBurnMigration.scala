@@ -16,7 +16,8 @@ case class CalculateBurnMigration(writableDB: DB, fs: FunctionalitySettings) ext
 
   var burned: Long = 0L
 
-  val burnFeetureHeight: Int = readOnly(_.get(Keys.activatedFeatures)).getOrElse(BlockchainFeatures.BurnFeeture.id, Int.MaxValue)
+  val burnFeetureHeight: Int = readOnly(_.get(Keys.activatedFeatures))
+    .get(BlockchainFeatures.BurnFeeture.id).fold(Int.MaxValue)(_ + 1)
 
   def isBurnAddress(address: Address): Boolean = fs.burnAddresses.contains(address.toString)
 
