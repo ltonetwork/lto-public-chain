@@ -5,11 +5,18 @@ import com.ltonetwork.utils.Base58
 import io.swagger.v3.oas.annotations.media.Schema
 import play.api.libs.json._
 import scorex.crypto.signatures.Curve25519._
+import java.util.Objects
 
-import scala.collection.immutable.Stream
 import scala.util.{Failure, Success}
 
-case class BlockCheckpoint(height: Int, @Schema(`type` = "java.lang.String") signature: Array[Byte])
+case class BlockCheckpoint(height: Int, @Schema(`type` = "java.lang.String") signature: Array[Byte]) {
+  override def equals(b: Any): Boolean = b match {
+    case other: BlockCheckpoint => height == other.height && signature.sameElements(other.signature)
+    case _                      => false
+  }
+
+  override def hashCode(): Int = Objects.hash(Int.box(height), signature)
+}
 
 case class Checkpoint(items: Seq[BlockCheckpoint], @Schema(`type` = "java.lang.String") signature: Array[Byte]) {
   def toSign: Array[Byte] = {
