@@ -63,7 +63,7 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
     Wallet(settings.walletSettings)
   } catch {
     case e: IllegalStateException =>
-      log.error(s"Failed to open wallet file '${settings.walletSettings.file.get.getAbsolutePath}")
+      log.error(s"Failed to open wallet file '${settings.walletSettings.file.get.getAbsolutePath}'")
       throw e
   }
   private val peerDatabase = new PeerDatabaseImpl(settings.networkSettings)
