@@ -156,7 +156,7 @@ case class DebugApiRoute(ws: LtoSettings,
   @GET
   @Path("/state")
   @Operation(
-    summary = "Get current state"
+    summary = "Get a list of balances of all accounts"
   )
   @SecurityRequirement(name = "bearerAuth")
   @ApiResponses(Array(new ApiResponse(responseCode = "200", description = "Json state")))
