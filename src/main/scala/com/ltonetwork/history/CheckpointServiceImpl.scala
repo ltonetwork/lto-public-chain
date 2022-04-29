@@ -15,13 +15,17 @@ class CheckpointServiceImpl(db: DB, settings: CheckpointsSettings)
 
   private val CheckpointProperty = "checkpoint"
 
-  override def get: Option[Checkpoint] = getProperty(CheckpointProperty).flatMap(b => CheckpointCodec.decode(b).toOption.map(r => r.value))
+  private def getFromDB: Option[Checkpoint] = getProperty(CheckpointProperty)
+    .flatMap(b => CheckpointCodec.decode(b).toOption.map(r => r.value))
+
+  override def get: Checkpoint = getFromDB
+    .getOrElse(Checkpoint(settings.blocks, Array.emptyByteArray))
 
   override def set(cp: Checkpoint): Either[ValidationError, Unit] =
     for {
-      _ <- Either.cond(!get.forall(_.signature sameElements cp.signature), (), GenericError("Checkpoint already applied"))
+      _ <- Either.cond(!(get.signature sameElements cp.signature), (), GenericError("Checkpoint already applied"))
       _ <- Either.cond(
-        crypto.verify(cp.signature, cp.toSign, settings.publicKey.arr),
+        settings.publicKey.exists(key => crypto.verify(cp.signature, cp.toSign, key)),
         putProperty(CheckpointProperty, CheckpointCodec.encode(cp), None),
         GenericError("Invalid checkpoint signature")
       )
