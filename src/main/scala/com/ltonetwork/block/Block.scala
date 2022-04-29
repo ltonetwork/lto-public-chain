@@ -77,7 +77,8 @@ object Block extends ScorexLogging {
     def apply(l: Long): Long = l / divider * dividend
   }
 
-  val CurrentBlockFeePart: Fraction = Fraction(2, 5)
+  val OpenerBlockFeePart: Fraction = Fraction(2, 5)
+  val CloserBlockFeePart: Fraction = Fraction(3, 5)
 
   type BlockIds = Seq[ByteStr]
   type BlockId = ByteStr

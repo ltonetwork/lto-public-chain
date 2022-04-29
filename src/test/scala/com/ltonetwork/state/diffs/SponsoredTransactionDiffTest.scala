@@ -77,7 +77,7 @@ class SponsoredTransactionDiffTest
             d.portfolios(sponsorship.sender.toAddress).balance shouldBe (-transfer.fee)
             d.portfolios(transfer.sender.toAddress).balance shouldBe (-transfer.amount)
             d.portfolios(transfer.recipient).balance shouldBe transfer.amount
-            val fees = Block.CurrentBlockFeePart(transfer.fee) + sponsorship.fee - Block.CurrentBlockFeePart(sponsorship.fee)
+            val fees = Block.OpenerBlockFeePart(transfer.fee) + sponsorship.fee - Block.OpenerBlockFeePart(sponsorship.fee)
             d.portfolios(TestBlock.defaultSigner).balance shouldBe fees
             b.sponsorOf(transfer.sender.toAddress) shouldBe List(sponsorship.sender.toAddress)
         }
@@ -159,7 +159,7 @@ class SponsoredTransactionDiffTest
             d.portfolios(sponsor.toAddress).balance shouldBe (-transfer.fee)
             d.portfolios(sponsoredTransfer.sender.toAddress).balance shouldBe (-transfer.amount)
             d.portfolios(sponsoredTransfer.recipient).balance shouldBe transfer.amount
-            val fees = Block.CurrentBlockFeePart(sponsoredTransfer.fee)
+            val fees = Block.OpenerBlockFeePart(sponsoredTransfer.fee)
             d.portfolios(TestBlock.defaultSigner).balance shouldBe fees
         }
     }
@@ -175,7 +175,7 @@ class SponsoredTransactionDiffTest
             d.portfolios(sponsor.toAddress).balance shouldBe (-transfer.fee)
             d.portfolios(sponsoredTransfer.sender.toAddress).balance shouldBe (-transfer.amount)
             d.portfolios(sponsoredTransfer.recipient).balance shouldBe transfer.amount
-            val fees = Block.CurrentBlockFeePart(transfer.fee) + sponsorship.fee - Block.CurrentBlockFeePart(sponsorship.fee)
+            val fees = Block.OpenerBlockFeePart(transfer.fee) + sponsorship.fee - Block.OpenerBlockFeePart(sponsorship.fee)
             d.portfolios(TestBlock.defaultSigner).balance shouldBe fees
             b.sponsorOf(transfer.sender.toAddress) shouldBe List(sponsorship.sender.toAddress)
         }
@@ -195,7 +195,7 @@ class SponsoredTransactionDiffTest
             d.portfolios(sponsor.toAddress).balance shouldBe (-transfer.fee)
             d.portfolios(sponsoredTransfer.sender.toAddress).balance shouldBe (-transfer.amount)
             d.portfolios(sponsoredTransfer.recipient).balance shouldBe transfer.amount
-            val fees = Block.CurrentBlockFeePart(transfer.fee) + setScript.fee - Block.CurrentBlockFeePart(setScript.fee)
+            val fees = Block.OpenerBlockFeePart(transfer.fee) + setScript.fee - Block.OpenerBlockFeePart(setScript.fee)
             d.portfolios(TestBlock.defaultSigner).balance shouldBe fees
         }
     }
