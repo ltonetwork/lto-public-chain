@@ -3,7 +3,7 @@ package com.ltonetwork.state.diffs
 import cats.Monoid
 import cats.implicits._
 import com.ltonetwork.account.Address
-import com.ltonetwork.block.Block.CurrentBlockFeePart
+import com.ltonetwork.block.Block.OpenerBlockFeePart
 import com.ltonetwork.block.{Block, BlockRewardCalculator, MicroBlock}
 import com.ltonetwork.metrics.Instrumented
 import com.ltonetwork.mining.MiningConstraint
@@ -30,7 +30,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
     val miningReward = BlockRewardCalculator.miningReward(settings, blockchain)
     val initDiff = Diff.empty.copy(
       portfolios = Map(blockGenerator.toAddress -> Monoid[Portfolio].combine(
-        maybePrevBlock.map(b => BlockRewardCalculator.openerBlockFee(blockchain, stateHeight, b)).orEmpty, // NG reward for closing block
+        maybePrevBlock.map(b => BlockRewardCalculator.closerBlockFee(blockchain, stateHeight, b)).orEmpty, // NG reward for closing block
         miningReward,
       )),
       burned = -1 * miningReward.balance
@@ -102,7 +102,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
           else
             txDiffer(updatedBlockchain, tx).map { newDiff =>
               val updatedDiff  = currDiff.combine(newDiff)
-              val curBlockFees = BlockRewardCalculator.rewardedFee(blockchain, currentBlockHeight, tx).multiply(CurrentBlockFeePart)
+              val curBlockFees = BlockRewardCalculator.rewardedFee(blockchain, currentBlockHeight, tx).multiply(OpenerBlockFeePart)
               val burnedFees   = BlockRewardCalculator.burnedFee(blockchain, currentBlockHeight, tx)
               val diff         = updatedDiff.combine(Diff.empty.copy(
                 portfolios = Map(blockGenerator -> curBlockFees),

@@ -1,7 +1,7 @@
 package com.ltonetwork.state
 
 import cats._
-import com.ltonetwork.block.Block.Fraction
+import com.ltonetwork.utils.Fraction
 
 case class Portfolio(balance: Long, lease: LeaseBalance) {
   lazy val effectiveBalance: Long = safeSum(balance, lease.in) - lease.out

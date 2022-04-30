@@ -1,5 +1,6 @@
 package com.ltonetwork.database.migration
 import com.ltonetwork.account.Address
+import com.ltonetwork.block.Block.{CloserBlockFeePart, OpenerBlockFeePart}
 import com.ltonetwork.block.{Block, BlockRewardCalculator}
 import com.ltonetwork.database.Keys
 import com.ltonetwork.features.BlockchainFeatures
@@ -16,7 +17,8 @@ case class CalculateBurnMigration(writableDB: DB, fs: FunctionalitySettings) ext
 
   var burned: Long = 0L
 
-  val burnFeetureHeight: Int = readOnly(_.get(Keys.activatedFeatures)).getOrElse(BlockchainFeatures.BurnFeeture.id, Int.MaxValue)
+  val burnFeetureHeight: Int = readOnly(_.get(Keys.activatedFeatures))
+    .getOrElse(BlockchainFeatures.BurnFeeture.id, Int.MaxValue)
 
   def isBurnAddress(address: Address): Boolean = fs.burnAddresses.contains(address.toString)
 
@@ -31,8 +33,10 @@ case class CalculateBurnMigration(writableDB: DB, fs: FunctionalitySettings) ext
     }).toLong)
 
   protected def transactionBurn(height: Int, block: Block): Long =
-    if (height >= burnFeetureHeight)
+    if (height > burnFeetureHeight)
       block.transactionCount * BlockRewardCalculator.feeBurnAmt
+    else if (height == burnFeetureHeight)
+      CloserBlockFeePart(block.transactionCount * BlockRewardCalculator.feeBurnAmt)
     else
       0L
 
