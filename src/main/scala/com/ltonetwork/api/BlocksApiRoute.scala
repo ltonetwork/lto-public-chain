@@ -99,13 +99,10 @@ case class BlocksApiRoute(settings: RestAPISettings,
               (blockchain.blockAt(height), height)
             }
             .filter(_._1.isDefined)
-            .map { pair =>
-              (pair._1.get, pair._2)
-            }
+            .map { case (block, height) => (block.get, pair._2) }
             .filter(_._1.signerData.generator.address == address)
-            .map { pair =>
-              pair._1.json() + ("height" -> Json.toJson(pair._2))
-            })
+            .map { case (block, height) => blockJson(height, block) }
+        )
         complete(blocks)
       } else complete(TooBigArrayAllocation)
   }
