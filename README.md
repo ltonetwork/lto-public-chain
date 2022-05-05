@@ -76,8 +76,8 @@ sbt packageAll -Dnetwork=testnet -DpackageName=lto-testnet  # Testnet
 
 The `.deb` package can be downloaded from the [GitHub release page](https://github.com/ltonetwork/lto-public-chain/releases).
 
-    wget https://github.com/ltonetwork/lto-public-chain/releases/download/v1.6.2/lto_1.6.2_all.deb 
-    dpkg -i lto_1.6.2_all.deb
+    wget https://github.com/ltonetwork/lto-public-chain/releases/download/v1.6.3/lto_1.6.3_all.deb 
+    dpkg -i lto_1.6.3_all.deb
 
 ## Fee vote
 
