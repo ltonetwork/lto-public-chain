@@ -99,7 +99,7 @@ case class BlocksApiRoute(settings: RestAPISettings,
               (blockchain.blockAt(height), height)
             }
             .filter(_._1.isDefined)
-            .map { case (block, height) => (block.get, pair._2) }
+            .map { case (block, height) => (block.get, height) }
             .filter(_._1.signerData.generator.address == address)
             .map { case (block, height) => blockJson(height, block) }
         )
