@@ -43,8 +43,8 @@ case class BlocksApiRoute(settings: RestAPISettings,
 
   private def blockJson(height: Int, block: Block) = {
     val miningReward = BlockRewardCalculator.miningReward(functionalitySettings, blockchain, height).balance
-    val prevBlockFee = blockchain.blockAt(height - 1).map(BlockRewardCalculator.openerBlockFee(blockchain, height, _).balance).getOrElse(0L)
-    val curBlockFee = BlockRewardCalculator.closerBlockFee(blockchain, height, block).balance
+    val prevBlockFee = blockchain.blockAt(height - 1).map(BlockRewardCalculator.closerBlockFee(blockchain, height - 1, _).balance).getOrElse(0L)
+    val curBlockFee = BlockRewardCalculator.openerBlockFee(blockchain, height, block).balance
     val feeCalculator = FeeCalculator(blockchain)
     val jsonHeight: JsValue = if (height > 0) JsNumber(height) else JsNull;
 
@@ -99,13 +99,10 @@ case class BlocksApiRoute(settings: RestAPISettings,
               (blockchain.blockAt(height), height)
             }
             .filter(_._1.isDefined)
-            .map { pair =>
-              (pair._1.get, pair._2)
-            }
+            .map { case (block, height) => (block.get, height) }
             .filter(_._1.signerData.generator.address == address)
-            .map { pair =>
-              pair._1.json() + ("height" -> Json.toJson(pair._2))
-            })
+            .map { case (block, height) => blockJson(height, block) }
+        )
         complete(blocks)
       } else complete(TooBigArrayAllocation)
   }

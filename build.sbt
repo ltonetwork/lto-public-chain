@@ -129,7 +129,7 @@ inConfig(Universal)(
         case other => other
       }
     },
-    mappings += (baseDirectory.value / s"fee-vote.py" -> "bin/lto-fee-vote"),
+    mappings += (baseDirectory.value / s"fee-vote.py" -> s"bin/lto${network.value.packageSuffix}-fee-vote"),
     javaOptions ++= Seq(
       // -J prefix is required by the bash script
       "-J-server",
