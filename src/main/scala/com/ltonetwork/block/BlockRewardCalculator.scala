@@ -15,16 +15,16 @@ object BlockRewardCalculator {
 
   private def maxMiningReward(settings: FunctionalitySettings, bc: Blockchain, height: Int): Long = {
     val activationHeight = bc.featureActivationHeight(BlockchainFeatures.Juicy)
+    val activationOffset = 1 // Mining reward starts 1 block late due to a bug in v1.6.3
 
-    if (activationHeight.exists(_ <= bc.height))
-      settings.miningReward + settings.miningRewardBonus * Math.max(activationHeight.get - height + settings.miningRewardBonusPeriod, 0)
+    if (activationHeight.exists(_ + activationOffset <= height))
+      settings.miningReward + settings.miningRewardBonus * Math.max(activationHeight.get + activationOffset - height + settings.miningRewardBonusPeriod, 0)
     else
       0L
   }
 
   def miningReward(settings: FunctionalitySettings, bc: Blockchain, height: Int): Portfolio =
-    Portfolio(balance = Math.min(maxMiningReward(settings, bc, height), bc.burned(height)))
-  def miningReward(settings: FunctionalitySettings, bc: Blockchain): Portfolio = miningReward(settings, bc, bc.height)
+    Portfolio(balance = Math.min(maxMiningReward(settings, bc, height), bc.burned(height - 1)))
 
   // During activation of burnfeeture, where only fee was only burned for closer.
   def rewardedFee(bc: Blockchain, height: Int, tx: Transaction): Portfolio = rewardedFee(bc, height, tx, 1)
