@@ -24,7 +24,8 @@ object IssueAssociationSerializerV4 extends TransactionSerializer.For[IssueAssoc
       recipient.bytes.arr,
       Ints.toByteArray(assocType),
       Longs.toByteArray(expires.getOrElse(0)),
-      Deser.serializeArray(hash.fold(Array.emptyByteArray)(_.arr))
+      Deser.serializeArray(hash.fold(Array.emptyByteArray)(_.arr)),
+      data.flatMap(_.toBytes).toArray
     )
   }
 
