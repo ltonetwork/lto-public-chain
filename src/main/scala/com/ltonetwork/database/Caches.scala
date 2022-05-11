@@ -73,7 +73,7 @@ trait Caches extends Blockchain {
   private var lastAddressId = loadMaxAddressId()
   protected def loadMaxAddressId(): BigInt
 
-  private val addressIdCache: LoadingCache[Address, Option[BigInt]] = cache(maxCacheSize, loadAddressId)
+  private val addressIdCache: LoadingCache[Address, Option[BigInt]] = cache(maxCacheSize, `loadAddressId`)
   protected def loadAddressId(address: Address): Option[BigInt]
   protected def addressId(address: Address): Option[BigInt] = addressIdCache.get(address)
 

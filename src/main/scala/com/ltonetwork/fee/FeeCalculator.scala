@@ -25,8 +25,8 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
 
   private def oldFees = new OldFeeCalculator(settings, blockchain)
 
-  private def dataTransactionBytes(tx: DataTransaction, unitSize: Int): Integer =
-    if (tx.data.nonEmpty) ((tx.data.map(_.toBytes.length).sum - 1) / unitSize) + 1
+  private def dataBytes(data: List[DataEntry[_]], unitSize: Int): Integer =
+    if (data.nonEmpty) ((data.map(_.toBytes.length).sum - 1) / unitSize) + 1
     else 0
 
   private def feesV5(height: Int, tx: Transaction): Either[ValidationError, Long] = (tx match {
@@ -40,7 +40,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     case _: AssociationTransaction       => Right(500)
     case _: SponsorshipTransaction       => Right(5000)
     case _: CancelSponsorshipTransaction => Right(1000)
-    case tx: DataTransaction             => Right(1000 + dataTransactionBytes(tx, 256) * 100)
+    case tx: DataTransaction             => Right(500 + dataBytes(tx.data, 256) * 100)
     case tx: RegisterTransaction         => Right(250 + tx.accounts.size * 100)
     case _: BurnTransaction              => Right(1000)
     case tx: MappedAnchorTransaction      => Right(250 + tx.anchors.size * 100)
@@ -58,7 +58,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     case _: AssociationTransaction       => Right(0.01 lto)
     case _: SponsorshipTransaction       => Right(0.1 lto)
     case _: CancelSponsorshipTransaction => Right(0.1 lto)
-    case tx: DataTransaction             => Right((0.01 lto) + dataTransactionBytes(tx, 1024*256) * (0.001 lto))
+    case tx: DataTransaction             => Right((0.01 lto) + dataBytes(tx.data, 1024*256) * (0.001 lto))
     case tx: RegisterTransaction         => Right((0.01 lto) + tx.accounts.size * (0.001 lto))
     case _                               => Left(UnsupportedTransactionType)
   }
@@ -71,7 +71,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     case _: CancelLeaseTransaction     => Right(1 lto)
     case tx: MassTransferTransaction   => Right((1 lto) + tx.transfers.size * (0.1 lto))
     case _: AnchorTransaction          => Right(0.35 lto)
-    case tx: DataTransaction           => Right((1 lto) + dataTransactionBytes(tx, 1024*256) * (0.1 lto))
+    case tx: DataTransaction           => Right((1 lto) + dataBytes(tx.data, 1024*256) * (0.1 lto))
     case _: AssociationTransaction     => Right(1 lto)
     case _: SponsorshipTransactionBase => Right(5 lto)
     case _                             => Left(UnsupportedTransactionType)
@@ -79,7 +79,7 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
 
   private def feesV2(tx: Transaction): Either[ValidationError, Long] = tx match {
     case _: AnchorTransaction          => Right(0.1 lto)
-    case tx: DataTransaction           => Right((0.1 lto) + dataTransactionBytes(tx, 1024*256) * (0.01 lto))
+    case tx: DataTransaction           => Right((0.1 lto) + dataBytes(tx.data, 1024*256) * (0.01 lto))
     case _                             => feesV3(tx)
   }
 

@@ -43,19 +43,20 @@ case class BlocksApiRoute(settings: RestAPISettings,
 
   private def blockJson(height: Int, block: Block) = {
     val miningReward = BlockRewardCalculator.miningReward(functionalitySettings, blockchain, height).balance
-    val prevBlockFee = blockchain.blockAt(height - 1).map(BlockRewardCalculator.openerBlockFee(blockchain, height, _).balance).getOrElse(0L)
-    val curBlockFee = BlockRewardCalculator.closerBlockFee(blockchain, height, block).balance
+    val prevBlockFee = blockchain.blockAt(height - 1).map(BlockRewardCalculator.closerBlockFee(blockchain, height - 1, _).balance).getOrElse(0L)
+    val curBlockFee = BlockRewardCalculator.openerBlockFee(blockchain, height, block).balance
     val feeCalculator = FeeCalculator(blockchain)
+    val jsonHeight: JsValue = if (height > 0) JsNumber(height) else JsNull;
 
     BlockHeader.json(block, block.bytes().length) ++ Json.obj(
       "transactions" -> JsArray(
         block.transactionData.map(tx => tx.json() ++ Json.obj("effectiveFee" -> feeCalculator.fee(height, tx)))
       ),
-      "fees" -> BlockRewardCalculator.blockFee(blockchain, height, block).balance,
+      "fee" -> BlockRewardCalculator.blockFee(blockchain, height, block).balance,
       "burnedFees" -> BlockRewardCalculator.blockBurnedFee(blockchain, height, block),
       "miningReward" -> miningReward,
       "generatorReward" -> (miningReward + prevBlockFee + curBlockFee),
-      "height" -> JsNumber(height)
+      "height" -> jsonHeight
     )
   }
 
@@ -98,13 +99,10 @@ case class BlocksApiRoute(settings: RestAPISettings,
               (blockchain.blockAt(height), height)
             }
             .filter(_._1.isDefined)
-            .map { pair =>
-              (pair._1.get, pair._2)
-            }
+            .map { case (block, height) => (block.get, height) }
             .filter(_._1.signerData.generator.address == address)
-            .map { pair =>
-              pair._1.json() + ("height" -> Json.toJson(pair._2))
-            })
+            .map { case (block, height) => blockJson(height, block) }
+        )
         complete(blocks)
       } else complete(TooBigArrayAllocation)
   }
@@ -385,7 +383,7 @@ case class BlocksApiRoute(settings: RestAPISettings,
         .toOption
         .toRight(InvalidSignature)
         .flatMap(s => blockchain.blockById(s).toRight(BlockDoesNotExist)) match {
-        case Right(block) => complete(block.json() + ("height" -> blockchain.heightOf(block.uniqueId).map(Json.toJson(_)).getOrElse(JsNull)))
+        case Right(block) => complete(blockJson(blockchain.heightOf(block.uniqueId).getOrElse(0), block))
         case Left(e)      => complete(e)
       }
     }

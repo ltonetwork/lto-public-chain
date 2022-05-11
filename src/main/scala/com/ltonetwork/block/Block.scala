@@ -9,7 +9,7 @@ import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.genesis.GenesisTransaction
-import com.ltonetwork.utils.ScorexLogging
+import com.ltonetwork.utils.{Fraction, ScorexLogging}
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
 import scorex.crypto.signatures.Curve25519._
@@ -72,12 +72,8 @@ case class Block private (override val timestamp: Long,
 }
 
 object Block extends ScorexLogging {
-
-  case class Fraction(dividend: Int, divider: Int) {
-    def apply(l: Long): Long = l / divider * dividend
-  }
-
-  val CurrentBlockFeePart: Fraction = Fraction(2, 5)
+  val OpenerBlockFeePart: Fraction = Fraction.roundDown(2, 5)
+  val CloserBlockFeePart: Fraction = Fraction.roundUp(3, 5)
 
   type BlockIds = Seq[ByteStr]
   type BlockId = ByteStr

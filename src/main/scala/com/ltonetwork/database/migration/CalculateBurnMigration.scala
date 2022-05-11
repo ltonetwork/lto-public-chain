@@ -1,5 +1,6 @@
 package com.ltonetwork.database.migration
 import com.ltonetwork.account.Address
+import com.ltonetwork.block.Block.{CloserBlockFeePart, OpenerBlockFeePart}
 import com.ltonetwork.block.{Block, BlockRewardCalculator}
 import com.ltonetwork.database.Keys
 import com.ltonetwork.features.BlockchainFeatures
@@ -16,7 +17,8 @@ case class CalculateBurnMigration(writableDB: DB, fs: FunctionalitySettings) ext
 
   var burned: Long = 0L
 
-  val burnFeetureHeight: Int = readOnly(_.get(Keys.activatedFeatures)).getOrElse(BlockchainFeatures.BurnFeeture.id, Int.MaxValue)
+  val burnFeetureHeight: Int = readOnly(_.get(Keys.activatedFeatures))
+    .getOrElse(BlockchainFeatures.BurnFeeture.id, Int.MaxValue)
 
   def isBurnAddress(address: Address): Boolean = fs.burnAddresses.contains(address.toString)
 
@@ -24,15 +26,17 @@ case class CalculateBurnMigration(writableDB: DB, fs: FunctionalitySettings) ext
   def burnedAt(height: Int): Long = readOnly(_.get(Keys.burned(height)))
 
   protected def burnAddressTransfers(block: Block): Long =
-    block.transactionData.foldLeft(0L)((a, tx) => tx match {
-      case t: TransferTransaction => if (isBurnAddress(t.recipient)) a + t.amount else a
-      case mt: MassTransferTransaction => a + mt.transfers.filter(t => isBurnAddress(t.address)).map(_.amount).sum
-      case _ => 0
-    })
+    block.transactionData.foldLeft(0L)((burned, tx) => burned + (tx match {
+      case t: TransferTransaction => if (isBurnAddress(t.recipient)) t.amount else 0L
+      case mt: MassTransferTransaction => mt.transfers.filter(t => isBurnAddress(t.address)).map(_.amount).sum
+      case _ => 0L
+    }).toLong)
 
   protected def transactionBurn(height: Int, block: Block): Long =
-    if (height >= burnFeetureHeight)
+    if (height > burnFeetureHeight)
       block.transactionCount * BlockRewardCalculator.feeBurnAmt
+    else if (height == burnFeetureHeight)
+      CloserBlockFeePart(block.transactionCount * BlockRewardCalculator.feeBurnAmt)
     else
       0L
 
