@@ -83,13 +83,11 @@ case class AssociationsApiRoute(settings: RestAPISettings,
           case (assoc, (h, cp, id, r)) =>
             val (assocType, _, hash) = assoc
             AssociationInfo(
-              party = cp.stringRepr,
+              recipient = cp.stringRepr,
               hash = hash.map(_.base58).getOrElse(""),
               associationType = assocType,
               issueHeight = h,
               issueTransactionId = id.toString,
-              revokeHeight = r.map(_._1),
-              revokeTransactionId = r.map(_._2.toString)
             )
         }
     }
@@ -100,13 +98,13 @@ case class AssociationsApiRoute(settings: RestAPISettings,
 
 object AssociationsApiRoute {
 
-  case class AssociationInfo(party: String,
+  case class AssociationInfo(recipient: String,
                              hash: String,
                              associationType: Int,
                              issueHeight: Int,
                              issueTransactionId: String,
-                             revokeHeight: Option[Int],
-                             revokeTransactionId: Option[String])
+
+)
 
   case class AssociationsInfo(address: String, outgoing: List[AssociationInfo], incoming: List[AssociationInfo])
 
