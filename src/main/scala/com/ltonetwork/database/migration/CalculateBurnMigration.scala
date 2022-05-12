@@ -41,7 +41,7 @@ case class CalculateBurnMigration(writableDB: DB, fs: FunctionalitySettings) ext
       0L
 
   override protected def before(height: Int): Unit = {
-    if (readOnly(_.get(Keys.activatedFeatures)).contains(BlockchainFeatures.Juicy.id)) {
+    if (readOnly(_.get(Keys.activatedFeatures)).get(BlockchainFeatures.Juicy.id).exists(_ <= maxHeight)) {
       log.error("Unable to apply calculate burn migration: Juicy is already active. Please sync from genesis.")
       forceStopApplication(MigrationError)
     }
