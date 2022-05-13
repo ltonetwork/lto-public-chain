@@ -48,10 +48,8 @@ package object state {
   }
 
   implicit class BlockchainExt(blockchain: Blockchain) extends ScorexLogging {
-    def assocExists(tx: AssociationTransaction): Boolean = {
-      val txs = blockchain.associations(tx.sender).outgoing.map(_._2).filter(as => tx.assoc == as.assoc)
-      txs.nonEmpty && txs.maxBy(tx => (tx.timestamp, tx.typeId)).typeId == IssueAssociationTransaction.typeId
-    }
+    def assocExists(tx: AssociationTransaction): Boolean =
+      blockchain.associations(tx.sender).outgoing.exists(as => tx.assoc == as.assoc)
 
     def isEmpty: Boolean = blockchain.height == 0
 

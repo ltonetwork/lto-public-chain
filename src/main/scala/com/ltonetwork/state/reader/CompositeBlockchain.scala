@@ -177,24 +177,22 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
 
   override def rollbackTo(targetBlockId: ByteStr): Seq[Block] = inner.rollbackTo(targetBlockId)
 
-  override def associations(address: Address): Blockchain.Associations = {
-    val a0 = inner.associations(address)
-    val diffAssociations: Seq[(Int, AssociationTransaction)] = maybeDiff
-      .map(
-        d =>
-          d.transactions.values
-            .map(i => (i._1, i._2))
-            .filter(x => {
-              val tpid = x._2.builder.typeId
-              tpid == IssueAssociationTransaction.typeId || tpid == RevokeAssociationTransaction.typeId
-            })
-            .toList
-            .map(_.asInstanceOf[(Int, AssociationTransaction)]))
-      .getOrElse(List.empty)
-    val outgoing = diffAssociations.filter(_._2.sender.toAddress == address)
-    val incoming = diffAssociations.filter(_._2.recipient == address)
+  override def associations(address: Address): Associations = {
+    val timestamp = inner.lastBlockTimestamp.get
+    val innerAssociations = inner.associations(address)
 
-    Blockchain.Associations(a0.outgoing ++ outgoing, a0.incoming ++ incoming)
+    val diffTxs = maybeDiff
+      .map(
+        _.transactions.values
+          .filter { case (_, tx, _) =>
+            tx.builder.typeId == IssueAssociationTransaction.typeId || tx.builder.typeId == RevokeAssociationTransaction.typeId
+          }
+          .map { case (_, tx, _) => (timestamp, tx.asInstanceOf[AssociationTransaction]) }
+          .toList
+      )
+      .getOrElse(List.empty)
+
+    innerAssociations.update(timestamp, diffTxs)
   }
 
   override def sponsorOf(address: Address): List[Address] =

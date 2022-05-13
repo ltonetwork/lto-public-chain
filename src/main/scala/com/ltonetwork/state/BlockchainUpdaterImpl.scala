@@ -550,21 +550,22 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
       blockchain.balance(address)
   }
 
-  override def associations(address: Address): Blockchain.Associations = {
-    val a0 = blockchain.associations(address)
-    val a1 = ngState
-      .map { n =>
-        val a = n.bestLiquidDiff.transactions.values
-          .filter(x => {
-            val tpid = x._2.builder.typeId
-            tpid == IssueAssociationTransaction.typeId || tpid == RevokeAssociationTransaction.typeId
-          })
-          .map(x => (x._1, x._2.asInstanceOf[AssociationTransaction]))
+  override def associations(address: Address): Associations = {
+    val associations = blockchain.associations(address)
+    val timestamp = blockchain.lastBlockTimestamp.get + 1
+
+    val txs = ngState
+      .map(
+        _.bestLiquidDiff.transactions.values
+          .filter { case (_, tx, _) =>
+            tx.builder.typeId == IssueAssociationTransaction.typeId || tx.builder.typeId == RevokeAssociationTransaction.typeId
+          }
+          .map { case (_, tx, _) => (timestamp, tx.asInstanceOf[AssociationTransaction]) }
           .toList
-        Blockchain.Associations(outgoing = a.filter(_._2.sender.toAddress == address), incoming = a.filter(_._2.recipient == address))
-      }
-      .getOrElse(Blockchain.Associations(List.empty, List.empty))
-    Blockchain.Associations(a0.outgoing ++ a1.outgoing, a0.incoming ++ a1.incoming)
+      )
+      .getOrElse(List.empty)
+
+    associations.update(timestamp, txs)
   }
 }
 
