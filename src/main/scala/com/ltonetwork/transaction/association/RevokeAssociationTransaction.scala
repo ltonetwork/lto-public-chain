@@ -38,7 +38,7 @@ case class RevokeAssociationTransaction private (version: Byte,
 object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssociationTransaction] {
 
   override def typeId: Byte                 = 17
-  override def supportedVersions: Set[Byte] = IssueAssociationTransaction.supportedVersions
+  override def supportedVersions: Set[Byte] = Set(1, 3)
 
   val MaxHashLength: Int    = IssueAssociationTransaction.MaxHashLength
   val StringHashLength: Int = IssueAssociationTransaction.StringHashLength

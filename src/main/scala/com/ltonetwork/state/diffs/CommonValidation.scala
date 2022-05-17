@@ -10,7 +10,7 @@ import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransaction
-import com.ltonetwork.transaction.association.AssociationTransaction
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction}
 import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
@@ -81,30 +81,31 @@ object CommonValidation {
       )
 
     (tx, tx.version) match {
-      case (_: GenesisTransaction, 1)         => Right(tx)
-      case (_: TransferTransaction, 1)        => Right(tx)
-      case (_: TransferTransaction, 2)        => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case (_: TransferTransaction, 3)        => activationBarrier(BlockchainFeatures.Cobalt)
-      case (_: LeaseTransaction, 1)           => Right(tx)
-      case (_: LeaseTransaction, 2)           => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case (_: LeaseTransaction, 3)           => activationBarrier(BlockchainFeatures.Cobalt)
-      case (_: CancelLeaseTransaction, 1)     => Right(tx)
-      case (_: CancelLeaseTransaction, 2)     => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case (_: CancelLeaseTransaction, 3)     => activationBarrier(BlockchainFeatures.Cobalt)
-      case (_: MassTransferTransaction, 1)    => Right(tx)
-      case (_: MassTransferTransaction, 3)    => activationBarrier(BlockchainFeatures.Cobalt)
-      case (_: DataTransaction, 1)            => deactivationBarrier(BlockchainFeatures.SmartAccounts)
-      case (_: SetScriptTransaction, 1)       => Right(tx)
-      case (_: SetScriptTransaction, 3)       => activationBarrier(BlockchainFeatures.Cobalt)
-      case (_: AnchorTransaction, 1)          => Right(tx)
-      case (_: AnchorTransaction, 3)          => activationBarrier(BlockchainFeatures.Cobalt)
-      case (_: AssociationTransaction, 1)     => activationBarrier(BlockchainFeatures.AssociationTransaction)
-      case (_: AssociationTransaction, 3)     => activationBarrier(BlockchainFeatures.Cobalt)
-      case (_: SponsorshipTransactionBase, 1) => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
-      case (_: SponsorshipTransactionBase, 3) => activationBarrier(BlockchainFeatures.Cobalt)
-      case (_: DataTransaction, 3)            => activationBarrier(BlockchainFeatures.CobaltAlloy)
-      case (_: RegisterTransaction, 3)        => activationBarrier(BlockchainFeatures.CobaltAlloy)
-      case (_: BurnTransaction, 3)            => activationBarrier(BlockchainFeatures.Juicy)
+      case (_: GenesisTransaction, 1)          => Right(tx)
+      case (_: TransferTransaction, 1)         => Right(tx)
+      case (_: TransferTransaction, 2)         => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: TransferTransaction, 3)         => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: LeaseTransaction, 1)            => Right(tx)
+      case (_: LeaseTransaction, 2)            => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: LeaseTransaction, 3)            => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: CancelLeaseTransaction, 1)      => Right(tx)
+      case (_: CancelLeaseTransaction, 2)      => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: CancelLeaseTransaction, 3)      => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: MassTransferTransaction, 1)     => Right(tx)
+      case (_: MassTransferTransaction, 3)     => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: DataTransaction, 1)             => deactivationBarrier(BlockchainFeatures.SmartAccounts)
+      case (_: SetScriptTransaction, 1)        => Right(tx)
+      case (_: SetScriptTransaction, 3)        => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: AnchorTransaction, 1)           => Right(tx)
+      case (_: AnchorTransaction, 3)           => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: AssociationTransaction, 1)      => activationBarrier(BlockchainFeatures.AssociationTransaction)
+      case (_: AssociationTransaction, 3)      => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: SponsorshipTransactionBase, 1)  => activationBarrier(BlockchainFeatures.SponsorshipTransaction)
+      case (_: SponsorshipTransactionBase, 3)  => activationBarrier(BlockchainFeatures.Cobalt)
+      case (_: DataTransaction, 3)             => activationBarrier(BlockchainFeatures.CobaltAlloy)
+      case (_: RegisterTransaction, 3)         => activationBarrier(BlockchainFeatures.CobaltAlloy)
+      case (_: BurnTransaction, 3)             => activationBarrier(BlockchainFeatures.Juicy)
+      case (_: IssueAssociationTransaction, 4) => activationBarrier(BlockchainFeatures.Juicy)
 
       case _ => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
     }
