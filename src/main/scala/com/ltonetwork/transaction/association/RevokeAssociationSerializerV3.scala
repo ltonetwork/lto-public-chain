@@ -22,7 +22,7 @@ object RevokeAssociationSerializerV3 extends TransactionSerializer.For[RevokeAss
       Longs.toByteArray(fee),
       recipient.bytes.arr,
       Ints.toByteArray(assocType),
-      Deser.serializeArray(hash.fold(Array.emptyByteArray)(_.arr))
+      Deser.serializeArray(subject.fold(Array.emptyByteArray)(_.arr))
     )
   }
 

@@ -56,8 +56,8 @@ object RevokeAssociationRequest {
       (JsPath \ "sponsorKeyType").readNullable[String] and
       (JsPath \ "sponsorPublicKey").readNullable[String] and
       (JsPath \ "recipient").read[String].orElse((JsPath \ "party").read[String]) and
-      (JsPath \ "associationType").read[Int] and
-      (JsPath \ "hash").readNullable[ByteStr] and
+      (JsPath \ "associationType").read[Int].orElse((JsPath \ "assocType").read[Int]) and
+      (JsPath \ "subject").readNullable[ByteStr].orElse((JsPath \ "hash").readNullable[ByteStr]) and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(RevokeAssociationRequest.apply _),
     Json.writes[RevokeAssociationRequest].transform((json: JsObject) => Json.obj("type" -> RevokeAssociationTransaction.typeId.toInt) ++ json)

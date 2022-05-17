@@ -33,7 +33,7 @@ class AssociationTransactionSpecification
     parsed.fee shouldEqual tx.fee
     parsed.recipient shouldEqual tx.recipient
     parsed.assocType shouldEqual tx.assocType
-    parsed.hash shouldEqual tx.hash
+    parsed.subject shouldEqual tx.subject
 
     (parsed, tx) match {
       case (ip: IssueAssociationTransaction, itx: IssueAssociationTransaction) => ip.expires shouldEqual itx.expires
@@ -84,7 +84,7 @@ class AssociationTransactionSpecification
       req.timestamp.get shouldEqual tx.timestamp
       req.associationType shouldEqual tx.assocType
       req.recipient shouldEqual tx.recipient.toString
-      req.hash shouldEqual tx.hash
+      req.hash shouldEqual tx.subject
     }
   }
 
@@ -115,7 +115,7 @@ class AssociationTransactionSpecification
         sender = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         recipient = p,
         assocType = 420,
-        hash = None,
+        subject = None,
         fee = 100000,
         timestamp = 1526911531530L,
         expires = None,
@@ -144,7 +144,7 @@ class AssociationTransactionSpecification
                        "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt",
                        "associationType": 420,
                        "expires": 1558447531530,
-                       "hash": "264h1cUrahDxWCPJBAPgtf6A9f3dNhkrLAeBUdHU8A5NDtksaumZ4WmsAU2NiF4eTCubLpYAd9D6xgBosPv34inu",
+                       "subject": "264h1cUrahDxWCPJBAPgtf6A9f3dNhkrLAeBUdHU8A5NDtksaumZ4WmsAU2NiF4eTCubLpYAd9D6xgBosPv34inu",
                        "proofs": [
                          "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94",
                          "2z2S3W9n9AatLQ4XmR5mPfZdGY3o27JY7Bf9c7GeD3GDhGykxuSEjKMkwh2yALDcBhdduFGLT1pXJww4Dg6eMHRx"
@@ -152,7 +152,7 @@ class AssociationTransactionSpecification
                        }
   """)
 
-    val hash = ByteStr.decodeBase58("264h1cUrahDxWCPJBAPgtf6A9f3dNhkrLAeBUdHU8A5NDtksaumZ4WmsAU2NiF4eTCubLpYAd9D6xgBosPv34inu").get
+    val subject = ByteStr.decodeBase58("264h1cUrahDxWCPJBAPgtf6A9f3dNhkrLAeBUdHU8A5NDtksaumZ4WmsAU2NiF4eTCubLpYAd9D6xgBosPv34inu").get
     val proofs = Seq(
       ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get,
       ByteStr.decodeBase58("2z2S3W9n9AatLQ4XmR5mPfZdGY3o27JY7Bf9c7GeD3GDhGykxuSEjKMkwh2yALDcBhdduFGLT1pXJww4Dg6eMHRx").get
@@ -164,7 +164,7 @@ class AssociationTransactionSpecification
         sender = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         recipient = Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet(),
         assocType = 420,
-        hash = Some(hash),
+        subject = Some(subject),
         fee = 100000,
         timestamp = 1526911531530L,
         expires = Some(1558447531530L),

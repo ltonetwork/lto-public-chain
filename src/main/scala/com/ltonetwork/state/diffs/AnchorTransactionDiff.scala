@@ -24,9 +24,8 @@ object AnchorTransactionDiff {
       _ =>
         Diff(
           height,
-          tx,
-          accountData = Map.empty
-      )
+          tx
+        )
     )
   }
 }

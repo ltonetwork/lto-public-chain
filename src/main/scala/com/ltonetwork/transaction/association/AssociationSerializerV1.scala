@@ -23,7 +23,7 @@ trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction]
       sender.publicKey,
       recipient.bytes.arr,
       Ints.toByteArray(assocType),
-      hash.fold(Array(0: Byte))(a => (1: Byte) +: Deser.serializeArray(a.arr)),
+      subject.fold(Array(0: Byte))(a => (1: Byte) +: Deser.serializeArray(a.arr)),
       Longs.toByteArray(timestamp),
       Longs.toByteArray(fee)
     )

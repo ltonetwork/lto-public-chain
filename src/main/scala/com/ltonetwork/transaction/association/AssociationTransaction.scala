@@ -10,7 +10,7 @@ import play.api.libs.json.{JsObject, Json}
 abstract class AssociationTransaction extends Transaction {
   def assocType: Int
   def recipient: Address
-  def hash: Option[ByteStr]
+  def subject: Option[ByteStr]
 
-  def assoc: (Int, Address, Option[ByteStr]) = (assocType, recipient, hash)
+  def assoc: (Int, Address, Option[ByteStr]) = (assocType, recipient, subject)
 }

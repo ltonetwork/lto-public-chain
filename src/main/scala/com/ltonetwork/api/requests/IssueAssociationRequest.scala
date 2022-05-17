@@ -60,9 +60,9 @@ object IssueAssociationRequest {
       (JsPath \ "sponsorKeyType").readNullable[String] and
       (JsPath \ "sponsorPublicKey").readNullable[String] and
       (JsPath \ "recipient").read[String].orElse((JsPath \ "party").read[String]) and
-      (JsPath \ "associationType").read[Int] and
+      (JsPath \ "associationType").read[Int].orElse((JsPath \ "assocType").read[Int]) and
       (JsPath \ "expires").readNullable[Long] and
-      (JsPath \ "hash").readNullable[ByteStr] and
+      (JsPath \ "subject").readNullable[ByteStr].orElse((JsPath \ "hash").readNullable[ByteStr]) and
       (JsPath \ "data").readNullable[List[DataEntry[_]]] and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(IssueAssociationRequest.apply _),

@@ -7,11 +7,11 @@ import play.api.libs.json._
 case class Association (sender: Address,
                         recipient: Address,
                         assocType: Int,
-                        hash: Option[ByteStr],
+                        subject: Option[ByteStr],
                         timestamp: Long,
                         expires: Option[Long],
                         data: List[DataEntry[_]]) {
-  def assoc: (Int, Address, Option[ByteStr]) = (assocType, recipient, hash)
+  def assoc: (Int, Address, Option[ByteStr]) = (assocType, recipient, subject)
 
   def isExpired(time: Long): Boolean = expires.exists(_ <= time)
 }
@@ -22,17 +22,17 @@ object Association {
       tx.sender,
       tx.recipient,
       tx.assocType,
-      tx.hash,
+      tx.subject,
       timestamp,
       tx.expires,
       tx.data
     )
 
-  implicit val jsonFormat: Writes[Association] = Writes { a => Json.obj(
+  implicit val jsonWrites: Writes[Association] = Writes { a => Json.obj(
     "sender" -> a.sender,
     "recipient" -> a.recipient,
     "type" -> a.assocType,
-    "hash" -> a.hash,
+    "subject" -> a.subject,
     "timestamp" -> a.timestamp,
     "expires" -> a.expires,
     "data" -> a.data,
@@ -83,5 +83,5 @@ object Associations {
       }
       .values.toList
 
-  implicit val jsonFormat: Format[Associations] = Json.format
+  implicit val jsonWrites: Writes[Associations] = Json.writes
 }
