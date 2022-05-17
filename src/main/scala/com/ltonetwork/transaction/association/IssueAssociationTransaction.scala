@@ -34,7 +34,8 @@ case class IssueAssociationTransaction private (version: Byte,
         "recipient"       -> recipient.stringRepr,
       ) ++
         expires.fold(Json.obj())(e => Json.obj("expires" -> e)) ++
-        hash.fold(Json.obj())(h => Json.obj("hash"       -> h.base58))
+        hash.fold(Json.obj())(h => Json.obj("hash" -> h.base58)) ++
+        (if (data.isEmpty) Json.obj() else Json.obj("data" -> data))
     ))
 }
 
