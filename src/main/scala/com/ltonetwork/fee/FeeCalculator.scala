@@ -6,7 +6,7 @@ import com.ltonetwork.settings.{Constants, FeesSettings}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.{InsufficientFee, UnsupportedTransactionType}
 import com.ltonetwork.transaction.anchor.AnchorTransaction
-import com.ltonetwork.transaction.association.AssociationTransaction
+import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
@@ -30,20 +30,21 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     else 0
 
   private def feesV5(height: Int, tx: Transaction): Either[ValidationError, Long] = (tx match {
-    case _: GenesisTransaction           => Right(0)
-    case _: TransferTransaction          => Right(1000)
-    case _: LeaseTransaction             => Right(1000)
-    case _: SetScriptTransaction         => Right(5000)
-    case _: CancelLeaseTransaction       => Right(1000)
-    case tx: MassTransferTransaction     => Right(1000 + tx.transfers.size * 100)
-    case tx: AnchorTransaction           => Right(250 + tx.anchors.size * 100)
-    case _: AssociationTransaction       => Right(500)
-    case _: SponsorshipTransaction       => Right(5000)
-    case _: CancelSponsorshipTransaction => Right(1000)
-    case tx: DataTransaction             => Right(500 + dataBytes(tx.data, 256) * 100)
-    case tx: RegisterTransaction         => Right(250 + tx.accounts.size * 100)
-    case _: BurnTransaction              => Right(1000)
-    case _                               => Left(UnsupportedTransactionType)
+    case _: GenesisTransaction            => Right(0)
+    case _: TransferTransaction           => Right(1000)
+    case _: LeaseTransaction              => Right(1000)
+    case _: SetScriptTransaction          => Right(5000)
+    case _: CancelLeaseTransaction        => Right(1000)
+    case tx: MassTransferTransaction      => Right(1000 + tx.transfers.size * 100)
+    case tx: AnchorTransaction            => Right(250 + tx.anchors.size * 100)
+    case tx: IssueAssociationTransaction  => Right(500 + dataBytes(tx.data, 256) * 100)
+    case _: RevokeAssociationTransaction  => Right(500)
+    case _: SponsorshipTransaction        => Right(5000)
+    case _: CancelSponsorshipTransaction  => Right(1000)
+    case tx: DataTransaction              => Right(500 + dataBytes(tx.data, 256) * 100)
+    case tx: RegisterTransaction          => Right(250 + tx.accounts.size * 100)
+    case _: BurnTransaction               => Right(1000)
+    case _                                => Left(UnsupportedTransactionType)
   }).map(_ * blockchain.feePrice(height))
 
   private def feesV4(tx: Transaction): Either[ValidationError, Long] = tx match {

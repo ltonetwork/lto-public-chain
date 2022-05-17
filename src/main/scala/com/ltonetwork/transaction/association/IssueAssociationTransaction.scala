@@ -5,6 +5,7 @@ import com.ltonetwork.account.KeyTypes.ED25519
 import com.ltonetwork.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.{Proofs, TransactionBuilder, TransactionSerializer, TxValidator, ValidationError}
+import com.ltonetwork.utils.base58Length
 import monix.eval.Coeval
 import play.api.libs.json._
 
@@ -45,7 +46,9 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
   override def supportedVersions: Set[Byte] = Set(1, 3, 4)
 
   val MaxHashLength: Int    = 64
-  val StringHashLength: Int = com.ltonetwork.utils.base58Length(IssueAssociationTransaction.MaxHashLength)
+  val StringHashLength: Int = base58Length(IssueAssociationTransaction.MaxHashLength)
+  val MaxBytes: Int         = 10 * 1024
+  val MaxEntryCount: Int    = 100
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
@@ -64,6 +67,10 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
         Validated.condNel(expires.isEmpty || version >= 3,
                           (),
                           ValidationError.UnsupportedFeature(s"Association expiry is not supported for tx v$version")),
+        Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), (), ValidationError.TooBigArray),
+        Validated.condNel(!data.exists(_.key.isEmpty), (), ValidationError.GenericError("Empty key found")),
+        Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, (), ValidationError.GenericError("Duplicate keys found")),
+        Validated.condNel(data.flatMap(_.toBytes).toArray.length <= MaxBytes, (), ValidationError.TooBigArray),
         Validated.condNel(sponsor.isEmpty || version >= 3,
                           (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
