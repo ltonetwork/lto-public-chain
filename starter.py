@@ -81,10 +81,9 @@ def create_fee_vote_cron():
         return
 
     with open('/etc/cron.d/fee-vote', 'w') as f:
-        f.write('0 * * * * python /lto-node/fee-vote.py %s %s\n' % (node, '/lto/fee-vote'))
-
+        f.write('*/10 * * * *  root  /usr/bin/python3 /lto-node/fee-vote.py %s %s\n' % (node, '/lto/fee-vote'))
     os.chmod('/etc/cron.d/fee-vote', 0o644)
-    os.system('crontab /etc/cron.d/fee-vote')
+    os.system('service cron start')
 
 
 if __name__ == "__main__":
@@ -102,7 +101,7 @@ if __name__ == "__main__":
         copyfile('/lto-node/lto-custom.conf', '/lto/configs/lto-config.conf')
 
     api_key = os.environ.get('LTO_API_KEY', generate_password())
-    if os.environ.get('LTO_API_KEY') is None:
+    if not os.environ.get('LTO_API_KEY'):
         print('Node API key:', api_key)
     api_key_hash = secureHash(api_key)
 
@@ -132,15 +131,15 @@ if __name__ == "__main__":
     nested_set(env_dict, ['lto', 'miner', 'enable'], 'yes' if ENABLE_MINING.lower() in TRUEISH else 'no')
 
     LTO_NODE_NAME = os.getenv('LTO_NODE_NAME')
-    if LTO_NODE_NAME is not None:
+    if LTO_NODE_NAME:
         nested_set(env_dict, ['lto', 'network', 'node-name'], LTO_NODE_NAME)
 
     LTO_DECLARED_ADDRESS = os.getenv('LTO_DECLARED_ADDRESS')
-    if LTO_DECLARED_ADDRESS is not None:
+    if LTO_DECLARED_ADDRESS:
         nested_set(env_dict, ['lto', 'network', 'declared-address'], LTO_DECLARED_ADDRESS)
 
     LTO_FEATURES = os.getenv('LTO_FEATURES')
-    if LTO_FEATURES is not None:
+    if LTO_FEATURES:
         nested_set(env_dict, ['lto', 'features', 'supported'], LTO_FEATURES.split(','))
 
     config = ConfigFactory.from_dict(env_dict)

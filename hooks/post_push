@@ -8,4 +8,3 @@ docker push $DOCKER_REPO:$MINOR_VERSION
 
 docker tag $IMAGE_NAME $DOCKER_REPO:edge
 docker push $DOCKER_REPO:edge
-

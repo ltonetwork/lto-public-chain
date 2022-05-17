@@ -3,7 +3,7 @@ Feature: Data
   Scenario Outline: Set data for an account
     Given Karen has an <key_type> account with 5 lto
     When Karen sets data (<version>) "foo" to "bar"
-    Then Karen has 3.9 lto
+    Then Karen has 4.4 lto
     And Karen has data "foo" with value "bar"
 
     Examples:
