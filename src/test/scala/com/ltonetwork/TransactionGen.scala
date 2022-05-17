@@ -402,7 +402,6 @@ trait TransactionGenBase extends ScriptGen {
       lease = LeaseTransaction.signed(2, timestamp, master, fee, recipient, ENOUGH_AMT / 2).explicitGet()
     } yield (genesis, setScript, lease, transfer)
 
-<<<<<<< HEAD
   def anchorTransactionGen: Gen[AnchorTransaction]                = versionGen(AnchorTransaction).flatMap(anchorTransactionGen)
   def anchorTransactionGen(version: Byte): Gen[AnchorTransaction] = anchorTransactionGen(version, ED25519)
   def anchorTransactionGen(version: Byte, keyType: KeyType): Gen[AnchorTransaction] =
