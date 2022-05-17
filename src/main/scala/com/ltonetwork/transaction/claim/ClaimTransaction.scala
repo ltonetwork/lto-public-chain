@@ -16,8 +16,7 @@ case class ClaimTransaction private (version: Byte,
                                      claimType: Int,
                                      recipient: Option[Address],
                                      subject: Option[ByteStr],
-                                     amount: Long,
-                                     hash: Option[ByteStr],
+                                     data: List[DataEntry[_]],
                                      related: List[ByteStr],
                                      sponsor: Option[PublicKeyAccount],
                                      proofs: Proofs)
@@ -33,9 +32,8 @@ case class ClaimTransaction private (version: Byte,
       Json.obj("claimType" -> claimType) ++
       recipient.fold(Json.obj())(v => Json.obj("recipient" -> v)) ++
       subject.fold(Json.obj())(v => Json.obj("subject" -> v)) ++
-      Json.obj("amount" -> amount) ++
-      hash.fold(Json.obj())(v => Json.obj("hash" -> v)) ++
-      (if (related.nonEmpty) Json.obj("related" -> Json.toJson(related)) else Json.obj())
+      (if (data.nonEmpty) Json.obj("data" -> data) else Json.obj()) ++
+      (if (related.nonEmpty) Json.obj("related" -> related) else Json.obj())
   )
 }
 
@@ -45,9 +43,9 @@ object ClaimTransaction extends TransactionBuilder.For[ClaimTransaction] {
   override val supportedVersions: Set[Byte] = Set(3)
 
   val MaxSubjectLength: Int  = 256
-  val MaxHashLength: Int     = 64
   val MaxBytes: Int          = 150 * 1024
   val MaxEntryCount: Int     = 100
+  val MaxRelated: Int        = 10
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
@@ -59,8 +57,11 @@ object ClaimTransaction extends TransactionBuilder.For[ClaimTransaction] {
         Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
         Validated.condNel(!subject.exists(_.length > MaxSubjectLength), (), ValidationError.GenericError(s"Subject length must be <= $MaxSubjectLength bytes")),
-        Validated.condNel(!hash.exists(_.length > MaxHashLength), (), ValidationError.GenericError(s"Hash length must be <= $MaxHashLength bytes")),
-        Validated.condNel(related.lengthCompare(MaxEntryCount) <= 0, (), ValidationError.TooBigArray),
+        Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), (), ValidationError.TooBigArray),
+        Validated.condNel(!data.exists(_.key.isEmpty), (), ValidationError.GenericError("Empty key found in data")),
+        Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, (), ValidationError.GenericError("Duplicate keys found in data")),
+        Validated.condNel(data.flatMap(_.toBytes).toArray.length <= MaxBytes, (), ValidationError.TooBigArray),
+        Validated.condNel(related.lengthCompare(MaxRelated) <= 0, (), ValidationError.TooBigArray),
         Validated.condNel(related.forall(a => a.length == crypto.digestLength), (), ValidationError.GenericError(s"Invalid related tx id")),
         Validated.condNel(related.distinct.lengthCompare(related.size) == 0, (), ValidationError.GenericError("Duplicate related ids in one tx found")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
