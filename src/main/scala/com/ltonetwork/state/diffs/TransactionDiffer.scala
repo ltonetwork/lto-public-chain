@@ -46,7 +46,7 @@ object TransactionDiffer {
             case dtx: DataTransaction               => DataTransactionDiff(blockchain, currentBlockHeight)(dtx)
             case sstx: SetScriptTransaction         => SetScriptTransactionDiff(currentBlockHeight)(sstx)
             case at: AnchorTransaction              => AnchorTransactionDiff(blockchain, currentBlockHeight)(at)
-            case as: AssociationTransaction         => AssociationTransactionDiff(currentBlockHeight)(as)
+            case as: AssociationTransaction         => AssociationTransactionDiff(blockchain, currentBlockHeight)(as)
             case stx: SponsorshipTransaction        => SponsorshipTransactionDiff.sponsor(blockchain, currentBlockHeight)(stx)
             case sctx: CancelSponsorshipTransaction => SponsorshipTransactionDiff.cancel(blockchain, currentBlockHeight)(sctx)
             case rtx: RegisterTransaction           => RegisterTransactionDiff(blockchain, currentBlockHeight)(rtx)

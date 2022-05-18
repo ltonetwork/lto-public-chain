@@ -83,5 +83,5 @@ object Associations {
       }
       .values.toList
 
-  implicit val jsonWrites: Writes[Associations] = Json.writes
+  implicit val jsonWrites: Writes[Associations] = Json.writes[Associations]
 }
