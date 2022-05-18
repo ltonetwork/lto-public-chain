@@ -1,6 +1,6 @@
 package com.ltonetwork.transaction.association
 
-import com.google.common.primitives.{Bytes, Ints, Longs}
+import com.google.common.primitives.{Bytes, Ints, Longs, Shorts}
 import com.ltonetwork.serialization._
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.association.IssueAssociationTransaction.create
@@ -25,6 +25,7 @@ object IssueAssociationSerializerV4 extends TransactionSerializer.For[IssueAssoc
       Ints.toByteArray(assocType),
       Longs.toByteArray(expires.getOrElse(0)),
       Deser.serializeArray(subject.fold(Array.emptyByteArray)(_.arr)),
+      Shorts.toByteArray(data.size.toShort),
       data.flatMap(_.toBytes).toArray
     )
   }

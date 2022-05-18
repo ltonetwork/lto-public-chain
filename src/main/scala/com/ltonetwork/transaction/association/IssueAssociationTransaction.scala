@@ -35,7 +35,7 @@ case class IssueAssociationTransaction private (version: Byte,
       )
         ++ expires.fold(Json.obj())(v => Json.obj("expires" -> v))
         ++ subject.fold(Json.obj())(v => Json.obj("subject" -> v.base58))
-        ++ (if (data.nonEmpty) Json.obj() else Json.obj("data" -> data))
+        ++ (if (data.isEmpty) Json.obj() else Json.obj("data" -> data))
     ))
 }
 

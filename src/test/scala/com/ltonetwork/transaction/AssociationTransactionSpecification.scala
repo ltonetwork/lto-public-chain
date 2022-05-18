@@ -45,9 +45,14 @@ class AssociationTransactionSpecification
     parsed.bytes() shouldEqual tx.bytes()
   }
 
-  property("serialization roundtrip versions") {
+  property("serialization roundtrip versions issue") {
     forEvery(versionTable(IssueAssociationTransaction)) { version: Byte =>
       forAll(issueAssocTransactionGen(version))(tx => checkSerialization(tx, IssueAssociationTransaction.parseBytes))
+    }
+  }
+
+  property("serialization roundtrip versions revoke") {
+    forEvery(versionTable(RevokeAssociationTransaction)) { version: Byte =>
       forAll(revokeAssocTransactionGen(version))(tx => checkSerialization(tx, RevokeAssociationTransaction.parseBytes))
     }
   }
