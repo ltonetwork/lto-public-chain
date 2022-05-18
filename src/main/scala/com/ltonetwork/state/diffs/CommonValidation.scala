@@ -105,7 +105,7 @@ object CommonValidation {
       case (_: DataTransaction, 3)             => activationBarrier(BlockchainFeatures.CobaltAlloy)
       case (_: RegisterTransaction, 3)         => activationBarrier(BlockchainFeatures.CobaltAlloy)
       case (_: BurnTransaction, 3)             => activationBarrier(BlockchainFeatures.Juicy)
-      case (_: IssueAssociationTransaction, 4) => activationBarrier(BlockchainFeatures.Juicy)
+      case (_: IssueAssociationTransaction, 4) => activationBarrier(BlockchainFeatures.Titanium)
 
       case _ => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
     }
