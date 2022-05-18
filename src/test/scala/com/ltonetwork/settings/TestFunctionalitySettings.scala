@@ -9,7 +9,8 @@ object TestFunctionalitySettings {
     BlockchainFeatures.AssociationTransaction.id -> 0,
     BlockchainFeatures.SponsorshipTransaction.id -> 0,
     BlockchainFeatures.Cobalt.id                 -> 0,
-    BlockchainFeatures.CobaltAlloy.id            -> 0
+    BlockchainFeatures.CobaltAlloy.id            -> 0,
+    BlockchainFeatures.Titanium.id               -> 0,
   )
 
   val Enabled = FunctionalitySettings(
