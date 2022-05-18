@@ -36,8 +36,10 @@ class AssociationTransactionSpecification
     parsed.subject shouldEqual tx.subject
 
     (parsed, tx) match {
-      case (ip: IssueAssociationTransaction, itx: IssueAssociationTransaction) => ip.expires shouldEqual itx.expires
-      case _                                                                   =>
+      case (ip: IssueAssociationTransaction, itx: IssueAssociationTransaction) =>
+        ip.expires shouldEqual itx.expires
+        ip.data shouldEqual itx.data
+      case _ =>
     }
 
     parsed.bytes() shouldEqual tx.bytes()
