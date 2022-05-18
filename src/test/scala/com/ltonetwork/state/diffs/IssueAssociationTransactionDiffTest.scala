@@ -4,14 +4,14 @@ import com.ltonetwork.account.PrivateKeyAccount
 import com.ltonetwork.block.Block
 import com.ltonetwork.block.TestBlock.{create => block}
 import com.ltonetwork.settings.Constants
-import com.ltonetwork.state.{Blockchain, ByteStr, EitherExt2}
+import com.ltonetwork.state.{Associations, ByteStr, EitherExt2}
 import com.ltonetwork.transaction.association.IssueAssociationTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.{NoShrink, TransactionGen, WithDB}
 import org.scalacheck.Gen
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class IssueAssociationTransactionDiffTest
     extends AnyPropSpec
@@ -42,8 +42,8 @@ class IssueAssociationTransactionDiffTest
       case (genesis, assoc) =>
         assertDiffAndState(Seq(block(Seq(genesis))), block(Seq(assoc))) {
           case (d, b) =>
-            b.associations(assoc.sender) shouldBe Blockchain.Associations(List((2, assoc)), List.empty)
-            b.associations(assoc.recipient) shouldBe Blockchain.Associations(List.empty, List((2, assoc)))
+            b.associations(assoc.sender) shouldBe Associations.build(assoc.sender, assoc.timestamp + 1, List((assoc.timestamp, assoc)), List.empty)
+            b.associations(assoc.recipient) shouldBe Associations.build(assoc.recipient, assoc.timestamp + 1, List.empty, List((assoc.timestamp, assoc)))
         }
     }
   }
@@ -81,19 +81,19 @@ class IssueAssociationTransactionDiffTest
 
     forAll(setup) {
       case (genesis1, genesis2, tx1, tx2, tx3) =>
-        def assert(s: Seq[Block]) = assertDiffAndState(block(Seq(genesis1, genesis2)) +: s.init, s.last) {
+        def assert(s: Seq[Block]): Unit = assertDiffAndState(block(Seq(genesis1, genesis2)) +: s.init, s.last) {
           case (d, b) =>
             withClue("for " + s.map(_.transactionData.size)) {
               b.associations(tx1.recipient).outgoing shouldBe List.empty
-              val incoming = b.associations(tx1.recipient).incoming.map(_._2).toSet
-              incoming shouldBe Set(tx1, tx2, tx3)
+              val associationsRecipient = Associations.build(tx1.recipient, tx1.timestamp + 100, List((tx1.timestamp, tx1), (tx2.timestamp, tx2), (tx3.timestamp, tx3)))
+              b.associations(tx1.recipient).incoming shouldBe associationsRecipient.incoming
 
-              val outgoingMaster1 = b.associations(tx1.sender).outgoing.map(_._2).toSet
-              outgoingMaster1 shouldBe Set(tx1, tx2)
+              val associationsMaster1 = Associations.build(tx1.sender, tx1.timestamp + 100, List((tx1.timestamp, tx1), (tx2.timestamp, tx2)))
+              b.associations(tx1.sender).outgoing shouldBe associationsMaster1.outgoing
               b.associations(tx1.sender).incoming shouldBe List.empty
 
-              val outgoingMaster2 = b.associations(tx3.sender).outgoing.map(_._2).toSet
-              outgoingMaster2 shouldBe Set(tx3)
+              val associationsMaster2 = Associations.build(tx3.sender, tx1.timestamp + 100, List((tx3.timestamp, tx3)))
+              b.associations(tx3.sender).outgoing shouldBe associationsMaster2.outgoing
               b.associations(tx3.sender).incoming shouldBe List.empty
             }
         }

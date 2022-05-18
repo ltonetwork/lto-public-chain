@@ -65,7 +65,7 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
         Validated.condNel(expires.isEmpty || version >= 3,
                           (),
                           ValidationError.UnsupportedFeature(s"Association expiry is not supported for tx v$version")),
-        Validated.condNel(expires.isEmpty || version >= 4,
+        Validated.condNel(data.isEmpty || version >= 4,
                           (),
                           ValidationError.UnsupportedFeature(s"Association data is not supported for tx v$version")),
         Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), (), ValidationError.TooBigArray),
