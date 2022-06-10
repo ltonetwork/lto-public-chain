@@ -1,6 +1,7 @@
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport.toPlatformDepsGroupID
 import sbt._
 
+//noinspection TypeAnnotation,ScalaStyle
 object Dependencies {
 
   val excludeScalaTest = ExclusionRule(organization = "org.scalatest")

@@ -421,15 +421,14 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
         .collect {
           case (height, tx, addresses) if addresses(address) && (types.isEmpty || types.contains(tx.builder.typeId)) => (height, tx)
         }
-        .slice(from, from + count)
         .toSeq
 
-      val actualTxCount = transactionsFromDiff.length
+      val diffTxCount = transactionsFromDiff.length
 
-      if (actualTxCount == count) transactionsFromDiff
-      else {
-        transactionsFromDiff ++ blockchain.addressTransactions(address, types, count - actualTxCount, 0)
-      }
+      if (diffTxCount >= from + count)
+        transactionsFromDiff.slice(from, from + count)
+      else
+        transactionsFromDiff.slice(from, from + count) ++ blockchain.addressTransactions(address, types, count - diffTxCount, from - diffTxCount)
     }
 
   override def containsTransaction(id: AssetId): Boolean = ngState.fold(blockchain.containsTransaction(id)) { ng =>

@@ -496,7 +496,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
         (h, tx) <- db.get(Keys.transactionInfo(txId))
       } yield (h, tx)
 
-      txs.slice(from, count).force
+      txs.slice(from, from + count).force
     }
   }
 
