@@ -1,7 +1,7 @@
 package com.ltonetwork.state.diffs
 
 import com.ltonetwork.features.BlockchainFeatures
-import com.ltonetwork.state.{Blockchain, Diff}
+import com.ltonetwork.state.{Blockchain, Diff, Portfolio}
 import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.anchor.AnchorTransaction
@@ -25,7 +25,7 @@ object AnchorTransactionDiff {
         Diff(
           height,
           tx,
-          accountData = Map.empty
+          portfolios = Map(tx.sender.toAddress -> Portfolio.empty)
       )
     )
   }

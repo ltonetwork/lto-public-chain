@@ -1,6 +1,6 @@
 package com.ltonetwork.state.diffs
 
-import com.ltonetwork.state.Diff
+import com.ltonetwork.state.{Diff, Portfolio}
 import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.transaction.association.AssociationTransaction
 
@@ -11,6 +11,6 @@ object AssociationTransactionDiff {
       Diff(
         height,
         tx,
-        accountData = Map.empty,
+        portfolios = Map(tx.sender.toAddress -> Portfolio.empty)
       ))
 }
