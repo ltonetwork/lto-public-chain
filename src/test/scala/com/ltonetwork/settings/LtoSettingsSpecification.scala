@@ -21,7 +21,6 @@ class LtoSettingsSpecification extends AnyFlatSpec with Matchers {
       settings.walletSettings should not be null
       settings.blockchainSettings should not be null
       settings.checkpointsSettings should not be null
-      settings.feesSettings should not be null
       settings.minerSettings should not be null
       settings.restAPISettings should not be null
       settings.synchronizationSettings should not be null

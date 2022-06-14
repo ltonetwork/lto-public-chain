@@ -2,7 +2,7 @@ package com.ltonetwork.fee
 
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.features.FeatureProvider._
-import com.ltonetwork.settings.{Constants, FeesSettings}
+import com.ltonetwork.settings.Constants
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError.{InsufficientFee, UnsupportedTransactionType}
 import com.ltonetwork.transaction.anchor.AnchorTransaction
@@ -21,10 +21,7 @@ import com.ltonetwork.utils._
 import scala.language.postfixOps
 import scala.util.{Left, Right}
 
-class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
-
-  private def oldFees = new OldFeeCalculator(settings, blockchain)
-
+class FeeCalculator(blockchain: Blockchain) {
   private def dataBytes(data: List[DataEntry[_]], unitSize: Int): Integer =
     if (data.nonEmpty) ((data.map(_.toBytes.length).sum - 1) / unitSize) + 1
     else 0
@@ -107,12 +104,6 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
   def minFee(height: Int, tx: Transaction): Either[ValidationError, Long] =
     if (blockchain.isFeatureActivated(BlockchainFeatures.Juicy, height))
       feesV5(height, tx)
-    else
-      oldFees.minFee(tx)
-
-  def consensusMinFee(height: Int, tx: Transaction): Either[ValidationError, Long] =
-    if (blockchain.isFeatureActivated(BlockchainFeatures.Juicy, height))
-      feesV5(height, tx)
     else if (blockchain.isFeatureActivated(BlockchainFeatures.Cobalt, height))
       feesV4(tx)
     else if (blockchain.isFeatureActivated(BlockchainFeatures.BurnFeeture, height))
@@ -121,6 +112,9 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
       feesV2(tx)
     else
       feesV1(tx)
+
+  // There's no longer a difference between consensus min fee and node min fee
+  def consensusMinFee(height: Int, tx: Transaction): Either[ValidationError, Long] = minFee(height, tx)
 
   def enoughFee[T <: Transaction](height: Int, tx: T): Either[ValidationError, T] = {
     for {
@@ -133,12 +127,10 @@ class FeeCalculator(settings: FeesSettings, blockchain: Blockchain) {
     val txName     = Constants.TransactionNames.getOrElse(tx.typeId, "unknown")
     val txFeeValue = tx.fee
 
-    InsufficientFee(s"Fee for ${txName} transaction ($txFeeValue) does not exceed minimal value of $minTxFee")
+    InsufficientFee(s"Fee for $txName transaction ($txFeeValue) does not exceed minimal value of $minTxFee")
   }
 }
 
 object FeeCalculator {
-  def apply(feesSettings: FeesSettings, blockchain: Blockchain): FeeCalculator =
-    new FeeCalculator(feesSettings, blockchain)
-  def apply(blockchain: Blockchain): FeeCalculator = new FeeCalculator(FeesSettings.empty, blockchain)
+  def apply(blockchain: Blockchain): FeeCalculator = new FeeCalculator(blockchain)
 }
