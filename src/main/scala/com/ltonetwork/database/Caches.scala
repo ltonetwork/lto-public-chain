@@ -121,7 +121,7 @@ trait Caches extends Blockchain {
     burnedCache += diff.burned
 
     val newAddresses = Set.newBuilder[Address]
-    newAddresses ++= (diff.portfolios.keys ++ diff.sponsoredBy.keys).toSet.filter(addressIdCache.get(_).isEmpty)
+    newAddresses ++= diff.portfolios.keys.filter(addressIdCache.get(_).isEmpty)
     for ((_, _, addresses) <- diff.transactions.values; address <- addresses if addressIdCache.get(address).isEmpty) {
       newAddresses += address
     }
@@ -134,6 +134,7 @@ trait Caches extends Blockchain {
 
     lastAddressId += newAddressIds.size
 
+    val changedPortfolios = diff.portfolios.filterNot { case (_, portfolio) => portfolio.isEmpty }
     val unbondingPortfolios = completedUnbonding(heightCache)
       .map { case (address, lease) => address -> Portfolio.empty.copy(lease = lease) }
 
@@ -142,7 +143,7 @@ trait Caches extends Blockchain {
     val leaseUnbonding = Map.newBuilder[BigInt, Long]
     val newPortfolios  = Map.newBuilder[Address, Portfolio]
 
-    for ((address, portfolioDiff) <- diff.portfolios.combine(unbondingPortfolios)) {
+    for ((address, portfolioDiff) <- changedPortfolios.combine(unbondingPortfolios)) {
       val newPortfolio = portfolioCache.get(address).combine(portfolioDiff)
 
       def id = addressId(address)

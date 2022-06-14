@@ -415,22 +415,24 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
       .map(t => (t._1, t._2))
       .orElse(blockchain.transactionInfo(id))
 
-  override def addressTransactions(address: Address, types: Set[Byte], count: Int, from: Int): Seq[(Int, Transaction)] =
+  override def addressTransactions(address: Address, types: Set[Byte], count: Int, from: Int): Seq[(Int, Transaction)] = {
+    def onlyTypes: Set[Byte] = if (settings.indexAllTransactions) types else if (types.isEmpty) portfolioTxTypes else types.intersect(portfolioTxTypes)
+
     ngState.fold(blockchain.addressTransactions(address, types, count, from)) { ng =>
       val transactionsFromDiff = ng.bestLiquidDiff.transactions.values.view
         .collect {
-          case (height, tx, addresses) if addresses(address) && (types.isEmpty || types.contains(tx.builder.typeId)) => (height, tx)
+          case (height, tx, addresses) if addresses(address) && (onlyTypes.isEmpty || onlyTypes.contains(tx.builder.typeId)) => (height, tx)
         }
-        .slice(from, from + count)
         .toSeq
 
-      val actualTxCount = transactionsFromDiff.length
+      val diffTxCount = transactionsFromDiff.length
 
-      if (actualTxCount == count) transactionsFromDiff
-      else {
-        transactionsFromDiff ++ blockchain.addressTransactions(address, types, count - actualTxCount, 0)
-      }
+      if (diffTxCount >= from + count)
+        transactionsFromDiff.slice(from, from + count)
+      else
+        transactionsFromDiff.slice(from, from + count) ++ blockchain.addressTransactions(address, types, count - diffTxCount, from - diffTxCount)
     }
+  }
 
   override def containsTransaction(id: AssetId): Boolean = ngState.fold(blockchain.containsTransaction(id)) { ng =>
     ng.bestLiquidDiff.transactions.contains(id) || blockchain.containsTransaction(id)
