@@ -74,6 +74,7 @@ object Keys {
   def transactionInfo(txId: ByteStr): Key[Option[(Int, Transaction)]] = Key.opt(hash(18, txId), readTransactionInfo, writeTransactionInfo)
   def transactionHeight(txId: ByteStr): Key[Option[Int]] =
     Key.opt(hash(18, txId), readTransactionHeight, unsupported("Can't write transaction height only"))
+  def transactionSponsor(txId: ByteStr): Key[Option[BigInt]] = Key.opt(hash(54, txId), BigInt(_), _.toByteArray)
 
   def carryFee(height: Int): Key[Long] = Key(h(19, height), Longs.fromByteArray, Longs.toByteArray)
 

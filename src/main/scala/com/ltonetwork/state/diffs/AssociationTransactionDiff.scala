@@ -11,6 +11,9 @@ object AssociationTransactionDiff {
       Diff(
         height,
         tx,
-        portfolios = Map(tx.sender.toAddress -> Portfolio.empty)
+        portfolios = Map(
+          tx.sender.toAddress -> Portfolio.empty,
+          tx.recipient -> Portfolio.empty,
+        )
       ))
 }

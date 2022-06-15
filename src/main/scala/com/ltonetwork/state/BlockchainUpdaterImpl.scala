@@ -415,6 +415,13 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
       .map(t => (t._1, t._2))
       .orElse(blockchain.transactionInfo(id))
 
+  override def transactionSponsor(id: AssetId): Option[Address] =
+    ngState
+      .fold(Diff.empty)(_.bestLiquidDiff)
+      .feeSponsors
+      .get(id)
+      .orElse(blockchain.transactionSponsor(id))
+
   override def addressTransactions(address: Address, types: Set[Byte], count: Int, from: Int): Seq[(Int, Transaction)] = {
     def onlyTypes: Set[Byte] = if (settings.indexAllTransactions) types else if (types.isEmpty) portfolioTxTypes else types.intersect(portfolioTxTypes)
 
