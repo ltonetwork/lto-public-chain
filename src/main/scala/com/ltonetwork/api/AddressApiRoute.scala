@@ -265,7 +265,7 @@ case class AddressApiRoute(settings: RestAPISettings,
         in = ParameterIn.PATH
       ),
       new Parameter(
-        name = "address",
+        name = "confirmations",
         description = "Number of confirmations",
         required = true,
         schema = new Schema(implementation = classOf[Int]),
@@ -317,7 +317,7 @@ case class AddressApiRoute(settings: RestAPISettings,
         in = ParameterIn.PATH
       ),
       new Parameter(
-        name = "address",
+        name = "confirmations",
         description = "Number of confirmations",
         required = true,
         schema = new Schema(implementation = classOf[Int]),

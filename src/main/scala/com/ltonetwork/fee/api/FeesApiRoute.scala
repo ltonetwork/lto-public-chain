@@ -10,6 +10,7 @@ import com.ltonetwork.transaction.ValidationError.GenericError
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.{Content, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.{GET, POST, Path}
 import play.api.libs.json._
@@ -58,6 +59,7 @@ case class FeesApiRoute(settings: RestAPISettings,
   @Operation(
     summary = "Vote for changing the fee price"
   )
+  @SecurityRequirement(name = "bearerAuth")
   @RequestBody(
     description = "Voting status",
     content = Array(
@@ -67,7 +69,7 @@ case class FeesApiRoute(settings: RestAPISettings,
       )),
     required = true
   )
-  def vote: Route = (path("vote") & post) {
+  def vote: Route = (path("vote") & post & withAuth) {
     handleExceptions(jsonExceptionHandler) {
       json[JsObject] { jsv =>
         val vote = (jsv \ "status").get match {
