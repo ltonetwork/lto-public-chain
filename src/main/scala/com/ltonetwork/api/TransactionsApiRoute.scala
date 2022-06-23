@@ -383,10 +383,11 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     }
   }
 
-  private def txToExtendedJson(height: Int, tx: Transaction): JsObject = txToExtendedJson(tx) ++ Json.obj(
-    "height" -> JsNumber(height),
-    "effectiveFee" -> feeCalculator.fee(height, tx)
-  )
+  private def extraTxInfo(height: Int, tx: Transaction): ExtraTxInfo =
+    ExtraTxInfo(height, feeCalculator.fee(height, tx), blockchain.transactionSponsor(tx.id()))
+
+  private def txToExtendedJson(height: Int, tx: Transaction): JsObject =
+    txToExtendedJson(tx) ++ extraTxInfo(height, tx).json
 
     /**
     * Produces compact representation for large transactions by stripping unnecessary data.
@@ -402,10 +403,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   }
 
   private def txToCompactJson(address: Address, height: Int, tx: Transaction): JsObject =
-    txToCompactJson(address, tx) ++ Json.obj(
-      "height" -> JsNumber(height),
-      "effectiveFee" -> feeCalculator.fee(height, tx)
-    )
+    txToCompactJson(address, tx) ++ extraTxInfo(height, tx).json
 
   private val jsonExceptionHandler = ExceptionHandler {
     case JsResultException(err)    => complete(WrongJson(errors = err))
@@ -429,4 +427,10 @@ object TransactionsApiRoute {
 
   def unmarshall[A, B](f: A => Try[B]): Unmarshaller[A, B] = Unmarshaller(_ => a => FastFuture(f(a)))
   def txTypeId(typeName: String): Try[Byte] = Try(transactionTypes(typeName))
+
+  case class ExtraTxInfo(height: Int, effectiveFee: Long, effectiveSponsor: Option[Address]) {
+    def json: JsObject = Json.toJson(this).asInstanceOf[JsObject]
+  }
+
+  implicit val extraTxInfoWrites: Writes[ExtraTxInfo] = Json.writes[ExtraTxInfo]
 }

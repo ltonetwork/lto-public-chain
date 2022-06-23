@@ -43,6 +43,11 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
       .map(_._1)
       .orElse(inner.transactionHeight(id))
 
+  override def transactionSponsor(id: AssetId): Option[Address] =
+    diff.feeSponsors
+      .get(id)
+      .orElse(inner.transactionSponsor(id))
+
   override def height: Int = inner.height + (if (maybeDiff.isDefined) 1 else 0)
 
   override def addressTransactions(address: Address, types: Set[Byte], count: Int, from: Int): Seq[(Int, Transaction)] = {

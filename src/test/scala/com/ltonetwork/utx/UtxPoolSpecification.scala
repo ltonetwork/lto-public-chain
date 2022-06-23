@@ -40,13 +40,6 @@ class UtxPoolSpecification
     with NoShrink
     with WithDB {
 
-  private val calculatorSettings = FeesSettings(
-    Map[Byte, Seq[FeeSettings]](
-      GenesisTransaction.typeId      -> Seq(FeeSettings("BASE", 0)),
-      TransferTransaction.typeId     -> Seq(FeeSettings("BASE", 0)),
-      MassTransferTransaction.typeId -> Seq(FeeSettings("BASE", 0), FeeSettings("VAR", 0)),
-      SetScriptTransaction.typeId    -> Seq(FeeSettings("BASE", 0))
-    ))
   import CommonValidation.{ScriptExtraFee => extraFee}
 
   private def mkBlockchain(senderAccount: Address, senderBalance: Long) = {
@@ -63,7 +56,6 @@ class UtxPoolSpecification
           )),
         genesisSettings
       ),
-      feesSettings = calculatorSettings,
       featuresSettings = origSettings.featuresSettings.copy(autoShutdownOnUnsupportedFeature = false)
     )
 
@@ -97,7 +89,7 @@ class UtxPoolSpecification
     txs.label("massTransferWithRecipients")
   }
 
-  private def mkCalculator(blockchain: Blockchain) = new FeeCalculator(calculatorSettings, blockchain)
+  private def mkCalculator(blockchain: Blockchain) = new FeeCalculator(blockchain)
 
   private val stateGen = for {
     sender        <- accountGen.label("sender")

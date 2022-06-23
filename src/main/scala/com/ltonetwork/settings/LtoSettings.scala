@@ -14,7 +14,6 @@ case class LtoSettings(directory: String,
                        walletSettings: WalletSettings,
                        blockchainSettings: BlockchainSettings,
                        checkpointsSettings: CheckpointsSettings,
-                       feesSettings: FeesSettings,
                        minerSettings: MinerSettings,
                        restAPISettings: RestAPISettings,
                        synchronizationSettings: SynchronizationSettings,
@@ -36,7 +35,6 @@ object LtoSettings {
     val walletSettings          = config.as[WalletSettings]("lto.wallet")
     val blockchainSettings      = BlockchainSettings.fromConfig(config)
     val checkpointsSettings     = CheckpointsSettings.fromConfig(config)
-    val feesSettings            = FeesSettings.fromConfig(config)
     val minerSettings           = MinerSettings.fromConfig(config)
     val restAPISettings         = RestAPISettings.fromConfig(config)
     val synchronizationSettings = SynchronizationSettings.fromConfig(config)
@@ -54,7 +52,6 @@ object LtoSettings {
       walletSettings,
       blockchainSettings,
       checkpointsSettings,
-      feesSettings,
       minerSettings,
       restAPISettings,
       synchronizationSettings,
