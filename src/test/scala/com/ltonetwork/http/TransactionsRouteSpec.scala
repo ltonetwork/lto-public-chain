@@ -151,13 +151,14 @@ class TransactionsRouteSpec
         case (tx, height) =>
           blockchainExpects()
           (blockchain.transactionInfo _).expects(tx.id()).returning(Some((height, tx))).once()
+          (blockchain.transactionSponsor _).expects(tx.id()).returning(tx.sponsor.map(_.toAddress)).once()
 
           Get(routePath(s"/info/${tx.id().base58}")) ~> route ~> check {
             status shouldEqual StatusCodes.OK
             responseAs[JsValue] shouldEqual tx.json() ++ Json.obj(
               "height" -> JsNumber(height),
               "effectiveFee" -> feeCalculator.fee(1, tx),
-            )
+            ) ++ tx.sponsor.fold(Json.obj())(sponsor => Json.obj("effectiveSponsor" -> sponsor.address))
           }
       }
     }
