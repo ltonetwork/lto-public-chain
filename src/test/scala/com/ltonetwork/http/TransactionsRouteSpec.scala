@@ -110,18 +110,18 @@ class TransactionsRouteSpec
 
   }
 
-  routePath("/address/{address}/limit/{limit}") - {
+  routePath("/address/{address}") - {
     "handles invalid address" in {
       forAll(bytes32gen, choose(1, MaxTransactionsPerRequest)) {
         case (bytes, limit) =>
-          Get(routePath(s"/address/${Base58.encode(bytes)}/limit/$limit")) ~> route should produce(InvalidAddress)
+          Get(routePath(s"/address/${Base58.encode(bytes)}?limit=$limit")) ~> route should produce(InvalidAddress)
       }
     }
 
     "handles invalid limit" in {
-      forAll(accountGen, alphaStr.label("alphaNumericLimit")) {
-        case (account, invalidLimit) =>
-          Get(routePath(s"/address/${account.address}/limit/$invalidLimit")) ~> route ~> check {
+      forAll(accountGen) {
+        account =>
+          Get(routePath(s"/address/${account.address}?limit=-1")) ~> route ~> check {
             status shouldEqual StatusCodes.BadRequest
             (responseAs[JsObject] \ "message").as[String] shouldEqual "invalid.limit"
           }
@@ -129,7 +129,7 @@ class TransactionsRouteSpec
 
       forAll(accountGen, choose(MaxTransactionsPerRequest + 1, Int.MaxValue).label("limitExceeded")) {
         case (account, limit) =>
-          Get(routePath(s"/address/${account.address}/limit/$limit")) ~> route should produce(TooBigArrayAllocation)
+          Get(routePath(s"/address/${account.address}?limit=$limit")) ~> route should produce(TooBigArrayAllocation)
       }
     }
 

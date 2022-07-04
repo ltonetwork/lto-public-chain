@@ -1,7 +1,7 @@
 package com.ltonetwork.state.diffs
 
 import com.ltonetwork.features.BlockchainFeatures
-import com.ltonetwork.state.{Blockchain, Diff}
+import com.ltonetwork.state.{Blockchain, Diff, Portfolio}
 import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.association.AssociationTransaction
@@ -22,6 +22,7 @@ object AssociationTransactionDiff {
       _ => Diff(
         height,
         tx,
+        portfolios = Map(tx.sender.toAddress -> Portfolio.empty, tx.recipient -> Portfolio.empty)
       )
     )
 }

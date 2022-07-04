@@ -2,7 +2,7 @@ package com.ltonetwork.state.diffs
 
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.features.FeatureProvider._
-import com.ltonetwork.state.{AccountDataInfo, Blockchain, Diff}
+import com.ltonetwork.state.{AccountDataInfo, Blockchain, Diff, Portfolio}
 import com.ltonetwork.transaction.ValidationError
 import com.ltonetwork.transaction.ValidationError.GenericError
 import com.ltonetwork.transaction.data.DataTransaction
@@ -30,6 +30,7 @@ object DataTransactionDiff {
         Diff(
           height,
           tx,
+          portfolios = Map(tx.sender.toAddress -> Portfolio.empty),
           accountData = Map(tx.sender.toAddress -> AccountDataInfo(tx.data.map(item => item.key -> item).toMap))
         )
     )

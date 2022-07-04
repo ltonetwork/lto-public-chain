@@ -28,18 +28,15 @@ object LevelDBWriter {
     db.get(Keys.leaseStatusHistory(leaseId)).headOption.fold(false)(h => db.get(Keys.leaseStatus(leaseId)(h)))
 
   /** {{{
-    * ([10, 7, 4], 5, 11) => [10, 7, 4]
-    * ([10, 7], 5, 11) => [10, 7, 1]
-    * }}}
-    */
+   * ([10, 7, 4], 5, 11) => [10, 7, 4]
+   * ([10, 7], 5, 11) => [10, 7, 1]
+   * }}}
+   */
   private[database] def slice(v: Seq[Int], from: Int, to: Int): Seq[Int] = {
     val (c1, c2) = v.dropWhile(_ > to).partition(_ > from)
     c1 :+ c2.headOption.getOrElse(1)
   }
 
-  /**
-    * @todo move this method to `object LevelDBWriter` once SmartAccountTrading is activated
-    */
   private[database] def merge(wbh: Seq[Int], lbh: Seq[Int]): Seq[(Int, Int)] = {
 
     /**
@@ -88,7 +85,11 @@ object LevelDBWriter {
   }
 }
 
-class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize: Int = 100000, val maxRollbackDepth: Int = 2000)
+class LevelDBWriter(writableDB: DB,
+                    fs: FunctionalitySettings,
+                    val maxCacheSize: Int = 100000,
+                    val maxRollbackDepth: Int = 2000,
+                    val indexAllTransactions: Boolean = false)
     extends Caches
     with ScorexLogging {
 
@@ -292,12 +293,14 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       }
     }
 
-    for ((addressId, txs) <- addressTransactions) {
-      val kk                          = Keys.addressTransactionSeqNr(addressId)
-      val nextSeqNr                   = rw.get(kk) + 1
-      val t: Key[Seq[(Int, AssetId)]] = Keys.addressTransactionIds(addressId, nextSeqNr)
-      rw.put(t, txs)
-      rw.put(kk, nextSeqNr)
+    addressTransactions.foreach {
+      case (addressId, txsAll) =>
+        val txs = if (indexAllTransactions) txsAll else txsAll.filter { case (typeId, _) => portfolioTxTypes.contains(typeId.toByte) }
+        val kk                          = Keys.addressTransactionSeqNr(addressId)
+        val nextSeqNr                   = rw.get(kk) + 1
+        val t: Key[Seq[(Int, AssetId)]] = Keys.addressTransactionIds(addressId, nextSeqNr)
+        rw.put(t, txs)
+        rw.put(kk, nextSeqNr)
     }
 
     def f(addr: Address, txs: Seq[AssociationTransaction], seqNrKey: ByteStr => Key[Int], idKey: (ByteStr, Int) => Key[Array[Byte]]) = {
@@ -496,7 +499,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
         (h, tx) <- db.get(Keys.transactionInfo(txId))
       } yield (h, tx)
 
-      txs.slice(from, count).force
+      txs.slice(from, from + count).force
     }
   }
 

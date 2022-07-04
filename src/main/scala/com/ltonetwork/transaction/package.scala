@@ -3,6 +3,11 @@ package com.ltonetwork
 import cats.data.ValidatedNel
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.block.{Block, MicroBlock}
+import com.ltonetwork.transaction.burn.BurnTransaction
+import com.ltonetwork.transaction.genesis.GenesisTransaction
+import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
+import com.ltonetwork.transaction.sponsorship.{CancelSponsorshipTransaction, SponsorshipTransaction}
+import com.ltonetwork.transaction.transfer.{MassTransferTransaction, TransferTransaction}
 
 package object transaction {
   type AssetId = com.ltonetwork.state.ByteStr
@@ -10,6 +15,18 @@ package object transaction {
   type DiscardedTransactions = Seq[Transaction]
   type DiscardedBlocks       = Seq[Block]
   type DiscardedMicroBlocks  = Seq[MicroBlock]
+
+
+  def portfolioTxTypes: Set[Byte] = Set(
+    GenesisTransaction.typeId,
+    TransferTransaction.typeId,
+    MassTransferTransaction.typeId,
+    BurnTransaction.typeId,
+    LeaseTransaction.typeId,
+    CancelLeaseTransaction.typeId,
+    SponsorshipTransaction.typeId,
+    CancelSponsorshipTransaction.typeId,
+  )
 
   implicit class TransactionValidationOps[T <: Transaction](val tx: T) extends AnyVal {
     def validatedNel(implicit validator: TxValidator[T]): ValidatedNel[ValidationError, T] = validator.validate(tx)

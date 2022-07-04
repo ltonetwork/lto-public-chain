@@ -3,11 +3,13 @@ package com.ltonetwork.api
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
+import akka.http.scaladsl.unmarshalling.Unmarshaller
+import akka.http.scaladsl.util.FastFuture
 import com.ltonetwork.account.Address
 import com.ltonetwork.api.requests.TxRequest
 import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.http.BroadcastRoute
-import com.ltonetwork.settings.{FunctionalitySettings, RestAPISettings}
+import com.ltonetwork.settings.{FunctionalitySettings, RestAPISettings, transactionTypes}
 import com.ltonetwork.state.diffs.CommonValidation
 import com.ltonetwork.state.{Blockchain, ByteStr}
 import com.ltonetwork.transaction.ValidationError.GenericError
@@ -19,7 +21,7 @@ import com.ltonetwork.utx.UtxPool
 import com.ltonetwork.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
 import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.media.{Content, Schema}
+import io.swagger.v3.oas.annotations.media.{ArraySchema, Content, Schema}
 import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.{Operation, Parameter, Parameters}
@@ -27,9 +29,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import jakarta.ws.rs.{GET, POST, Path}
 import play.api.libs.json._
 
-import java.util.NoSuchElementException
-import scala.util.Success
-import scala.util.control.Exception
+import scala.util.{Success, Try}
 
 @Path("/transactions")
 @Tag(name = "transactions")
@@ -45,18 +45,19 @@ case class TransactionsApiRoute(settings: RestAPISettings,
     with BroadcastRoute
     with CommonApiFunctions {
 
-  import TransactionsApiRoute.MaxTransactionsPerRequest
+  import TransactionsApiRoute._
 
   override lazy val route: Route =
     pathPrefix("transactions") {
-      unconfirmed ~ addressLimit ~ info ~ sign ~ submit ~ calculateFee ~ broadcast
+      unconfirmed ~ address ~ info ~ sign ~ submit ~ calculateFee ~ broadcast
     }
 
   private val invalidLimit = StatusCodes.BadRequest -> Json.obj("message" -> "invalid.limit")
+  private val invalidOffset = StatusCodes.BadRequest -> Json.obj("message" -> "invalid.offset")
+  private val invalidType = StatusCodes.BadRequest -> Json.obj("message" -> "invalid.type")
 
-  //TODO implement general pagination
   @GET
-  @Path("/address/{address}/limit/{limit}")
+  @Path("/address/{address}")
   @Operation(
     summary = "Get list of transactions where specified address has been involved"
   )
@@ -72,35 +73,53 @@ case class TransactionsApiRoute(settings: RestAPISettings,
       new Parameter(
         name = "limit",
         description = "Specified number of records to be returned",
-        required = true,
+        required = false,
         schema = new Schema(implementation = classOf[Int]),
-        in = ParameterIn.PATH
+        in = ParameterIn.QUERY
+      ),
+      new Parameter(
+        name = "offset",
+        description = "The limit offset",
+        required = false,
+        schema = new Schema(implementation = classOf[Int]),
+        in = ParameterIn.QUERY
+      ),
+      new Parameter(
+        name = "type",
+        description = "Filter by type",
+        required = false,
+        array = new ArraySchema(
+          schema = new Schema(implementation = classOf[String])
+        ),
+        in = ParameterIn.QUERY
       )
     )
   )
-  def addressLimit: Route = (pathPrefix("address") & get) {
+  def address: Route = (pathPrefix("address") & get) {
     pathPrefix(Segment) { address =>
       Address.fromString(address) match {
         case Left(e) => complete(ApiError.fromValidationError(e))
         case Right(a) =>
+          pathEndOrSingleSlash {
+            parameters("limit" ? 100, "offset" ? 0, "type".as(unmarshall(txTypeId)).repeated) { (limit, offset, types) =>
+              if (limit > MaxTransactionsPerRequest)
+                complete(TooBigArrayAllocation)
+              else if (limit < 0)
+                complete(invalidLimit)
+              else if (offset < 0)
+                complete(invalidOffset)
+              else
+                complete(
+                  Json.arr(JsArray(blockchain
+                    .addressTransactions(a, types.toSet, limit, offset)
+                    .map({ case (h, tx) => txToCompactJson(a, h, tx) }))))
+            } ~ complete(invalidType)
+          } ~
           pathPrefix("limit") {
             pathEndOrSingleSlash {
               complete(invalidLimit)
-            } ~
-              path(Segment) { limitStr =>
-                Exception.allCatch.opt(limitStr.toInt) match {
-                  case Some(limit) if limit > 0 && limit <= MaxTransactionsPerRequest =>
-                    complete(
-                      Json.arr(JsArray(blockchain
-                        .addressTransactions(a, Set.empty, limit, 0)
-                        .map({ case (h, tx) => txToCompactJson(a, h, tx) }))))
-                  case Some(limit) if limit > MaxTransactionsPerRequest =>
-                    complete(TooBigArrayAllocation)
-                  case _ =>
-                    complete(invalidLimit)
-                }
-              }
-          } ~ complete(StatusCodes.NotFound)
+            } ~ path(Segment) { limit => redirect(s"/transactions/address/${address}?limit=${limit}", StatusCodes.PermanentRedirect)}
+          }
       }
     }
   }
@@ -407,4 +426,7 @@ object TransactionsApiRoute {
       case _ => Right(tx)
     }
   }
+
+  def unmarshall[A, B](f: A => Try[B]): Unmarshaller[A, B] = Unmarshaller(_ => a => FastFuture(f(a)))
+  def txTypeId(typeName: String): Try[Byte] = Try(transactionTypes(typeName))
 }

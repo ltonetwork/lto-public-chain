@@ -9,6 +9,7 @@ case class LtoSettings(directory: String,
                        dataDirectory: String,
                        maxCacheSize: Int,
                        maxRollbackDepth: Int,
+                       indexAllTransactions: Boolean,
                        networkSettings: NetworkSettings,
                        walletSettings: WalletSettings,
                        blockchainSettings: BlockchainSettings,
@@ -30,6 +31,7 @@ object LtoSettings {
     val dataDirectory           = config.as[String]("lto.data-directory")
     val maxCacheSize            = config.as[Int]("lto.max-cache-size")
     val maxRollbackDepth        = config.as[Int]("lto.max-rollback-depth")
+    val indexAllTransactions    = config.as[Boolean]("lto.index-all-transactions")
     val networkSettings         = config.as[NetworkSettings]("lto.network")
     val walletSettings          = config.as[WalletSettings]("lto.wallet")
     val blockchainSettings      = BlockchainSettings.fromConfig(config)
@@ -47,6 +49,7 @@ object LtoSettings {
       dataDirectory,
       maxCacheSize,
       maxRollbackDepth,
+      indexAllTransactions,
       networkSettings,
       walletSettings,
       blockchainSettings,
