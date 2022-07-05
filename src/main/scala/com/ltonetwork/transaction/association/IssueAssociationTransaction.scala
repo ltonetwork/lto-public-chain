@@ -68,6 +68,7 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
         Validated.condNel(data.isEmpty || version >= 4,
                           (),
                           ValidationError.UnsupportedFeature(s"Association data is not supported for tx v$version")),
+        Validated.condNel(!expires.exists(_ < tx.timestamp), (), ValidationError.GenericError("Association should not expire before the issue timestamp")),
         Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), (), ValidationError.TooBigArray),
         Validated.condNel(!data.exists(_.key.isEmpty), (), ValidationError.GenericError("Empty key found")),
         Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, (), ValidationError.GenericError("Duplicate keys found")),

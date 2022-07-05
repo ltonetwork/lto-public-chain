@@ -2,6 +2,8 @@ from behave import *
 from e2e.common.tools import broadcast, NODE, funds_for_transaction
 from lto.transactions import Association, RevokeAssociation
 
+from e2e.steps.generic import wait
+
 
 def association(context, sender, recipient, type, hash="", version=None):
     sender = context.users[sender]
@@ -18,13 +20,11 @@ def is_associated(context, sender, recipient):
     sender = context.users[sender]
     recipient = context.users[recipient]
 
-    list_outgoing = NODE.wrapper(api='/associations/status/{}'.format(sender.address))['outgoing']
-    ass_list = []
-    for association in list_outgoing:
-        if 'revokeTransactionId' not in association and association['party'] == recipient.address:
-            association['sender'] = sender.address
-            ass_list.append(association)
-    return ass_list
+    result = NODE.wrapper(api='/associations/status/{}'.format(sender.address))
+    list_outgoing = result['outgoing']
+    print(result)
+
+    return list(filter(lambda assoc: assoc['recipient'] == recipient.address, list_outgoing))
 
 
 def revoke_association(context, user1, user2, type, hash="", version=None):
@@ -49,10 +49,11 @@ def step_impl(context, sender, recipient, type, hash=""):
 
 @given('{sender} does not have an association with {recipient} of type {type:d}')
 def step_impl(context, sender, recipient, type):
-    if is_associated(context, sender, recipient):
+    for assoc in is_associated(context, sender, recipient):
         funds_for_transaction(context, sender, RevokeAssociation.DEFAULT_FEE)
-        revoke_association(sender, recipient, type, hash)
-        assert not is_associated(context, sender, recipient, type), 'Failed to revoke association'
+        revoke_association(context, sender, recipient, type, assoc.hash)
+
+    assert not is_associated(context, sender, recipient), 'Failed to revoke association'
 
 
 @when('{sender} issues an association with {recipient} of type {type:d}')
