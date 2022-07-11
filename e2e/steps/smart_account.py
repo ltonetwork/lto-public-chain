@@ -14,7 +14,7 @@ def clear_script(context, user):
     broadcast(context, transaction)
 
 def has_script(context, user):
-    response = NODE.wrapper('/addresses/scriptInfo/{}'.format(context.users[user].address))
+    response = NODE.request('/addresses/scriptInfo/{}'.format(context.users[user].address))
     return 'script' in response
 
 @given("{user} has a smart account with script")

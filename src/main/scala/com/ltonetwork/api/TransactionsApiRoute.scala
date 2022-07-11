@@ -417,8 +417,6 @@ object TransactionsApiRoute {
   val MaxTransactionsPerRequest = 10000
   def ifPossible[T <: Transaction](bc: Blockchain, tx: T): Either[GenericError, T] = {
     tx match {
-      case atx: IssueAssociationTransaction =>
-        Either.cond(!bc.assocExists(atx), tx, GenericError("The exact same association already exists"))
       case atx: RevokeAssociationTransaction =>
         Either.cond(bc.assocExists(atx), tx, GenericError("The association doesn't exist"))
       case ltx: CancelLeaseTransaction =>

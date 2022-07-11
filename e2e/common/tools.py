@@ -75,4 +75,13 @@ def convert_balance(balance):
 
 
 def encode_hash(hash):
-    return hashlib.sha256(hash.encode('utf-8')).hexdigest()
+    return hashlib.sha256(hash.encode('utf-8')).digest()
+
+
+def cast_boolean_or_int(value):
+    if value.lower() == 'true':
+        return True
+    elif value.lower() == 'false':
+        return False
+    else:
+        return int(value)
