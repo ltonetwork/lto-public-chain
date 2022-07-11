@@ -13,11 +13,10 @@ case class ClaimTransaction private (version: Byte,
                                      timestamp: Long,
                                      sender: PublicKeyAccount,
                                      fee: Long,
-                                     claimType: Int,
+                                     claimType: Long,
                                      recipient: Option[Address],
                                      subject: Option[ByteStr],
                                      data: List[DataEntry[_]],
-                                     related: List[ByteStr],
                                      sponsor: Option[PublicKeyAccount],
                                      proofs: Proofs)
   extends Transaction {
@@ -32,8 +31,7 @@ case class ClaimTransaction private (version: Byte,
       Json.obj("claimType" -> claimType) ++
       recipient.fold(Json.obj())(v => Json.obj("recipient" -> v)) ++
       subject.fold(Json.obj())(v => Json.obj("subject" -> v)) ++
-      (if (data.nonEmpty) Json.obj("data" -> data) else Json.obj()) ++
-      (if (related.nonEmpty) Json.obj("related" -> related) else Json.obj())
+      (if (data.nonEmpty) Json.obj("data" -> data) else Json.obj())
   )
 }
 
@@ -45,7 +43,6 @@ object ClaimTransaction extends TransactionBuilder.For[ClaimTransaction] {
   val MaxSubjectLength: Int  = 256
   val MaxBytes: Int          = 150 * 1024
   val MaxEntryCount: Int     = 100
-  val MaxRelated: Int        = 10
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
@@ -61,9 +58,6 @@ object ClaimTransaction extends TransactionBuilder.For[ClaimTransaction] {
         Validated.condNel(!data.exists(_.key.isEmpty), (), ValidationError.GenericError("Empty key found in data")),
         Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, (), ValidationError.GenericError("Duplicate keys found in data")),
         Validated.condNel(data.flatMap(_.toBytes).toArray.length <= MaxBytes, (), ValidationError.TooBigArray),
-        Validated.condNel(related.lengthCompare(MaxRelated) <= 0, (), ValidationError.TooBigArray),
-        Validated.condNel(related.forall(a => a.length == crypto.digestLength), (), ValidationError.GenericError(s"Invalid related tx id")),
-        Validated.condNel(related.distinct.lengthCompare(related.size) == 0, (), ValidationError.GenericError("Duplicate related ids in one tx found")),
         Validated.condNel(fee > 0, None, ValidationError.InsufficientFee()),
       )
     }
@@ -79,25 +73,21 @@ object ClaimTransaction extends TransactionBuilder.For[ClaimTransaction] {
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
-             claimType: Int,
+             claimType: Long,
              recipient: Option[Address],
              subject: Option[ByteStr],
-             amount: Long,
-             hash: Option[ByteStr],
-             related: List[ByteStr],
+             data: List[DataEntry[_]],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    ClaimTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, claimType, recipient, subject, amount, hash, related, sponsor, proofs).validatedEither
+    ClaimTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, claimType, recipient, subject, data, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
              sender: PrivateKeyAccount,
              fee: Long,
-             claimType: Int,
+             claimType: Long,
              recipient: Option[Address],
              subject: Option[ByteStr],
-             amount: Long,
-             hash: Option[ByteStr],
-             related: List[ByteStr]): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, claimType, recipient, subject, amount, hash, related, None, Proofs.empty).signWith(sender)
+             data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, claimType, recipient, subject, data, None, Proofs.empty).signWith(sender)
 }
