@@ -16,7 +16,7 @@ object IssueAssociationSerializerV4 extends TransactionSerializer.For[IssueAssoc
   override def bodyBytes(tx: IssueAssociationTransaction): Array[Byte] = {
     import tx._
 
-    val b = Bytes.concat(
+    Bytes.concat(
       Array(builder.typeId, version, chainId),
       Longs.toByteArray(timestamp),
       Deser.serializeAccount(sender),
@@ -28,8 +28,6 @@ object IssueAssociationSerializerV4 extends TransactionSerializer.For[IssueAssoc
       Shorts.toByteArray(data.size.toShort),
       data.flatMap(_.toBytes).toArray
     )
-
-    b
   }
 
   def parseBytes(version: Byte, bytes: Array[Byte]): Try[IssueAssociationTransaction] =
