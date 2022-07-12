@@ -9,7 +9,7 @@ import com.ltonetwork.transaction.ValidationError.{GenericError, InvalidPublicKe
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.burn.BurnTransaction
-import com.ltonetwork.transaction.claim.ClaimTransaction
+import com.ltonetwork.transaction.statement.StatementTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
 import com.ltonetwork.transaction.register.RegisterTransaction
@@ -126,7 +126,7 @@ object TxRequest {
           case SetScriptTransaction         => Right(jsv.as[SetScriptRequest])
           case RegisterTransaction          => Right(jsv.as[RegisterRequest])
           case BurnTransaction              => Right(jsv.as[BurnRequest])
-          case ClaimTransaction             => Right(jsv.as[ClaimRequest])
+          case StatementTransaction             => Right(jsv.as[StatementRequest])
           case _                            => Left(GenericError(s"Unsupported transaction type ($typeId)"))
         }
     }

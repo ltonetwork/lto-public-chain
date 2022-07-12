@@ -15,7 +15,7 @@ import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.AnchorTransaction
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.burn.BurnTransaction
-import com.ltonetwork.transaction.claim.ClaimTransaction
+import com.ltonetwork.transaction.statement.StatementTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
@@ -448,18 +448,18 @@ trait TransactionGenBase extends ScriptGen {
       sponsor <- sponsorGen(version)
     } yield RevokeAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, hashOpt).sponsorWith(sponsor).explicitGet()
 
-  def claimTransactionGen: Gen[ClaimTransaction] = versionGen(ClaimTransaction).flatMap(claimTransactionGen)
-  def claimTransactionGen(version: Byte): Gen[ClaimTransaction] = for {
+  def statementTransactionGen: Gen[StatementTransaction] = versionGen(StatementTransaction).flatMap(statementTransactionGen)
+  def statementTransactionGen(version: Byte): Gen[StatementTransaction] = for {
     sender <- accountGen
     timestamp <- timestampGen
-    claimType <- Gen.choose(Long.MinValue, Long.MaxValue)
+    statementType <- Gen.choose(Long.MinValue, Long.MaxValue)
     recipient <- Gen.option(addressGen)
-    subject   <- Gen.option(genBoundedBytes(1, ClaimTransaction.MaxSubjectLength).map(ByteStr(_)))
+    subject   <- Gen.option(genBoundedBytes(1, StatementTransaction.MaxSubjectLength).map(ByteStr(_)))
     size      <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
     data      <- uniqueDataGen(size)
     sponsor   <- sponsorGen(version)
     fee = 15000000
-  } yield ClaimTransaction.signed(version, timestamp, sender, fee, claimType, recipient, subject, data).sponsorWith(sponsor).explicitGet()
+  } yield StatementTransaction.signed(version, timestamp, sender, fee, statementType, recipient, subject, data).sponsorWith(sponsor).explicitGet()
 
   def assocTransactionGen: Gen[AssociationTransaction] = Gen.oneOf(issueAssocTransactionGen, revokeAssocTransactionGen)
 
