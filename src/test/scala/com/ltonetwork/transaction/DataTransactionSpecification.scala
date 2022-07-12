@@ -1,21 +1,19 @@
 package com.ltonetwork.transaction
 
 import com.google.common.primitives.Shorts
-import com.ltonetwork.{TransactionGen, transaction}
+import com.ltonetwork.account.{KeyTypes, PublicKeyAccount}
+import com.ltonetwork.api.requests.DataRequest
 import com.ltonetwork.state.DataEntry._
 import com.ltonetwork.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, DataEntry, EitherExt2, IntegerDataEntry, StringDataEntry}
+import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.utils.Base58
+import com.ltonetwork.{TransactionGen, transaction}
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.Json
-import com.ltonetwork.account.{KeyType, KeyTypes, PublicKeyAccount}
-import com.ltonetwork.api.requests.DataRequest
-import com.ltonetwork.transaction.data.DataTransaction
-import org.scalacheck.Gen.Parameters
-import org.scalacheck.rng.Seed
 import scorex.crypto.encode.Base64
 
 class DataTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen {

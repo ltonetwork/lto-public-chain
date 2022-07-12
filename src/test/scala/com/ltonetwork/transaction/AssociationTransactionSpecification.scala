@@ -91,7 +91,7 @@ class AssociationTransactionSpecification
       req.timestamp.get shouldEqual tx.timestamp
       req.associationType shouldEqual tx.assocType
       req.recipient shouldEqual tx.recipient.toString
-      req.hash shouldEqual tx.subject
+      req.subject shouldEqual tx.subject
     }
   }
 

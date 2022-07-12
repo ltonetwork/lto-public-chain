@@ -2,15 +2,18 @@ package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.{Address, PublicKeyAccount}
-import com.ltonetwork.api.http.requests.ClaimRequest
-import com.ltonetwork.state.{ByteStr, EitherExt2}
+import com.ltonetwork.api.requests.ClaimRequest
+import com.ltonetwork.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, DataEntry, EitherExt2, IntegerDataEntry}
 import com.ltonetwork.transaction.claim.ClaimTransaction
 import com.ltonetwork.utils.Base58
 import org.scalatest._
-import org.scalatest.prop.PropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.Json
+import scorex.crypto.encode.Base64
 
-class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
+class ClaimTransactionSpecification extends AnyPropSpec with ScalaCheckDrivenPropertyChecks with Matchers with TransactionGen {
 
   private def checkSerialization(tx: ClaimTransaction): Assertion = {
     val tryParse = ClaimTransaction.parseBytes(tx.bytes())
@@ -22,17 +25,21 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
     parsed.fee shouldEqual tx.fee
     parsed.sponsor shouldEqual tx.sponsor
 
-    parsed.related.zip(tx.related).foreach {
-      case (r, t) => r shouldEqual t
+    parsed.claimType shouldEqual tx.claimType
+    parsed.subject shouldEqual tx.subject
+    parsed.recipient shouldEqual tx.recipient
+
+    parsed.data.zip(tx.data).foreach {
+      case (r, t) =>
+        r.key shouldEqual t.key
+        r.value shouldEqual t.value
     }
 
     parsed.bytes() shouldEqual tx.bytes()
   }
 
   property("serialization roundtrip") {
-    forEvery(versionTable(ClaimTransaction)) { version: Byte =>
-      forAll(claimTransactionGen(version))(checkSerialization)
-    }
+    forAll(claimTransactionGen)(checkSerialization)
   }
 
   property("from TransactionBuilder") {
@@ -53,10 +60,6 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
       req.fee shouldEqual tx.fee
       req.timestamp should be ('defined)
       req.timestamp.get shouldEqual tx.timestamp
-
-      req.related.getOrElse(List.empty[ByteStr]).zip(tx.related).foreach {
-        case (r, t) => r shouldEqual t
-      }
     }
   }
 
@@ -64,14 +67,13 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
     val js = Json.parse("""{
                        "type": 20,
                        "version": 3,
-                       "id": "EY7marMyFL3Xv4JNfcvw6ETcAa6JmbxNRsPuwYJRN8Ky",
+                       "id": "27ypi5gPqh5UJgn5oTRriR4qXQ89vNvXKikiq29Sd5y2",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
                        "fee": 100000,
                        "timestamp": 1526911531530,
                        "claimType": 42,
-                       "amount": 0,
                        "proofs": [
                          "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
                        ]
@@ -82,19 +84,17 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
 
     val tx = ClaimTransaction
       .create(
-        3,
-        None,
-        1526911531530L,
-        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
-        100000,
-        42,
-        None,
-        None,
-        0,
-        None,
-        List.empty[ByteStr],
-        None,
-        Proofs(Seq(proof))
+        version = 3,
+        chainId = None,
+        timestamp = 1526911531530L,
+        sender = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
+        fee = 100000,
+        claimType = 42,
+        recipient = None,
+        subject = None,
+        data = List.empty[DataEntry[_]],
+        sponsor = None,
+        proofs = Proofs(Seq(proof))
       ).explicitGet()
 
     tx.json() shouldEqual js
@@ -104,7 +104,7 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
     val js = Json.parse("""{
                        "type": 20,
                        "version": 3,
-                       "id": "Hny72m41hBDs9kSTVm48sT6wsVy5C9ZhmMdkcpHmN728",
+                       "id": "6gPwhssDXRyLTm4F4PUugPrD4kJqFjxwXKJGhHDAgJYC",
                        "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
                        "senderKeyType": "ed25519",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
@@ -116,11 +116,22 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
                        "claimType": 42,
                        "recipient": "3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt",
                        "subject": "dRsU",
-                       "amount": 8900000,
-                       "hash": "32MUGxHoR66M4HT8ga7haKS6tLkJ1w5P4du6q3X9tZqvdSuSHNoUzwQCPwPyW8u5xLxso1Qx99GexVGfLGep1Wfv",
-                       "related": [
-                         "7hmabbFS8a2z79a29pzZH1s8LHxrsEAnnLjJxNdZ1gGw",
-                         "EXhjYjy8a1dURbttrGzfcft7cddDnPnoa3vqaBLCTFVY"
+                       "data": [
+                         {
+                           "key": "int",
+                           "type": "integer",
+                           "value": 24
+                           },
+                         {
+                           "key": "bool",
+                           "type": "boolean",
+                           "value": true
+                           },
+                         {
+                           "key": "blob",
+                           "type": "binary",
+                           "value": "base64:YWxpY2U="
+                           }
                        ],
                        "proofs": [
                          "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94",
@@ -129,10 +140,10 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
                        }
   """)
 
-    val related = List(
-      ByteStr.decodeBase58("7hmabbFS8a2z79a29pzZH1s8LHxrsEAnnLjJxNdZ1gGw").get,
-      ByteStr.decodeBase58("EXhjYjy8a1dURbttrGzfcft7cddDnPnoa3vqaBLCTFVY").get
-    )
+    val entry1 = IntegerDataEntry("int", 24)
+    val entry2 = BooleanDataEntry("bool", true)
+    val entry3 = BinaryDataEntry("blob", ByteStr(Base64.decode("YWxpY2U=")))
+
     val proofs = Seq(
       ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get,
       ByteStr.decodeBase58("2z2S3W9n9AatLQ4XmR5mPfZdGY3o27JY7Bf9c7GeD3GDhGykxuSEjKMkwh2yALDcBhdduFGLT1pXJww4Dg6eMHRx").get
@@ -140,19 +151,17 @@ class ClaimTransactionSpecification extends PropSpec with PropertyChecks with Ma
 
     val tx = ClaimTransaction
       .create(
-        3,
-        None,
-        1526911531530L,
-        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
-        100000,
-        42,
-        Some(Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet()),
-        Some(ByteStr.decodeBase58("dRsU").get),
-        8900000,
-        Some(ByteStr.decodeBase58("32MUGxHoR66M4HT8ga7haKS6tLkJ1w5P4du6q3X9tZqvdSuSHNoUzwQCPwPyW8u5xLxso1Qx99GexVGfLGep1Wfv").get),
-        related,
-        Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
-        Proofs(proofs)
+        version = 3,
+        chainId = None,
+        timestamp = 1526911531530L,
+        sender = PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
+        fee = 100000,
+        claimType = 42,
+        recipient = Some(Address.fromString("3N5XyVTp4kEARUGRkQTuCVN6XjV4c5iwcJt").explicitGet()),
+        subject = Some(ByteStr.decodeBase58("dRsU").get),
+        data = List(entry1, entry2, entry3),
+        sponsor = Some(PublicKeyAccount.fromBase58String("22wYfvU2op1f3s4RMRL2bwWBmtHCAB6t3cRwnzRJ1BNz").explicitGet()),
+        proofs = Proofs(proofs)
       ).explicitGet()
 
     tx.json() shouldEqual js
