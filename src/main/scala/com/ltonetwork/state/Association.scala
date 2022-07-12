@@ -5,13 +5,13 @@ import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAsso
 import play.api.libs.json._
 
 case class Association (sender: Address,
+                        assocType: Long,
                         recipient: Address,
-                        assocType: Int,
                         subject: Option[ByteStr],
                         timestamp: Long,
                         expires: Option[Long],
                         data: List[DataEntry[_]]) {
-  def assoc: (Int, Address, Option[ByteStr]) = (assocType, recipient, subject)
+  def assoc: (Long, Address, Option[ByteStr]) = (assocType, recipient, subject)
 
   def isExpired(time: Long): Boolean = expires.exists(_ <= time)
 }
@@ -20,8 +20,8 @@ object Association {
   def apply(timestamp: Long, tx: IssueAssociationTransaction): Association =
     Association(
       tx.sender,
-      tx.recipient,
       tx.assocType,
+      tx.recipient,
       tx.subject,
       timestamp,
       tx.expires,
@@ -30,8 +30,8 @@ object Association {
 
   implicit val jsonWrites: Writes[Association] = Writes { a => Json.obj(
     "sender" -> a.sender,
-    "recipient" -> a.recipient,
     "type" -> a.assocType,
+    "recipient" -> a.recipient,
     "subject" -> a.subject,
     "timestamp" -> a.timestamp,
     "expires" -> a.expires,
@@ -65,9 +65,9 @@ object Associations {
     Associations(address, buildList(currentTime, outgoing), buildList(currentTime, incoming))
 
   private def buildList: (Long, List[(Long, AssociationTransaction)]) => List[Association] =
-    buildList(Map.empty[(Int, Address, Option[ByteStr]), Association])
+    buildList(Map.empty[(Long, Address, Option[ByteStr]), Association])
 
-  private def buildList(initial: Map[(Int, Address, Option[ByteStr]), Association])(currentTime: Long, txs: List[(Long, AssociationTransaction)]): List[Association] =
+  private def buildList(initial: Map[(Long, Address, Option[ByteStr]), Association])(currentTime: Long, txs: List[(Long, AssociationTransaction)]): List[Association] =
     txs
       .sortBy { case (ts, tx) => (ts, tx.typeId) }
       .foldLeft(initial) {

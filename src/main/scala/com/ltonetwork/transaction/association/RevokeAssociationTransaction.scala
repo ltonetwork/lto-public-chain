@@ -13,8 +13,8 @@ case class RevokeAssociationTransaction private (version: Byte,
                                                  timestamp: Long,
                                                  sender: PublicKeyAccount,
                                                  fee: Long,
+                                                 assocType: Long,
                                                  recipient: Address,
-                                                 assocType: Int,
                                                  subject: Option[ByteStr],
                                                  sponsor: Option[PublicKeyAccount],
                                                  proofs: Proofs)
@@ -38,7 +38,7 @@ case class RevokeAssociationTransaction private (version: Byte,
 object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssociationTransaction] {
 
   override def typeId: Byte                 = 17
-  override def supportedVersions: Set[Byte] = Set(1, 3)
+  override def supportedVersions: Set[Byte] = Set(1, 3, 4)
 
   val MaxSubjectLength: Int = IssueAssociationTransaction.MaxSubjectLength
 
@@ -51,10 +51,11 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
-        Validated.condNel(version < 3 || !subject.exists(_.arr.length == 0), (), ValidationError.GenericError("Hash length must not be 0 bytes")),
+        Validated.condNel(version >= 4 || assocType.isValidInt, (), ValidationError.GenericError(s"Association type must be a valid integer for v$version")),
+        Validated.condNel(version < 3 || !subject.exists(_.arr.length == 0), (), ValidationError.GenericError("Subject length must not be 0 bytes")),
         Validated.condNel(!subject.exists(_.arr.length > MaxSubjectLength),
                           (),
-                          ValidationError.GenericError(s"Hash length must be <= ${MaxSubjectLength} bytes")),
+                          ValidationError.GenericError(s"Subject length must be <= ${MaxSubjectLength} bytes")),
         Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
                           (),
@@ -67,13 +68,14 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
   }
 
   object SerializerV1 extends AssociationSerializerV1[RevokeAssociationTransaction] {
-    protected val createTx = (version, chainId, timestamp, sender, fee, recipient, assocType, subject, proofs) =>
-      create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, subject, None, proofs)
+    protected val createTx = (version, chainId, timestamp, sender, fee, assocType, recipient, subject, proofs) =>
+      create(version, Some(chainId), timestamp, sender, fee, assocType, recipient, subject, None, proofs)
   }
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => SerializerV1
     case 3 => RevokeAssociationSerializerV3
+    case 4 => RevokeAssociationSerializerV4
     case _ => UnknownSerializer
   }
 
@@ -82,19 +84,19 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
+             assocType: Long,
              recipient: Address,
-             assocType: Int,
              subject: Option[ByteStr],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    RevokeAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, assocType, subject, sponsor, proofs).validatedEither
+    RevokeAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, assocType, recipient, subject, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
              sender: PrivateKeyAccount,
              fee: Long,
+             assocType: Long,
              recipient: Address,
-             assocType: Int,
              subject: Option[ByteStr]): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, assocType, subject, None, Proofs.empty).signWith(sender)
+    create(version, None, timestamp, sender, fee, assocType, recipient, subject, None, Proofs.empty).signWith(sender)
 }

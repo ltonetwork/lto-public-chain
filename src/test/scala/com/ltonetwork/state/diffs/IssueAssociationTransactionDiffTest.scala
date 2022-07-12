@@ -30,11 +30,11 @@ class IssueAssociationTransactionDiffTest
   property("can find outgoing and incoming assoc") {
     val setup = for {
       (genesis, master, ts) <- baseSetup
-      party                 <- accountGen
+      recipient             <- accountGen
       feeOverhead           <- Gen.choose[Long](0, ENOUGH_AMT)
       version               <- Gen.oneOf(IssueAssociationTransaction.supportedVersions.toSeq)
       tx = IssueAssociationTransaction
-        .signed(version, ts + 10000, master, Constants.UnitsInLTO + feeOverhead, party, 42, None, None, List.empty)
+        .signed(version, ts + 10000, master, Constants.UnitsInLTO + feeOverhead, 42, recipient, None, None, List.empty)
         .explicitGet()
     } yield (genesis, tx)
 
@@ -53,7 +53,7 @@ class IssueAssociationTransactionDiffTest
     val setup = for {
       master  <- accountGen
       master2 <- accountGen
-      party   <- accountGen
+      recipient   <- accountGen
       ts      <- positiveLongGen
       version <- Gen.oneOf(IssueAssociationTransaction.supportedVersions.toSeq)
       genesis1 = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
@@ -65,18 +65,18 @@ class IssueAssociationTransactionDiffTest
           ts + 1,
           master,
           Constants.UnitsInLTO + feeOverhead,
-          party,
           100,
+          recipient,
           None,
           Some(ByteStr.decodeBase58("Fjn9ZkwYx1YuXDskEGDhLA8PdQGgewHRK9PGxYmzy61g").get),
           List.empty,
         )
         .explicitGet()
       tx2 = IssueAssociationTransaction
-        .signed(version, ts + 2, master, Constants.UnitsInLTO + feeOverhead, party, 11, None, None, List.empty)
+        .signed(version, ts + 2, master, Constants.UnitsInLTO + feeOverhead, 11, recipient, None, None, List.empty)
         .explicitGet()
       tx3 = IssueAssociationTransaction
-        .signed(version, ts + 3, master2, Constants.UnitsInLTO + feeOverhead, party, 11, None, None, List.empty)
+        .signed(version, ts + 3, master2, Constants.UnitsInLTO + feeOverhead, 11, recipient, None, None, List.empty)
         .explicitGet()
     } yield (genesis1, genesis2, tx1, tx2, tx3)
 

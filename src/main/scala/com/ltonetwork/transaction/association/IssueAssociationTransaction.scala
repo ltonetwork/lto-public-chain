@@ -13,8 +13,8 @@ case class IssueAssociationTransaction private (version: Byte,
                                                 timestamp: Long,
                                                 sender: PublicKeyAccount,
                                                 fee: Long,
+                                                assocType: Long,
                                                 recipient: Address,
-                                                assocType: Int,
                                                 expires: Option[Long],
                                                 subject: Option[ByteStr],
                                                 data: List[DataEntry[_]],
@@ -57,10 +57,11 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
-        Validated.condNel(version < 3 || !subject.exists(_.arr.length == 0), (), ValidationError.GenericError("Hash length must not be 0 bytes")),
+        Validated.condNel(version >= 4 || assocType.isValidInt, (), ValidationError.GenericError(s"Association type must be a valid integer for v$version")),
+        Validated.condNel(version < 3 || !subject.exists(_.arr.length == 0), (), ValidationError.GenericError("Subject length must not be 0 bytes")),
         Validated.condNel(!subject.exists(_.arr.length > MaxSubjectLength),
                           (),
-                          ValidationError.GenericError(s"Hash length must be <= $MaxSubjectLength bytes")),
+                          ValidationError.GenericError(s"Subject length must be <= $MaxSubjectLength bytes")),
         Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(expires.isEmpty || version >= 3,
                           (),
@@ -83,8 +84,8 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
   }
 
   object SerializerV1 extends AssociationSerializerV1[IssueAssociationTransaction] {
-    protected val createTx = (version, chainId, timestamp, sender, fee, recipient, assocType, subject, proofs) =>
-      create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, None, subject, List.empty, None, proofs)
+    protected val createTx = (version, chainId, timestamp, sender, fee, assocType, recipient, subject, proofs) =>
+      create(version, Some(chainId), timestamp, sender, fee, assocType, recipient, None, subject, List.empty, None, proofs)
   }
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
@@ -99,23 +100,23 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
+             assocType: Long,
              recipient: Address,
-             assocType: Int,
              expires: Option[Long],
              subject: Option[ByteStr],
              data: List[DataEntry[_]],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    IssueAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, assocType, expires, subject, data, sponsor, proofs).validatedEither
+    IssueAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, assocType, recipient, expires, subject, data, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
              sender: PrivateKeyAccount,
              fee: Long,
+             assocType: Long,
              recipient: Address,
-             assocType: Int,
              expires: Option[Long],
              subject: Option[ByteStr],
              data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, assocType, expires, subject, data, None, Proofs.empty).signWith(sender)
+    create(version, None, timestamp, sender, fee, assocType, recipient, expires, subject, data, None, Proofs.empty).signWith(sender)
 }

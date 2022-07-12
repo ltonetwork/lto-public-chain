@@ -21,8 +21,8 @@ object IssueAssociationSerializerV4 extends TransactionSerializer.For[IssueAssoc
       Longs.toByteArray(timestamp),
       Deser.serializeAccount(sender),
       Longs.toByteArray(fee),
+      Longs.toByteArray(assocType),
       recipient.bytes.arr,
-      Ints.toByteArray(assocType),
       Longs.toByteArray(expires.getOrElse(0)),
       Deser.serializeArray(subject.fold(Array.emptyByteArray)(_.arr)),
       Shorts.toByteArray(data.size.toShort),
@@ -35,14 +35,14 @@ object IssueAssociationSerializerV4 extends TransactionSerializer.For[IssueAssoc
       val buf = ByteBuffer.wrap(bytes)
 
       val (chainId, timestamp, sender, fee) = parseBase(buf)
+      val assocType                         = buf.getLong
       val recipient                         = buf.getAddress
-      val assocType                         = buf.getInt
       val expires                           = Some(buf.getLong).noneIf(0)
       val hash                              = Some(buf.getByteArrayWithLength).map(ByteStr(_)).noneIfEmpty
       val data                              = parseData(buf)
       val (sponsor, proofs)                 = parseFooter(buf)
 
-      create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, expires, hash, data, sponsor, proofs)
+      create(version, Some(chainId), timestamp, sender, fee, assocType, recipient, expires, hash, data, sponsor, proofs)
         .fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 }

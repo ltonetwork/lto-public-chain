@@ -34,8 +34,8 @@ object Tx {
   case class MassTransfer(p: Proven, transferCount: Long, totalAmount: Long, transfers: IndexedSeq[TransferItem], attachment: ByteVector) extends Tx
   case class Anchor(p: Proven, anchorCount: Long, anchors: IndexedSeq[ByteVector])                                                        extends Tx
   case class Data(p: Proven, data: IndexedSeq[DataItem[_]])                                                                               extends Tx
-  case class IssueAssociation(p: Proven, assocType: Int, recipient: LangAddress)                                                          extends Tx
-  case class RevokeAssociation(p: Proven, assocType: Int, recipient: LangAddress)                                                         extends Tx
+  case class IssueAssociation(p: Proven, assocType: Long, recipient: LangAddress)                                                         extends Tx
+  case class RevokeAssociation(p: Proven, assocType: Long, recipient: LangAddress)                                                        extends Tx
   case class Sponsorship(p: Proven, recipient: LangAddress)                                                                               extends Tx
   case class CancelSponsorship(p: Proven, recipient: LangAddress)                                                                         extends Tx
   case class Register(p: Proven, accounts: IndexedSeq[PublicKey])                                                                         extends Tx

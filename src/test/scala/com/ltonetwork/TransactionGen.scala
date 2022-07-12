@@ -423,7 +423,7 @@ trait TransactionGenBase extends ScriptGen {
       sender    <- accountGen(keyType)
       timestamp <- timestampGen
       recipient <- accountGen(keyType)
-      assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
+      assocType <- if (version < 4) Gen.choose(Int.MinValue, Int.MaxValue).map(_.toLong) else Gen.choose(Long.MinValue, Long.MaxValue)
       expires   <- if (version < 3) Gen.const(None) else Gen.option(timestampGen)
       fee       <- smallFeeGen
       minSubjectLength = if (version < 3) 0 else 1
@@ -432,7 +432,7 @@ trait TransactionGenBase extends ScriptGen {
       size    <- Gen.choose(0, 5)
       data    <- if (version < 4) Gen.const(List.empty) else uniqueDataGen(size)
     } yield
-      IssueAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, expires, subject, data).sponsorWith(sponsor).explicitGet()
+      IssueAssociationTransaction.signed(version, timestamp, sender, fee, assocType, recipient, expires, subject, data).sponsorWith(sponsor).explicitGet()
 
   def revokeAssocTransactionGen: Gen[RevokeAssociationTransaction]                = versionGen(RevokeAssociationTransaction).flatMap(revokeAssocTransactionGen)
   def revokeAssocTransactionGen(version: Byte): Gen[RevokeAssociationTransaction] = revokeAssocTransactionGen(version, ED25519)
@@ -441,12 +441,12 @@ trait TransactionGenBase extends ScriptGen {
       sender    <- accountGen(keyType)
       timestamp <- timestampGen
       recipient <- accountGen(keyType)
-      assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
+      assocType <- if (version < 4) Gen.choose(Int.MinValue, Int.MaxValue).map(_.toLong) else Gen.choose(Long.MinValue, Long.MaxValue)
       fee       <- smallFeeGen
       minSubjectLength = if (version < 3) 0 else 1
       hashOpt <- Gen.option(genBoundedBytes(minSubjectLength, RevokeAssociationTransaction.MaxSubjectLength).map(ByteStr(_)))
       sponsor <- sponsorGen(version)
-    } yield RevokeAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, hashOpt).sponsorWith(sponsor).explicitGet()
+    } yield RevokeAssociationTransaction.signed(version, timestamp, sender, fee, assocType, recipient, hashOpt).sponsorWith(sponsor).explicitGet()
 
   def statementTransactionGen: Gen[StatementTransaction] = versionGen(StatementTransaction).flatMap(statementTransactionGen)
   def statementTransactionGen(version: Byte): Gen[StatementTransaction] = for {
