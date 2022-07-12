@@ -203,7 +203,7 @@ class LevelDBWriter(writableDB: DB,
                                   leaseBalances: Map[BigInt, LeaseBalance],
                                   leaseUnbonding: Map[BigInt, Long],
                                   leaseStates: Map[ByteStr, Boolean],
-                                  transactions: Map[ByteStr, (Transaction, Set[BigInt])],
+                                  transactions: Map[ByteStr, (Transaction, Set[BigInt], Option[BigInt])],
                                   addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
                                   scripts: Map[BigInt, Option[Script]],
                                   data: Map[BigInt, AccountDataInfo],
@@ -324,8 +324,9 @@ class LevelDBWriter(writableDB: DB,
       case (addr, txs) => f(addr, txs, Keys.incomingAssociationsSeqNr, Keys.incomingAssociationTransactionId)
     }
 
-    for ((id, (tx, _)) <- transactions) {
+    for ((id, (tx, _, sp)) <- transactions) {
       rw.put(Keys.transactionInfo(id), Some((height, tx)))
+      sp.foreach(a => rw.put(Keys.transactionSponsor(id), Some(a)))
     }
 
     val activationWindowSize = fs.activationWindowSize(height)
@@ -486,9 +487,12 @@ class LevelDBWriter(writableDB: DB,
       rw.filterHistory(Keys.sponsorshipHistory(sponsoree), currentHeight)
     }
   }
+
   override def transactionInfo(id: ByteStr): Option[(Int, Transaction)] = readOnly(db => db.get(Keys.transactionInfo(id)))
 
   override def transactionHeight(id: ByteStr): Option[Int] = readOnly(db => db.get(Keys.transactionHeight(id)))
+
+  override def transactionSponsor(id: ByteStr): Option[Address] = readOnly(db => db.get(Keys.transactionSponsor(id)).map(a => db.get(Keys.idToAddress(a))))
 
   override def addressTransactions(address: Address, types: Set[Byte], count: Int, from: Int): Seq[(Int, Transaction)] = readOnly { db =>
     db.get(Keys.addressId(address)).fold(Seq.empty[(Int, Transaction)]) { addressId =>

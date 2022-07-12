@@ -4,7 +4,7 @@ import com.ltonetwork.consensus.PoSSelector
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.fee.{FeeCalculator, FeeVoteStatus}
 import com.ltonetwork.history.{CheckpointServiceImpl, StorageFactory}
-import com.ltonetwork.settings.{BlockchainSettings, FeesSettings, FunctionalitySettings, LtoSettings}
+import com.ltonetwork.settings.{BlockchainSettings, FunctionalitySettings, LtoSettings}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.BlockchainUpdater
 import com.ltonetwork.utils._
@@ -47,7 +47,7 @@ class MinerSpecification extends AnyPropSpec with MockFactory with TransactionGe
     val utx = new UtxPoolImpl(
       time,
       blockchain,
-      new FeeCalculator(FeesSettings.empty, blockchain),
+      new FeeCalculator(blockchain),
       functionalitySettings,
       settings.utxSettings
     )

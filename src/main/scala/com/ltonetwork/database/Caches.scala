@@ -106,7 +106,7 @@ trait Caches extends Blockchain {
                          leaseBalances: Map[BigInt, LeaseBalance],
                          leaseUnbonding: Map[BigInt, Long],
                          leaseStates: Map[ByteStr, Boolean],
-                         transactions: Map[ByteStr, (Transaction, Set[BigInt])],
+                         transactions: Map[ByteStr, (Transaction, Set[BigInt], Option[BigInt])],
                          addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
                          scripts: Map[BigInt, Option[Script]],
                          data: Map[BigInt, AccountDataInfo],
@@ -162,10 +162,10 @@ trait Caches extends Blockchain {
       newPortfolios += address -> newPortfolio
     }
 
-    val newTransactions = Map.newBuilder[ByteStr, (Transaction, Set[BigInt])]
+    val newTransactions = Map.newBuilder[ByteStr, (Transaction, Set[BigInt], Option[BigInt])]
     for ((id, (_, tx, addresses)) <- diff.transactions) {
       transactionIds.put(id, tx.timestamp)
-      newTransactions += id -> ((tx, addresses.map(addressId)))
+      newTransactions += id -> ((tx, addresses.map(addressId), diff.feeSponsors.get(id).map(addressId)))
     }
 
     val newAssociations: List[(Int, AssociationTransaction)] = diff.transactions.values

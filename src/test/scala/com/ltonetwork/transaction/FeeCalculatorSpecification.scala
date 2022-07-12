@@ -4,7 +4,6 @@ import com.ltonetwork.TransactionGen
 import com.ltonetwork.account.Address
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.fee.FeeCalculator
-import com.ltonetwork.settings.FeesSettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
@@ -33,28 +32,28 @@ class FeeCalculatorSpecification extends AnyPropSpec with ScalaCheckDrivenProper
   }
 
   property("Transfer transaction") {
-    val feeCalc = new FeeCalculator(FeesSettings.empty, noScriptBlockchain)
+    val feeCalc = new FeeCalculator(noScriptBlockchain)
     forAll(transferGen, Gen.choose(0.8.lto, 1.2.lto)) { (tx: TransferTransaction, fee: Long) =>
       feeCalc.enoughFee(tx.copy(fee = fee)) shouldBeRightIf (fee >= 1.lto)
     }
   }
 
   property("Mass Transfer transaction") {
-    val feeCalc = new FeeCalculator(FeesSettings.empty, noScriptBlockchain)
+    val feeCalc = new FeeCalculator(noScriptBlockchain)
     forAll(massTransferGen(4), Gen.choose(0.8.lto, 2.lto)) { (tx: MassTransferTransaction, fee: Long) =>
       feeCalc.enoughFee(tx.copy(fee = fee)) shouldBeRightIf (fee >= 1.lto + (tx.transfers.size * 0.1.lto))
     }
   }
 
   property("Lease transaction") {
-    val feeCalc = new FeeCalculator(FeesSettings.empty, noScriptBlockchain)
+    val feeCalc = new FeeCalculator(noScriptBlockchain)
     forAll(leaseGen, Gen.choose(0.8.lto, 1.2.lto)) { (tx: LeaseTransaction, fee: Long) =>
       feeCalc.enoughFee(tx.copy(fee = fee)) shouldBeRightIf (fee >= 1.lto)
     }
   }
 
   property("Association transaction") {
-    val feeCalc = new FeeCalculator(FeesSettings.empty, noScriptBlockchain)
+    val feeCalc = new FeeCalculator(noScriptBlockchain)
     forAll(assocTransactionGen, Gen.choose(0.4.lto, 0.6.lto)) { (tx: AssociationTransaction, fee: Long) =>
       val (txWithFee, dataLength) = tx match {
         case iatx: IssueAssociationTransaction => (iatx.copy(fee = fee), iatx.data.map(_.toBytes.length).sum)
@@ -65,28 +64,28 @@ class FeeCalculatorSpecification extends AnyPropSpec with ScalaCheckDrivenProper
   }
 
   property("Sponsorship transaction") {
-    val feeCalc = new FeeCalculator(FeesSettings.empty, noScriptBlockchain)
+    val feeCalc = new FeeCalculator(noScriptBlockchain)
     forAll(sponsorshipGen, Gen.choose(4.lto, 6.lto)) { (tx: SponsorshipTransaction, fee: Long) =>
       feeCalc.enoughFee(tx.copy(fee = fee)) shouldBeRightIf (fee >= 5.lto)
     }
   }
 
   property("Cancel Sponsorship transaction") {
-    val feeCalc = new FeeCalculator(FeesSettings.empty, noScriptBlockchain)
+    val feeCalc = new FeeCalculator(noScriptBlockchain)
     forAll(cancelSponsorshipGen, Gen.choose(0.8.lto, 1.2.lto)) { (tx: CancelSponsorshipTransaction, fee: Long) =>
       feeCalc.enoughFee(tx.copy(fee = fee)) shouldBeRightIf (fee >= 1.lto)
     }
   }
 
   property("Lease cancel transaction") {
-    val feeCalc = new FeeCalculator(FeesSettings.empty, noScriptBlockchain)
+    val feeCalc = new FeeCalculator(noScriptBlockchain)
     forAll(cancelLeaseGen, Gen.choose(1.lto, 1.2.lto)) { (tx: CancelLeaseTransaction, fee: Long) =>
       feeCalc.enoughFee(tx.copy(fee = fee)) shouldBeRightIf (fee >= 1.lto)
     }
   }
 
   property("Data transaction") {
-    val feeCalc = new FeeCalculator(FeesSettings.empty, noScriptBlockchain)
+    val feeCalc = new FeeCalculator(noScriptBlockchain)
     forAll(dataTransactionGen(10), Gen.choose(0.4.lto, 0.6.lto)) { (tx, fee: Long) =>
       feeCalc.enoughFee(tx.copy(fee = fee)) shouldBeRightIf (fee >= 0.5.lto + Math.ceil(tx.data.map(_.toBytes.length).sum / 256.0).toInt * 0.1.lto)
     }

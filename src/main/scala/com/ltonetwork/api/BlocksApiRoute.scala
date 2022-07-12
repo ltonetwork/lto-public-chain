@@ -2,6 +2,7 @@ package com.ltonetwork.api
 
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.{Route, StandardRoute}
+import com.ltonetwork.account.Address
 import com.ltonetwork.block.{Block, BlockHeader, BlockRewardCalculator}
 import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.network._
@@ -32,6 +33,8 @@ case class BlocksApiRoute(settings: RestAPISettings,
                           checkpointProc: Checkpoint => Task[Either[ValidationError, Option[BigInt]]])
     extends ApiRoute {
 
+  import BlocksApiRoute._
+
   // todo: make this configurable and fix integration tests
   val MaxBlocksPerRequest = 100
   val rollbackExecutor    = monix.execution.Scheduler.singleThread(name = "debug-rollback")
@@ -49,9 +52,9 @@ case class BlocksApiRoute(settings: RestAPISettings,
     val jsonHeight: JsValue = if (height > 0) JsNumber(height) else JsNull;
 
     BlockHeader.json(block, block.bytes().length) ++ Json.obj(
-      "transactions" -> JsArray(
-        block.transactionData.map(tx => tx.json() ++ Json.obj("effectiveFee" -> feeCalculator.fee(height, tx)))
-      ),
+      "transactions" -> JsArray(block.transactionData.map { tx =>
+        tx.json() ++ ExtraTxInfo(feeCalculator.fee(height, tx), blockchain.transactionSponsor(tx.id())).json
+      }),
       "fee" -> BlockRewardCalculator.blockFee(blockchain, height, block).balance,
       "burnedFees" -> BlockRewardCalculator.blockBurnedFee(blockchain, height, block),
       "miningReward" -> miningReward,
@@ -420,4 +423,12 @@ case class BlocksApiRoute(settings: RestAPISettings,
         .map(_.fold(ApiError.fromValidationError, _ => Json.obj("" -> "")): ToResponseMarshallable)
     }
   }
+}
+
+object BlocksApiRoute {
+  case class ExtraTxInfo(effectiveFee: Long, effectiveSponsor: Option[Address]) {
+    def json: JsObject = Json.toJson(this).asInstanceOf[JsObject]
+  }
+
+  implicit val extraTxInfoWrites: Writes[ExtraTxInfo] = Json.writes[ExtraTxInfo]
 }

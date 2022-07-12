@@ -5,7 +5,7 @@ import com.ltonetwork.account.{Address, KeyType, KeyTypes}
 import com.ltonetwork.features.FeatureProvider._
 import com.ltonetwork.features.{BlockchainFeature, BlockchainFeatures}
 import com.ltonetwork.fee.FeeCalculator
-import com.ltonetwork.settings.{FeesSettings, FunctionalitySettings}
+import com.ltonetwork.settings.FunctionalitySettings
 import com.ltonetwork.state._
 import com.ltonetwork.transaction.ValidationError._
 import com.ltonetwork.transaction._

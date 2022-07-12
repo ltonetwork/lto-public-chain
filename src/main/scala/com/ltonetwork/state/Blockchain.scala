@@ -47,6 +47,7 @@ trait Blockchain {
 
   def transactionInfo(id: ByteStr): Option[(Int, Transaction)]
   def transactionHeight(id: ByteStr): Option[Int]
+  def transactionSponsor(id: ByteStr): Option[Address]
 
   def addressTransactions(address: Address, types: Set[Byte], count: Int, from: Int): Seq[(Int, Transaction)]
 
