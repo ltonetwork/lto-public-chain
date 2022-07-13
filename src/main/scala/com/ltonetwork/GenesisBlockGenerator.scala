@@ -152,6 +152,9 @@ object GenesisBlockGenerator extends App {
 
     val confBody =
       s"""lto {
+         |  max-rollback-depth = 1000000
+         |  index-all-transactions = true
+         |
          |  blockchain {
          |    type = CUSTOM
          |    custom {

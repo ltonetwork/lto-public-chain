@@ -5,11 +5,11 @@ from lto.transactions import Association, RevokeAssociation
 from e2e.steps.generic import wait
 
 
-def association(context, sender, recipient, type, subject=None, version=4, data=None):
+def association(context, sender, type, recipient, subject=None, data=None, version=None):
     sender = context.users[sender]
     recipient = context.users[recipient]
     
-    transaction = Association(recipient.address, type, subject=Binary(subject or '', 'utf-8'), data=data)
+    transaction = Association(type, recipient.address, subject=Binary(subject or '', 'utf-8'), data=data)
     transaction.version = version or Association.DEFAULT_VERSION
     transaction.sign_with(sender)
 
@@ -30,13 +30,13 @@ def has_association(context, sender, recipient, subject):
     return next(filter(lambda assoc: assoc.subject == subject, is_associated(context, sender, recipient)))
 
 
-def revoke_association(context, user1, user2, type, subject=None, version=None):
-    user1 = context.users[user1]
-    user2 = context.users[user2]
+def revoke_association(context, sender, type, recipient, subject=None, version=None):
+    sender = context.users[sender]
+    recipient = context.users[recipient]
 
-    transaction = RevokeAssociation(user2.address, type, subject=Binary(subject or '', 'utf-8'))
+    transaction = RevokeAssociation(type, recipient.address, subject=Binary(subject or '', 'utf-8'))
     transaction.version = version or RevokeAssociation.DEFAULT_VERSION
-    transaction.sign_with(user1)
+    transaction.sign_with(sender)
 
     broadcast(context, transaction)
 
@@ -51,15 +51,15 @@ def data_value(assoc, key):
 def step_impl(context, sender, recipient, type, subject=None):
     if not is_associated(context, sender, recipient):
         funds_for_transaction(context, sender, Association.BASE_FEE)
-        association(context, sender, recipient, type, subject)
+        association(context, sender, type, recipient, subject)
         assert is_associated(context, sender, recipient), 'Failed to issue association'
 
 
 @given('{sender} does not have an association with {recipient} of type {type:d}')
 def step_impl(context, sender, recipient, type):
     for assoc in is_associated(context, sender, recipient):
-        funds_for_transaction(context, sender, RevokeAssociation.DEFAULT_FEE)
-        revoke_association(context, sender, recipient, type, assoc.hash)
+        funds_for_transaction(context, sender, RevokeAssociation.BASE_FEE)
+        revoke_association(context, sender, type, recipient, assoc.hash)
 
     assert not is_associated(context, sender, recipient), 'Failed to revoke association'
 
@@ -67,24 +67,24 @@ def step_impl(context, sender, recipient, type):
 @when('{sender} issues an association with {recipient} of type {type:d}')
 @when('{sender} issues an association (v{version:d}) with {recipient} of type {type:d}')
 def step_impl(context, sender, recipient, type, version=None):
-    association(context, sender, recipient, type, version=version)
+    association(context, sender, type, recipient, version=version)
 
 
 @when('{sender} revokes the association with {recipient} of type {type:d}')
 @when('{sender} revokes the association (v{version:d}) with {recipient} of type {type:d}')
 def step_impl(context, sender, recipient, type, version=None):
-    revoke_association(context, sender, recipient, type, version=version)
+    revoke_association(context, sender, type, recipient, version=version)
 
 
 @when('{sender} revokes the association with {recipient} of type {type:d} and subject {subject}')
 def step_impl(context, sender, recipient, type, subject):
-    revoke_association(context, sender, recipient, type, subject)
+    revoke_association(context, sender, type, recipient, subject)
 
 
 @when(u'{sender} tries to issue an association with {recipient} of type {type:d}')
 def step_impl(context, sender, recipient, type):
     try:
-        association(context, sender, recipient, type)
+        association(context, sender, type, recipient)
     except:
         pass
 
@@ -92,7 +92,7 @@ def step_impl(context, sender, recipient, type):
 @when(u'{sender} tries to revoke an association with {recipient} of type {type:d}')
 def step_impl(context, sender, recipient, type):
     try:
-        revoke_association(context, sender, recipient, type)
+        revoke_association(context, sender, type, recipient)
     except:
         pass
 
@@ -113,12 +113,12 @@ def step_impl(context, sender, recipient):
 @given(u'{sender} has an association with {recipient} that has data "{key}" with value "{str}"')
 def step_impl(context, sender, recipient, key, str=None, value=None):
     funds_for_transaction(context, sender, Association.BASE_FEE + Association.VAR_FEE)
-    association(context, sender, recipient, 1, data={key: str or cast_boolean_or_int(value)}, version=4)
+    association(context, sender, 1, recipient, data={key: str or cast_boolean_or_int(value)}, version=4)
 
 @when(u'{sender} issues an association with {recipient} that sets data "{key}" to {value}')
 @when(u'{sender} issues an association with {recipient} that sets data "{key}" to "{str}"')
 def step_impl(context, sender, recipient, key, str=None, value=None):
-    association(context, sender, recipient, 1, data={key: str or cast_boolean_or_int(value)}, version=4)
+    association(context, sender, 1, recipient, data={key: str or cast_boolean_or_int(value)}, version=4)
 
 
 @then('{sender} has an association with {recipient} that has data "{key}" with value {value}')

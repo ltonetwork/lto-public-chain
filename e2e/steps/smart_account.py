@@ -19,7 +19,7 @@ def has_script(context, user):
 
 @given("{user} has a smart account with script")
 def step_impl(context, user):
-    funds_for_transaction(context, user, SetScript.DEFAULT_FEE)
+    funds_for_transaction(context, user, SetScript.BASE_FEE)
     set_script(context, user, context.text)
     assert has_script(context, user), "No script set for account {}".format(context.users[user].address)
 

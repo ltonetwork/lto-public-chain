@@ -41,8 +41,8 @@ class FeeCalculator(blockchain: Blockchain) {
     case _: CancelSponsorshipTransaction  => Right(1000)
     case tx: DataTransaction              => Right(500 + dataBytes(tx.data, 256) * 100)
     case tx: RegisterTransaction          => Right(250 + tx.accounts.size * 100)
-    case tx: StatementTransaction             => Right(500 + dataBytes(tx.data, 256) * 100)
     case _: BurnTransaction               => Right(1000)
+    case tx: StatementTransaction         => Right(500 + dataBytes(tx.data, 256) * 100)
     case _                                => Left(UnsupportedTransactionType)
   }).map(_ * blockchain.feePrice(height))
 

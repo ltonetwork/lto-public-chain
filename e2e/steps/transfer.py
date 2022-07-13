@@ -28,10 +28,10 @@ def step_impl(context, user, balance):
     if user_balance < balance:
         transfer_to(context, recipient=user, amount=balance - user_balance)
     elif user_balance > balance:
-        if user_balance - balance <= Transfer.DEFAULT_FEE:
-            transfer_to(context, recipient=user, amount=Transfer.DEFAULT_FEE)
+        if user_balance - balance <= Transfer.BASE_FEE:
+            transfer_to(context, recipient=user, amount=Transfer.BASE_FEE)
         user_balance = get_balance(context.users[user].address)
-        transfer_to(context, amount=user_balance - (balance + Transfer.DEFAULT_FEE), sender=user)
+        transfer_to(context, amount=user_balance - (balance + Transfer.BASE_FEE), sender=user)
 
     assert_equals(get_balance(context.users[user].address), balance)
 

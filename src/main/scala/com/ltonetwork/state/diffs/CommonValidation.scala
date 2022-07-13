@@ -18,6 +18,7 @@ import com.ltonetwork.transaction.lease._
 import com.ltonetwork.transaction.register.RegisterTransaction
 import com.ltonetwork.transaction.smart.SetScriptTransaction
 import com.ltonetwork.transaction.sponsorship._
+import com.ltonetwork.transaction.statement.StatementTransaction
 import com.ltonetwork.transaction.transfer._
 
 import scala.concurrent.duration._
@@ -105,7 +106,8 @@ object CommonValidation {
       case (_: DataTransaction, 3)             => activationBarrier(BlockchainFeatures.CobaltAlloy)
       case (_: RegisterTransaction, 3)         => activationBarrier(BlockchainFeatures.CobaltAlloy)
       case (_: BurnTransaction, 3)             => activationBarrier(BlockchainFeatures.Juicy)
-      case (_: IssueAssociationTransaction, 4) => activationBarrier(BlockchainFeatures.Titanium)
+      case (_: AssociationTransaction, 4)      => activationBarrier(BlockchainFeatures.Titanium)
+      case (_: StatementTransaction, 3)        => activationBarrier(BlockchainFeatures.Titanium)
 
       case _ => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
     }
