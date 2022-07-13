@@ -12,7 +12,7 @@ import com.ltonetwork.lang.v1.testing.ScriptGen
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.ENOUGH_AMT
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.anchor.{AnchorTransaction, MappedAnchorTransaction}
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.statement.StatementTransaction
@@ -51,6 +51,7 @@ trait TransactionGenBase extends ScriptGen {
   val bytes32gen: Gen[Array[Byte]] = byteArrayGen(32)
   val bytes64gen: Gen[Array[Byte]] = byteArrayGen(64)
 
+  def genBoundedBytes(size: Int): Gen[Array[Byte]] = genBoundedBytes(size, size)
   def genBoundedBytes(minSize: Int, maxSize: Int): Gen[Array[Byte]] =
     for {
       length <- Gen.chooseNum(minSize, maxSize)
@@ -409,12 +410,29 @@ trait TransactionGenBase extends ScriptGen {
       sender    <- accountGen(keyType)
       timestamp <- timestampGen
       size      <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
-      len       <- Gen.oneOf(AnchorTransaction.EntryLength)
-      data      <- Gen.listOfN(size, genBoundedBytes(len, len))
+      len       <- Gen.choose(0, AnchorTransaction.MaxEntryLength)
+      anchors   <- Gen.containerOfN[Set, ByteStr](size, genBoundedBytes(len).map(ByteStr(_))).map(_.toList)
       sponsor   <- sponsorGen(version)
       fee     = 15000000
-      anchors = data.map(ByteStr(_))
     } yield AnchorTransaction.signed(version, timestamp, sender, fee, anchors).sponsorWith(sponsor).explicitGet()
+
+  def mappedAnchorTransactionGen: Gen[MappedAnchorTransaction]                = versionGen(MappedAnchorTransaction).flatMap(mappedAnchorTransactionGen)
+  def mappedAnchorTransactionGen(version: Byte): Gen[MappedAnchorTransaction] = mappedAnchorTransactionGen(version, ED25519)
+  def mappedAnchorTransactionGen(version: Byte, keyType: KeyType): Gen[MappedAnchorTransaction] =
+    for {
+      sender    <- accountGen(keyType)
+      timestamp <- timestampGen
+      size      <- Gen.choose(0, MappedAnchorTransaction.MaxEntryCount)
+      len       <- Gen.choose(0, MappedAnchorTransaction.MaxEntryLength)
+      anchors   <- Gen.mapOfN(size, Arbitrary {
+        for {
+          key   <- genBoundedBytes(len).map(ByteStr(_))
+          value <- genBoundedBytes(len).map(ByteStr(_))
+        } yield(key, value)
+      }.arbitrary)
+      sponsor   <- sponsorGen(version)
+      fee     = 15000000
+    } yield MappedAnchorTransaction.signed(version, timestamp, sender, fee, anchors).sponsorWith(sponsor).explicitGet()
 
   def issueAssocTransactionGen: Gen[IssueAssociationTransaction]                = versionGen(IssueAssociationTransaction).flatMap(issueAssocTransactionGen)
   def issueAssocTransactionGen(version: Byte): Gen[IssueAssociationTransaction] = issueAssocTransactionGen(version, ED25519)

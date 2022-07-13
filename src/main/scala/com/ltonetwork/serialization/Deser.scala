@@ -59,4 +59,7 @@ object Deser {
     Shorts.toByteArray(list.length.toShort) ++ list.map(ser(_)).reduceOption((a, b) => a ++ b).getOrElse(Array.emptyByteArray)
 
   def serializeAccount(account: PublicKeyAccount): Array[Byte] = Bytes.concat(Array(account.keyType.id), account.publicKey)
+
+  def serializeMap[T1, T2](m: Map[T1, T2])(ser: (T1, T2) => Array[Byte]): Array[Byte] =
+    Shorts.toByteArray(m.toSeq.length.toShort) ++ Bytes.concat(m.toSeq.map { case (k, v) => ser(k, v) }: _*)
 }

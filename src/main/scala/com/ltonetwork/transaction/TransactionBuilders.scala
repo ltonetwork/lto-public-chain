@@ -1,6 +1,6 @@
 package com.ltonetwork.transaction
 
-import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.anchor.{AnchorTransaction, MappedAnchorTransaction}
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.burn.BurnTransaction
 import com.ltonetwork.transaction.statement.StatementTransaction
@@ -35,6 +35,7 @@ object TransactionBuilders {
     CancelSponsorshipTransaction,
     RegisterTransaction,
     BurnTransaction,
+    MappedAnchorTransaction,
     StatementTransaction,
   ).map { x =>
     x.typeId -> x
