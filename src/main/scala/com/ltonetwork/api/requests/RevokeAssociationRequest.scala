@@ -17,9 +17,9 @@ case class RevokeAssociationRequest(version: Option[Byte] = None,
                                     sponsor: Option[String] = None,
                                     sponsorKeyType: Option[String] = None,
                                     sponsorPublicKey: Option[String] = None,
+                                    associationType: Long,
                                     recipient: String,
-                                    associationType: Int,
-                                    hash: Option[ByteStr] = None,
+                                    subject: Option[ByteStr] = None,
                                     signature: Option[ByteStr] = None,
                                     proofs: Option[Proofs] = None,
 ) extends TxRequest.For[RevokeAssociationTransaction] {
@@ -37,7 +37,7 @@ case class RevokeAssociationRequest(version: Option[Byte] = None,
         fee,
         associationType,
         validRecipient,
-        hash.noneIfEmpty,
+        subject.noneIfEmpty,
         sponsor,
         proofs
       )
@@ -55,8 +55,8 @@ object RevokeAssociationRequest {
       (JsPath \ "sponsor").readNullable[String] and
       (JsPath \ "sponsorKeyType").readNullable[String] and
       (JsPath \ "sponsorPublicKey").readNullable[String] and
+      (JsPath \ "associationType").read[Long].orElse((JsPath \ "assocType").read[Long]) and
       (JsPath \ "recipient").read[String].orElse((JsPath \ "party").read[String]) and
-      (JsPath \ "associationType").read[Int].orElse((JsPath \ "assocType").read[Int]) and
       (JsPath \ "subject").readNullable[ByteStr].orElse((JsPath \ "hash").readNullable[ByteStr]) and
       (JsPath \ "signature").readNullable[ByteStr] and
       (JsPath \ "proofs").readNullable[Proofs])(RevokeAssociationRequest.apply _),

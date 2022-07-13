@@ -17,8 +17,8 @@ case class IssueAssociationRequest(version: Option[Byte] = None,
                                    sponsor: Option[String] = None,
                                    sponsorKeyType: Option[String] = None,
                                    sponsorPublicKey: Option[String] = None,
+                                   associationType: Long,
                                    recipient: String,
-                                   associationType: Int,
                                    expires: Option[Long] = None,
                                    subject: Option[ByteStr] = None,
                                    data: Option[List[DataEntry[_]]] = None,
@@ -59,8 +59,8 @@ object IssueAssociationRequest {
       (JsPath \ "sponsor").readNullable[String] and
       (JsPath \ "sponsorKeyType").readNullable[String] and
       (JsPath \ "sponsorPublicKey").readNullable[String] and
+      (JsPath \ "associationType").read[Long].orElse((JsPath \ "assocType").read[Long]) and
       (JsPath \ "recipient").read[String].orElse((JsPath \ "party").read[String]) and
-      (JsPath \ "associationType").read[Int].orElse((JsPath \ "assocType").read[Int]) and
       (JsPath \ "expires").readNullable[Long] and
       (JsPath \ "subject").readNullable[ByteStr].orElse((JsPath \ "hash").readNullable[ByteStr]) and
       (JsPath \ "data").readNullable[List[DataEntry[_]]] and

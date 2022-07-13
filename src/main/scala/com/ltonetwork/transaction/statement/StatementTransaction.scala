@@ -37,7 +37,7 @@ case class StatementTransaction private(version: Byte,
 
 object StatementTransaction extends TransactionBuilder.For[StatementTransaction] {
 
-  override val typeId: Byte                 = 20
+  override val typeId: Byte                 = 23
   override val supportedVersions: Set[Byte] = Set(3)
 
   val MaxSubjectLength: Int  = 256

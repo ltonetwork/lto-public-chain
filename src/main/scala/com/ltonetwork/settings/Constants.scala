@@ -11,9 +11,9 @@ object Constants extends ScorexLogging {
   val AgentName       = s"LTO v${Version.VersionString}"
 
   val UnitsInLTO = 100000000L
-  val TotalLTO   = 1000000000L
 
-  val TotalLTOMain = 500000000L
+  val TotalLTOTestnet = 1000000000L
+  val TotalLTOMainnet = 500000000L
 
   lazy val TransactionNames: Map[Byte, String] =
     Map(
@@ -31,6 +31,6 @@ object Constants extends ScorexLogging {
       (19: Byte) -> "cancel sponsorship",
       (20: Byte) -> "register",
       (21: Byte) -> "burn",
-      (22: Byte) -> "statement"
+      (23: Byte) -> "statement"
     )
 }

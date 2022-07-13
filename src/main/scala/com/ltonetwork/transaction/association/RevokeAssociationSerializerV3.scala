@@ -20,8 +20,8 @@ object RevokeAssociationSerializerV3 extends TransactionSerializer.For[RevokeAss
       Longs.toByteArray(timestamp),
       Deser.serializeAccount(sender),
       Longs.toByteArray(fee),
-      Ints.toByteArray(assocType.toInt),
       recipient.bytes.arr,
+      Ints.toByteArray(assocType.toInt),
       Deser.serializeArray(subject.fold(Array.emptyByteArray)(_.arr))
     )
   }

@@ -31,8 +31,8 @@ object RevokeAssociationSerializerV4 extends TransactionSerializer.For[RevokeAss
       val buf = ByteBuffer.wrap(bytes)
 
       val (chainId, timestamp, sender, fee) = parseBase(buf)
-      val recipient                         = buf.getAddress
       val assocType                         = buf.getLong
+      val recipient                         = buf.getAddress
       val subject                           = Some(buf.getByteArrayWithLength).map(ByteStr(_)).noneIfEmpty
       val (sponsor, proofs)                 = parseFooter(buf)
 

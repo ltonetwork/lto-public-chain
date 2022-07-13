@@ -105,8 +105,8 @@ class IssueAssociationTransactionDiffTest
             }
         }
         assert(Seq(block(Seq(tx1, tx2, tx3))))
-        //assert(Seq(block(Seq(tx1)), block(Seq(tx2, tx3))))
-        //assert(Seq(block(Seq(tx1, tx2)), block(Seq(tx3))))
+        assert(Seq(block(Seq(tx1)), block(Seq(tx2, tx3))))
+        assert(Seq(block(Seq(tx1, tx2)), block(Seq(tx3))))
     }
   }
 
