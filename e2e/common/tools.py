@@ -29,7 +29,7 @@ def get_balance(address):
 
 
 def get_data(address):
-    return NODE.data_of(address)
+    return NODE.data(address)
 
 
 def funds_for_transaction(context, user, tx_fee):

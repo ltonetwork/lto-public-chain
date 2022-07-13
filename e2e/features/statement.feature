@@ -23,7 +23,7 @@ Feature: Statement
 
   Scenario Outline: Statement with different data types
     When Alice makes a statement with data "<key>" is <value>
-    #Then there is an statement transaction with data "key" is <value> signed by Alice
+    Then there is an statement transaction with data "<key>" is <value> signed by Alice
 
     Examples:
       | key       | value   |

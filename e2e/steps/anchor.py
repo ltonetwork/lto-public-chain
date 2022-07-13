@@ -1,6 +1,7 @@
 from behave import *
-from e2e.common.tools import *
+from e2e.common.tools import ROOT_ACCOUNT, NODE, encode_hash, broadcast
 from lto.transactions import Anchor
+from lto.crypto import encode
 import random
 
 
@@ -43,4 +44,7 @@ def step_impl(context, user, hash='', sponsor=None):
 
 @then('There is an anchor transaction with hash "{hash}" signed by {user}')
 def step_impl(context, hash, user):
-    pass
+    digest = encode(encode_hash(hash), 'base58')
+    txs = NODE.transactions(context.users[user], 'anchor')
+    anchors = [anchor.base58() for tx in txs for anchor in tx.anchors]
+    assert digest in anchors, 'Anchor tx with hash "{}" not found'.format(hash)

@@ -76,5 +76,6 @@ Feature: Association
 
   Scenario: Issue association overwriting data
     Given Alice has an association with Bob that has data "foo" with value 10
+    And wait
     When Alice issues an association with Bob that sets data "foo" to 42
     Then Alice has an association with Bob that has data "foo" with value 42

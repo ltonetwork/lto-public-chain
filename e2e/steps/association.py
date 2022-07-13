@@ -5,6 +5,11 @@ from lto.transactions import Association, RevokeAssociation
 from e2e.steps.generic import wait
 
 
+def data_value(data_entries, key):
+    entry = next(filter(lambda e: e['key'] == key, data_entries), None)
+    return entry['value'] if entry else None
+
+
 def association(context, sender, type, recipient, subject=None, data=None, version=None):
     sender = context.users[sender]
     recipient = context.users[recipient]
@@ -39,11 +44,6 @@ def revoke_association(context, sender, type, recipient, subject=None, version=N
     transaction.sign_with(sender)
 
     broadcast(context, transaction)
-
-
-def data_value(assoc, key):
-    entry = next(filter(lambda e: e['key'] == key, assoc['data']))
-    return entry['value'] if entry else None
 
 
 @given('{sender} has an association with {recipient} of type {type:d}')
@@ -100,7 +100,8 @@ def step_impl(context, sender, recipient, type):
 @then('{sender} is associated with {recipient}')
 def step_impl(context, sender, recipient):
     assocs = is_associated(context, sender, recipient)
-    assert assocs, '{} is not associated with {}'.format(context.users[sender].address, context.users[recipient].address)
+    assert assocs, '{} is not associated with {}'\
+        .format(context.users[sender].address, context.users[recipient].address)
 
 
 @then('{sender} is not associated with {recipient}')
@@ -124,8 +125,13 @@ def step_impl(context, sender, recipient, key, str=None, value=None):
 @then('{sender} has an association with {recipient} that has data "{key}" with value {value}')
 @then('{sender} has an association with {recipient} that has data "{key}" with value "{str}"')
 def step_impl(context, sender, recipient, key, str=None, value=None):
-    assocs = is_associated(context, sender, recipient)
-    assert assocs, '{} is not associated with {}'.format(context.users[sender].address, context.users[recipient].address)
-
+    sender_addr = context.users[sender].address
+    recipient_addr = context.users[recipient].address
     value = str or cast_boolean_or_int(value)
-    assert any(data_value(assoc, key) == value for assoc in assocs), "No association with given data"
+
+    assocs = is_associated(context, sender, recipient)
+    assert assocs, '{} is not associated with {}'.format(sender_addr, recipient_addr)
+
+    found = next((v for v in [data_value(assoc['data'], key) for assoc in assocs] if v is not None), None)
+    assert found is not None, 'No association with key {}'.format(key)
+    assert found == value, 'Association data {} is {} instead of {}'.format(key, found, value)
