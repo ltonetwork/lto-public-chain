@@ -33,13 +33,8 @@ object AnchorTransactionDiff {
       } else {
         validateEntryLengths(tx)
       }
-    ).map(
-      _ =>
-        Diff(
-          height,
-          tx,
-          portfolios = Map(tx.sender.toAddress -> Portfolio.empty)
-      )
+    ).map (
+      _ => Diff(height, tx, portfolios = Map(tx.sender.toAddress -> Portfolio.empty))
     )
   }
 }
