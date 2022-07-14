@@ -17,3 +17,8 @@ Feature: Anchor
     Given Alice has a new account
     When Alice tries to anchor
     Then the transaction fails
+
+  Scenario: Multi anchor transaction
+    Given Alice has an account with 5 lto
+    When Alice anchors 5 hashes
+    Then Alice has 4.25 lto
