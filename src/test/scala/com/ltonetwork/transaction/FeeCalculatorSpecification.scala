@@ -55,11 +55,11 @@ class FeeCalculatorSpecification extends AnyPropSpec with ScalaCheckDrivenProper
   property("Association transaction") {
     val feeCalc = new FeeCalculator(noScriptBlockchain)
     forAll(assocTransactionGen, Gen.choose(0.4.lto, 0.6.lto)) { (tx: AssociationTransaction, fee: Long) =>
-      val txWithFee = tx match {
-        case iatx: IssueAssociationTransaction => iatx.copy(fee = fee)
-        case ratx: RevokeAssociationTransaction => ratx.copy(fee = fee)
+      val (txWithFee, dataLength) = tx match {
+        case iatx: IssueAssociationTransaction => (iatx.copy(fee = fee), iatx.data.map(_.toBytes.length).sum)
+        case ratx: RevokeAssociationTransaction => (ratx.copy(fee = fee), 0)
       }
-      feeCalc.enoughFee(txWithFee) shouldBeRightIf (fee >= 0.5.lto)
+      feeCalc.enoughFee(txWithFee) shouldBeRightIf (fee >= 0.5.lto + Math.ceil(dataLength / 256.0).toInt * 0.1.lto)
     }
   }
 

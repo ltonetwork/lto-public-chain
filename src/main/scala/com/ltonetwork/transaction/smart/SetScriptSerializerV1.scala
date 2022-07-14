@@ -1,6 +1,7 @@
 package com.ltonetwork.transaction.smart
 
 import com.google.common.primitives.{Bytes, Longs}
+import com.ltonetwork.serialization.Deser.serializeArray
 import com.ltonetwork.serialization._
 import com.ltonetwork.transaction.{TransactionSerializer, ValidationError}
 import com.ltonetwork.transaction.smart.SetScriptTransaction.create
@@ -16,7 +17,7 @@ object SetScriptSerializerV1 extends TransactionSerializer.For[SetScriptTransact
     Bytes.concat(
       Array(SetScriptTransaction.typeId, version, chainId),
       sender.publicKey,
-      Deser.serializeOption(script)(s => s.bytes().arr),
+      Deser.serializeOption(script)(s => serializeArray(s.bytes().arr)),
       Longs.toByteArray(fee),
       Longs.toByteArray(timestamp),
     )

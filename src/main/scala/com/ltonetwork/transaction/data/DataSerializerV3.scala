@@ -24,6 +24,13 @@ object DataSerializerV3 extends TransactionSerializer.For[DataTransaction] {
     )
   }
 
+  def parseData(buf: ByteBuffer): List[DataEntry[_]] = {
+    val (data, dataEnd) = parseData(buf.array(), buf.position)
+    buf.position(dataEnd)
+
+    data
+  }
+
   private def parseData(bytes: Array[Byte], pos: Int): (List[DataEntry[_]], Int) = {
     val entryCount = Shorts.fromByteArray(bytes.slice(pos, pos + Shorts.BYTES))
 
@@ -38,11 +45,10 @@ object DataSerializerV3 extends TransactionSerializer.For[DataTransaction] {
       val buf = ByteBuffer.wrap(bytes)
 
       val (chainId, timestamp, sender, fee) = parseBase(buf)
-      val (entries, entriesEnd)             = parseData(bytes, buf.position)
-      buf.position(entriesEnd)
+      val data                              = parseData(buf)
       val (sponsor, proofs)                 = parseFooter(buf)
 
-      create(version, Some(chainId), timestamp, sender, fee, entries, sponsor, proofs)
+      create(version, Some(chainId), timestamp, sender, fee, data, sponsor, proofs)
         .fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 }

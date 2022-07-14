@@ -3,15 +3,6 @@ from e2e.common.tools import *
 from lto.transactions import Data
 
 
-def __cast_value(value):
-    if value.lower() == 'true':
-        return True
-    elif value.lower() == 'false':
-        return False
-    else:
-        return int(value)
-
-
 def set_data(context, user=None, data=None, version=None):
     account = context.users[user] if user else ROOT_ACCOUNT
 
@@ -27,14 +18,14 @@ def set_data(context, user=None, data=None, version=None):
 @when(u'{user} sets data (v{version:d}) "{key}" to {value}')
 @when(u'{user} sets data (v{version:d}) "{key}" to "{str}"')
 def step_impl(context, user, key, str=None, value=None, version=None):
-    set_data(context, user, {key: str or __cast_value(value)}, version)
+    set_data(context, user, {key: str or cast_boolean_or_int(value)}, version)
 
 
 @when('{user} tries to set data "{key}" to {value}')
 @when('{user} tries to set data "{key}" to "{str}"')
 def step_impl(context, user, key, str=None, value=None):
     try:
-        set_data(context, user, key, str or __cast_value(value))
+        set_data(context, user, key, str or cast_boolean_or_int(value))
     except:
         pass
 
@@ -44,4 +35,5 @@ def step_impl(context, user, key, str=None, value=None):
 def step_impl(context, user, key, str=None, value=None):
     data = get_data(context.users[user])
     assert key in data, 'key "{}" is not set'.format(key)
-    assert data[key] == str or __cast_value(value)
+    assert data[key] == str or cast_boolean_or_int(value)
+

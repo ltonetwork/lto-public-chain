@@ -54,6 +54,19 @@ package object serialization {
       }
     }
 
+    def getList[T](ser: ByteBuffer => T): List[T] = {
+      val length = buf.getShort
+
+      (0 until length).foldLeft(List.empty[T]) {
+        case (acc, _) => acc :+ ser(buf)
+      }
+    }
+
+    def getOption[T](ser: ByteBuffer => T): Option[T] = {
+      val a = buf.get
+      if (a == 1) Some(ser(buf)) else None
+    }
+
     def getOptionalByteArray: Option[Array[Byte]] =
       if (buf.get == 1) {
         val length = buf.getShort

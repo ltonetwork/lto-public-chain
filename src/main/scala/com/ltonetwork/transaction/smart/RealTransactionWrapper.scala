@@ -1,11 +1,11 @@
 package com.ltonetwork.transaction.smart
 
-import com.ltonetwork.lang.v1.traits.{Proven, _}
+import com.ltonetwork.lang.v1.traits._
 import com.ltonetwork.state._
 import scodec.bits.ByteVector
 import com.ltonetwork.account.Address
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.anchor.{AnchorTransaction, MappedAnchorTransaction}
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
@@ -57,6 +57,12 @@ object RealTransactionWrapper {
       case ss: SetScriptTransaction => Tx.SetScript(proven(ss), ss.script.map(_.bytes()).map(toByteVector))
       case a: AnchorTransaction =>
         Tx.Anchor(proven(a), a.anchors.length, a.anchors.map(anchor => toByteVector(anchor)).toIndexedSeq)
+      case a: MappedAnchorTransaction =>
+        Tx.MappedAnchor(
+          proven(a),
+          a.anchors.toList.length,
+          a.anchors.map { case (k, v) => KeyValuePair(toByteVector(k), toByteVector(v)) }.toIndexedSeq
+        )
       case d: DataTransaction =>
         Tx.Data(
           proven(d),
@@ -72,7 +78,7 @@ object RealTransactionWrapper {
       case s: SponsorshipTransaction       => Tx.Sponsorship(proven(s), s.recipient)
       case s: CancelSponsorshipTransaction => Tx.CancelSponsorship(proven(s), s.recipient)
       case r: RegisterTransaction =>
-        Tx.Register(proven(r), r.accounts.map(k => com.ltonetwork.lang.v1.traits.PublicKey(ByteVector(k.publicKey))).toIndexedSeq)
+        Tx.Register(proven(r), r.accounts.map(k => PublicKey(ByteVector(k.publicKey))).toIndexedSeq)
 
       case _ => ???
     }

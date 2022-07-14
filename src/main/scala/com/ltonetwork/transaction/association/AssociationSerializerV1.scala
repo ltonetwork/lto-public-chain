@@ -12,7 +12,7 @@ import scala.util.{Failure, Success, Try}
 trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction] extends TransactionSerializer.For[AssociationTransactionT] {
 
   type CreateCtor =
-    (Byte, Byte, Long, PublicKeyAccount, Long, Address, Int, Option[ByteStr], Proofs) => Either[ValidationError, AssociationTransactionT]
+    (Byte, Byte, Long, PublicKeyAccount, Long, Long, Address, Option[ByteStr], Proofs) => Either[ValidationError, AssociationTransactionT]
   protected val createTx: CreateCtor
 
   override def bodyBytes(tx: AssociationTransactionT): Array[Byte] = {
@@ -22,8 +22,8 @@ trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction]
       Array(builder.typeId, version, chainId),
       sender.publicKey,
       recipient.bytes.arr,
-      Ints.toByteArray(assocType),
-      hash.fold(Array(0: Byte))(a => (1: Byte) +: Deser.serializeArray(a.arr)),
+      Ints.toByteArray(assocType.toInt),
+      subject.fold(Array(0: Byte))(a => (1: Byte) +: Deser.serializeArray(a.arr)),
       Longs.toByteArray(timestamp),
       Longs.toByteArray(fee)
     )
@@ -42,7 +42,7 @@ trait AssociationSerializerV1[AssociationTransactionT <: AssociationTransaction]
       val fee       = buf.getLong
       val proofs    = buf.getProofs
 
-      createTx(version, chainId, timestamp, sender, fee, recipient, assocType, hashOpt, proofs)
+      createTx(version, chainId, timestamp, sender, fee, assocType, recipient, hashOpt, proofs)
         .fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 }

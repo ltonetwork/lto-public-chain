@@ -5,6 +5,6 @@ package com.ltonetwork
 // In case of not updating the version nodes build from headless sources will fail to connect to newer versions
 
 object Version {
-  val VersionString                 = "1.6.x-dev"
-  val VersionTuple: (Int, Int, Int) = (1, 6, 0)
+  val VersionString                 = "1.7.x-dev"
+  val VersionTuple: (Int, Int, Int) = (1, 7, 0)
 }

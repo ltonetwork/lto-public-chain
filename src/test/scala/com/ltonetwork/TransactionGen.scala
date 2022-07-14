@@ -12,9 +12,10 @@ import com.ltonetwork.lang.v1.testing.ScriptGen
 import com.ltonetwork.state._
 import com.ltonetwork.state.diffs.ENOUGH_AMT
 import com.ltonetwork.transaction._
-import com.ltonetwork.transaction.anchor.AnchorTransaction
+import com.ltonetwork.transaction.anchor.{AnchorTransaction, MappedAnchorTransaction}
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.burn.BurnTransaction
+import com.ltonetwork.transaction.statement.StatementTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
@@ -50,6 +51,7 @@ trait TransactionGenBase extends ScriptGen {
   val bytes32gen: Gen[Array[Byte]] = byteArrayGen(32)
   val bytes64gen: Gen[Array[Byte]] = byteArrayGen(64)
 
+  def genBoundedBytes(size: Int): Gen[Array[Byte]] = genBoundedBytes(size, size)
   def genBoundedBytes(minSize: Int, maxSize: Int): Gen[Array[Byte]] =
     for {
       length <- Gen.chooseNum(minSize, maxSize)
@@ -361,6 +363,13 @@ trait TransactionGenBase extends ScriptGen {
   def dataForScriptGen(size: Int): Gen[List[DataEntry[_]]] =
     Gen.listOfN(size, dataEntryGen(200, dataScriptsKeyGen))
 
+  def uniqueDataGen(size: Int, useForScript: Boolean = false): Gen[List[DataEntry[_]]] =
+    (if (useForScript) dataGen(size) else dataForScriptGen(size)).map(
+      _.foldRight(List.empty[DataEntry[_]]) { (e, es) =>
+        if (es.exists(_.key == e.key)) es else e :: es
+      }
+    )
+
   val dataTransactionGen: Gen[DataTransaction] = dataTransactionGen(DataTransaction.MaxEntryCount)
 
   def dataTransactionGen(maxEntryCount: Int, useForScript: Boolean = false): Gen[DataTransaction] =
@@ -372,11 +381,8 @@ trait TransactionGenBase extends ScriptGen {
       timestamp <- timestampGen
       size      <- Gen.choose(0, maxEntryCount)
       fee       = 15000000
-      data      <- if (useForScript) dataGen(size) else dataForScriptGen(size)
-      uniq = data.foldRight(List.empty[DataEntry[_]]) { (e, es) =>
-        if (es.exists(_.key == e.key)) es else e :: es
-      }
-    } yield DataTransaction.signed(version, timestamp, sender, fee, uniq).explicitGet()
+      data      <- uniqueDataGen(size, useForScript)
+    } yield DataTransaction.signed(version, timestamp, sender, fee, data).explicitGet()
 
   def dataTransactionGenP(sender: PrivateKeyAccount, data: List[DataEntry[_]]): Gen[DataTransaction] =
     (for {
@@ -404,12 +410,29 @@ trait TransactionGenBase extends ScriptGen {
       sender    <- accountGen(keyType)
       timestamp <- timestampGen
       size      <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
-      len       <- Gen.oneOf(AnchorTransaction.EntryLength)
-      data      <- Gen.listOfN(size, genBoundedBytes(len, len))
+      len       <- Gen.choose(0, AnchorTransaction.MaxEntryLength)
+      anchors   <- Gen.containerOfN[Set, ByteStr](size, genBoundedBytes(len).map(ByteStr(_))).map(_.toList)
       sponsor   <- sponsorGen(version)
       fee     = 15000000
-      anchors = data.map(ByteStr(_))
     } yield AnchorTransaction.signed(version, timestamp, sender, fee, anchors).sponsorWith(sponsor).explicitGet()
+
+  def mappedAnchorTransactionGen: Gen[MappedAnchorTransaction]                = versionGen(MappedAnchorTransaction).flatMap(mappedAnchorTransactionGen)
+  def mappedAnchorTransactionGen(version: Byte): Gen[MappedAnchorTransaction] = mappedAnchorTransactionGen(version, ED25519)
+  def mappedAnchorTransactionGen(version: Byte, keyType: KeyType): Gen[MappedAnchorTransaction] =
+    for {
+      sender    <- accountGen(keyType)
+      timestamp <- timestampGen
+      size      <- Gen.choose(0, MappedAnchorTransaction.MaxEntryCount)
+      len       <- Gen.choose(0, MappedAnchorTransaction.MaxEntryLength)
+      anchors   <- Gen.mapOfN(size, Arbitrary {
+        for {
+          key   <- genBoundedBytes(len).map(ByteStr(_))
+          value <- genBoundedBytes(len).map(ByteStr(_))
+        } yield(key, value)
+      }.arbitrary)
+      sponsor   <- sponsorGen(version)
+      fee     = 15000000
+    } yield MappedAnchorTransaction.signed(version, timestamp, sender, fee, anchors).sponsorWith(sponsor).explicitGet()
 
   def issueAssocTransactionGen: Gen[IssueAssociationTransaction]                = versionGen(IssueAssociationTransaction).flatMap(issueAssocTransactionGen)
   def issueAssocTransactionGen(version: Byte): Gen[IssueAssociationTransaction] = issueAssocTransactionGen(version, ED25519)
@@ -418,14 +441,16 @@ trait TransactionGenBase extends ScriptGen {
       sender    <- accountGen(keyType)
       timestamp <- timestampGen
       recipient <- accountGen(keyType)
-      assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
+      assocType <- if (version < 4) Gen.choose(Int.MinValue, Int.MaxValue).map(_.toLong) else Gen.choose(Long.MinValue, Long.MaxValue)
       expires   <- if (version < 3) Gen.const(None) else Gen.option(timestampGen)
       fee       <- smallFeeGen
-      minHashLength = if (version < 3) 0 else 1
-      hashOpt <- Gen.option(genBoundedBytes(minHashLength, IssueAssociationTransaction.MaxHashLength).map(ByteStr(_)))
+      minSubjectLength = if (version < 3) 0 else 1
+      subject <- Gen.option(genBoundedBytes(minSubjectLength, IssueAssociationTransaction.MaxSubjectLength).map(ByteStr(_)))
       sponsor <- sponsorGen(version)
+      size    <- Gen.choose(0, 5)
+      data    <- if (version < 4) Gen.const(List.empty) else uniqueDataGen(size)
     } yield
-      IssueAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, expires, hashOpt).sponsorWith(sponsor).explicitGet()
+      IssueAssociationTransaction.signed(version, timestamp, sender, fee, assocType, recipient, expires, subject, data).sponsorWith(sponsor).explicitGet()
 
   def revokeAssocTransactionGen: Gen[RevokeAssociationTransaction]                = versionGen(RevokeAssociationTransaction).flatMap(revokeAssocTransactionGen)
   def revokeAssocTransactionGen(version: Byte): Gen[RevokeAssociationTransaction] = revokeAssocTransactionGen(version, ED25519)
@@ -434,12 +459,25 @@ trait TransactionGenBase extends ScriptGen {
       sender    <- accountGen(keyType)
       timestamp <- timestampGen
       recipient <- accountGen(keyType)
-      assocType <- Gen.choose(Int.MinValue, Int.MaxValue)
+      assocType <- if (version < 4) Gen.choose(Int.MinValue, Int.MaxValue).map(_.toLong) else Gen.choose(Long.MinValue, Long.MaxValue)
       fee       <- smallFeeGen
-      minHashLength = if (version < 3) 0 else 1
-      hashOpt <- Gen.option(genBoundedBytes(minHashLength, RevokeAssociationTransaction.MaxHashLength).map(ByteStr(_)))
+      minSubjectLength = if (version < 3) 0 else 1
+      hashOpt <- Gen.option(genBoundedBytes(minSubjectLength, RevokeAssociationTransaction.MaxSubjectLength).map(ByteStr(_)))
       sponsor <- sponsorGen(version)
-    } yield RevokeAssociationTransaction.signed(version, timestamp, sender, fee, recipient, assocType, hashOpt).sponsorWith(sponsor).explicitGet()
+    } yield RevokeAssociationTransaction.signed(version, timestamp, sender, fee, assocType, recipient, hashOpt).sponsorWith(sponsor).explicitGet()
+
+  def statementTransactionGen: Gen[StatementTransaction] = versionGen(StatementTransaction).flatMap(statementTransactionGen)
+  def statementTransactionGen(version: Byte): Gen[StatementTransaction] = for {
+    sender <- accountGen
+    timestamp <- timestampGen
+    statementType <- Gen.choose(Long.MinValue, Long.MaxValue)
+    recipient <- Gen.option(addressGen)
+    subject   <- Gen.option(genBoundedBytes(1, StatementTransaction.MaxSubjectLength).map(ByteStr(_)))
+    size      <- Gen.choose(0, AnchorTransaction.MaxEntryCount)
+    data      <- uniqueDataGen(size)
+    sponsor   <- sponsorGen(version)
+    fee = 15000000
+  } yield StatementTransaction.signed(version, timestamp, sender, fee, statementType, recipient, subject, data).sponsorWith(sponsor).explicitGet()
 
   def assocTransactionGen: Gen[AssociationTransaction] = Gen.oneOf(issueAssocTransactionGen, revokeAssocTransactionGen)
 

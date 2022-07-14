@@ -21,8 +21,8 @@ object RevokeAssociationSerializerV3 extends TransactionSerializer.For[RevokeAss
       Deser.serializeAccount(sender),
       Longs.toByteArray(fee),
       recipient.bytes.arr,
-      Ints.toByteArray(assocType),
-      Deser.serializeArray(hash.fold(Array.emptyByteArray)(_.arr))
+      Ints.toByteArray(assocType.toInt),
+      Deser.serializeArray(subject.fold(Array.emptyByteArray)(_.arr))
     )
   }
 
@@ -33,10 +33,10 @@ object RevokeAssociationSerializerV3 extends TransactionSerializer.For[RevokeAss
       val (chainId, timestamp, sender, fee) = parseBase(buf)
       val recipient                         = buf.getAddress
       val assocType                         = buf.getInt
-      val hash                              = Some(buf.getByteArrayWithLength).map(ByteStr(_)).noneIfEmpty
+      val subject                           = Some(buf.getByteArrayWithLength).map(ByteStr(_)).noneIfEmpty
       val (sponsor, proofs)                 = parseFooter(buf)
 
-      create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, hash, sponsor, proofs)
+      create(version, Some(chainId), timestamp, sender, fee, assocType, recipient, subject, sponsor, proofs)
         .fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
 }

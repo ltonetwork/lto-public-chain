@@ -13,10 +13,11 @@ case class IssueAssociationTransaction private (version: Byte,
                                                 timestamp: Long,
                                                 sender: PublicKeyAccount,
                                                 fee: Long,
+                                                assocType: Long,
                                                 recipient: Address,
-                                                assocType: Int,
                                                 expires: Option[Long],
-                                                hash: Option[ByteStr],
+                                                subject: Option[ByteStr],
+                                                data: List[DataEntry[_]],
                                                 sponsor: Option[PublicKeyAccount],
                                                 proofs: Proofs)
     extends AssociationTransaction {
@@ -31,19 +32,21 @@ case class IssueAssociationTransaction private (version: Byte,
       Json.obj(
         "associationType" -> assocType,
         "recipient"       -> recipient.stringRepr,
-      ) ++
-        expires.fold(Json.obj())(e => Json.obj("expires" -> e)) ++
-        hash.fold(Json.obj())(h => Json.obj("hash"       -> h.base58))
+      )
+        ++ expires.fold(Json.obj())(v => Json.obj("expires" -> v))
+        ++ subject.fold(Json.obj())(v => Json.obj("subject" -> v.base58))
+        ++ (if (data.isEmpty) Json.obj() else Json.obj("data" -> data))
     ))
 }
 
 object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociationTransaction] {
 
   override def typeId: Byte                 = 16
-  override def supportedVersions: Set[Byte] = Set(1, 3)
+  override def supportedVersions: Set[Byte] = Set(1, 3, 4)
 
-  val MaxHashLength: Int    = 64
-  val StringHashLength: Int = com.ltonetwork.utils.base58Length(IssueAssociationTransaction.MaxHashLength)
+  val MaxSubjectLength: Int = 256
+  val MaxBytes: Int         = 10 * 1024
+  val MaxEntryCount: Int    = 100
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
@@ -54,14 +57,22 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
-        Validated.condNel(version < 3 || !hash.exists(_.arr.length == 0), (), ValidationError.GenericError("Hash length must not be 0 bytes")),
-        Validated.condNel(!hash.exists(_.arr.length > MaxHashLength),
+        Validated.condNel(version >= 4 || assocType.isValidInt, (), ValidationError.GenericError(s"Association type must be a valid integer for v$version")),
+        Validated.condNel(version < 3 || !subject.exists(_.arr.length == 0), (), ValidationError.GenericError("Subject length must not be 0 bytes")),
+        Validated.condNel(!subject.exists(_.arr.length > MaxSubjectLength),
                           (),
-                          ValidationError.GenericError(s"Hash length must be <= $MaxHashLength bytes")),
+                          ValidationError.GenericError(s"Subject length must be <= $MaxSubjectLength bytes")),
         Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(expires.isEmpty || version >= 3,
                           (),
                           ValidationError.UnsupportedFeature(s"Association expiry is not supported for tx v$version")),
+        Validated.condNel(data.isEmpty || version >= 4,
+                          (),
+                          ValidationError.UnsupportedFeature(s"Association data is not supported for tx v$version")),
+        Validated.condNel(data.lengthCompare(MaxEntryCount) <= 0 && data.forall(_.valid), (), ValidationError.TooBigArray),
+        Validated.condNel(!data.exists(_.key.isEmpty), (), ValidationError.GenericError("Empty key found")),
+        Validated.condNel(data.map(_.key).distinct.lengthCompare(data.size) == 0, (), ValidationError.GenericError("Duplicate keys found in data")),
+        Validated.condNel(data.flatMap(_.toBytes).toArray.length <= MaxBytes, (), ValidationError.TooBigArray),
         Validated.condNel(sponsor.isEmpty || version >= 3,
                           (),
                           ValidationError.UnsupportedFeature(s"Sponsored transaction not supported for tx v$version")),
@@ -73,13 +84,14 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
   }
 
   object SerializerV1 extends AssociationSerializerV1[IssueAssociationTransaction] {
-    protected val createTx = (version, chainId, timestamp, sender, fee, recipient, assocType, hash, proofs) =>
-      create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, None, hash, None, proofs)
+    protected val createTx = (version, chainId, timestamp, sender, fee, assocType, recipient, subject, proofs) =>
+      create(version, Some(chainId), timestamp, sender, fee, assocType, recipient, None, subject, List.empty, None, proofs)
   }
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => SerializerV1
     case 3 => IssueAssociationSerializerV3
+    case 4 => IssueAssociationSerializerV4
     case _ => UnknownSerializer
   }
 
@@ -88,21 +100,23 @@ object IssueAssociationTransaction extends TransactionBuilder.For[IssueAssociati
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
+             assocType: Long,
              recipient: Address,
-             assocType: Int,
              expires: Option[Long],
-             hash: Option[ByteStr],
+             subject: Option[ByteStr],
+             data: List[DataEntry[_]],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    IssueAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, assocType, expires, hash, sponsor, proofs).validatedEither
+    IssueAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, assocType, recipient, expires, subject, data, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
              sender: PrivateKeyAccount,
              fee: Long,
+             assocType: Long,
              recipient: Address,
-             assocType: Int,
              expires: Option[Long],
-             hash: Option[ByteStr]): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, assocType, expires, hash, None, Proofs.empty).signWith(sender)
+             subject: Option[ByteStr],
+             data: List[DataEntry[_]]): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, assocType, recipient, expires, subject, data, None, Proofs.empty).signWith(sender)
 }

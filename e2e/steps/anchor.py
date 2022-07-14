@@ -1,19 +1,14 @@
 from behave import *
-from e2e.common.tools import *
+from e2e.common.tools import ROOT_ACCOUNT, NODE, encode_hash, broadcast
 from lto.transactions import Anchor
-import random
+from lto.crypto import encode
+from os import urandom
 
 
-def anchor(context, user="", hash="", sponsor="", version=None):
-    if not user:
-        account = ROOT_ACCOUNT
-    else:
-        account = context.users[user]
+def anchor(context, user, hash=None, sponsor=None, version=None):
+    account = context.users[user]
 
-    if not hash:
-        hash = ''.join(random.choice('qwertyuiopasdfghjklzxcvbnm') for _ in range(6))
-
-    transaction = Anchor(encode_hash(hash))
+    transaction = Anchor(encode_hash(hash) if hash else urandom(32))
     transaction.version = version or Anchor.DEFAULT_VERSION
     transaction.sign_with(account)
 
@@ -43,4 +38,17 @@ def step_impl(context, user, hash='', sponsor=None):
 
 @then('There is an anchor transaction with hash "{hash}" signed by {user}')
 def step_impl(context, hash, user):
-    pass
+    digest = encode(encode_hash(hash), 'base58')
+    txs = NODE.transactions(context.users[user], 'anchor')
+    anchors = [anchor.base58() for tx in txs for anchor in tx.anchors]
+    assert digest in anchors, 'Anchor tx with hash "{}" not found'.format(hash)
+
+
+@when(u'{user} anchors {number:d} hashes')
+def step_impl(context, user, number):
+    account = context.users[user]
+    hashes = [urandom(32) for i in range(0, number)]
+
+    transaction = Anchor(*hashes)
+    transaction.sign_with(account)
+    broadcast(context, transaction)

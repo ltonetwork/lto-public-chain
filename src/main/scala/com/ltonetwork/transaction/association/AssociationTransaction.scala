@@ -8,9 +8,9 @@ import play.api.libs.json.{JsObject, Json}
 
 // Base class for issue and revoke association transactions
 abstract class AssociationTransaction extends Transaction {
-  def assocType: Int
+  def assocType: Long
   def recipient: Address
-  def hash: Option[ByteStr]
+  def subject: Option[ByteStr]
 
-  def assoc: (Int, Address, Option[ByteStr]) = (assocType, recipient, hash)
+  def assoc: (Long, Address, Option[ByteStr]) = (assocType, recipient, subject)
 }

@@ -73,7 +73,7 @@ trait Blockchain {
   // the following methods are used exclusively by patches
   def allActiveLeases: Set[LeaseTransaction]
 
-  def associations(address: Address): Blockchain.Associations
+  def associations(address: Address): Associations
 
   def sponsorOf(address: Address): List[Address]
 
@@ -84,7 +84,4 @@ trait Blockchain {
 
   def append(diff: Diff, carryFee: Long, block: Block): Unit
   def rollbackTo(targetBlockId: ByteStr): Seq[Block]
-}
-object Blockchain {
-  case class Associations(outgoing: List[(Int, AssociationTransaction)], incoming: List[(Int, AssociationTransaction)])
 }

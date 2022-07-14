@@ -5,7 +5,6 @@ import com.ltonetwork.state.ByteStr
 import com.ltonetwork.transaction.transfer.MassTransferTransaction
 import com.ltonetwork.transaction.transfer.MassTransferTransaction.Transfer
 import com.ltonetwork.transaction.{Proofs, ValidationError}
-import com.ltonetwork.utils.Time
 import play.api.libs.json.{Format, JsObject, Json}
 
 case class MassTransferRequest(version: Option[Byte] = None,

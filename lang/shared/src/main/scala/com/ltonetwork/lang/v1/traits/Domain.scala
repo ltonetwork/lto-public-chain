@@ -12,6 +12,8 @@ case class TransferItem(recipient: LangAddress, amount: Long)
 
 case class PublicKey(bytes: ByteVector)
 
+case class KeyValuePair(key: ByteVector, value: ByteVector)
+
 trait DataItem[T] {
   val key: String
   val value: T
@@ -33,9 +35,10 @@ object Tx {
   case class SetScript(p: Proven, script: Option[ByteVector])                                                                             extends Tx
   case class MassTransfer(p: Proven, transferCount: Long, totalAmount: Long, transfers: IndexedSeq[TransferItem], attachment: ByteVector) extends Tx
   case class Anchor(p: Proven, anchorCount: Long, anchors: IndexedSeq[ByteVector])                                                        extends Tx
+  case class MappedAnchor(p: Proven, anchorCount: Long, anchors: IndexedSeq[KeyValuePair])                                                extends Tx
   case class Data(p: Proven, data: IndexedSeq[DataItem[_]])                                                                               extends Tx
-  case class IssueAssociation(p: Proven, assocType: Int, recipient: LangAddress)                                                          extends Tx
-  case class RevokeAssociation(p: Proven, assocType: Int, recipient: LangAddress)                                                         extends Tx
+  case class IssueAssociation(p: Proven, assocType: Long, recipient: LangAddress)                                                         extends Tx
+  case class RevokeAssociation(p: Proven, assocType: Long, recipient: LangAddress)                                                        extends Tx
   case class Sponsorship(p: Proven, recipient: LangAddress)                                                                               extends Tx
   case class CancelSponsorship(p: Proven, recipient: LangAddress)                                                                         extends Tx
   case class Register(p: Proven, accounts: IndexedSeq[PublicKey])                                                                         extends Tx

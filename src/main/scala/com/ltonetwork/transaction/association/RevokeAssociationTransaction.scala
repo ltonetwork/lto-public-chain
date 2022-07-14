@@ -13,9 +13,9 @@ case class RevokeAssociationTransaction private (version: Byte,
                                                  timestamp: Long,
                                                  sender: PublicKeyAccount,
                                                  fee: Long,
+                                                 assocType: Long,
                                                  recipient: Address,
-                                                 assocType: Int,
-                                                 hash: Option[ByteStr],
+                                                 subject: Option[ByteStr],
                                                  sponsor: Option[PublicKeyAccount],
                                                  proofs: Proofs)
     extends AssociationTransaction {
@@ -30,18 +30,17 @@ case class RevokeAssociationTransaction private (version: Byte,
       Json.obj(
         "associationType" -> assocType,
         "recipient"       -> recipient.stringRepr,
-      ) ++
-        hash.map(h => Json.obj("hash" -> h.base58)).getOrElse(Json.obj())
+      )
+        ++ subject.fold(Json.obj())(v => Json.obj("subject" -> v.base58))
     ))
 }
 
 object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssociationTransaction] {
 
   override def typeId: Byte                 = 17
-  override def supportedVersions: Set[Byte] = IssueAssociationTransaction.supportedVersions
+  override def supportedVersions: Set[Byte] = Set(1, 3, 4)
 
-  val MaxHashLength: Int    = IssueAssociationTransaction.MaxHashLength
-  val StringHashLength: Int = IssueAssociationTransaction.StringHashLength
+  val MaxSubjectLength: Int = IssueAssociationTransaction.MaxSubjectLength
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))
@@ -52,10 +51,11 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
       seq(tx)(
         Validated.condNel(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version)),
         Validated.condNel(chainId == networkByte, (), ValidationError.WrongChainId(chainId)),
-        Validated.condNel(version < 3 || !hash.exists(_.arr.length == 0), (), ValidationError.GenericError("Hash length must not be 0 bytes")),
-        Validated.condNel(!hash.exists(_.arr.length > MaxHashLength),
+        Validated.condNel(version >= 4 || assocType.isValidInt, (), ValidationError.GenericError(s"Association type must be a valid integer for v$version")),
+        Validated.condNel(version < 3 || !subject.exists(_.arr.length == 0), (), ValidationError.GenericError("Subject length must not be 0 bytes")),
+        Validated.condNel(!subject.exists(_.arr.length > MaxSubjectLength),
                           (),
-                          ValidationError.GenericError(s"Hash length must be <= ${MaxHashLength} bytes")),
+                          ValidationError.GenericError(s"Subject length must be <= ${MaxSubjectLength} bytes")),
         Validated.condNel(fee > 0, (), ValidationError.InsufficientFee()),
         Validated.condNel(sponsor.isEmpty || version >= 3,
                           (),
@@ -68,13 +68,14 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
   }
 
   object SerializerV1 extends AssociationSerializerV1[RevokeAssociationTransaction] {
-    protected val createTx = (version, chainId, timestamp, sender, fee, recipient, assocType, hash, proofs) =>
-      create(version, Some(chainId), timestamp, sender, fee, recipient, assocType, hash, None, proofs)
+    protected val createTx = (version, chainId, timestamp, sender, fee, assocType, recipient, subject, proofs) =>
+      create(version, Some(chainId), timestamp, sender, fee, assocType, recipient, subject, None, proofs)
   }
 
   override def serializer(version: Byte): TransactionSerializer.For[TransactionT] = version match {
     case 1 => SerializerV1
     case 3 => RevokeAssociationSerializerV3
+    case 4 => RevokeAssociationSerializerV4
     case _ => UnknownSerializer
   }
 
@@ -83,19 +84,19 @@ object RevokeAssociationTransaction extends TransactionBuilder.For[RevokeAssocia
              timestamp: Long,
              sender: PublicKeyAccount,
              fee: Long,
+             assocType: Long,
              recipient: Address,
-             assocType: Int,
-             hash: Option[ByteStr],
+             subject: Option[ByteStr],
              sponsor: Option[PublicKeyAccount],
              proofs: Proofs): Either[ValidationError, TransactionT] =
-    RevokeAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, recipient, assocType, hash, sponsor, proofs).validatedEither
+    RevokeAssociationTransaction(version, chainId.getOrElse(networkByte), timestamp, sender, fee, assocType, recipient, subject, sponsor, proofs).validatedEither
 
   def signed(version: Byte,
              timestamp: Long,
              sender: PrivateKeyAccount,
              fee: Long,
+             assocType: Long,
              recipient: Address,
-             assocType: Int,
-             hash: Option[ByteStr]): Either[ValidationError, TransactionT] =
-    create(version, None, timestamp, sender, fee, recipient, assocType, hash, None, Proofs.empty).signWith(sender)
+             subject: Option[ByteStr]): Either[ValidationError, TransactionT] =
+    create(version, None, timestamp, sender, fee, assocType, recipient, subject, None, Proofs.empty).signWith(sender)
 }

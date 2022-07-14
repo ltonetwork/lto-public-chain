@@ -3,6 +3,8 @@ package com.ltonetwork.transaction
 import cats.implicits._
 import cats.data.{Validated, ValidatedNel}
 import cats.data.Validated.{Invalid, Valid}
+import com.ltonetwork.state.DataEntry
+import com.ltonetwork.transaction.data.DataTransaction.MaxEntryCount
 
 import scala.annotation.implicitNotFound
 import scala.util.Try
