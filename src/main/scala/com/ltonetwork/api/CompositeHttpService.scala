@@ -53,7 +53,9 @@ case class CompositeHttpService(system: ActorSystem, apiTypes: Set[Class[_]], ro
   def logRequestResponse(req: HttpRequest)(res: RouteResult): Unit = res match {
     case Complete(resp) =>
       val msg = s"HTTP ${resp.status.value} from ${req.method.value} ${req.uri}"
-      if (resp.status == StatusCodes.OK) log.debug(msg) else log.warn(msg)
+      if (resp.status.intValue() < 400) log.debug(msg)
+      else if (resp.status.intValue() < 500) log.info(msg)
+      else log.warn(msg)
     case _ =>
   }
 
