@@ -15,7 +15,7 @@ object AssociationTransactionDiff {
     (
       if (!blockchain.isFeatureActivated(BlockchainFeatures.Titanium, height))
         for {
-          _ <- Either.cond(tx.subject.exists(_.length <= oldMaxSubjectLength), (), GenericError("Subject should contain <= 64 bytes"))
+          _ <- Either.cond(!tx.subject.exists(_.length > oldMaxSubjectLength), (), GenericError("Subject should contain <= 64 bytes"))
         } yield ()
       else Right(())
     ).map(
