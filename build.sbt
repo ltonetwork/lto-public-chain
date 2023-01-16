@@ -60,7 +60,7 @@ val aopMerge: MergeStrategy = new MergeStrategy {
   import scala.xml.dtd._
 
   def apply(tempDir: File, path: String, files: Seq[File]): Either[String, Seq[(File, String)]] = {
-    val dt                         = DocType("aspectj", PublicID("-//AspectJ//DTD//EN", "http://www.eclipse.org/aspectj/dtd/aspectj.dtd"), Nil)
+    val dt                         = DocType("aspectj", PublicID("-//AspectJ//DTD//EN", "https://www.eclipse.org/aspectj/dtd/aspectj.dtd"), Nil)
     val file                       = MergeStrategy.createMergeTarget(tempDir, path)
     val xmls: Seq[Elem]            = files.map(XML.loadFile)
     val aspectsChildren: Seq[Node] = xmls.flatMap(_ \\ "aspectj" \ "aspects" \ "_")
