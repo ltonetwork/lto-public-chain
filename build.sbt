@@ -58,11 +58,19 @@ val aopMerge: MergeStrategy = new MergeStrategy {
   val name = "aopMerge"
   import scala.xml._
   import scala.xml.dtd._
+  import java.io.FileInputStream
+  import org.xml.sax.InputSource
+
+  val parser = {
+    val factory = javax.xml.parsers.SAXParserFactory.newInstance()
+    factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+    factory.newSAXParser()
+  }
 
   def apply(tempDir: File, path: String, files: Seq[File]): Either[String, Seq[(File, String)]] = {
-    val dt                         = DocType("aspectj", PublicID("-//AspectJ//DTD//EN", "http://www.eclipse.org/aspectj/dtd/aspectj.dtd"), Nil)
+    val dt                         = DocType("aspectj", PublicID("-//AspectJ//DTD//EN", "https://www.eclipse.org/aspectj/dtd/aspectj.dtd"), Nil)
     val file                       = MergeStrategy.createMergeTarget(tempDir, path)
-    val xmls: Seq[Elem]            = files.map(XML.loadFile)
+    val xmls: Seq[Elem]            = files.map(f => XML.loadXML(new InputSource(new FileInputStream(f)), parser))
     val aspectsChildren: Seq[Node] = xmls.flatMap(_ \\ "aspectj" \ "aspects" \ "_")
     val weaverChildren: Seq[Node]  = xmls.flatMap(_ \\ "aspectj" \ "weaver" \ "_")
     val options: String            = xmls.map(x => (x \\ "aspectj" \ "weaver" \ "@options").text).mkString(" ").trim
