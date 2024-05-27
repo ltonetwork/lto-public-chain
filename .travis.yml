@@ -1,4 +1,4 @@
-dist: focal
+dist: jammy
 language: scala
 
 addons:
@@ -16,15 +16,11 @@ jdk: openjdk11
 
 scala:
   - 2.12.9
-
-python:
-  - "3.10"
   
 before_install:
   - unset _JAVA_OPTIONS
   - unset SBT_OPTS
   - unset JAVA_TOOL_OPTIONS
-  - pyenv global 3.10
 
 before_script:
   - pip install -q -r e2e/requirements.txt
