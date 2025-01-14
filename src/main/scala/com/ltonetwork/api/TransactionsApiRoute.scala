@@ -384,7 +384,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
   }
 
   private def extraTxInfo(height: Int, tx: Transaction): ExtraTxInfo =
-    ExtraTxInfo(height, feeCalculator.fee(height, tx), blockchain.transactionSponsor(tx.id()))
+    ExtraTxInfo(height, blockchain.blockIdAtHeight(height).getOrElse(ByteStr.empty), feeCalculator.fee(height, tx), blockchain.transactionSponsor(tx.id()))
 
   private def txToExtendedJson(height: Int, tx: Transaction): JsObject =
     txToExtendedJson(tx) ++ extraTxInfo(height, tx).json
@@ -426,7 +426,7 @@ object TransactionsApiRoute {
   def unmarshall[A, B](f: A => Try[B]): Unmarshaller[A, B] = Unmarshaller(_ => a => FastFuture(f(a)))
   def txTypeId(typeName: String): Try[Byte] = Try(transactionTypes(typeName))
 
-  case class ExtraTxInfo(height: Int, effectiveFee: Long, effectiveSponsor: Option[Address]) {
+  case class ExtraTxInfo(height: Int, blockSignature: ByteStr, effectiveFee: Long, effectiveSponsor: Option[Address]) {
     def json: JsObject = Json.toJson(this).asInstanceOf[JsObject]
   }
 

@@ -23,6 +23,7 @@ trait Blockchain {
   def blockBytes(height: Int): Option[Array[Byte]]
   def blockBytes(blockId: ByteStr): Option[Array[Byte]]
 
+  def blockIdAtHeight(height: Int): Option[ByteStr]
   def heightOf(blockId: ByteStr): Option[Int]
 
   /** Returns the most recent block IDs, starting from the most recent  one */

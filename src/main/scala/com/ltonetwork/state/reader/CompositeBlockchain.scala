@@ -156,6 +156,8 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
 
   override def blockBytes(blockId: ByteStr): Option[Array[Byte]] = inner.blockBytes(blockId)
 
+  override def blockIdAtHeight(height: Int): Option[ByteStr] = inner.blockIdAtHeight(height)
+
   override def heightOf(blockId: ByteStr): Option[Int] = inner.heightOf(blockId)
 
   /** Returns the most recent block IDs, starting from the most recent  one */

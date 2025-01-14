@@ -576,6 +576,9 @@ class LevelDBWriter(writableDB: DB,
   override def blockBytes(blockId: ByteStr): Option[Array[Byte]] =
     readOnly(db => db.get(Keys.heightOf(blockId)).flatMap(h => db.get(Keys.blockBytes(h))))
 
+  override def blockIdAtHeight(height: Int): Option[ByteStr] =
+    readOnly(_.get(Keys.blockHeader(height))).map(_._1.signerData.signature)
+
   override def heightOf(blockId: ByteStr): Option[Int] = readOnly(_.get(Keys.heightOf(blockId)))
 
   override def lastBlockIds(howMany: Int): immutable.IndexedSeq[ByteStr] = readOnly { db =>
