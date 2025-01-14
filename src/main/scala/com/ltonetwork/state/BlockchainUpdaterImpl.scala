@@ -316,6 +316,12 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
       .scoreOf(blockId)
       .orElse(ngState.collect { case ng if ng.contains(blockId) => blockchain.score + ng.base.blockScore() })
 
+  override def blockIdAtHeight(height: Int): Option[BlockId] =
+    if (height == this.height)
+      ngState.map(_.bestLiquidBlockId)
+    else
+      blockchain.blockIdAtHeight(height)
+
   override def heightOf(blockId: BlockId): Option[Int] =
     blockchain
       .heightOf(blockId)

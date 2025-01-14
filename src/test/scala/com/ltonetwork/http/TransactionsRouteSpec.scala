@@ -3,11 +3,12 @@ package com.ltonetwork.http
 import akka.http.scaladsl.model.StatusCodes
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.api.{InvalidAddress, InvalidSignature, TooBigArrayAllocation, TransactionsApiRoute}
+import com.ltonetwork.block.Block
 import com.ltonetwork.features.BlockchainFeatures
 import com.ltonetwork.fee.FeeCalculator
 import com.ltonetwork.http.ApiMarshallers._
 import com.ltonetwork.settings.{TestFunctionalitySettings, WalletSettings}
-import com.ltonetwork.state.Blockchain
+import com.ltonetwork.state.{Blockchain, ByteStr}
 import com.ltonetwork.transaction.Proofs
 import com.ltonetwork.utils.{Base58, _}
 import com.ltonetwork.utx.UtxPool
@@ -143,20 +144,23 @@ class TransactionsRouteSpec
 
     "working properly otherwise" in {
       val txAvailability = for {
-        tx     <- randomTransactionGen
-        height <- posNum[Int]
-      } yield (tx, height)
+        tx        <- randomTransactionGen
+        height    <- posNum[Int]
+        signature <- ByteStr(bytes64gen.sample.get)
+      } yield (tx, height, signature)
 
       forAll(txAvailability) {
-        case (tx, height) =>
+        case (tx, height, signature) =>
           blockchainExpects()
           (blockchain.transactionInfo _).expects(tx.id()).returning(Some((height, tx))).once()
           (blockchain.transactionSponsor _).expects(tx.id()).returning(tx.sponsor.map(_.toAddress)).once()
+          (blockchain.blockIdAtHeight _).expects(height).returning(Some(signature)).once()
 
           Get(routePath(s"/info/${tx.id().base58}")) ~> route ~> check {
             status shouldEqual StatusCodes.OK
             responseAs[JsValue] shouldEqual tx.json() ++ Json.obj(
               "height" -> JsNumber(height),
+              "blockSignature" -> JsString(signature.base58),
               "effectiveFee" -> feeCalculator.fee(1, tx),
             ) ++ tx.sponsor.fold(Json.obj())(sponsor => Json.obj("effectiveSponsor" -> sponsor.address))
           }

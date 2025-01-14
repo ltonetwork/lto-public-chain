@@ -12,6 +12,14 @@ It will produce `lto-public-all-*.jar` in the `target` folder.
 
 For further information please read the [LTO Network documentation](https://docs.ltonetwork.com).
 
+### Troubleshooting
+
+If you're not using a supported Java version, you can get the error;
+
+    Error: Could not create the Java Virtual Machine.
+
+The code is developed and tested with **OpenJDK version 11**.
+
 # Docker
 
 ## Build
