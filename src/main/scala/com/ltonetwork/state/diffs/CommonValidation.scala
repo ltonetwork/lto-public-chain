@@ -12,6 +12,7 @@ import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.{AnchorTransaction, MappedAnchorTransaction}
 import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.transaction.burn.BurnTransaction
+import com.ltonetwork.transaction.certificate.CertificateTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease._
@@ -109,6 +110,7 @@ object CommonValidation {
       case (_: AssociationTransaction, 4)      => activationBarrier(BlockchainFeatures.Titanium)
       case (_: MappedAnchorTransaction, 3)     => activationBarrier(BlockchainFeatures.Titanium)
       case (_: StatementTransaction, 3)        => activationBarrier(BlockchainFeatures.Titanium)
+      case (_: CertificateTransaction, 3)      => activationBarrier(BlockchainFeatures.Palladium)
 
       case _ => Left(ActivationError(s"Version ${tx.version} of ${tx.getClass.getSimpleName} (tx type ${tx.typeId}) must be explicitly activated"))
     }
