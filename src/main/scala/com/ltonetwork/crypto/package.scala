@@ -30,6 +30,8 @@ package object crypto {
       secp256k1.signDetached(message, privateKey).getBytes
     case KeyTypes.SECP256R1 =>
       secp256r1.signDetached(message, privateKey).getBytes
+    case KeyTypes.BLS12_381 =>
+      throw new IllegalArgumentException("BLS12-381 signing is not supported in this context")
     case _ =>
       throw new IllegalArgumentException("Unknown key type")
   }
@@ -47,6 +49,8 @@ package object crypto {
       secp256k1.verify(message, signature, publicKey)
     case KeyTypes.SECP256R1 =>
       secp256r1.verify(message, signature, publicKey)
+    case KeyTypes.BLS12_381 =>
+      throw new IllegalArgumentException("BLS12-381 verification is not supported in this context")
     case _ =>
       throw new IllegalArgumentException("Unknown key type")
   }
@@ -64,6 +68,8 @@ package object crypto {
     case KeyTypes.SECP256R1 =>
       val kp = secp256r1.keyPairFromSeed(seed)
       (kp.getPrivateKey.getBytes, kp.getPublicKey.getBytes)
+    case KeyTypes.BLS12_381 =>
+      throw new IllegalArgumentException("BLS12-381 key pair generation is not supported in this context")
     case _ =>
       throw new IllegalArgumentException("Unknown key type")
   }

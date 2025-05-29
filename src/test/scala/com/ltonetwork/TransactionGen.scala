@@ -76,7 +76,7 @@ trait TransactionGenBase extends ScriptGen {
   def accountGen: Gen[PrivateKeyAccount]                   = accountGen(ED25519)
 
   def accountGenRandom(): Gen[PrivateKeyAccount] =
-    accountGen(Gen.oneOf(KeyTypes.all).pureApply(Gen.Parameters.default, Seed.random(), 100))
+    accountGen(Gen.oneOf(KeyTypes.signing).pureApply(Gen.Parameters.default, Seed.random(), 100))
 
   val addressGen: Gen[Address] = accountGen.map(PublicKeyAccount.toAddress(_))
 
@@ -94,7 +94,7 @@ trait TransactionGenBase extends ScriptGen {
 
   def versionGen(builder: TransactionBuilder): Gen[Byte]         = Gen.oneOf(builder.supportedVersions.toSeq)
   def versionTable(builder: TransactionBuilder): TableFor1[Byte] = Table("version", builder.supportedVersions.toList: _*)
-  val keyTypeTable: TableFor1[KeyType]                           = Table("keytypes", KeyTypes.all: _*)
+  val keyTypeTable: TableFor1[KeyType]                           = Table("keytypes", KeyTypes.signing: _*)
 
   val proofsGen: Gen[Proofs] = for {
     proofsAmount <- Gen.choose(1, 8)
