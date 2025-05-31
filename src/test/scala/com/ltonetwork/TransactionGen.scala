@@ -540,5 +540,4 @@ trait TransactionGenBase extends ScriptGen with CertificateGen {
       .signed(version, timestamp, sender, fee, certificate)
       .sponsorWith(sponsor)
       .explicitGet()
-
 }

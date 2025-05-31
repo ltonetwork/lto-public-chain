@@ -161,8 +161,10 @@ class LevelDBWriter(writableDB: DB,
     }
   }
 
-  override def certificate(acc: Address): Option[Array[Byte]] = readOnly { db =>
-    addressId(acc).flatMap(id => db.get(Keys.certificate(id)))
+  override def certificate(address: Address): Option[Array[Byte]] = readOnly { db =>
+    addressId(address).fold(Option.empty[Array[Byte]]) { addressId =>
+      db.fromHistory(Keys.certificateHistory(addressId), Keys.certificate(addressId)).flatten
+    }
   }
 
   override def balance(address: Address): Long = readOnly { db =>
@@ -280,7 +282,8 @@ class LevelDBWriter(writableDB: DB,
     }
 
     for ((addressId, cert) <- certificates) {
-      rw.put(Keys.certificate(addressId), cert)
+      expiredKeys ++= updateHistory(rw, Keys.certificateHistory(addressId), threshold, Keys.certificate(addressId))
+      cert.foreach(c => rw.put(Keys.certificate(addressId)(height), Some(c)))
     }
 
     for ((addressId, addressData) <- data) {

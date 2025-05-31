@@ -125,6 +125,7 @@ object Keys {
 
   def migration(id: Int): Key[Int] = Key[Int](h(53, id), Option(_).fold(0)(Ints.fromByteArray), Ints.toByteArray)
 
-  def certificate(addressId: BigInt): Key[Option[Array[Byte]]] =
-    Key.opt(addr(54, addressId), identity, identity)
+  def certificateHistory(addressId: BigInt): Key[Seq[Int]] = historyKey(54, addressId.toByteArray)
+  def certificate(addressId: BigInt)(height: Int): Key[Option[Array[Byte]]] =
+    Key.opt(hAddr(55, height, addressId), identity, identity)
 }
