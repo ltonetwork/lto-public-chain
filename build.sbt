@@ -270,6 +270,7 @@ lazy val node = project
         Dependencies.scorex ++
         Dependencies.commons_net ++
         Dependencies.jaxb_api ++
-        Dependencies.monix.value
+        Dependencies.monix.value ++
+        Dependencies.bouncycastle
   )
   .dependsOn(langJVM)

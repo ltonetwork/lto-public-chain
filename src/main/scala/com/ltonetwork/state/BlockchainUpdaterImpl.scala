@@ -500,6 +500,10 @@ class BlockchainUpdaterImpl(blockchain: Blockchain, settings: LtoSettings, time:
     diffData.data.get(key).orElse(blockchain.accountData(acc, key))
   }
 
+  override def certificate(acc: Address): Option[Array[Byte]] = ngState.fold(blockchain.certificate(acc)) { ng =>
+    ng.bestLiquidDiff.certificate.get(acc).flatten.orElse(blockchain.certificate(acc))
+  }
+
   private def changedBalances(pred: Portfolio => Boolean, f: Address => Long): Map[Address, Long] =
     ngState
       .fold(Map.empty[Address, Long]) { ng =>

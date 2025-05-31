@@ -112,7 +112,8 @@ trait Caches extends Blockchain {
                          data: Map[BigInt, AccountDataInfo],
                          assocs: List[(Int, AssociationTransaction)],
                          sponsorship: Map[BigInt, List[Address]],
-                         totalBurned: Long): Unit
+                         totalBurned: Long,
+                         certificates: Map[BigInt, Option[Array[Byte]]]): Unit
 
   override def append(diff: Diff, carryFee: Long, block: Block): Unit = {
     heightCache += 1
@@ -190,7 +191,8 @@ trait Caches extends Blockchain {
       diff.accountData.map { case (address, data)       => addressId(address) -> data },
       newAssociations,
       diff.sponsoredBy.map { case (sponsoree, v) => (addressId(sponsoree) -> v) },
-      burnedCache
+      burnedCache,
+      diff.certificate.map { case (address, cert) => (addressId(address) -> cert) }
     )
 
     for ((address, id)        <- newAddressIds) addressIdCache.put(address, Some(id))

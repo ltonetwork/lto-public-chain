@@ -4,6 +4,7 @@ import cats.data.{Validated, ValidatedNel}
 import com.ltonetwork.account.{PrivateKeyAccount, PublicKeyAccount}
 import com.ltonetwork.state._
 import com.ltonetwork.transaction._
+import com.ltonetwork.utils.Base64
 import monix.eval.Coeval
 import play.api.libs.json._
 
@@ -24,14 +25,14 @@ case class CertificateTransaction private (
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(serializer.bodyBytes(this))
   val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase ++ Json.obj(
-      "certificate" -> java.util.Base64.getEncoder.encodeToString(certificate)
+      "certificate" -> Base64.encode(certificate)
     ))
 }
 
 object CertificateTransaction extends TransactionBuilder.For[CertificateTransaction] {
 
-  override val typeId: Byte                 = 21
-  override val supportedVersions: Set[Byte] = Set(1)
+  override val typeId: Byte                 = 24
+  override val supportedVersions: Set[Byte] = Set(3)
 
   implicit def sign(tx: TransactionT, signer: PrivateKeyAccount, sponsor: Option[PublicKeyAccount]): TransactionT =
     tx.copy(proofs = tx.proofs + signer.sign(tx.bodyBytes()), sponsor = sponsor.otherwise(tx.sponsor))

@@ -161,6 +161,10 @@ class LevelDBWriter(writableDB: DB,
     }
   }
 
+  override def certificate(acc: Address): Option[Array[Byte]] = readOnly { db =>
+    addressId(acc).flatMap(id => db.get(Keys.certificate(id)))
+  }
+
   override def balance(address: Address): Long = readOnly { db =>
     addressId(address).fold(0L) { addressId =>
       db.fromHistory(Keys.ltoBalanceHistory(addressId), Keys.ltoBalance(addressId)).getOrElse(0L)
@@ -209,7 +213,8 @@ class LevelDBWriter(writableDB: DB,
                                   data: Map[BigInt, AccountDataInfo],
                                   assocs: List[(Int, AssociationTransaction)],
                                   sponsorship: Map[BigInt, List[Address]],
-                                  totalBurned: Long): Unit = readWrite { rw =>
+                                  totalBurned: Long,
+                                  certificates: Map[BigInt, Option[Array[Byte]]]): Unit = readWrite { rw =>
     val expiredKeys = new ArrayBuffer[Array[Byte]]
 
     rw.put(Keys.height, height)
@@ -272,6 +277,10 @@ class LevelDBWriter(writableDB: DB,
     for ((addressId, newSponsorList) <- sponsorship) {
       expiredKeys ++= updateHistory(rw, Keys.sponsorshipHistory(addressId), threshold, Keys.sponsorshipStatus(addressId))
       rw.put(Keys.sponsorshipStatus(addressId)(height), newSponsorList)
+    }
+
+    for ((addressId, cert) <- certificates) {
+      rw.put(Keys.certificate(addressId), cert)
     }
 
     for ((addressId, addressData) <- data) {

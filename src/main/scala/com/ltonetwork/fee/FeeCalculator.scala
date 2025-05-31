@@ -8,6 +8,7 @@ import com.ltonetwork.transaction.ValidationError.{InsufficientFee, UnsupportedT
 import com.ltonetwork.transaction.anchor.{AnchorTransaction, MappedAnchorTransaction}
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.burn.BurnTransaction
+import com.ltonetwork.transaction.certificate.CertificateTransaction
 import com.ltonetwork.transaction.statement.StatementTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
@@ -44,6 +45,7 @@ class FeeCalculator(blockchain: Blockchain) {
     case _: BurnTransaction               => Right(1000)
     case tx: MappedAnchorTransaction      => Right(250 + tx.anchors.size * 100)
     case tx: StatementTransaction         => Right(500 + dataBytes(tx.data, 256) * 100)
+    case _: CertificateTransaction        => Right(5000)
     case _                                => Left(UnsupportedTransactionType)
   }).map(_ * blockchain.feePrice(height))
 
@@ -60,6 +62,10 @@ class FeeCalculator(blockchain: Blockchain) {
     case _: CancelSponsorshipTransaction => Right(0.1 lto)
     case tx: DataTransaction             => Right((0.01 lto) + dataBytes(tx.data, 1024*256) * (0.001 lto))
     case tx: RegisterTransaction         => Right((0.01 lto) + tx.accounts.size * (0.001 lto))
+    case _: BurnTransaction              => Right(0.01 lto)
+    case tx: MappedAnchorTransaction     => Right((0.01 lto) + tx.anchors.size * (0.001 lto))
+    case tx: StatementTransaction        => Right((0.01 lto) + dataBytes(tx.data, 1024*256) * (0.001 lto))
+    case _: CertificateTransaction       => Right(0.1 lto)
     case _                               => Left(UnsupportedTransactionType)
   }
 

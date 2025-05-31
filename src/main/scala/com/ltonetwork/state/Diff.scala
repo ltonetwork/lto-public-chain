@@ -13,7 +13,8 @@ case class Diff(transactions: Map[ByteStr, (Int, Transaction, Set[Address])],
                 leaseState: Map[ByteStr, Boolean],
                 scripts: Map[Address, Option[Script]],
                 accountData: Map[Address, AccountDataInfo],
-                burned: Long) {
+                burned: Long,
+                certificate: Map[Address, Option[Array[Byte]]]) {
 
   lazy val accountTransactionIds: Map[Address, List[(Int, ByteStr)]] = {
     val map: List[(Address, Set[(Int, Byte, Long, ByteStr)])] = transactions.toList
@@ -37,7 +38,8 @@ object Diff {
             leaseState: Map[ByteStr, Boolean] = Map.empty,
             scripts: Map[Address, Option[Script]] = Map.empty,
             accountData: Map[Address, AccountDataInfo] = Map.empty,
-            burned: Long = 0): Diff =
+            burned: Long = 0,
+            certificate: Map[Address, Option[Array[Byte]]] = Map.empty): Diff =
     Diff(
       transactions = Map((tx.id(), (height, tx, portfolios.keys.toSet))),
       feeSponsors = Map.empty,
@@ -47,14 +49,15 @@ object Diff {
       scripts = scripts,
       accountData = accountData,
       burned = burned,
+      certificate = certificate,
     )
 
   def fee(tx: Transaction, feeSponsor: Option[Address], portfolios: Map[Address, Portfolio]): Diff = {
     val feeSponsors = feeSponsor.map(address => Map((tx.id(), address))).getOrElse(Map.empty)
-    new Diff(Map.empty, feeSponsors, portfolios, Map.empty, Map.empty, Map.empty, Map.empty, 0L)
+    new Diff(Map.empty, feeSponsors, portfolios, Map.empty, Map.empty, Map.empty, Map.empty, 0L, Map.empty)
   }
 
-  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, 0L)
+  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, 0L, Map.empty)
 
   implicit val diffMonoid: Monoid[Diff] = new Monoid[Diff] {
     override def empty: Diff = Diff.empty
@@ -69,6 +72,7 @@ object Diff {
         scripts = older.scripts ++ newer.scripts,
         accountData = older.accountData.combine(newer.accountData),
         burned = older.burned + newer.burned,
+        certificate = older.certificate ++ newer.certificate,
       )
   }
 }
