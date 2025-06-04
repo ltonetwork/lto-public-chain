@@ -76,7 +76,7 @@ case class CertificateApiRoute(settings: RestAPISettings, blockchain: Blockchain
   }
 
   @GET
-  @Path("/{address}/raw")
+  @Path("/raw/{address}")
   @Operation(summary = "Get raw certificate (DER encoded)")
   @Parameters(Array(
     new Parameter(
