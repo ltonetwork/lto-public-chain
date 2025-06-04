@@ -1,15 +1,11 @@
 package com.ltonetwork.api.swagger
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.{HttpEntity, MediaTypes}
-import akka.http.scaladsl.server.Route
-import com.github.swagger.akka.{CustomMediaTypes, SwaggerGenerator, SwaggerHttpService}
-import com.github.swagger.akka.SwaggerHttpService.apiDocsBase
-import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
+import com.github.swagger.akka.{SwaggerGenerator, SwaggerHttpService}
 import com.ltonetwork.Version
 import com.ltonetwork.settings.RestAPISettings
 import io.swagger.v3.oas.models.info.{Info, License}
-import io.swagger.v3.oas.models.security.{SecurityRequirement, SecurityScheme}
+import io.swagger.v3.oas.models.security.SecurityScheme
 import io.swagger.v3.oas.models.servers.Server
 import io.swagger.v3.oas.models.{Components, OpenAPI}
 
@@ -23,7 +19,7 @@ class SwaggerDocService(val actorSystem: ActorSystem, val apiClasses: Set[Class[
 
   val license = new License()
   license.setName("Apache License, Version 2.0")
-  license.setUrl("https://github.com/legalthings/PublicNode/blob/master/LICENSE")
+  license.setUrl("https://github.com/ltonetwork/lto-public-chain/blob/master/LICENSE")
 
   override val info = new Info()
     .title("LTO Public Node")

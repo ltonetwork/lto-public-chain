@@ -17,11 +17,13 @@ def assert_equals(value1, value2):
     assert value1 == value2, f'{value1} is not {value2}'
 
 
-def generate_account(key_type='ed25519'):
-    if key_type == 'ed25519':
-        return AccountFactory(CHAIN_ID).create()
+def generate_account(key_type='ed25519', private_key=None):
+    factory = AccountFactory(CHAIN_ID) if key_type == 'ed25519' else AccountFactoryECDSA(CHAIN_ID, key_type)
+
+    if private_key:
+        return factory.create_from_private_key(private_key)
     else:
-        return AccountFactoryECDSA(CHAIN_ID, key_type).create()
+        return factory.create()
 
 
 def get_balance(address):

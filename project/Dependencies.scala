@@ -122,6 +122,6 @@ object Dependencies {
     "com.sun.xml.bind" % "jaxb-core" % "2.3.0",
     "com.sun.xml.bind" % "jaxb-impl" % "2.3.0"
   )
-  lazy val bouncycastle = Seq("org.bouncycastle" % "bcpkix-jdk15to18" % "1.69" % "test")
+  lazy val bouncycastle = Seq("org.bouncycastle" % "bcpkix-jdk15to18" % "1.69")
 
 }

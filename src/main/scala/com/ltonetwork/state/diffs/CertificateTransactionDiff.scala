@@ -69,7 +69,6 @@ object CertificateTransactionDiff {
         }
 
       case None =>
-        // Clear certificate
         Right(Diff(
           height,
           tx,

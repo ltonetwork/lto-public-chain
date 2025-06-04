@@ -17,7 +17,7 @@ case class CertificateRequest(version: Option[Byte] = None,
                               sponsor: Option[String] = None,
                               sponsorKeyType: Option[String] = None,
                               sponsorPublicKey: Option[String] = None,
-                              certificate: Option[String], // base64 encoded
+                              certificate: Option[String], // PEM encoded certificate
                               signature: Option[ByteStr] = None,
                               proofs: Option[Proofs] = None)
   extends TxRequest.For[CertificateTransaction] {
@@ -27,7 +27,10 @@ case class CertificateRequest(version: Option[Byte] = None,
   def toTxFrom(sender: PublicKeyAccount, sponsor: Option[PublicKeyAccount], proofs: Proofs, timestamp: Long): Either[ValidationError, CertificateTransaction] = {
     val certBytesEither: Either[ValidationError, Array[Byte]] = certificate match {
       case Some(str) if str.nonEmpty =>
-        Base64.decode(str).toEither.leftMap(ex => ValidationError.GenericError(s"Failed to decode certificate field ${ex.getMessage}"))
+        val pem = str.replaceAll("-----BEGIN CERTIFICATE-----", "")
+          .replaceAll("-----END CERTIFICATE-----", "")
+          .replaceAll("\\s", "")
+        Base64.decode(pem).toEither.leftMap(ex => ValidationError.GenericError(s"Failed to decode certificate field ${ex.getMessage}"))
       case _ =>
         Right(Array.emptyByteArray)
     }
