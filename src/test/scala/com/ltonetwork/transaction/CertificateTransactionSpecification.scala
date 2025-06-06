@@ -49,11 +49,13 @@ class CertificateTransactionSpecification
       val json = tx.json()
       json.toString shouldEqual tx.toString
 
+      val certBase64 = if (tx.certificate.nonEmpty) Some(Base64.encode(tx.certificate)) else None
+
       val req = json.as[CertificateRequest]
       req.senderPublicKey should be('defined)
       req.senderPublicKey.get shouldEqual Base58.encode(tx.sender.publicKey)
       req.fee shouldEqual tx.fee
-      req.certificate shouldEqual Some(Base64.encode(tx.certificate))
+      req.certificate shouldEqual certBase64.map(cert => s"-----BEGIN CERTIFICATE-----\n$cert\n-----END CERTIFICATE-----")
       req.timestamp should be('defined)
       req.timestamp.get shouldEqual tx.timestamp
     }
@@ -72,7 +74,7 @@ class CertificateTransactionSpecification
       "senderPublicKey": "x1Hr4HTHPeGV4oLUtuLtMQP1FqhtrRWpAEaeK6WHjKj9",
       "fee": 100000,
       "timestamp": 1526911531530,
-      "certificate": "$certBase64",
+      "certificate": "-----BEGIN CERTIFICATE-----\\n$certBase64\\n-----END CERTIFICATE-----",
       "proofs": [
         "24VXZn6t2ZY1RF8SQiNmeHH8Qiy6P4zRnpkjbvTLcfsucb8zrzec4GRoLtSqkaELZpJXaeoPh83jf14LVgVZeiKZ"
       ]
