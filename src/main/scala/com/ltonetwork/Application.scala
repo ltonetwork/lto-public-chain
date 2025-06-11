@@ -250,6 +250,7 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
                         settings.blockchainSettings.functionalitySettings,
                         loadBalanceHistory),
         AssociationsApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, allChannels, time),
+        CertificateApiRoute(settings.restAPISettings, blockchainUpdater, time),
         DebugApiRoute(
           settings,
           wallet,
@@ -283,6 +284,7 @@ class Application(val actorSystem: ActorSystem, val settings: LtoSettings, confi
         classOf[PeersApiRoute],
         classOf[AddressApiRoute],
         classOf[AssociationsApiRoute],
+        classOf[CertificateApiRoute],
         classOf[DebugApiRoute],
         classOf[ActivationApiRoute]
       )

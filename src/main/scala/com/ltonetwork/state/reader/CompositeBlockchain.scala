@@ -126,6 +126,13 @@ class CompositeBlockchain(inner: Blockchain, maybeDiff: => Option[Diff], carry: 
     diffData.data.get(key).orElse(inner.accountData(acc, key))
   }
 
+  override def certificate(acc: Address): Option[Array[Byte]] = {
+    diff.certificate.get(acc) match {
+      case Some(opt) => opt
+      case None      => inner.certificate(acc)
+    }
+  }
+
   private def changedBalances(pred: Portfolio => Boolean, f: Address => Long): Map[Address, Long] =
     for {
       (address, p) <- diff.portfolios

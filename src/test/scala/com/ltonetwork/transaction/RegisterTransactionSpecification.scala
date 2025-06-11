@@ -1,7 +1,7 @@
 package com.ltonetwork.transaction
 
 import com.ltonetwork.TransactionGen
-import com.ltonetwork.account.PublicKeyAccount
+import com.ltonetwork.account.{KeyTypes, PublicKeyAccount}
 import com.ltonetwork.api.requests.RegisterRequest
 import com.ltonetwork.state.{ByteStr, EitherExt2}
 import com.ltonetwork.transaction.register.RegisterTransaction
@@ -110,6 +110,66 @@ class RegisterTransactionSpecification
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         100000,
         List(account),
+        None,
+        Proofs(Seq(proof))
+      )
+      .explicitGet()
+
+    tx.json() shouldEqual js
+  }
+
+
+  property(testName = "JSON format validation with all key types") {
+    val js = Json.parse("""{
+                       "type": 20,
+                       "version": 3,
+                       "id": "FKqhStbC2YYdk8kK488tHCnBJ4Wfv1WbXvxDvmAJREfY",
+                       "sender": "3Mr31XDsqdktAdNQCdSd8ieQuYoJfsnLVFg",
+                       "senderKeyType": "ed25519",
+                       "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
+                       "fee": 100000,
+                       "timestamp": 1526911531530,
+                       "accounts": [
+                         {
+                           "keyType": "ed25519",
+                           "publicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z"
+                         },
+                         {
+                           "keyType": "secp256k1",
+                           "publicKey": "u4udut3StdCe7jCqGPW59KorcnFXkyVrH36WCJb6J4ERP"
+                         },
+                         {
+                           "keyType": "secp256r1",
+                           "publicKey": "VXEHgucYi9AZ8mZRU3KKKuXpoVgzWNzoiD8HPiC5eqp8H"
+                         },
+                         {
+                           "keyType": "bls12-381",
+                           "publicKey": "81SKPmARHUvSUZDc821CVzGEcfoXWXT7b8ZoVCimUDqwcoE5zj4T2sPpjBuu3zpXZS"
+                         }
+                       ],
+                       "proofs": [
+                         "32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94"
+                       ]
+                       }
+  """)
+
+    val accounts = List(
+      PublicKeyAccount.fromBase58String(KeyTypes.ED25519, "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
+      PublicKeyAccount.fromBase58String(KeyTypes.SECP256K1, "u4udut3StdCe7jCqGPW59KorcnFXkyVrH36WCJb6J4ERP").explicitGet(),
+      PublicKeyAccount.fromBase58String(KeyTypes.SECP256R1, "VXEHgucYi9AZ8mZRU3KKKuXpoVgzWNzoiD8HPiC5eqp8H").explicitGet(),
+      PublicKeyAccount.fromBase58String(KeyTypes.BLS12_381, "81SKPmARHUvSUZDc821CVzGEcfoXWXT7b8ZoVCimUDqwcoE5zj4T2sPpjBuu3zpXZS").explicitGet(),
+    )
+
+    val proof = ByteStr.decodeBase58("32mNYSefBTrkVngG5REkmmGAVv69ZvNhpbegmnqDReMTmXNyYqbECPgHgXrX2UwyKGLFS45j7xDFyPXjF8jcfw94").get
+
+    val tx = RegisterTransaction
+      .create(
+        3,
+        None,
+        1526911531530L,
+        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
+        100000,
+        accounts,
         None,
         Proofs(Seq(proof))
       )

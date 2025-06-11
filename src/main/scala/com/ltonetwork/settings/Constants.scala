@@ -32,6 +32,7 @@ object Constants extends ScorexLogging {
       (20: Byte) -> "register",
       (21: Byte) -> "burn",
       (22: Byte) -> "mapped anchor",
-      (23: Byte) -> "statement"
+      (23: Byte) -> "statement",
+      (24: Byte) -> "certificate",
     )
 }

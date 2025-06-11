@@ -10,6 +10,7 @@ import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.{AnchorTransaction, MappedAnchorTransaction}
 import com.ltonetwork.transaction.association.AssociationTransaction
 import com.ltonetwork.transaction.burn.BurnTransaction
+import com.ltonetwork.transaction.certificate.CertificateTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
 import com.ltonetwork.transaction.lease.{CancelLeaseTransaction, LeaseTransaction}
@@ -54,6 +55,7 @@ object TransactionDiffer {
             case btx: BurnTransaction               => BurnTransactionDiff(blockchain, currentBlockHeight)(btx)
             case matx: MappedAnchorTransaction       => MappedAnchorTransactionDiff(blockchain, currentBlockHeight)(matx)
             case stx: StatementTransaction          => StatementTransactionDiff(blockchain, currentBlockHeight)(stx)
+            case cct: CertificateTransaction        => CertificateTransactionDiff(blockchain, currentBlockHeight)(cct)
             case _                                  => Left(UnsupportedTransactionType)
           }).map { d: Diff =>
             val fee = FeeCalculator(blockchain).fee(currentBlockHeight, tx)

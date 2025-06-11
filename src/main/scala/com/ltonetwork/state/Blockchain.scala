@@ -78,6 +78,8 @@ trait Blockchain {
 
   def sponsorOf(address: Address): List[Address]
 
+  def certificate(acc: Address): Option[Array[Byte]]
+
   /** Builds a new portfolio map by applying a partial function to all portfolios on which the function is defined.
     *
     * @note Portfolios passed to `pf` only contain LTO and Leasing balances to improve performance */

@@ -3,6 +3,7 @@ package com.ltonetwork.transaction
 import com.ltonetwork.transaction.anchor.{AnchorTransaction, MappedAnchorTransaction}
 import com.ltonetwork.transaction.association.{IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.burn.BurnTransaction
+import com.ltonetwork.transaction.certificate.CertificateTransaction
 import com.ltonetwork.transaction.statement.StatementTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
@@ -37,6 +38,7 @@ object TransactionBuilders {
     BurnTransaction,
     MappedAnchorTransaction,
     StatementTransaction,
+    CertificateTransaction
   ).map { x =>
     x.typeId -> x
   }(collection.breakOut)

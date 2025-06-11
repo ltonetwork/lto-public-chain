@@ -1,7 +1,7 @@
 package com.ltonetwork
 
 import cats.syntax.semigroup._
-import com.ltonetwork.account.KeyTypes.ED25519
+import com.ltonetwork.account.KeyTypes.{ED25519, SECP256R1}
 import com.ltonetwork.account.PublicKeyAccount._
 import com.ltonetwork.account._
 import com.ltonetwork.lang.Global
@@ -15,6 +15,7 @@ import com.ltonetwork.transaction._
 import com.ltonetwork.transaction.anchor.{AnchorTransaction, MappedAnchorTransaction}
 import com.ltonetwork.transaction.association.{AssociationTransaction, IssueAssociationTransaction, RevokeAssociationTransaction}
 import com.ltonetwork.transaction.burn.BurnTransaction
+import com.ltonetwork.transaction.certificate.CertificateTransaction
 import com.ltonetwork.transaction.statement.StatementTransaction
 import com.ltonetwork.transaction.data.DataTransaction
 import com.ltonetwork.transaction.genesis.GenesisTransaction
@@ -42,7 +43,7 @@ trait TransactionGen extends BeforeAndAfterAll with TransactionGenBase with Scri
   }
 }
 
-trait TransactionGenBase extends ScriptGen {
+trait TransactionGenBase extends ScriptGen with CertificateGen {
 
   protected def lto(n: Float): Long = (n * 100000000L).toLong
 
@@ -76,7 +77,7 @@ trait TransactionGenBase extends ScriptGen {
   def accountGen: Gen[PrivateKeyAccount]                   = accountGen(ED25519)
 
   def accountGenRandom(): Gen[PrivateKeyAccount] =
-    accountGen(Gen.oneOf(KeyTypes.all).pureApply(Gen.Parameters.default, Seed.random(), 100))
+    accountGen(Gen.oneOf(KeyTypes.signing).pureApply(Gen.Parameters.default, Seed.random(), 100))
 
   val addressGen: Gen[Address] = accountGen.map(PublicKeyAccount.toAddress(_))
 
@@ -94,7 +95,7 @@ trait TransactionGenBase extends ScriptGen {
 
   def versionGen(builder: TransactionBuilder): Gen[Byte]         = Gen.oneOf(builder.supportedVersions.toSeq)
   def versionTable(builder: TransactionBuilder): TableFor1[Byte] = Table("version", builder.supportedVersions.toList: _*)
-  val keyTypeTable: TableFor1[KeyType]                           = Table("keytypes", KeyTypes.all: _*)
+  val keyTypeTable: TableFor1[KeyType]                           = Table("keytypes", KeyTypes.signing: _*)
 
   val proofsGen: Gen[Proofs] = for {
     proofsAmount <- Gen.choose(1, 8)
@@ -523,4 +524,20 @@ trait TransactionGenBase extends ScriptGen {
       (sender, _, amount, timestamp, fee, _) <- transferParamGen(keyType)
       sponsor                                <- sponsorGen(version)
     } yield BurnTransaction.signed(version, timestamp, sender, fee, amount).sponsorWith(sponsor).explicitGet()
+
+  def certificateTransactionGen: Gen[CertificateTransaction] = versionGen(CertificateTransaction).flatMap(certificateTransactionGen)
+  def certificateTransactionGen(version: Byte): Gen[CertificateTransaction] =
+    for {
+      sender      <- accountGen(SECP256R1)
+      timestamp   <- timestampGen
+      certificate <- Gen.frequency(
+        3 -> validCertificateFor(sender),
+        1 -> Gen.const(Array.emptyByteArray)
+      )
+      sponsor     <- sponsorGen(version)
+      fee          = 10000000
+    } yield CertificateTransaction
+      .signed(version, timestamp, sender, fee, certificate)
+      .sponsorWith(sponsor)
+      .explicitGet()
 }

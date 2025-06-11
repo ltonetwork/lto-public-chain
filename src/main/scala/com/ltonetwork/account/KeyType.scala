@@ -10,8 +10,16 @@ object KeyTypes {
   val ED25519: KeyType   = KeyType(1, 32, "ed25519")
   val SECP256K1: KeyType = KeyType(2, 33, "secp256k1")
   val SECP256R1: KeyType = KeyType(3, 33, "secp256r1")
+  val BLS12_381: KeyType = KeyType(4, 48, "bls12-381")
 
-  val all = Seq(
+  val all: Seq[KeyType] = Seq(
+    ED25519,
+    SECP256K1,
+    SECP256R1,
+    BLS12_381
+  )
+
+  val signing: Seq[KeyType] = Seq(
     ED25519,
     SECP256K1,
     SECP256R1

@@ -124,4 +124,8 @@ object Keys {
   def burned(height: Int): Key[Long] = Key[Long](h(51, height), Option(_).fold(0L)(Longs.fromByteArray), Longs.toByteArray)
 
   def migration(id: Int): Key[Int] = Key[Int](h(53, id), Option(_).fold(0)(Ints.fromByteArray), Ints.toByteArray)
+
+  def certificateHistory(addressId: BigInt): Key[Seq[Int]] = historyKey(54, addressId.toByteArray)
+  def certificate(addressId: BigInt)(height: Int): Key[Option[Array[Byte]]] =
+    Key.opt(hAddr(55, height, addressId), identity, identity)
 }
